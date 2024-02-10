@@ -80,7 +80,7 @@
 
 |r65c12opcode9D|
   ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
-  ADDRESSOFABSOLUTEX_M ;;; ;r0 ;3 cycles
+  ADDRESSOFABSOLUTEX ;;; ;r0 ;3 cycles
   ;R6502STA ;r1=r6502_a
   MOV r1,ra ;1 cycle
   WRITEMEM ;1 cycle
@@ -92,7 +92,7 @@
 |r65c12opcode9E|
   ;STZ
   ;STMFD sp!,{lr}
-  ADDRESSOFABSOLUTEX_M ;;; ;r0 ;3 cycles
+  ADDRESSOFABSOLUTEX ;;; ;r0 ;3 cycles
   MOV r1,#0 ;1 cycle
   WRITEMEM ;1 cycle
   CPU_CYCLES 2
@@ -111,7 +111,7 @@
 |r65c12opcodeA0|
   ;LDY
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  VALUEOFIMMEDIATE_M ry
+  VALUEOFIMMEDIATE ry
   ;R6502LDY
   SETNFLAG ry
   SETZFLAG ry
@@ -124,7 +124,7 @@
   ;LDA
   ;STMFD sp!,{r0-r2,rps-r12,lr}
   ;VALUEOFPREINDEXED
-  ADDRESSOFPREINDEXED_M ;r0 ;4 cycles
+  ADDRESSOFPREINDEXED ;r0 ;4 cycles
   READMEM ;1 cycle
   R6502LDA ;1 cycle
   CPU_CYCLES 2
@@ -135,7 +135,7 @@
 |r65c12opcodeA2|
   ;LDX
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  VALUEOFIMMEDIATE_M rx
+  VALUEOFIMMEDIATE rx
   ;R6502LDX
   SETNFLAG rx
   SETZFLAG rx
@@ -156,7 +156,7 @@
   ;LDY
   ;STMFD sp!,{r0-r2,rps-r12,lr}
   ;VALUEOFZEROPAGE
-  ADDRESSOFZEROPAGE_M r0
+  ADDRESSOFZEROPAGE r0
   ;R6502LDY
   ;---
   ;MOV r1,r0
@@ -175,7 +175,7 @@
   ;LDA
   ;STMFD sp!,{r0-r2,rps-r12,lr}
   ;VALUEOFZEROPAGE
-  ADDRESSOFZEROPAGE_M r0
+  ADDRESSOFZEROPAGE r0
   ;R6502LDA
   ;---
   ;MOV r1,r0
@@ -194,7 +194,7 @@
   ;LDX
   ;STMFD sp!,{r0-r2,rps-r12,lr}
   ;VALUEOFZEROPAGE
-  ADDRESSOFZEROPAGE_M r0
+  ADDRESSOFZEROPAGE r0
   ;R6502LDX
   ;---
   ;MOV r1,r0
@@ -237,7 +237,7 @@
 
 |r65c12opcodeA9|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  VALUEOFIMMEDIATE_M ra
+  VALUEOFIMMEDIATE ra
   ;R6502LDA
   SETNFLAG ra
   SETZFLAG ra
@@ -275,7 +275,7 @@
 |r65c12opcodeAC|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
   ;VALUEOFABSOLUTE
-  ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   READMEM ;1 cycle
   R6502LDY ;1 cycle
   CPU_CYCLES 2
@@ -286,7 +286,7 @@
 |r65c12opcodeAD|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
   ;VALUEOFABSOLUTE ;2 cycles
-  ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   READMEM ;1 cycle
   R6502LDA ;1 cycle
   CPU_CYCLES 2
@@ -297,7 +297,7 @@
 |r65c12opcodeAE|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
   ;VALUEOFABSOLUTE
-  ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   READMEM ;1 cycle
   R6502LDX ;1 cycle
   CPU_CYCLES 2

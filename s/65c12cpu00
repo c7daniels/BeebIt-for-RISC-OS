@@ -124,7 +124,7 @@
   ;ORA
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ;VALUEOFPREINDEXED
-  ADDRESSOFPREINDEXED_M ;r0 ;4 cycles
+  ADDRESSOFPREINDEXED ;r0 ;4 cycles
   READMEM ;1 cycle
   R6502ORA ;1 cycle
   CPU_CYCLES 2
@@ -152,7 +152,7 @@
 |r65c12opcode04|
   ;TSB
   ;STMFD sp!,{r0-r2,rpc,r11,lr}
-  ADDRESSOFZEROPAGE_M r0
+  ADDRESSOFZEROPAGE r0
   LDRB r3,[r12,r0]
   AND r1,ra,r3 ;and it
   SETZFLAG r1
@@ -166,7 +166,7 @@
 |r65c12opcode05|
   ;ORA
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  VALUEOFZEROPAGE_M
+  VALUEOFZEROPAGE
   R6502ORA
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
@@ -176,7 +176,7 @@
 |r65c12opcode06|
   ;ASL
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  VALUEOFZEROPAGE_M
+  VALUEOFZEROPAGE
   R6502ASL r0
   STRB r0,[r11]
   CPU_CYCLES 5
@@ -414,7 +414,7 @@ r65c12opcode07_error5
 |r65c12opcode09|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ;STMFD sp!,{r0-r12,lr}
-  VALUEOFIMMEDIATE_M r0
+  VALUEOFIMMEDIATE r0
   R6502ORA
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
@@ -447,7 +447,7 @@ r65c12opcode07_error5
 |r65c12opcode0C|
   ;TSB
   ;STMFD sp!,{r0-r2,rpc,r11,lr}
-  ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   MOV r2,r0 ;store address
   READMEM ;1 cycle
   AND r1,r0,ra ;and it
@@ -464,7 +464,7 @@ r65c12opcode07_error5
   ;ORA
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ;VALUEOFABSOLUTE
-  ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   READMEM ;1 cycle
   R6502ORA ;1 cycle
   CPU_CYCLES 2
@@ -475,7 +475,7 @@ r65c12opcode07_error5
 |r65c12opcode0E|
   ;ASL
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   MOV r2,r0 ;store address
   READMEM ;1 cycle
   R6502ASL r0 ;2 cycles

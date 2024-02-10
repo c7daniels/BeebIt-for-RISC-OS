@@ -102,7 +102,7 @@
 
 r65c12opcodeF0_2
   ;LDR r12,=memory ;pointer to memory block
-  VALUEOFIMMEDIATE_M r0
+  VALUEOFIMMEDIATE r0
   MOV r1,rpc,LSR#8 ;r1=(pc>>8)
   AND r1,r1,#&FF
   ANDS r2,r0,#&80 ;r2=(n & 0x80)
@@ -136,7 +136,7 @@ r65c12opcodeF0_2
   ;SBC
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFPOSTINDEXEDY
-  ADDRESSOFPOSTINDEXEDY_M ;r0 ;3+ cycles
+  ADDRESSOFPOSTINDEXEDY ;r0 ;3+ cycles
   READMEM ;1 cycle
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps
@@ -159,7 +159,7 @@ r65c12opcodeF1_2
 |r65c12opcodeF2|
   ;SBC
   ;STMFD sp!,{lr}
-  ADDRESSOFINDZEROPAGE_M
+  ADDRESSOFINDZEROPAGE 
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps
   ANDS r1,rps,#DFLAG
@@ -198,7 +198,7 @@ r65c12opcodeF2_2
 |r65c12opcodeF5|
   ;SBC
   ;STMFD sp!,{r0-r12,lr}
-  VALUEOFZEROPAGEX_M ;;;
+  VALUEOFZEROPAGEX ;;;
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps
   ANDS r1,rps,#DFLAG
@@ -219,7 +219,7 @@ r65c12opcodeF5_2
 
 |r65c12opcodeF6|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  VALUEOFZEROPAGEX_M ;;;
+  VALUEOFZEROPAGEX ;;;
   R6502INC r0
   STRB r0,[r11]
   CPU_CYCLES 6
@@ -251,7 +251,7 @@ r65c12opcodeF5_2
   ;SBC
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEYPLUS
-  ADDRESSOFABSOLUTEYPLUS_M ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEYPLUS ;r0 ;2+ cycles
   READMEM ;1 cycle
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps
@@ -301,7 +301,7 @@ r65c12opcodeF9_2
   ;SBC
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEXPLUS
-  ADDRESSOFABSOLUTEXPLUS_M ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEXPLUS ;r0 ;2+ cycles
   READMEM ;1 cycle
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps
@@ -324,7 +324,7 @@ r65c12opcodeFD_2
 |r65c12opcodeFE|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
   ;VALUEOFABSOLUTE
-  ADDRESSOFABSOLUTEX_M ;;; ;r0 ;3 cycles
+  ADDRESSOFABSOLUTEX ;;; ;r0 ;3 cycles
   MOV r2,r0 ;store address
   READMEM ;1 cycle
   R6502INC r0 ;2 cycles

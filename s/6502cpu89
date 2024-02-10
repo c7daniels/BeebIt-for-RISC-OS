@@ -138,7 +138,7 @@ r6502opcode77_2
   ;ADC
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEYPLUS
-  ADDRESSOFABSOLUTEYPLUS_B ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEYPLUS ;r0 ;2+ cycles
   READMEM ;1 cycle
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps
@@ -204,7 +204,7 @@ r6502opcode7B_2
   ;ADC
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEXPLUS
-  ADDRESSOFABSOLUTEXPLUS_B ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEXPLUS ;r0 ;2+ cycles
   READMEM ;1 cycle
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps
@@ -277,7 +277,7 @@ r6502opcode7F_2
 |r6502opcode81|
   ;STA
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ADDRESSOFPREINDEXED_B ;r0 ;4 cycles
+  ADDRESSOFPREINDEXED ;r0 ;4 cycles
   ;R6502STA ;r1=r6502_a
   MOV r1,ra ;1 cycle
   WRITEMEM ;1 cycle
@@ -298,7 +298,7 @@ r6502opcode7F_2
 |r6502opcode83|
   ;SAX
   ;STMFD sp!,{r0-r2,ra,rx,rpc-r12,lr}
-  ADDRESSOFPREINDEXED_B ;r0 ;4 cycles
+  ADDRESSOFPREINDEXED ;r0 ;4 cycles
   ;LDR r11,=r6502_a
   ;LDRB ra,[r11]
   ;LDR r11,=r6502_x
@@ -313,7 +313,7 @@ r6502opcode7F_2
 |r6502opcode84|
   ;STY
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ADDRESSOFZEROPAGE_BASE r0
+  ADDRESSOFZEROPAGE r0
   ;R6502STY ;r1=r6502_y
   STRB ry,[r12,r0]
   CPU_CYCLES 3
@@ -324,7 +324,7 @@ r6502opcode7F_2
 |r6502opcode85|
   ;STA
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ADDRESSOFZEROPAGE_BASE r0
+  ADDRESSOFZEROPAGE r0
   ;R6502STA ;r1=r6502_a
   STRB ra,[r12,r0]
   CPU_CYCLES 3
@@ -335,7 +335,7 @@ r6502opcode7F_2
 |r6502opcode86|
   ;STX
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ADDRESSOFZEROPAGE_BASE r0
+  ADDRESSOFZEROPAGE r0
   ;R6502STX ;r1=r6502_x
   STRB rx,[r12,r0]
   CPU_CYCLES 3
@@ -346,7 +346,7 @@ r6502opcode7F_2
 |r6502opcode87|
   ;SAX
   ;STMFD sp!,{r0-r2,ra,rx,rpc-r12,lr}
-  ADDRESSOFZEROPAGE_BASE r0
+  ADDRESSOFZEROPAGE r0
   ;LDR r11,=r6502_a
   ;LDRB ra,[r11] ;r6502_a
   ;LDR r11,=r6502_x
@@ -401,7 +401,7 @@ r6502opcode7F_2
 |r6502opcode8B|
   ;XAA
   ;STMFD sp!,{lr}
-  VALUEOFIMMEDIATE_B r0
+  VALUEOFIMMEDIATE r0
   MOV ra,rx
   AND ra,ra,r0
   CPU_CYCLES 2
@@ -411,7 +411,7 @@ r6502opcode7F_2
 
 |r6502opcode8C|
   ;STY
-  ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   MOV r1,ry ;1 cycle
   WRITEMEM ;1 cycle
   CPU_CYCLES 2
@@ -419,7 +419,7 @@ r6502opcode7F_2
 
 |r6502opcode8D|
   ;STA
-  ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   MOV r1,ra ;1 cycle
   WRITEMEM ;1 cycle
   CPU_CYCLES 2
@@ -427,7 +427,7 @@ r6502opcode7F_2
 
 |r6502opcode8E|
   ;STX
-  ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   ;R6502STX ;r1=r6502_x
   MOV r1,rx ;1 cycle
   WRITEMEM ;1 cycle
@@ -437,7 +437,7 @@ r6502opcode7F_2
 |r6502opcode8F|
   ;SAX
   ;STMFD sp!,{r0-r2,ra,rx,rpc-r12,lr}
-  ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   ;LDR r11,=r6502_a
   ;LDRB ra,[r11]
   ;LDR r11,=r6502_x
@@ -485,7 +485,7 @@ r6502opcode7F_2
 
 r6502opcode90_2
   ;LDR r12,=memory ;pointer to memory block
-  VALUEOFIMMEDIATE_B r0
+  VALUEOFIMMEDIATE r0
   MOV r1,rpc,LSR#8 ;r1=(pc>>8)
   AND r1,r1,#&FF
   ANDS r2,r0,#&80 ;r2=(n & 0x80)

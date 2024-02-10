@@ -104,7 +104,7 @@
   ;AND
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEXPLUS
-  ADDRESSOFABSOLUTEXPLUS_B ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEXPLUS ;r0 ;2+ cycles
   READMEM ;1 cycle
   R6502AND ;1 cycle
   CPU_CYCLES 2
@@ -163,7 +163,7 @@ r6502opcode40end
 |r6502opcode41|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ;VALUEOFPREINDEXED
-  ADDRESSOFPREINDEXED_B ;r0 ;4 cycles
+  ADDRESSOFPREINDEXED ;r0 ;4 cycles
   READMEM ;1 cycle
   R6502EOR ;1 cycle
   CPU_CYCLES 2
@@ -203,7 +203,7 @@ r6502opcode40end
 
 |r6502opcode45|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  VALUEOFZEROPAGE_BASE
+  VALUEOFZEROPAGE
   R6502EOR
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
@@ -213,7 +213,7 @@ r6502opcode40end
 |r6502opcode46|
   ;LSR
   ;STMFD sp!,{r0-r2,rps-r12,lr}
-  VALUEOFZEROPAGE_BASE
+  VALUEOFZEROPAGE
   R6502LSR r0
   STRB r0,[r11]
   CPU_CYCLES 5
@@ -246,7 +246,7 @@ r6502opcode40end
 
 |r6502opcode49|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  VALUEOFIMMEDIATE_B r0
+  VALUEOFIMMEDIATE r0
   R6502EOR
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
@@ -269,7 +269,7 @@ r6502opcode40end
 
 |r6502opcode4B|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  VALUEOFIMMEDIATE_B r0
+  VALUEOFIMMEDIATE r0
   R6502ALR
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
@@ -297,7 +297,7 @@ r6502opcode40end
 |r6502opcode4D|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ;VALUEOFABSOLUTE
-  ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   READMEM ;1 cycle
   R6502EOR ;1 cycle
   CPU_CYCLES 2
@@ -308,7 +308,7 @@ r6502opcode40end
 |r6502opcode4E|
   ;LSR
   ;STMFD sp!,{r0-r3,rps-r12,lr}
-  ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   MOV r2,r0 ;store address
   READMEM ;1 cycle
   R6502LSR r0 ;2 cycles
@@ -323,7 +323,7 @@ r6502opcode40end
 |r6502opcode4F|
   ;LSE
   ;STMFD sp!,{r0-ra,rps,r11,r12,lr}
-  ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
+  ADDRESSOFABSOLUTE ;r0 ;2 cycles
   MOV r2,r0 ;store address
   READMEM ;1 cycle
   R6502LSE ;2 cycles
@@ -371,7 +371,7 @@ r6502opcode40end
 
 r6502opcode50_2
   ;LDR r12,=memory ;pointer to memory block
-  VALUEOFIMMEDIATE_B r0
+  VALUEOFIMMEDIATE r0
   MOV r1,rpc,LSR#8 ;r1=(pc>>8)
   AND r1,r1,#&FF
   ANDS r2,r0,#&80 ;r2=(n & 0x80)
@@ -405,7 +405,7 @@ r6502opcode50end
   ;EOR
   ;STMFD sp!,{r0-r2,ra,ry,rps-r12,lr}
   ;VALUEOFPOSTINDEXEDY
-  ADDRESSOFPOSTINDEXEDY_B ;r0 ;3+ cycles
+  ADDRESSOFPOSTINDEXEDY ;r0 ;3+ cycles
   READMEM ;1 cycle
   R6502EOR ;1 cycle
   CPU_CYCLES 2
@@ -487,7 +487,7 @@ r6502opcode50end
 |r6502opcode59|
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEYPLUS
-  ADDRESSOFABSOLUTEYPLUS_B ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEYPLUS ;r0 ;2+ cycles
   READMEM ;1 cycle
   R6502EOR ;1 cycle
   CPU_CYCLES 2
@@ -531,7 +531,7 @@ r6502opcode50end
   ;EOR
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEXPLUS
-  ADDRESSOFABSOLUTEXPLUS_B ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEXPLUS ;r0 ;2+ cycles
   READMEM ;1 cycle
   R6502EOR ;1 cycle
   CPU_CYCLES 2

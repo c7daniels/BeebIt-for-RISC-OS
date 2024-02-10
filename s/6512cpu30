@@ -113,7 +113,7 @@
 
 r6512opcode30_2
   ;LDR r12,=memory ;pointer to memory block
-  VALUEOFIMMEDIATE_BP r0
+  VALUEOFIMMEDIATE r0
   MOV r1,rpc,LSR#8 ;r1=(pc>>8)
   AND r1,r1,#&FF
   ANDS r2,r0,#&80 ;r2=(n & 0x80)
@@ -147,7 +147,7 @@ r6512opcode30end
   ;AND
   ;STMFD sp!,{r0-r2,ra,ry,rps-r12,lr}
   ;VALUEOFPOSTINDEXEDY
-  ADDRESSOFPOSTINDEXEDY_BP ;r0 ;3+ cycles
+  ADDRESSOFPOSTINDEXEDY ;r0 ;3+ cycles
   READMEM ;1 cycle
   R6502AND ;1 cycle
   CPU_CYCLES 2
@@ -164,7 +164,7 @@ r6512opcode30end
 |r6512opcode33|
   ;RLA
   ;STMFD sp!,{r0-ra,rps,r11,r12,lr}
-  ADDRESSOFPOSTINDEXEDY_STA_BP ;r0 ;4 cycles
+  ADDRESSOFPOSTINDEXEDY_STA ;r0 ;4 cycles
   MOV r2,r0 ;store address
   READMEM ;1 cycle
   R6502RLA ;2 cycles
@@ -187,7 +187,7 @@ r6512opcode30end
 
 |r6512opcode35|
   ;STMFD sp!,{r0-r2,ra,rx,rps-r12,lr}
-  VALUEOFZEROPAGEX_BP
+  VALUEOFZEROPAGEX
   R6502AND
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rx,rps-r12,pc}
@@ -196,7 +196,7 @@ r6512opcode30end
 
 |r6512opcode36|
   ;STMFD sp!,{r0-r4,rps-rpc,r10-r12,lr}
-  VALUEOFZEROPAGEX_BP
+  VALUEOFZEROPAGEX
   R6502ROL r0
   STRB r0,[r11]
   CPU_CYCLES 6
@@ -207,7 +207,7 @@ r6512opcode30end
 |r6512opcode37|
   ;RLA
   ;STMFD sp!,{r0-ra,rps,r11,r12,lr}
-  ADDRESSOFZEROPAGEX_BP
+  ADDRESSOFZEROPAGEX
   MOV r2,r0 ;store address
   LDRB r0,[r12,r2]
   R6502RLA
@@ -232,7 +232,7 @@ r6512opcode30end
 |r6512opcode39|
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEYPLUS
-  ADDRESSOFABSOLUTEYPLUS_BP ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEYPLUS ;r0 ;2+ cycles
   READMEM ;1 cycle
   R6502AND ;1 cycle
   CPU_CYCLES 2
@@ -251,7 +251,7 @@ r6512opcode30end
 |r6512opcode3B|
   ;RLA
   ;STMFD sp!,{r0-ra,rps,r11,r12,lr}
-  ADDRESSOFABSOLUTEY_BP ;r0 ;3 cycles
+  ADDRESSOFABSOLUTEY ;r0 ;3 cycles
   MOV r2,r0 ;store address
   READMEM ;1 cycle
   R6502RLA ;2 cycles
@@ -276,7 +276,7 @@ r6512opcode30end
   ;AND
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEXPLUS
-  ADDRESSOFABSOLUTEXPLUS_BP ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEXPLUS ;r0 ;2+ cycles
   READMEM ;1 cycle
   R6502AND ;1 cycle
   CPU_CYCLES 2
@@ -287,7 +287,7 @@ r6512opcode30end
 |r6512opcode3E|
   ;STMFD sp!,{r0-r4,rps-rpc,r10-r12,lr}
   ;VALUEOFABSOLUTE
-  ADDRESSOFABSOLUTEX_BP ;r0 ;3 cycles
+  ADDRESSOFABSOLUTEX ;r0 ;3 cycles
   MOV r2,r0 ;store address
   READMEM ;1 cycle
   R6502ROL r0 ;2 cycles
@@ -302,7 +302,7 @@ r6512opcode30end
 |r6512opcode3F|
   ;RLA
   ;STMFD sp!,{r0-ra,rps,r11,r12,lr}
-  ADDRESSOFABSOLUTEX_BP ;r0 ;3 cycles
+  ADDRESSOFABSOLUTEX ;r0 ;3 cycles
   MOV r2,r0 ;store address
   READMEM ;1 cycle
   R6502RLA ;2 cycles
