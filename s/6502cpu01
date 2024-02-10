@@ -41,8 +41,8 @@
   IMPORT |r6502_x|
   IMPORT |r6502_y|
   IMPORT |r6502_cyclestogo|
-  IMPORT |r6502readb|
-  IMPORT |r6502writeb|
+  IMPORT |r6502readmem|
+  IMPORT |r6502writemem|
   IMPORT |r6502opcodes|
 
 ; Export global symbols
@@ -114,7 +114,7 @@
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ;VALUEOFPREINDEXED
   ADDRESSOFPREINDEXED_B ;r0 ;4 cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ORA ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
@@ -132,11 +132,11 @@
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ADDRESSOFPREINDEXED_B ;r0 ;4 cycles
   MOV r2,r0 ;store address
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ASO ;2 cycles
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
@@ -453,7 +453,7 @@ r6502opcode07_error5
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ;VALUEOFABSOLUTE
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ORA ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
@@ -465,12 +465,11 @@ r6502opcode07_error5
   ;STMFD sp!,{r0-r2,rps-r12,lr}
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
   MOV r2,r0 ;store address
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ASL r0 ;2 cycles
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  ;BL r6502writemem
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
@@ -481,11 +480,11 @@ r6502opcode07_error5
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
   MOV r2,r0 ;store address
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ASO ;2 cycles
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
@@ -562,7 +561,7 @@ r6502opcode10end
   ;STMFD sp!,{r0-r2,ra,ry,rps-r12,lr}
   ;VALUEOFPOSTINDEXEDY
   ADDRESSOFPOSTINDEXEDY_B ;r0 ;3+ cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ORA ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,ry,rps-r12,pc}
@@ -580,11 +579,11 @@ r6502opcode10end
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ADDRESSOFPOSTINDEXEDY_STA ;r0 ;4 cycles
   MOV r2,r0 ;store address
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ASO ;2 cycles
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
@@ -648,7 +647,7 @@ r6502opcode10end
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEYPLUS
   ADDRESSOFABSOLUTEYPLUS_B ;r0 ;2+ cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ORA ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
@@ -668,11 +667,11 @@ r6502opcode10end
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ADDRESSOFABSOLUTEY ;r0 ;3 cycles
   MOV r2,r0 ;store address
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ASO ;2 cycles
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
@@ -692,7 +691,7 @@ r6502opcode10end
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEXPLUS
   ADDRESSOFABSOLUTEXPLUS_B ;r0 ;2+ cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ORA ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
@@ -704,12 +703,11 @@ r6502opcode10end
   ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
   ADDRESSOFABSOLUTEX ;r0 ;3 cycles
   MOV r2,r0 ;store address
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502ASL r0 ;2 cycles
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  ;BL r6502writemem
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr

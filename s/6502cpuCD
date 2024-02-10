@@ -49,9 +49,8 @@
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
   IMPORT |r6502_cyclestogo|
-  IMPORT |r6502readb|
-  IMPORT |r6502readbp|
-  IMPORT |r6502writeb|
+  IMPORT |r6502readmem|
+  IMPORT |r6502writemem|
   IMPORT |r6502opcodes|
 
   ;IMPORT |sheilaread|
@@ -106,7 +105,7 @@
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ;VALUEOFPREINDEXED
   ADDRESSOFPREINDEXED_B ;r0 ;4 cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502CMP ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
@@ -127,12 +126,12 @@
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ADDRESSOFPREINDEXED_B ;r0 ;4 cycles
   MOV r2,r0
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502DEC r0 ;1 cycle
   R6502CMP ;1 cycle
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
@@ -234,7 +233,7 @@
   ;STMFD sp!,{r0-r2,ry,rps-r12,lr}
   ;VALUEOFABSOLUTE
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502CPY ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
@@ -246,7 +245,7 @@
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ;VALUEOFABSOLUTE
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502CMP ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
@@ -258,12 +257,11 @@
   ;VALUEOFABSOLUTE
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
   MOV r2,r0 ;store address
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502DEC r0 ;1 cycle
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  ;BL r6502writemem
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
@@ -275,13 +273,13 @@
   ;VALUEOFABSOLUTE
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
   MOV r2,r0 ;store address
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502DEC r0 ;1 cycle
   R6502CMP
   MOV r1,r0 ;value
   MOV r0,r2 ;address
   ;BL r6502writemem
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
@@ -358,7 +356,7 @@ r6502opcodeD0_2
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ;VALUEOFPOSTINDEXEDY
   ADDRESSOFPOSTINDEXEDY_B ;r0 ;3+ cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502CMP ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
@@ -376,12 +374,12 @@ r6502opcodeD0_2
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ADDRESSOFPOSTINDEXEDY_STA ;r0 ;4 cycles
   MOV r2,r0
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502DEC r0 ;1 cycle
   R6502CMP ;1 cycle
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
@@ -446,7 +444,7 @@ r6502opcodeD0_2
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEYPLUS
   ADDRESSOFABSOLUTEYPLUS_B ;r0 ;2+ cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502CMP ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
@@ -466,12 +464,12 @@ r6502opcodeD0_2
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ADDRESSOFABSOLUTEY ;r0 ;3 cycles
   MOV r2,r0
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502DEC r0 ;2 cycles
   R6502CMP
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
@@ -491,7 +489,7 @@ r6502opcodeD0_2
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEXPLUS
   ADDRESSOFABSOLUTEXPLUS_B ;r0 ;2+ cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502CMP ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
@@ -503,12 +501,11 @@ r6502opcodeD0_2
   ;VALUEOFABSOLUTE
   ADDRESSOFABSOLUTEX ;r0 ;3 cycles
   MOV r2,r0 ;store address
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502DEC r0 ;2 cycles
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  ;BL r6502writemem
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
@@ -519,12 +516,12 @@ r6502opcodeD0_2
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
   ADDRESSOFABSOLUTEX ;r0 ;3 cycles
   MOV r2,r0
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502DEC r0 ;2 cycles
   R6502CMP
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr

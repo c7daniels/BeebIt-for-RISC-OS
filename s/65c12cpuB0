@@ -47,9 +47,7 @@
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
   IMPORT |r6502_cyclestogo|
-  IMPORT |r6502read|
-  IMPORT |r6502readm|
-  IMPORT |r6502write|
+  IMPORT |r6502readmem|
   IMPORT |r65c12loadregs|
   IMPORT |r65c12saveregs|
   IMPORT |r65c12opcodes|
@@ -157,7 +155,7 @@ r65c12opcodeB0end
 ;  SWI OS_WriteI+32
 ;  LDMFD sp!,{r0}
 
-  READMEMM ;1 cycle
+  READMEM ;1 cycle
 
 ;  STMFD sp!,{r0}
   ;MOV r0, ry ;y
@@ -178,7 +176,7 @@ r65c12opcodeB0end
   ;LDA
   ;STMFD sp!,{lr}
   ADDRESSOFINDZEROPAGE_M
-  READMEMM ;1 cycle
+  READMEM ;1 cycle
   R6502LDA
   CPU_CYCLES 5
   ;LDMFD sp!,{pc}
@@ -245,7 +243,7 @@ r65c12opcodeB0end
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEYPLUS
   ADDRESSOFABSOLUTEYPLUS_M ;r0 ;2+ cycles
-  READMEMM ;1 cycle
+  READMEM ;1 cycle
   R6502LDA ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
@@ -282,7 +280,7 @@ r65c12opcodeB0end
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEXPLUS
   ADDRESSOFABSOLUTEXPLUS_M ;r0 ;2+ cycles
-  READMEMM ;1 cycle
+  READMEM ;1 cycle
   R6502LDY ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
@@ -293,7 +291,7 @@ r65c12opcodeB0end
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEXPLUS
   ADDRESSOFABSOLUTEXPLUS_M ;r0 ;2+ cycles
-  READMEMM ;1 cycle
+  READMEM ;1 cycle
   R6502LDA ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
@@ -304,7 +302,7 @@ r65c12opcodeB0end
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTEYPLUS
   ADDRESSOFABSOLUTEYPLUS_M ;r0 ;2+ cycles
-  READMEMM ;1 cycle
+  READMEM ;1 cycle
   R6502LDX ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}

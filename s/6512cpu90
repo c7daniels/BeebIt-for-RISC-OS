@@ -52,11 +52,8 @@
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
   IMPORT |r6502_cyclestogo|
-  IMPORT |r6502read|
-  ;IMPORT |r6502writemem|
-  IMPORT |r6502write|
-  IMPORT |r6502readbp|
-  IMPORT |r6502writebp|
+  IMPORT |r6502readmem|
+  IMPORT |r6502writemem|
   IMPORT |r6512loadregs|
   IMPORT |r6512saveregs|
   IMPORT |r6512opcodes|
@@ -154,8 +151,7 @@ r6512opcode90end
   ADDRESSOFPOSTINDEXEDY_STA_BP ;r0 ;3+ cycles
   ;R6502STA ;r1=r6502_a
   MOV r1,ra ;1 cycle
-  ;BL r6502writemem ;(n,r6502_a)
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
@@ -178,7 +174,7 @@ r6512opcode90end
   AND r1,r1,r2,LSR #8
   ANDMI r0,r0,#&FF
   ORRMI r0,r0,r1,LSL #8
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
@@ -259,7 +255,7 @@ r6512opcode90end
   ADDRESSOFABSOLUTEY_BP ;r0 ;3 cycles
   ;R6502STA ;r1=r6502_a
   MOV r1,ra ;1 cycle
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
@@ -290,7 +286,7 @@ r6512opcode90end
   MOV rsp,r1
   ANDMI r0,r0,#&FF
   ORRMI r0,r0,r1,LSL #8
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
@@ -306,7 +302,7 @@ r6512opcode90end
   AND r1,ry,r2,LSR #8 ;1 cycle
   ANDMI r0,r0,#&FF
   ORRMI r0,r0,r1,LSL #8
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr
@@ -318,7 +314,7 @@ r6512opcode90end
   ADDRESSOFABSOLUTEX_BP ;r0 ;3 cycles
   ;R6502STA ;r1=r6502_a
   MOV r1,ra ;1 cycle
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr
@@ -334,7 +330,7 @@ r6512opcode90end
   AND r1,rx,r2,LSR #8 ;1 cycle
   ANDMI r0,r0,#&FF
   ORRMI r0,r0,r1,LSL #8
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
@@ -351,7 +347,7 @@ r6512opcode90end
   AND r1,r1,r2,LSR #8
   ANDMI r0,r0,#&FF
   ORRMI r0,r0,r1,LSL #8
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr

@@ -42,9 +42,8 @@
   IMPORT |r6502_x|
   IMPORT |r6502_y|
   IMPORT |r6502_cyclestogo|
-  IMPORT |r6502readb|
-  IMPORT |r6502readbp|
-  IMPORT |r6502writeb|
+  IMPORT |r6502readmem|
+  IMPORT |r6502writemem|
   IMPORT |r6502loadregs|
   IMPORT |r6502saveregs|
   IMPORT |r6502opcodes|
@@ -82,7 +81,7 @@
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFPREINDEXED
   ADDRESSOFPREINDEXED_B ;r0 ;4 cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps
   ANDS r1,rps,#DFLAG
@@ -115,12 +114,12 @@ r6502opcodeE1_2
   ;STMFD sp!,{r0-r12,lr}
   ADDRESSOFPREINDEXED_B ;r0 ;4 cycles
   MOV r2,r0
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   ADD r0,r0,#1
   AND r0,r0,#&FF
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   MOV r0,r1 ;r0=value
   ;SBC
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
@@ -278,7 +277,7 @@ r6502opcodeEB_2
   ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
   ;VALUEOFABSOLUTE
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502CPX ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
@@ -290,7 +289,7 @@ r6502opcodeEB_2
   ;STMFD sp!,{r0-r12,lr}
   ;VALUEOFABSOLUTE
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps
   ANDS r1,rps,#DFLAG
@@ -314,12 +313,12 @@ r6502opcodeED_2
   ;VALUEOFABSOLUTE
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
   MOV r2,r0 ;store address
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   R6502INC r0 ;2 cycles
   MOV r1,r0 ;value
   MOV r0,r2 ;address
   ;BL r6502writemem
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
@@ -330,12 +329,12 @@ r6502opcodeED_2
   ;STMFD sp!,{r0-r12,lr}
   ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
   MOV r2,r0
-  READMEMB ;1 cycle
+  READMEM ;1 cycle
   ADD r0,r0,#1
   AND r0,r0,#&FF
   MOV r1,r0 ;value
   MOV r0,r2 ;address
-  WRITEMEMB ;1 cycle
+  WRITEMEM ;1 cycle
   MOV r0,r1 ;r0=value
   ;SBC
   ;LDR r12,=r6502_ps ;pointer to r6502_ps

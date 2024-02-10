@@ -52,11 +52,8 @@
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
   IMPORT |r6502_cyclestogo|
-  IMPORT |r6502read|
-  ;IMPORT |r6502writemem|
-  IMPORT |r6502write|
-  IMPORT |r6502readbp|
-  IMPORT |r6502writebp|
+  IMPORT |r6502readmem|
+  IMPORT |r6502writemem|
   IMPORT |r6512loadregs|
   IMPORT |r6512saveregs|
   IMPORT |r6512opcodes|
@@ -99,7 +96,7 @@
   ADDRESSOFPREINDEXED_BP ;r0 ;4 cycles
   ;R6502STA ;r1=r6502_a
   MOV r1,ra ;1 cycle
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
@@ -123,7 +120,7 @@
   ;LDR r11,=r6502_x
   ;LDRB rx,[r11]
   AND r1,ra,rx ;1 cycle
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rx,rpc-r12,pc}
   ;MOV pc,lr
@@ -232,7 +229,7 @@
   ;STY
   ADDRESSOFABSOLUTE_BP ;r0 ;2 cycles
   MOV r1,ry ;1 cycle
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   R6512NEXTOPCODE
 
@@ -240,7 +237,7 @@
   ;STA
   ADDRESSOFABSOLUTE_BP ;r0 ;2 cycles
   MOV r1,ra ;1 cycle
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   R6512NEXTOPCODE
 
@@ -249,7 +246,7 @@
   ADDRESSOFABSOLUTE_BP ;r0 ;2 cycles
   ;R6502STX ;r1=r6502_x
   MOV r1,rx ;1 cycle
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   R6512NEXTOPCODE
 
@@ -262,7 +259,7 @@
   ;LDR r11,=r6502_x
   ;LDRB rx,[r11]
   AND r1,ra,rx ;1 cycle
-  WRITEMEMBP ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rx,rpc-r12,pc}
   ;MOV pc,lr

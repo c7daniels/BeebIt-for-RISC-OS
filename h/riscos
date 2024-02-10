@@ -38,34 +38,38 @@ extern void vsync(void);
   extern void zeribeepwrite(char nvalue);
   extern void zeribeepdetach(void);
 
-  extern void r6502readbp3000(void);
+  extern void r6502read3000(void);
+  extern void r6502read8000(void);
+  extern void r6502readC000(void);
+  extern void r6502write3000(void);
+  extern void r6502write8000(void);
+  extern void r6502writeC000(void);
+
+  extern void r6502readbF000(void);
+  extern void r6502writebF000(void);
+
   extern void r6502readbp3000_ram(void);
-  extern void r6502readbp8000(void);
   extern void r6502readbp8000_ram(void);
-  extern void r6502writebp3000(void);
+  extern void r6502readbpF000(void);
   extern void r6502writebp3000_ram(void);
-  extern void r6502writebp8000(void);
   extern void r6502writebp8000_ram(void);
+  extern void r6502writebpF000(void);
 
   extern void r6502readm3000(void);
   extern void r6502readm3000_x(void);
   extern void r6502readm3000_e(void);
-  extern void r6502readm8000(void);
   extern void r6502readm8000_ram(void);
-  extern void r6502readmC000(void);
   extern void r6502readmC000_y(void);
-  extern void r6502writem3000(void);
+  extern void r6502readmF000(void);
   extern void r6502writem3000_x(void);
   extern void r6502writem3000_e(void);
   extern void r6502writem8000(void);
   extern void r6502writem8000_ram(void);
-  extern void r6502writemC000(void);
   extern void r6502writemC000_y(void);
+  extern void r6502writemF000(void);
 
-  extern char r6502readbpoffset[0x40];
-  extern char r6502readmoffset[0x40];
-  extern char r6502writebpoffset[0x40];
-  extern char r6502writemoffset[0x40];
+  extern char r6502readoffset[0x40];
+  extern char r6502writeoffset[0x40];
 
   extern void mode0plot4(int naddress, int n);
   extern void mode0plot8(int naddress, int n);

@@ -38,30 +38,99 @@ void sheilareset(void)
   /*int i;
   for (i=0;i<=0x100;i++)
     sheila_b[i] = 0xFE;*/
-  setword(r6502readbpoffset+32, (int)r6502readbp8000);
-  setword(r6502readbpoffset+36, (int)r6502readbp8000);
-  setword(r6502readbpoffset+40, (int)r6502readbp8000);
-  setword(r6502writebpoffset+32, (int)r6502writebp8000);
-  setword(r6502writebpoffset+36, (int)r6502writebp8000);
-  setword(r6502writebpoffset+40, (int)r6502writebp8000);
+  int read3000,write3000;
+  int read8000,write8000,read9000,write9000,readB000,writeB000;
+  int readC000,writeC000,readE000,writeE000,readF000,writeF000;
 
-  setword(r6502readmoffset+12, (int)r6502readm3000);
-  setword(r6502readmoffset+16, (int)r6502readm3000);
-  setword(r6502readmoffset+20, (int)r6502readm3000);
-  setword(r6502readmoffset+24, (int)r6502readm3000);
-  setword(r6502readmoffset+28, (int)r6502readm3000);
-  setword(r6502writemoffset+12, (int)r6502writem3000);
-  setword(r6502writemoffset+16, (int)r6502writem3000);
-  setword(r6502writemoffset+20, (int)r6502writem3000);
-  setword(r6502writemoffset+24, (int)r6502writem3000);
-  setword(r6502writemoffset+28, (int)r6502writem3000);
+  read3000 = (int)r6502read3000;
+  write3000 = (int)r6502write3000;
+  readB000 = read9000 = read8000 = (int)r6502read8000;
+  writeB000 = write9000 = write8000 = (int)r6502write8000;
+  readE000 = readC000 = (int)r6502readC000;
+  writeE000 = writeC000 = (int)r6502writeC000;
 
-  setword(r6502readmoffset+32, (int)r6502readm8000);
-  setword(r6502writemoffset+32, (int)r6502writem8000);
-  setword(r6502readmoffset+48, (int)r6502readmC000);
-  setword(r6502readmoffset+52, (int)r6502readmC000);
-  setword(r6502writemoffset+48, (int)r6502writemC000);
-  setword(r6502writemoffset+52, (int)r6502writemC000);
+  switch (beebit_machinetype)
+  {
+      case MACHINE_MODELB:
+        readF000 = (int)r6502readbF000;
+        writeF000 = (int)r6502writebF000;
+        break;
+      case MACHINE_MODELBPLUS:
+        if (beebit_acccon & 0x80)
+        {
+          read3000 = (int)r6502readbp3000_ram;
+          write3000 = (int)r6502writebp3000_ram;
+        }
+        
+        if (beebit_romsel & 0x80)
+        {
+          read9000 = read8000 = (int)r6502readbp8000_ram;
+          write9000 = write8000 = (int)r6502writebp8000_ram;
+        }
+        readF000 = (int)r6502readbpF000;
+        writeF000 = (int)r6502writebpF000;
+        break;
+      case MACHINE_MASTER128:
+      case MACHINE_COMPACT:
+        switch (beebit_acccon & 0x06)
+        {
+        case 0x00:
+          /*RAM*/
+          break;
+        case 0x02:
+          /*ACCCON b1 (E)*/
+          read3000 = (int)r6502readm3000_e;
+          write3000 = (int)r6502writem3000_e;
+          break;
+        case 0x04:
+        case 0x06:
+          /*ACCCON b2 (X)*/
+          read3000 = (int)r6502readm3000_x;
+          write3000 = (int)r6502writem3000_x;
+          break;
+        }
+        if (beebit_romsel & 0x80)
+        {
+          read8000 = (int)r6502readm8000_ram;
+          write8000 = (int)r6502writem8000_ram;
+        }
+        if (beebit_acccon & 0x08)
+        {
+          readC000 = (int)r6502readmC000_y;
+          writeC000 = (int)r6502writemC000_y;
+        }
+        readF000 = (int)r6502readmF000;
+        writeF000 = (int)r6502writemF000;
+        break;
+  }
+  
+  setword(r6502readoffset+12, read3000);
+  setword(r6502readoffset+16, read3000);
+  setword(r6502readoffset+20, read3000);
+  setword(r6502readoffset+24, read3000);
+  setword(r6502readoffset+28, read3000);
+  setword(r6502readoffset+32, read8000);
+  setword(r6502readoffset+36, read9000);
+  setword(r6502readoffset+40, read9000);
+  setword(r6502readoffset+44, readB000);
+  setword(r6502readoffset+48, readC000);
+  setword(r6502readoffset+52, readC000);
+  setword(r6502readoffset+56, readE000);
+  setword(r6502readoffset+60, readF000);
+  
+  setword(r6502writeoffset+12, write3000);
+  setword(r6502writeoffset+16, write3000);
+  setword(r6502writeoffset+20, write3000);
+  setword(r6502writeoffset+24, write3000);
+  setword(r6502writeoffset+28, write3000);
+  setword(r6502writeoffset+32, write8000);
+  setword(r6502writeoffset+36, write9000);
+  setword(r6502writeoffset+40, write9000);
+  setword(r6502writeoffset+44, writeB000);
+  setword(r6502writeoffset+48, writeC000);
+  setword(r6502writeoffset+52, writeC000);
+  setword(r6502writeoffset+56, writeE000);
+  setword(r6502writeoffset+60, writeF000);
 }
 
 char sheilaread_b(int naddress)
@@ -877,21 +946,21 @@ void sheilawrite_bp(int naddress, char nvalue)
       if (nvalue & 0x80)
       {
         /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
-        setword(r6502readbpoffset+32, (int)r6502readbp8000_ram);
-        setword(r6502readbpoffset+36, (int)r6502readbp8000_ram);
-        setword(r6502readbpoffset+40, (int)r6502readbp8000_ram);
-        setword(r6502writebpoffset+32, (int)r6502writebp8000_ram);
-        setword(r6502writebpoffset+36, (int)r6502writebp8000_ram);
-        setword(r6502writebpoffset+40, (int)r6502writebp8000_ram);
+        setword(r6502readoffset+32, (int)r6502readbp8000_ram);
+        setword(r6502readoffset+36, (int)r6502readbp8000_ram);
+        setword(r6502readoffset+40, (int)r6502readbp8000_ram);
+        setword(r6502writeoffset+32, (int)r6502writebp8000_ram);
+        setword(r6502writeoffset+36, (int)r6502writebp8000_ram);
+        setword(r6502writeoffset+40, (int)r6502writebp8000_ram);
       }
       else
       {
-        setword(r6502readbpoffset+32, (int)r6502readbp8000);
-        setword(r6502readbpoffset+36, (int)r6502readbp8000);
-        setword(r6502readbpoffset+40, (int)r6502readbp8000);
-        setword(r6502writebpoffset+32, (int)r6502writebp8000);
-        setword(r6502writebpoffset+36, (int)r6502writebp8000);
-        setword(r6502writebpoffset+40, (int)r6502writebp8000);
+        setword(r6502readoffset+32, (int)r6502read8000);
+        setword(r6502readoffset+36, (int)r6502read8000);
+        setword(r6502readoffset+40, (int)r6502read8000);
+        setword(r6502writeoffset+32, (int)r6502write8000);
+        setword(r6502writeoffset+36, (int)r6502write8000);
+        setword(r6502writeoffset+40, (int)r6502write8000);
       }
 
       /*beebit_romsel |= (nvalue & 0x80);*/
@@ -916,29 +985,29 @@ void sheilawrite_bp(int naddress, char nvalue)
       if (nvalue & 0x80)
       {
         /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
-        setword(r6502readbpoffset+12, (int)r6502readbp3000_ram);
-        setword(r6502readbpoffset+16, (int)r6502readbp3000_ram);
-        setword(r6502readbpoffset+20, (int)r6502readbp3000_ram);
-        setword(r6502readbpoffset+24, (int)r6502readbp3000_ram);
-        setword(r6502readbpoffset+28, (int)r6502readbp3000_ram);
-        setword(r6502writebpoffset+12, (int)r6502writebp3000_ram);
-        setword(r6502writebpoffset+16, (int)r6502writebp3000_ram);
-        setword(r6502writebpoffset+20, (int)r6502writebp3000_ram);
-        setword(r6502writebpoffset+24, (int)r6502writebp3000_ram);
-        setword(r6502writebpoffset+28, (int)r6502writebp3000_ram);
+        setword(r6502readoffset+12, (int)r6502readbp3000_ram);
+        setword(r6502readoffset+16, (int)r6502readbp3000_ram);
+        setword(r6502readoffset+20, (int)r6502readbp3000_ram);
+        setword(r6502readoffset+24, (int)r6502readbp3000_ram);
+        setword(r6502readoffset+28, (int)r6502readbp3000_ram);
+        setword(r6502writeoffset+12, (int)r6502writebp3000_ram);
+        setword(r6502writeoffset+16, (int)r6502writebp3000_ram);
+        setword(r6502writeoffset+20, (int)r6502writebp3000_ram);
+        setword(r6502writeoffset+24, (int)r6502writebp3000_ram);
+        setword(r6502writeoffset+28, (int)r6502writebp3000_ram);
       }
       else
       {
-        setword(r6502readbpoffset+12, (int)r6502readbp3000);
-        setword(r6502readbpoffset+16, (int)r6502readbp3000);
-        setword(r6502readbpoffset+20, (int)r6502readbp3000);
-        setword(r6502readbpoffset+24, (int)r6502readbp3000);
-        setword(r6502readbpoffset+28, (int)r6502readbp3000);
-        setword(r6502writebpoffset+12, (int)r6502writebp3000);
-        setword(r6502writebpoffset+16, (int)r6502writebp3000);
-        setword(r6502writebpoffset+20, (int)r6502writebp3000);
-        setword(r6502writebpoffset+24, (int)r6502writebp3000);
-        setword(r6502writebpoffset+28, (int)r6502writebp3000);
+        setword(r6502readoffset+12, (int)r6502read3000);
+        setword(r6502readoffset+16, (int)r6502read3000);
+        setword(r6502readoffset+20, (int)r6502read3000);
+        setword(r6502readoffset+24, (int)r6502read3000);
+        setword(r6502readoffset+28, (int)r6502read3000);
+        setword(r6502writeoffset+12, (int)r6502write3000);
+        setword(r6502writeoffset+16, (int)r6502write3000);
+        setword(r6502writeoffset+20, (int)r6502write3000);
+        setword(r6502writeoffset+24, (int)r6502write3000);
+        setword(r6502writeoffset+28, (int)r6502write3000);
       }
       beebit_acccon = nvalue;
 
@@ -1138,13 +1207,13 @@ void sheilawrite_m(int naddress, char nvalue)
       if (nvalue & 0x80)
       {
         /*ROMSEL b7 (RAM)*/
-        setword(r6502readmoffset+32, (int)r6502readm8000_ram);
-        setword(r6502writemoffset+32, (int)r6502writem8000_ram);
+        setword(r6502readoffset+32, (int)r6502readm8000_ram);
+        setword(r6502writeoffset+32, (int)r6502writem8000_ram);
       }
       else
       {
-        setword(r6502readmoffset+32, (int)r6502readm8000);
-        setword(r6502writemoffset+32, (int)r6502writem8000);
+        setword(r6502readoffset+32, (int)r6502read8000);
+        setword(r6502writeoffset+32, (int)r6502write8000);
       }
       beebit_romsel = nvalue;
       #ifdef __DEVELOPxx__
@@ -1237,43 +1306,43 @@ void sheilawrite_m(int naddress, char nvalue)
       {
         case 0x00:
           /*RAM*/
-          setword(r6502readmoffset+12, (int)r6502readm3000);
-          setword(r6502readmoffset+16, (int)r6502readm3000);
-          setword(r6502readmoffset+20, (int)r6502readm3000);
-          setword(r6502readmoffset+24, (int)r6502readm3000);
-          setword(r6502readmoffset+28, (int)r6502readm3000);
-          setword(r6502writemoffset+12, (int)r6502writem3000);
-          setword(r6502writemoffset+16, (int)r6502writem3000);
-          setword(r6502writemoffset+20, (int)r6502writem3000);
-          setword(r6502writemoffset+24, (int)r6502writem3000);
-          setword(r6502writemoffset+28, (int)r6502writem3000);
+          setword(r6502readoffset+12, (int)r6502read3000);
+          setword(r6502readoffset+16, (int)r6502read3000);
+          setword(r6502readoffset+20, (int)r6502read3000);
+          setword(r6502readoffset+24, (int)r6502read3000);
+          setword(r6502readoffset+28, (int)r6502read3000);
+          setword(r6502writeoffset+12, (int)r6502write3000);
+          setword(r6502writeoffset+16, (int)r6502write3000);
+          setword(r6502writeoffset+20, (int)r6502write3000);
+          setword(r6502writeoffset+24, (int)r6502write3000);
+          setword(r6502writeoffset+28, (int)r6502write3000);
           break;
         case 0x02:
           /*ACCCON b1 (E)*/
-          setword(r6502readmoffset+12, (int)r6502readm3000_e);
-          setword(r6502readmoffset+16, (int)r6502readm3000_e);
-          setword(r6502readmoffset+20, (int)r6502readm3000_e);
-          setword(r6502readmoffset+24, (int)r6502readm3000_e);
-          setword(r6502readmoffset+28, (int)r6502readm3000_e);
-          setword(r6502writemoffset+12, (int)r6502writem3000_e);
-          setword(r6502writemoffset+16, (int)r6502writem3000_e);
-          setword(r6502writemoffset+20, (int)r6502writem3000_e);
-          setword(r6502writemoffset+24, (int)r6502writem3000_e);
-          setword(r6502writemoffset+28, (int)r6502writem3000_e);
+          setword(r6502readoffset+12, (int)r6502readm3000_e);
+          setword(r6502readoffset+16, (int)r6502readm3000_e);
+          setword(r6502readoffset+20, (int)r6502readm3000_e);
+          setword(r6502readoffset+24, (int)r6502readm3000_e);
+          setword(r6502readoffset+28, (int)r6502readm3000_e);
+          setword(r6502writeoffset+12, (int)r6502writem3000_e);
+          setword(r6502writeoffset+16, (int)r6502writem3000_e);
+          setword(r6502writeoffset+20, (int)r6502writem3000_e);
+          setword(r6502writeoffset+24, (int)r6502writem3000_e);
+          setword(r6502writeoffset+28, (int)r6502writem3000_e);
           break;
         case 0x04:
         case 0x06:
           /*ACCCON b2 (X)*/
-          setword(r6502readmoffset+12, (int)r6502readm3000_x);
-          setword(r6502readmoffset+16, (int)r6502readm3000_x);
-          setword(r6502readmoffset+20, (int)r6502readm3000_x);
-          setword(r6502readmoffset+24, (int)r6502readm3000_x);
-          setword(r6502readmoffset+28, (int)r6502readm3000_x);
-          setword(r6502writemoffset+12, (int)r6502writem3000_x);
-          setword(r6502writemoffset+16, (int)r6502writem3000_x);
-          setword(r6502writemoffset+20, (int)r6502writem3000_x);
-          setword(r6502writemoffset+24, (int)r6502writem3000_x);
-          setword(r6502writemoffset+28, (int)r6502writem3000_x);
+          setword(r6502readoffset+12, (int)r6502readm3000_x);
+          setword(r6502readoffset+16, (int)r6502readm3000_x);
+          setword(r6502readoffset+20, (int)r6502readm3000_x);
+          setword(r6502readoffset+24, (int)r6502readm3000_x);
+          setword(r6502readoffset+28, (int)r6502readm3000_x);
+          setword(r6502writeoffset+12, (int)r6502writem3000_x);
+          setword(r6502writeoffset+16, (int)r6502writem3000_x);
+          setword(r6502writeoffset+20, (int)r6502writem3000_x);
+          setword(r6502writeoffset+24, (int)r6502writem3000_x);
+          setword(r6502writeoffset+28, (int)r6502writem3000_x);
           break;
       }
 
@@ -1281,18 +1350,18 @@ void sheilawrite_m(int naddress, char nvalue)
       {
         /*ACCCON b3 (Y)*/
         /*&C000-&DFFF*/
-        setword(r6502readmoffset+48, (int)r6502readmC000_y);
-        setword(r6502readmoffset+52, (int)r6502readmC000_y);
-        setword(r6502writemoffset+48, (int)r6502writemC000_y);
-        setword(r6502writemoffset+52, (int)r6502writemC000_y);
+        setword(r6502readoffset+48, (int)r6502readmC000_y);
+        setword(r6502readoffset+52, (int)r6502readmC000_y);
+        setword(r6502writeoffset+48, (int)r6502writemC000_y);
+        setword(r6502writeoffset+52, (int)r6502writemC000_y);
       }
       else
       {
         /*&C000-&DFFF*/
-        setword(r6502readmoffset+48, (int)r6502readmC000);
-        setword(r6502readmoffset+52, (int)r6502readmC000);
-        setword(r6502writemoffset+48, (int)r6502writemC000);
-        setword(r6502writemoffset+52, (int)r6502writemC000);
+        setword(r6502readoffset+48, (int)r6502readC000);
+        setword(r6502readoffset+52, (int)r6502readC000);
+        setword(r6502writeoffset+48, (int)r6502writeC000);
+        setword(r6502writeoffset+52, (int)r6502writeC000);
       }
 
       if (nvalue & 0x80)

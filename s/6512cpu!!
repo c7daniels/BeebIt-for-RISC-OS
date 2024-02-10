@@ -298,9 +298,7 @@
   IMPORT |r6502_x|
   IMPORT |r6502_y|
   IMPORT |r6502_cyclestogo|
-  IMPORT |r6502read|
-  IMPORT |r6502readbp|
-  IMPORT |r6502write|
+  IMPORT |r6502readmem|
   IMPORT |beebit_acccon|
   IMPORT |beebit_trace|
   IMPORT |beebit_romsel|
@@ -547,7 +545,7 @@ r6512execute_loop
   ;CMP rpc,#&3000
   ;LDRLTB r0,[r12,rpc] ;get opcode
   ;MOVGE r0,rpc
-  ;BLGE r6502readbp ;=r0
+  ;BLGE r6502readmem ;=r0
   ;LDR r1,=buffer
   ;MOV r2,#16
   ;SWI OS_ConvertHex2 ;BinaryToDecimal
@@ -587,10 +585,10 @@ r6512execute_loop
   CMP rpc,#&3000
   LDRLTB r0,[r12,rpc] ;get opcode
   MOVGE r0,rpc
-  BLGE r6502readbp ;=r0
+  BLGE r6502readmem ;=r0
   ADD rpc,rpc,#1
 
-  ;BLGE r6502readbp ;=r0
+  ;BLGE r6502readmem ;=r0
 ;  LDRB r0,[r12,rpc] ;get opcode
 ;  ADD rpc,rpc,#1
   ;ANDS r0,rpc,#&10000

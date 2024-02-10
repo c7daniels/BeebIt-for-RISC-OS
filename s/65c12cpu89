@@ -51,10 +51,8 @@
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
   IMPORT |r6502_cyclestogo|
-  ;IMPORT |r6502read|
-  IMPORT |r6502readm|
-  ;IMPORT |r6502writemem|
-  IMPORT |r6502writem|
+  IMPORT |r6502readmem|
+  IMPORT |r6502writemem|
   IMPORT |r65c12loadregs|
   IMPORT |r65c12saveregs|
   IMPORT |r65c12opcodes|
@@ -121,8 +119,7 @@
   ADDRESSOFPREINDEXED_M ;r0 ;4 cycles
   ;R6502STA ;r1=r6502_a
   MOV r1,ra ;1 cycle
-  ;BL r6502writemem ;(n,r6502_a)
-  WRITEMEMM ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
@@ -162,7 +159,7 @@
   ADDRESSOFZEROPAGE_M r0
   ;R6502STA ;r1=r6502_a
   ;MOV r1, ra
-  ;WRITEMEMM
+  ;WRITEMEM
   STRB ra,[r12,r0]
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
@@ -242,7 +239,7 @@
   ;STY
   ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
   MOV r1,ry ;1 cycle
-  WRITEMEMM ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   R65C12NEXTOPCODE
 
@@ -250,7 +247,7 @@
   ;STA
   ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
   MOV r1,ra ;1 cycle
-  WRITEMEMM ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   R65C12NEXTOPCODE
 
@@ -259,8 +256,7 @@
   ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
   ;R6502STX ;r1=r6502_x
   MOV r1,rx ;1 cycle
-  ;BL r6502writeb ;mem ;(n,r6502_x)
-  WRITEMEMM ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   R65C12NEXTOPCODE
 
@@ -343,8 +339,7 @@ r65c12opcode90_2
   ADDRESSOFPOSTINDEXEDY_STA_M ;r0 ;3+ cycles
   ;R6502STA ;r1=r6502_a
   MOV r1,ra ;1 cycle
-  ;BL r6502writemem ;(n,r6502_a)
-  WRITEMEMM ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
@@ -355,7 +350,7 @@ r65c12opcode90_2
   ;STMFD sp!,{lr}
   ADDRESSOFINDZEROPAGE_M
   MOV r1,ra
-  WRITEMEMM ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 5
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
@@ -436,8 +431,7 @@ r65c12opcode90_2
   ADDRESSOFABSOLUTEY_M ;r0 ;3 cycles
   ;R6502STA ;r1=r6502_a
   MOV r1,ra ;1 cycle
-  ;BL r6502writemem ;(n,r6502_a)
-  WRITEMEMM ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
@@ -469,7 +463,7 @@ r65c12opcode90_2
   ;STMFD sp!,{lr}
   ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
   MOV r1,#0 ;1 cycle
-  WRITEMEMM ;1 cycle
+  WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{pc}
   ;MOV pc,lr

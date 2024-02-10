@@ -298,9 +298,7 @@
   IMPORT |r6502_x|
   IMPORT |r6502_y|
   IMPORT |r6502_cyclestogo|
-  ;IMPORT |r6502read|
-  IMPORT |r6502readbp|
-  ;IMPORT |r6502write|
+  IMPORT |r6502readmem|
   IMPORT |beebit_trace|
   IMPORT |beebit_romsel|
   IMPORT |beebit_acccon|
