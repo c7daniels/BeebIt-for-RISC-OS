@@ -58,7 +58,6 @@
   EXPORT |r6502opcodeE4|
   EXPORT |r6502opcodeE5|
   EXPORT |r6502opcodeE6|
-  ;EXPORT |r6502opcodeE6_ram|
   EXPORT |r6502opcodeE7|
   EXPORT |r6502opcodeE8|
   EXPORT |r6502opcodeE9|
@@ -182,17 +181,6 @@ r6502opcodeE5_2
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
-
-;|r6502opcodeE6_ram|
-  ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ;VALUEOFZEROPAGE
-;  VALUEOFZEROPAGE_BP
-;  R6502INC r0
-;  STRB r0,[r11]
-;  CPU_CYCLES 5
-  ;LDMFD sp!,{r0-r2,rps-r12,pc}
-  ;MOV pc,lr
-;  R6502NEXTOPCODE
 
 |r6502opcodeE7|
   ;ISB

@@ -63,18 +63,15 @@
 ; Export global symbols
 
   EXPORT |r6512opcodeA0|
-  ;EXPORT |r6512opcodeA0_ram|
   EXPORT |r6512opcodeA1|
   EXPORT |r6512opcodeA2|
   EXPORT |r6512opcodeA3|
   EXPORT |r6512opcodeA4|
   EXPORT |r6512opcodeA5|
-  ;EXPORT |r6512opcodeA5_ram|
   EXPORT |r6512opcodeA6|
   EXPORT |r6512opcodeA7|
   EXPORT |r6512opcodeA8|
   EXPORT |r6512opcodeA9|
-  ;EXPORT |r6512opcodeA9_ram|
   EXPORT |r6512opcodeAA|
   EXPORT |r6512opcodeAB|
   EXPORT |r6512opcodeAC|

@@ -309,7 +309,6 @@
   EXPORT |r6512loadregs|
   EXPORT |r6512saveregs|
   EXPORT |r6512execute|
-  EXPORT |r6512execute_ram|
   ;EXPORT |r6502adc|
   ;EXPORT |r6502sbc|
   EXPORT |r6512irq|
@@ -691,24 +690,6 @@ r6512execute_loop
   BGT r6512execute_loop
 
 r6512execute_end
-  BL r6512saveregs
-  LDMFD sp!,{r0-r12,pc}
-
-|r6512execute_ram|
-  STMFD sp!,{r0-r12,lr}
-  BL r6512loadregs
-
-  CMP rpc,#&3000
-  LDRLTB r0,[r12,rpc] ;get opcode
-  MOVGE r0,rpc
-  BLGE r6502readbp ;=r0
-  ADD rpc,rpc,#1
-
-  LDR r1,=r6512opcodes
-  MOV lr,pc
-  LDR pc,[r1,r0,LSL#2]
-
-r6512execute_ram_end
   BL r6512saveregs
   LDMFD sp!,{r0-r12,pc}
 

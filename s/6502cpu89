@@ -79,7 +79,6 @@
   EXPORT |r6502opcode83|
   EXPORT |r6502opcode84|
   EXPORT |r6502opcode85|
-  ;EXPORT |r6502opcode85_ram|
   EXPORT |r6502opcode86|
   EXPORT |r6502opcode87|
   EXPORT |r6502opcode88|
@@ -92,7 +91,6 @@
   EXPORT |r6502opcode8F|
   EXPORT |r6502opcode90|
   EXPORT |r6502opcode91|
-  ;EXPORT |r6502opcode91_ram|
   EXPORT |r6502opcode92|
   EXPORT |r6502opcode93|
   EXPORT |r6502opcode94|
@@ -336,20 +334,6 @@ r6502opcode7F_2
   ;MOV pc,lr
   R6502NEXTOPCODE
 
-;|r6502opcode85_ram|
-  ;STA
-  ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ;CMP rpc,#&3000
-  ;LDRGE r12,=shadow
-;  ADDRESSOFZEROPAGE_BP r0
-  ;R6502STA ;r1=r6502_a
-  ;LDR r12,=memory
-;  STRB ra,[r12,r0]
-;  CPU_CYCLES 3
-  ;LDMFD sp!,{r0-r2,rps-r12,pc}
-  ;MOV pc,lr
-;  R6502NEXTOPCODE
-
 |r6502opcode86|
   ;STX
   ;STMFD sp!,{r0-r2,rps-r12,lr}
@@ -546,45 +530,6 @@ r6502opcode90end
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
-
-;|r6502opcode91_ram|
-  ;STA
-  ;STMFD sp!,{r0-r2,ry,rps-r12,lr}
-  ;CMP rpc,#&3000
-  ;LDRGE r12,=shadow
-  ;ADDRESSOFPOSTINDEXEDY_STA ;r0 ;4 cycles
-
-  ;OUT:r0 =address
-;  ADDRESSOFZEROPAGE_BP r0
-  ;LDRB r2,[r12,r0] ;lo
-;  MOV r3,r0
-;  READMEMB ;lo
-;  MOV r2,r0 ;lo
-;  MOV r0,r3
-;  ADD r1,r0,#1 ;r1 = (r0+1)
-;  AND r1,r1,#&FF ;r1 = (r1 and &FF)
-;  AND r0,r0,#&FF00
-;  ORR r0,r0,r1
-  ;ADD r10,r12,r0
-  ;LDRB r1,[r10] ;hi
-;  READMEMB ;hi
-  ;MOV r1,r0
-  ;LDRB r1,[r12,r0] ;hi
-;  ADD r0,r2,r0,LSL#8 ;r0=lo+(hi<<8)
-  ;LDR r11,=r6502_y
-  ;LDRB ry,[r11] ;r3=y
-;  ADD r0,r0,ry
-;  CPU_CYCLES 4
-
-  ;R6502STA ;r1=r6502_a
-;  MOV r1,ra ;1 cycle
-  ;BL r6502writemem ;(n,r6502_a)
-  ;LDR r12,=memory
-;  WRITEMEMB ;1 cycle
-;  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
-  ;MOV pc,lr
-;  R6502NEXTOPCODE
 
 |r6502opcode92|
   ;HLT

@@ -71,7 +71,6 @@
   EXPORT |r6512opcodeC7|
   EXPORT |r6512opcodeC8|
   EXPORT |r6512opcodeC9|
-  ;EXPORT |r6512opcodeC9_ram|
   EXPORT |r6512opcodeCA|
   EXPORT |r6512opcodeCB|
   EXPORT |r6512opcodeCC|

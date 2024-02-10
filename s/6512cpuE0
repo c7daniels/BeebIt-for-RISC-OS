@@ -59,7 +59,6 @@
   EXPORT |r6512opcodeE4|
   EXPORT |r6512opcodeE5|
   EXPORT |r6512opcodeE6|
-  ;EXPORT |r6512opcodeE6_ram|
   EXPORT |r6512opcodeE7|
   EXPORT |r6512opcodeE8|
   EXPORT |r6512opcodeE9|

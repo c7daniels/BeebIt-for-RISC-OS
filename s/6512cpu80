@@ -72,7 +72,6 @@
   EXPORT |r6512opcode83|
   EXPORT |r6512opcode84|
   EXPORT |r6512opcode85|
-  ;EXPORT |r6512opcode85_ram|
   EXPORT |r6512opcode86|
   EXPORT |r6512opcode87|
   EXPORT |r6512opcode88|
@@ -151,20 +150,6 @@
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
   R6512NEXTOPCODE
-
-;|r6512opcode85_ram|
-  ;STA
-  ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ;CMP rpc,#&3000
-  ;LDRGE r12,=shadow
-;  ADDRESSOFZEROPAGE_P r0
-  ;R6502STA ;r1=r6502_a
-  ;LDR r12,=memory
-;  STRB ra,[r12,r0]
-;  CPU_CYCLES 3
-  ;LDMFD sp!,{r0-r2,rps-r12,pc}
-  ;MOV pc,lr
-;  R6512NEXTOPCODE
 
 |r6512opcode86|
   ;STX

@@ -82,7 +82,6 @@
   EXPORT |r65c12opcode8F|
   EXPORT |r65c12opcode90|
   EXPORT |r65c12opcode91|
-  EXPORT |r65c12opcode91_ram|
   EXPORT |r65c12opcode92|
   EXPORT |r65c12opcode93|
   EXPORT |r65c12opcode94|
@@ -340,18 +339,6 @@ r65c12opcode90_2
   R65C12NEXTOPCODE
 
 |r65c12opcode91|
-  ;STMFD sp!,{r0-r2,ry,rps-r12,lr}
-  ADDRESSOFPOSTINDEXEDY_STA ;r0 ;3+ cycles
-  ;R6502STA ;r1=r6502_a
-  MOV r1,ra ;1 cycle
-  ;BL r6502writemem ;(n,r6502_a)
-  WRITEMEMM ;1 cycle
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
-  ;MOV pc,lr
-  R65C12NEXTOPCODE
-
-|r65c12opcode91_ram|
   ;STMFD sp!,{r0-r2,ry,rps-r12,lr}
   ADDRESSOFPOSTINDEXEDY_STA_M ;r0 ;3+ cycles
   ;R6502STA ;r1=r6502_a
