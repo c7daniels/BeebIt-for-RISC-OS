@@ -235,10 +235,8 @@ WRITEMEM_LEN EQU 3*4
   ;LDRB rx,[r11] ;r6=x
   ADD r0,r0,rx ;r0=r0+x
   ;mask with #&FFFF
-  ANDS r3,r0,#&10000
-  MOVNE r3,#&FF00
-  ORRNE r3,r3,#&00FF
-  ANDNE r0,r0,r3
+  MOV r0,r0,LSL #16
+  MOV r0,r0,LSR #16
   CPU_CYCLES 3
   MEND
 
@@ -249,11 +247,9 @@ WRITEMEM_LEN EQU 3*4
   ;LDR r11,=r6502_y
   ;LDRB ry,[r11] ;r7=y
   ADD r0,r0,ry ;r0=r0+y
-  ANDS r3,r0,#&10000
   ;mask with #&FFFF
-  MOVNE r3,#&FF00
-  ORRNE r3,r3,#&00FF
-  ANDNE r0,r0,r3
+  MOV r0,r0,LSL #16
+  MOV r0,r0,LSR #16
   CPU_CYCLES 3
   MEND
 
@@ -264,11 +260,9 @@ WRITEMEM_LEN EQU 3*4
   ;LDR r11,=r6502_x
   ;LDRB rx,[r11] ;r3=x
   ADD r0,r0,rx ;r0=r0+x
-  ANDS r3,r0,#&10000
   ;mask with #&FFFF
-  MOVNE r3,#&FF00
-  ORRNE r3,r3,#&00FF
-  ANDNE r0,r0,r3
+  MOV r0,r0,LSL #16
+  MOV r0,r0,LSR #16
   ;CPU_CYCLES 2
 
   MOV r2,r0,LSR#8 ;r3=(r0>>8)
@@ -289,11 +283,9 @@ WRITEMEM_LEN EQU 3*4
   ;LDR r11,=r6502_y
   ;LDR ry,[r11] ;ry=y
   ADD r0,r0,ry ;r0=r0+y
-  ANDS r3,r0,#&10000
   ;mask with #&FFFF
-  MOVNE r3,#&FF00
-  ORRNE r3,r3,#&00FF
-  ANDNE r0,r0,r3
+  MOV r0,r0,LSL #16
+  MOV r0,r0,LSR #16
 
   MOV r2,r0,LSR#8 ;r2=(r0>>8)
   CMP r2,r1 ;if (r2<>hi)
@@ -389,10 +381,8 @@ WRITEMEM_LEN EQU 3*4
   ;ADD r10,r12,r0 ;memory+r0
   ;LDRB r2,[r10] ;lo
   LDRB r2,[r12,r0] ;lo
-  ADD r1,r0,#1 ;r1 = (r0+1)
-  AND r1,r1,#&FF ;r1 = (r1 and &FF)
-  AND r0,r0,#&FF00
-  ORR r0,r0,r1
+  ADD r0,r0,#1
+  BIC r0,r0,#&0100
   ;ADD r10,r12,r0 ;memory+r0
   ;LDRB r1,[r10] ;hi
   LDRB r1,[r12,r0] ;hi
@@ -409,10 +399,8 @@ WRITEMEM_LEN EQU 3*4
   ;ADD r10,r12,r0 ;memory+r0
   ;LDRB r2,[r10] ;lo
   LDRB r2,[r12,r0] ;lo
-  ADD r1,r0,#1 ;r1 = (r0+1)
-  AND r1,r1,#&FF ;r1 = (r1 and &FF)
-  AND r0,r0,#&FF00
-  ORR r0,r0,r1
+  ADD r0,r0,#1
+  BIC r0,r0,#&0100
   ;ADD r10,r12,r0 ;memory+r0
   ;LDRB r1,[r10] ;hi
   LDRB r1,[r12,r0] ;hi
@@ -420,11 +408,9 @@ WRITEMEM_LEN EQU 3*4
   ;continue
   ADD r0,r2,r1,LSL#8 ;r0=lo+(hi<<8) ;check for page boundary cross
   ADD r0,r0,ry
-  ANDS r3,r0,#&10000
   ;mask with #&FFFF
-  MOVNE r3,#&FF00
-  ORRNE r3,r3,#&00FF
-  ANDNE r0,r0,r3
+  MOV r0,r0,LSL #16
+  MOV r0,r0,LSR #16
   MOV r2,r0,LSR#8 ;r2=(r0>>8)
   CMP r2,r1 ;if (r2<>hi)
   ;LDRNE r11,=r6502_cyclestogo
@@ -443,10 +429,8 @@ WRITEMEM_LEN EQU 3*4
   ;ADD r10,r12,r0 ;memory+r0
   ;LDRB r2,[r10] ;lo
   LDRB r2,[r12,r0] ;lo
-  ADD r1,r0,#1 ;r1 = (r0+1)
-  AND r1,r1,#&FF ;r1 = (r1 and &FF)
-  AND r0,r0,#&FF00
-  ORR r0,r0,r1
+  ADD r0,r0,#1
+  BIC r0,r0,#&0100
   ;ADD r10,r12,r0
   ;LDRB r1,[r10] ;hi
   LDRB r1,[r12,r0] ;hi
@@ -454,11 +438,9 @@ WRITEMEM_LEN EQU 3*4
   ;LDR r11,=r6502_y
   ;LDRB ry,[r11] ;r3=y
   ADD r0,r0,ry
-  ANDS r3,r0,#&10000
   ;mask with #&FFFF
-  MOVNE r3,#&FF00
-  ORRNE r3,r3,#&00FF
-  ANDNE r0,r0,r3
+  MOV r0,r0,LSL #16
+  MOV r0,r0,LSR #16
   CPU_CYCLES 4
   MEND
 
