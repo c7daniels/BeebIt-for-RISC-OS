@@ -550,19 +550,12 @@
 ;
 |r6502execute|
   STMFD sp!,{r0-r12,lr}
-
-  ;LDR r11,=r6502_cyclestogo
-  ;LDR r0,[r11]
-  ;LDR r11,=r6502_cyclestore
-  ;STR r0,[r11]
-
   BL r6502loadregs
 
 r6502execute_loop
   ;-------------------
   ;LDR r11,=beebit_trace ;trace
   ;LDR r0,[r11]
-
   ;CMP r0,#00
   ;BEQ r6502execute_loop2
 
@@ -573,7 +566,10 @@ r6502execute_loop
   ;SWI OS_Write0
   ;SWI OS_WriteI+32
 
-  ;LDRB r0,[r12,rpc] ;get opcode
+  ;CMP rpc,#&3000
+  ;LDRLTB r0,[r12,rpc] ;get opcode
+  ;MOVGE r0,rpc
+  ;BLGE r6502readmem ;=r0
   ;LDR r1,=buffer
   ;MOV r2,#16
   ;SWI OS_ConvertHex2 ;BinaryToDecimal
@@ -634,16 +630,19 @@ r6502execute_loop
   ;-------------------
 
 r6502execute_loop2
-  LDRB r3,[r12,rpc] ;get opcode
+  CMP rpc,#&3000
+  LDRLTB r0,[r12,rpc] ;get opcode
+  MOVGE r0,rpc
+  BLGE r6502readmem ;=r0
   ADD rpc,rpc,#1
   ;MOV rpc,rpc,LSL #16
   ;MOV rpc,rpc,LSR #16
   ;STR rpc,[r11] ;pc
 
-  LDR r0,=r6502opcodes
+  LDR r1,=r6502opcodes
   ;STMFD sp!,{lr}
   MOV lr,pc
-  LDR pc,[r0,r3,LSL#2]
+  LDR pc,[r1,r0,LSL#2]
   ;LDMFD sp!,{lr}
 
   ;-------------------
@@ -724,11 +723,6 @@ r6502execute_loop3
   BGT r6502execute_loop
 
 ;r6502execute_end
-  ;LDR r12,=r6502_cyclestore
-  ;LDA r0,[r12]
-  ;LDR r11,=r6502cyclestogo
-  ;LDR r1,[r11]
-  ;SUB r0,r0,r1
   BL r6502saveregs
   ;SWI OS_WriteI+90
   LDMFD sp!,{r0-r12,pc}

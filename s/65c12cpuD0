@@ -101,7 +101,7 @@
   ;B r65c12opcodeD0end
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 r65c12opcodeD0_2
   ;LDR r12,=memory ;pointer to memory block
@@ -131,7 +131,7 @@ r65c12opcodeD0end
   ;STR rpc,[r11] ;r6502_pc
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeD1|
   ;CMP
@@ -143,7 +143,7 @@ r65c12opcodeD0end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeD2|
   ;CMP
@@ -154,7 +154,7 @@ r65c12opcodeD0end
   CPU_CYCLES 5
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeD3|
   ;Reserved NOP
@@ -162,7 +162,7 @@ r65c12opcodeD0end
   SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeD4|
   ;Reserved NOP
@@ -171,7 +171,7 @@ r65c12opcodeD0end
   SUB rcycles,rcycles,#4
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeD5|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
@@ -180,7 +180,7 @@ r65c12opcodeD0end
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeD6|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
@@ -190,7 +190,7 @@ r65c12opcodeD0end
   CPU_CYCLES 6
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeD7|
   ;Reserved NOP
@@ -198,7 +198,7 @@ r65c12opcodeD0end
   SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeD8|
   ;CLD
@@ -210,7 +210,7 @@ r65c12opcodeD0end
   CPU_CYCLES 2
   ;MOV pc,lr
   ;LDMFD sp!,{r2,rps,r11,pc}
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeD9|
   ;STMFD sp!,{r0-r12,lr}
@@ -221,7 +221,7 @@ r65c12opcodeD0end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeDA|
   ;PHX
@@ -230,7 +230,7 @@ r65c12opcodeD0end
   CPU_CYCLES 3
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeDB|
   ;Reserved NOP
@@ -238,7 +238,7 @@ r65c12opcodeD0end
   SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeDC|
   ;Reserved NOP
@@ -247,7 +247,7 @@ r65c12opcodeD0end
   SUB rcycles,rcycles,#4
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeDD|
   ;STMFD sp!,{r0-r12,lr}
@@ -258,7 +258,7 @@ r65c12opcodeD0end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeDE|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
@@ -273,7 +273,7 @@ r65c12opcodeD0end
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcodeDF|
   ;Reserved NOP
@@ -281,7 +281,7 @@ r65c12opcodeD0end
   SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 ;Data Area
 

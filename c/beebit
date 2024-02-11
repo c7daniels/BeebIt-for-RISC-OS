@@ -621,13 +621,13 @@ int beebitenter(void)
       case MACHINE_MODELBPLUS:
         r6502read = r6502readbp;
         r6502write = r6502writebp;
-        cpu_execute = r6512execute;
+        cpu_execute = r6502execute;
         break;
       case MACHINE_MASTER128:
       case MACHINE_COMPACT:
         r6502read = r6502readm;
         r6502write = r6502writem;
-        cpu_execute = r65c12execute;
+        cpu_execute = r6502execute;
         if (beebit_machinetype == MACHINE_MASTER128)
         {
           /*new location*/

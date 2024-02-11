@@ -93,7 +93,7 @@
   CPU_CYCLES 7
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode01|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
@@ -104,13 +104,13 @@
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode02|
   ;HLT
   R6502JAM
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode03|
   ;ASO
@@ -125,7 +125,7 @@
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode04|
   ;SKB
@@ -134,7 +134,7 @@
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode05|
   ;ORA
@@ -144,7 +144,7 @@
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode06|
   ;ASL
@@ -155,7 +155,7 @@
   CPU_CYCLES 5
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode07|
   ;check if it's called from the ROM space
@@ -171,7 +171,7 @@
   CPU_CYCLES 5
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 r6512opcode07_interface
   ;Opcode 07 Interface
@@ -387,7 +387,7 @@ r6512opcode07_error5
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,rsp,r11,r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode09|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
@@ -398,7 +398,7 @@ r6512opcode07_error5
   ;LDMFD sp!,{r0-r12,pc}
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode0A|
   ;ASL
@@ -412,7 +412,7 @@ r6512opcode07_error5
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode0B|
   ;ANC
@@ -422,7 +422,7 @@ r6512opcode07_error5
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode0C|
   ;SKW
@@ -431,7 +431,7 @@ r6512opcode07_error5
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode0D|
   ;ORA
@@ -443,7 +443,7 @@ r6512opcode07_error5
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode0E|
   ;ASL
@@ -458,7 +458,7 @@ r6512opcode07_error5
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode0F|
   ;ASO
@@ -473,7 +473,7 @@ r6512opcode07_error5
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 ;Data Area
 

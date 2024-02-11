@@ -44,8 +44,8 @@
   IMPORT |r6502_cyclestogo|
   IMPORT |r6502readmem|
   IMPORT |r6502writemem|
-  IMPORT |r6512loadregs|
-  IMPORT |r6512saveregs|
+  IMPORT |r6502loadregs|
+  IMPORT |r6502saveregs|
   IMPORT |r6502opcodes|
 
 ; Export global symbols
@@ -74,7 +74,7 @@
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeE1|
   ;SBC
@@ -91,14 +91,14 @@
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 r6512opcodeE1_2
   ;BCD
   R6502SBCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeE2|
   ;SKB
@@ -107,7 +107,7 @@ r6512opcodeE1_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeE3|
   ;ISB
@@ -131,14 +131,14 @@ r6512opcodeE1_2
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 r6512opcodeE3_2
   ;BCD
   R6502SBCD ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeE4|
   ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
@@ -147,7 +147,7 @@ r6512opcodeE3_2
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeE5|
   ;SBC
@@ -162,14 +162,14 @@ r6512opcodeE3_2
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 r6512opcodeE5_2
   ;BCD
   R6502SBCD
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 ;|r6512opcodeE6|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
@@ -179,7 +179,7 @@ r6512opcodeE5_2
 ;  CPU_CYCLES 5
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
-;  R6512NEXTOPCODE
+;  R6502NEXTOPCODE
 
 |r6512opcodeE6|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
@@ -190,7 +190,7 @@ r6512opcodeE5_2
   CPU_CYCLES 5
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeE7|
   ;ISB
@@ -210,14 +210,14 @@ r6512opcodeE5_2
   CPU_CYCLES 5
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 r6512opcodeE7_2
   ;BCD
   R6502SBCD ;1 cycle
   CPU_CYCLES 5
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeE8|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
@@ -230,7 +230,7 @@ r6512opcodeE7_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeE9|
   ;SBC
@@ -245,21 +245,21 @@ r6512opcodeE7_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 r6512opcodeE9_2
   ;BCD
   R6502SBCD
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeEA|
   ;STMFD sp!,{lr}
   R6502NOP
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeEB|
   ;SBC
@@ -274,14 +274,14 @@ r6512opcodeE9_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 r6512opcodeEB_2
   ;BCD
   R6502SBCD
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeEC|
   ;CPX
@@ -293,7 +293,7 @@ r6512opcodeEB_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeED|
   ;SBC
@@ -310,14 +310,14 @@ r6512opcodeEB_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 r6512opcodeED_2
   ;BCD
   R6502SBCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeEE|
   ;STMFD sp!,{r0-r2,rps-r12,lr}
@@ -332,7 +332,7 @@ r6512opcodeED_2
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcodeEF|
   ;ISB
@@ -356,14 +356,14 @@ r6512opcodeED_2
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 r6512opcodeEF_2
   ;BCD
   R6502SBCD ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 ;Data Area
 

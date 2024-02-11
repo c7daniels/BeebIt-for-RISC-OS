@@ -55,8 +55,8 @@
   ;IMPORT |r6522usrvia_irq|
   IMPORT |beebit_irq|
   IMPORT |updatetimers|
-  IMPORT |r65c12loadregs|
-  IMPORT |r65c12saveregs|
+  IMPORT |r6502loadregs|
+  IMPORT |r6502saveregs|
   IMPORT |r6502opcodes|
 
 ; Export global symbols
@@ -98,7 +98,7 @@
   STACKPUSH r2
   ;MOV rpc,r0
   CPU_CYCLES 6
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 r65c12opcode20_2
   ;master 128
@@ -121,7 +121,7 @@ r65c12opcode20_2
   STACKPUSH r2
   ;MOV rpc,r0
   CPU_CYCLES 6
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode21|
   ;AND
@@ -133,7 +133,7 @@ r65c12opcode20_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode22|
   ;Reserved NOP
@@ -142,7 +142,7 @@ r65c12opcode20_2
   SUB rcycles,rcycles,#2
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode23|
   ;Reserved NOP
@@ -150,7 +150,7 @@ r65c12opcode20_2
   SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode24|
   ;BIT
@@ -160,7 +160,7 @@ r65c12opcode20_2
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode25|
   ;AND
@@ -170,7 +170,7 @@ r65c12opcode20_2
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode26|
   ;ROL
@@ -181,7 +181,7 @@ r65c12opcode20_2
   CPU_CYCLES 5
   ;LDMFD sp!,{r0-r4,rps-rpc,r10-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode27|
   ;Reserved NOP
@@ -189,7 +189,7 @@ r65c12opcode20_2
   SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode28|
   ;PLP
@@ -202,7 +202,7 @@ r65c12opcode20_2
   R6502IRQCHECK1
 
 r65c12opcode28end
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode29|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
@@ -211,7 +211,7 @@ r65c12opcode28end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode2A|
   ;STMFD sp!,{r0-r4,rps-rpc,r10-r12,lr}
@@ -224,7 +224,7 @@ r65c12opcode28end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r4,rps-rpc,r10-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode2B|
   ;Reserved NOP
@@ -232,7 +232,7 @@ r65c12opcode28end
   SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode2C|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
@@ -243,7 +243,7 @@ r65c12opcode28end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode2D|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
@@ -254,7 +254,7 @@ r65c12opcode28end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode2E|
   ;STMFD sp!,{r0-r4,rps-rpc,r10-r12,lr}
@@ -269,7 +269,7 @@ r65c12opcode28end
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r4,rps-rpc,r10-r12,pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r65c12opcode2F|
   ;Reserved NOP
@@ -277,7 +277,7 @@ r65c12opcode28end
   SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R65C12NEXTOPCODE
+  R6502NEXTOPCODE
 
 ;Data Area
 

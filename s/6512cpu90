@@ -54,8 +54,8 @@
   IMPORT |r6502_cyclestogo|
   IMPORT |r6502readmem|
   IMPORT |r6502writemem|
-  IMPORT |r6512loadregs|
-  IMPORT |r6512saveregs|
+  IMPORT |r6502loadregs|
+  IMPORT |r6502saveregs|
   IMPORT |r6502opcodes|
 
   ;IMPORT |sheilaread|
@@ -110,7 +110,7 @@
   ;B r6512opcode90end
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 r6512opcode90_2
   ;LDR r12,=memory ;pointer to memory block
@@ -140,7 +140,7 @@ r6512opcode90end
   ;STR rpc,[r11] ;r6502_pc
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode91|
   ;STMFD sp!,{r0-r2,ry,rps-r12,lr}
@@ -151,13 +151,13 @@ r6512opcode90end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode92|
   ;HLT
   R6502JAM
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode93|
   ;SHA
@@ -174,7 +174,7 @@ r6512opcode90end
   CPU_CYCLES 2
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode94|
   ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
@@ -186,7 +186,7 @@ r6512opcode90end
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode95|
   ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
@@ -198,7 +198,7 @@ r6512opcode90end
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode96|
   ;STMFD sp!,{r1-r2,ry,rps-r12,lr}
@@ -210,7 +210,7 @@ r6512opcode90end
   CPU_CYCLES 4
   ;LDMFD sp!,{r1-r2,ry,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode97|
   ;SAX
@@ -225,7 +225,7 @@ r6512opcode90end
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rx,rpc-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode98|
   ;TYA
@@ -243,7 +243,7 @@ r6512opcode90end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rps,r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode99|
   ;STA
@@ -255,7 +255,7 @@ r6512opcode90end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode9A|
   ;TXS
@@ -268,7 +268,7 @@ r6512opcode90end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode9B|
   ;SHS
@@ -286,7 +286,7 @@ r6512opcode90end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode9C|
   ;SHY
@@ -302,7 +302,7 @@ r6512opcode90end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode9D|
   ;STA
@@ -314,7 +314,7 @@ r6512opcode90end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode9E|
   ;SHX
@@ -330,7 +330,7 @@ r6512opcode90end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 |r6512opcode9F|
   ;SHA
@@ -347,7 +347,7 @@ r6512opcode90end
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
-  R6512NEXTOPCODE
+  R6502NEXTOPCODE
 
 ;Data Area
 

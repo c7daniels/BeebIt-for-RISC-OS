@@ -62,6 +62,4 @@ extern void r6502doirq(void);
 extern void r6502donmi(void);
 /*extern void r6502execute(int ncycles);*/
 extern void r6502execute(void);
-extern void r6512execute(void);
-extern void r65c12execute(void);
 extern void r6502showps(void);

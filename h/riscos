@@ -142,8 +142,7 @@ extern void vsync(void);
   extern char r6502stackpop(void);
   extern int r6502processorstatus(int lbreak);
 
-  /*extern void r6502execute(void);
-  extern void r6512execute(void);*/
+  /*extern void r6502execute(void);*/
 
   extern void r6502adc(int n);
   /*extern void r6502and(int n);*/
