@@ -14,7 +14,7 @@
 ;
   MACRO
   R6502NEXTOPCODE ;_SLOW ;rename for tracing
-  MOV pc,lr
+  LDR pc,[sp],#4
   MEND
 
 ;
@@ -23,18 +23,18 @@
   MACRO
   R6502NEXTOPCODE_FAST ;rename for tracing
   CMP rcycles,#0
-  MOVLE pc,lr
+  LDRLE pc,[sp],#4
   CMP rpc,#&3000
   LDRLTB r0,[r12,rpc] ;get opcode
-  ADDLT pc,pc,#12 ;20 ;6*4 (-4)
+  ADDLT pc,pc,#READMEM_LEN+(1*4)-4
 
   MOV r0,rpc ;1*4
-  READMEM ;3*4
+  READMEM ;1*4
 
   ADD rpc,rpc,#1
   LDR r1,=r6502opcodes
   LDR pc,[r1,r0,LSL#2]
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   MEND
 
 ;

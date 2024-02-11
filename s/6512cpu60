@@ -92,7 +92,7 @@
   ;STR rpc,[r11]
   CPU_CYCLES 6
   ;LDMFD sp!,{r0-r2,rsp,rpc,r10-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode61|
@@ -109,20 +109,20 @@
   R6502ADC ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r6512opcode61_2
   ;BCD
   R6502ADCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode62|
   ;HLT
   R6502JAM
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode63|
@@ -142,14 +142,14 @@ r6512opcode61_2
   R6502ADC ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r6512opcode63_2
   ;BCD
   R6502ADCD ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode64|
@@ -158,7 +158,7 @@ r6512opcode63_2
   R6502SKB
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,rpc,r11,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode65|
@@ -173,14 +173,14 @@ r6512opcode63_2
   R6502ADC
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r6512opcode65_2
   ;BCD
   R6502ADCD
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode66|
@@ -190,7 +190,7 @@ r6512opcode65_2
   STRB r0,[r11]
   CPU_CYCLES 5
   ;LDMFD sp!,{r0-r4,rps,rpc,r10-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode67|
@@ -206,14 +206,14 @@ r6512opcode65_2
   R6502ADC
   CPU_CYCLES 5
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r6512opcode67_2
   ;BCD
   R6502ADCD
   CPU_CYCLES 5
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode68|
@@ -236,7 +236,7 @@ r6512opcode67_2
 
   CPU_CYCLES 4
   ;LDMFD sp!,{r2,rsp,ra,rps,r11-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode69|
@@ -253,7 +253,7 @@ r6512opcode67_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;LDMFD sp!,{pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r6512opcode69_2
   ;BCD
@@ -261,7 +261,7 @@ r6512opcode69_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;LDMFD sp!,{pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode6A|
@@ -274,9 +274,10 @@ r6512opcode69_2
   ;MOV ra,r0
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r4,rps-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
+<<<<<<< HEAD
 |r6512opcode6B|
   ;ARR
   VALUEOFIMMEDIATE r0
@@ -285,13 +286,13 @@ r6512opcode69_2
   ;digital
   R6502ARR
   CPU_CYCLES 2
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r6512opcode6B_2
   ;BCD
   R6502ARRD
   CPU_CYCLES 2
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode6C|
@@ -325,7 +326,7 @@ r6512opcode6B_2
 
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r2,rpc,r10-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode6D|
@@ -342,14 +343,14 @@ r6512opcode6B_2
   R6502ADC ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r6512opcode6D_2
   ;BCD
   R6502ADCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode6E|
@@ -364,7 +365,7 @@ r6512opcode6D_2
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r4,rps-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6512opcode6F|
@@ -384,14 +385,14 @@ r6512opcode6D_2
   R6502ADC
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r6512opcode6F_2
   ;BCD
   R6502ADCD
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
+  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 ;Data Area

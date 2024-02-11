@@ -641,7 +641,8 @@ r6502execute_loop2
 
   LDR r1,=r6502opcodes
   ;STMFD sp!,{lr}
-  MOV lr,pc
+  ADD lr,pc,#4
+  STR lr,[sp,#-4]!
   LDR pc,[r1,r0,LSL#2]
   ;LDMFD sp!,{lr}
 

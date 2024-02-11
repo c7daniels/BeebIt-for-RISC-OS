@@ -146,22 +146,18 @@ rsp RN 4
   SUB rcycles,rcycles,#$n
   MEND
 
-READMEM_LEN EQU 3*4
+READMEM_LEN EQU 1*4
 
   MACRO
   READMEM
-  STR lr,[sp,#-4]! ;STMFD sp!,{lr}
   BL r6502readmem
-  LDR lr,[sp],#4 ;LDMFD sp!,{lr}
   MEND
 
-WRITEMEM_LEN EQU 3*4
+WRITEMEM_LEN EQU 1*4
 
   MACRO
   WRITEMEM
-  STR lr,[sp,#-4]! ;STMFD sp!,{lr}
   BL r6502writemem
-  LDR lr,[sp],#4 ;LDMFD sp!,{lr}
   MEND
 
   MACRO
@@ -206,11 +202,11 @@ WRITEMEM_LEN EQU 3*4
 
   ;rpc > &2FC0
   MOV r0,rpc
-  READMEM ;3*4
+  READMEM ;1*4
   MOV r2,r0 ;lo
 
   ADD r0,rpc,#1 ;rpc += 1
-  READMEM ;3*4
+  READMEM ;1*4
 
   ;continue
   ADD rpc,rpc,#2 ;pc += 2
