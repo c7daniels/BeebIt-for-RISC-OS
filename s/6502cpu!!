@@ -8,7 +8,7 @@
 ;
 ; r12=pointer to variable
 ; r11=pointer to variable
-; r10=pointer to variable
+; r10=cyclestogo
 ; r9=PC
 ; r8=PS
 ; r7=Y
@@ -302,6 +302,7 @@
   IMPORT |beebit_trace|
   IMPORT |beebit_romsel|
   IMPORT |beebit_acccon|
+  IMPORT |r6502opcodes|
 
 ; Export global symbols
 
@@ -313,7 +314,7 @@
   EXPORT |r6502irq|
   EXPORT |r6502nmi|
   ;EXPORT |constFFFFFFFF|
-  EXPORT |r6502opcodes|
+  EXPORT |r6502opcodeset|
 
 |r6502loadregs|
   ;STMFD sp!,{lr}
@@ -735,7 +736,7 @@ r6502execute_loop3
   LDMFD sp!,{r0-r12,pc}
 
 
-|r6502opcodes|
+|r6502opcodeset|
   DCD r6502opcode00
   DCD r6502opcode01
   DCD r6502opcode02

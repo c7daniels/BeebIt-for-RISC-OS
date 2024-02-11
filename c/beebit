@@ -317,6 +317,20 @@ void beebitreset(void)
         beebit_vdusel = 0x01;
         break;
     }
+    /*CPU instruction set*/
+    switch (beebit_machinetype)
+    {
+      case MACHINE_MODELB:
+        memcpy(r6502opcodes,r6502opcodeset,0x400);
+        break;
+      case MACHINE_MODELBPLUS:
+        memcpy(r6502opcodes,r6512opcodeset,0x400);
+        break;
+      case MACHINE_MASTER128:
+      case MACHINE_COMPACT:
+        memcpy(r6502opcodes,r65c12opcodeset,0x400);
+        break;
+    }
     lbreak = FALSE;
     beebit_rommask = 0xFFFFFF;
     beebit_romselected = -1;

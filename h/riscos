@@ -178,8 +178,9 @@ extern void vsync(void);
   /*extern void r6502executeit(void);*/
 
   extern char r6502opcodes[0x400];
-  extern char r6512opcodes[0x400];
-  extern char r65c12opcodes[0x400];
+  extern char r6502opcodeset[0x400];
+  extern char r6512opcodeset[0x400];
+  extern char r65c12opcodeset[0x400];
 
   extern void r6502opcode00(void);
   extern void r6502opcode01(void);

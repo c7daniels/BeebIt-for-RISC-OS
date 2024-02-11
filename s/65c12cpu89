@@ -8,7 +8,7 @@
 ;
 ; r12=pointer to variable
 ; r11=pointer to variable
-; r10=pointer to variable
+; r10=cyclestogo
 ; r9=PC
 ; r8=PS
 ; r7=Y
@@ -55,7 +55,7 @@
   IMPORT |r6502writemem|
   IMPORT |r65c12loadregs|
   IMPORT |r65c12saveregs|
-  IMPORT |r65c12opcodes|
+  IMPORT |r6502opcodes|
 
   ;IMPORT |sheilaread|
   ;IMPORT |sheilawrite|

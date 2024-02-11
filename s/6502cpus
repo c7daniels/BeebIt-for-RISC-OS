@@ -8,7 +8,7 @@
 ;
 ; r12=pointer to variable
 ; r11=pointer to variable
-; r10=pointer to variable
+; r10=cyclestogo
 ; r9=PC
 ; r8=PS
 ; r7=Y
@@ -105,6 +105,7 @@
 
   EXPORT |r6502readoffset|
   EXPORT |r6502writeoffset|
+  EXPORT |r6502opcodes|
 
   EXPORT |r6502read3000|
   EXPORT |r6502read8000|
@@ -1159,6 +1160,9 @@ r6502writeoffset
   DCD r6502writeC000 ;D
   DCD r6502writeC000 ;E
   DCD r6502writebF000 ;F
+
+|r6502opcodes|
+  % &400
 
 ;buffermem
 ;  DCD 0

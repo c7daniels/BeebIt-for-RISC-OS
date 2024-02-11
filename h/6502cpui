@@ -39,22 +39,6 @@
   R6512NEXTOPCODE_SLOW
   MOV pc,lr
   MEND
-
-;
-;rockwell 6512 cpu
-;
-  MACRO
-  R6512NEXTOPCODE_S
-  ;no good for B+ emulation because of reading from shadow RAM
-  CMP rcycles,#0
-  MOVLE pc,lr
-  LDRB r3,[r12,rpc] ;get opcode
-  ADD rpc,rpc,#1
-  LDR r0,=r6512opcodes
-  LDR pc,[r0,r3,LSL#2]
-  ;MOV pc,lr
-  MEND
-
 ;
 ;rockwell 6512 cpu
 ;
@@ -70,7 +54,7 @@
   READMEM ;3*4
 
   ADD rpc,rpc,#1
-  LDR r1,=r6512opcodes
+  LDR r1,=r6502opcodes
   LDR pc,[r1,r0,LSL#2]
   ;MOV pc,lr
   MEND
@@ -98,7 +82,7 @@
   READMEM ;3*4
 
   ADD rpc,rpc,#1
-  LDR r1,=r65c12opcodes
+  LDR r1,=r6502opcodes
   LDR pc,[r1,r0,LSL#2]
   ;MOV pc,lr
   MEND
