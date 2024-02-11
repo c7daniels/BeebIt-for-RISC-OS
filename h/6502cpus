@@ -214,10 +214,8 @@ WRITEMEM_LEN EQU 3*4
 
   ;continue
   ADD rpc,rpc,#2 ;pc += 2
-  ;ANDS r1,rpc,#&10000
-  ;MOVNE r1,#&FF00
-  ;ORRNE r1,r1,#&00FF
-  ;ANDNE rpc,rpc,r1
+  ;MOV rpc,rpc,LSL #16
+  ;MOV rpc,rpc,LSR #16
   ADD r0,r2,r0,LSL#8 ;r0=lo+(hi<<8)
   MEND
 
@@ -382,7 +380,7 @@ WRITEMEM_LEN EQU 3*4
   ;LDRB r2,[r10] ;lo
   LDRB r2,[r12,r0] ;lo
   ADD r0,r0,#1
-  BIC r0,r0,#&0100
+  AND r0,r0,#&FF
   ;ADD r10,r12,r0 ;memory+r0
   ;LDRB r1,[r10] ;hi
   LDRB r1,[r12,r0] ;hi
@@ -400,7 +398,7 @@ WRITEMEM_LEN EQU 3*4
   ;LDRB r2,[r10] ;lo
   LDRB r2,[r12,r0] ;lo
   ADD r0,r0,#1
-  BIC r0,r0,#&0100
+  AND r0,r0,#&FF
   ;ADD r10,r12,r0 ;memory+r0
   ;LDRB r1,[r10] ;hi
   LDRB r1,[r12,r0] ;hi
@@ -430,7 +428,7 @@ WRITEMEM_LEN EQU 3*4
   ;LDRB r2,[r10] ;lo
   LDRB r2,[r12,r0] ;lo
   ADD r0,r0,#1
-  BIC r0,r0,#&0100
+  AND r0,r0,#&FF
   ;ADD r10,r12,r0
   ;LDRB r1,[r10] ;hi
   LDRB r1,[r12,r0] ;hi
@@ -486,10 +484,8 @@ WRITEMEM_LEN EQU 3*4
 
   ;continue
   ADD rpc,rpc,#1 ;pc+=1
-  ;ANDS r1,rpc,#&10000
-  ;MOVNE r1,#&FF00
-  ;ORRNE r1,r1,#&00FF
-  ;ANDNE rpc,rpc,r1
+  ;MOV rpc,rpc,LSL #16
+  ;MOV rpc,rpc,LSR #16
   ;STR rpc,[r11]
   MEND
 

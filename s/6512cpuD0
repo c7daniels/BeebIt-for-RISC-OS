@@ -94,10 +94,8 @@
 ;  BEQ r6512opcodeD0_2
   ;else
 ;  ADD rpc,rpc,#1 ;r6502_pc++
-  ;ANDS r0,rpc,#&10000
-  ;MOVNE r0,#&FF00
-  ;ORRNE r0,r0,#&00FF
-  ;ANDNE rpc,rpc,r0
+  ;MOV rpc,rpc,LSL #16
+  ;MOV rpc,rpc,LSR #16
   ;STR rpc,[r11] ;r6502_pc
   ;LDR r10,=r6502_cyclestogo
   ;LDR r4,[r10] ;r6502_cyclestogo
@@ -120,10 +118,8 @@
 ;  SUBNE rpc,rpc,r0 ;rpc=(rpc-r0)
 ;  ADDEQ rpc,rpc,r0 ;rpc=(rpc+r0)
 
-  ;ANDS r0,rpc,#&10000
-  ;MOVNE r0,#&FF00
-  ;ORRNE r0,r0,#&00FF
-  ;ANDNE rpc,rpc,r0
+  ;MOV rpc,rpc,LSL #16
+  ;MOV rpc,rpc,LSR #16
 
 ;  MOV r2,rpc,LSR#8 ;r2=(pc>>8)
 ;  AND r2,r2,#&FF
@@ -160,10 +156,8 @@
   BEQ r6512opcodeD0_2
   ;else
   ADD rpc,rpc,#1 ;r6502_pc++
-  ;ANDS r0,rpc,#&10000
-  ;MOVNE r0,#&FF00
-  ;ORRNE r0,r0,#&00FF
-  ;ANDNE rpc,rpc,r0
+  ;MOV rpc,rpc,LSL #16
+  ;MOV rpc,rpc,LSR #16
   ;STR rpc,[r11] ;r6502_pc
   ;LDR r10,=r6502_cyclestogo
   ;LDR r4,[r10] ;r6502_cyclestogo
@@ -186,10 +180,8 @@ r6512opcodeD0_2
   SUBNE rpc,rpc,r0 ;rpc=(rpc-r0)
   ADDEQ rpc,rpc,r0 ;rpc=(rpc+r0)
 
-  ;ANDS r0,rpc,#&10000
-  ;MOVNE r0,#&FF00
-  ;ORRNE r0,r0,#&00FF
-  ;ANDNE rpc,rpc,r0
+  ;MOV rpc,rpc,LSL #16
+  ;MOV rpc,rpc,LSR #16
 
   MOV r2,rpc,LSR#8 ;r2=(pc>>8)
   AND r2,r2,#&FF
