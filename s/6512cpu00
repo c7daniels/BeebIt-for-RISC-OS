@@ -175,7 +175,7 @@
 
 r6512opcode07_interface
   ;Opcode 07 Interface
-  STMFD sp!,{r0-ry,r11-r12,lr}
+  STMFD sp!,{r0-ry,r11-r12}
   ;MOV r0,#31
   ;SWI OS_WriteC
   ;MOV r0,#0
@@ -300,7 +300,9 @@ r6512opcode07_2
   LDRB rps,[r11]
   LDR r11,=r6502_pc
   LDR rpc,[r11]
-  LDMFD sp!,{r0-ry,r11-r12,pc}
+  LDMFD sp!,{r0-ry,r11-r12}
+  ;LDR pc,[sp],#4
+  R6502NEXTOPCODE
 
 r6512opcode07_error
   ;load the swi number
@@ -368,7 +370,9 @@ r6512opcode07_error5
   LDRB rps,[r11]
   LDR r11,=r6502_pc
   LDR rpc,[r11]
-  LDMFD sp!,{r0-ry,r11-r12,pc}
+  LDMFD sp!,{r0-ry,r11-r12}
+  ;LDR pc,[sp],#4
+  R6502NEXTOPCODE
 
 |r6512opcode08|
   ;PHP
