@@ -47,7 +47,6 @@ extern void (*cpu_execute)(void);
 extern int r6502_cyclestogo;
 extern int r6502_cyclesoriginal;
 extern int r6502_cyclesexpired;
-extern int r6502_cyclesstored;
 extern int r6502_cycle;
 extern unsigned int r6502_cyclesmonotonic;
 

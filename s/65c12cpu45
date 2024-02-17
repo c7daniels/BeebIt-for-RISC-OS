@@ -48,7 +48,7 @@
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
   IMPORT |r6502_cyclestogo|
-  ;IMPORT |r6502_cyclesstored|
+  IMPORT |r6502_cyclesoriginal|
   ;IMPORT |r6502read|
   IMPORT |r6502readm|
   ;IMPORT |r6502writemem|
@@ -110,65 +110,12 @@
   CPU_CYCLES 6
 
   ANDS r0,rps,#IFLAG
-  ;BNE r65c12opcode40end
+  BNE r65c12opcode40end
 
-  ;LDR r11,=beebit_irq
-  ;LDR r2,[r11]
-  ;CMP r2,#0
-  ;BEQ r65c12opcode40end
-
-  ;LDR r11,=r6502_cyclesstored
-  ;STR rcycles,[r11]
-  ;MOV rcycles,#0
+  R6502IRQCHECK0
 
 r65c12opcode40end
   R65C12NEXTOPCODE
-
-;|r65c12opcode40old|
-  ;RTI
-  ;STMFD sp!,{r0-r2,rsp,rps,rpc-r12,lr}
-;  STMFD sp!,{lr}
-  ;LDR r12,=memory ;pointer to memory
-  ;LDR r10,=r6502_sp ;pointer to r6502_sp
-  ;LDRB rsp,[r10] ;load r6502_sp
-
-;  STACKPOP rps
-;  STACKPOP r2 ;lo
-;  STACKPOP r3 ;hi
-  ;STRB rsp,[r10] ;store r6502_sp
-
-  ;LDR r10,=r6502_ps ;pointer to r6502_ps
-  ;STRB rps,[r10] ;r6502_ps
-
-  ;LDR r11,=r6502_pc
-;  ADD rpc,r2,r3,LSL#8 ;r6502_pc=nlo+(nhi<<8)
-  ;STR rpc,[r11]
-
-;  CPU_CYCLES 6
-
-;  ANDS r0,rps,#IFLAG
-;  LDMNEFD sp!,{pc}
-  ;BNE r65c12opcode40end
-
-  ;LDR r11,=r6522sysvia_irq
-  ;LDRB r2,[r11]
-  ;CMP r2,#0
-  ;LDREQ r11,=r6522usrvia_irq
-  ;LDREQB r2,[r11]
-  ;CMPEQ r2,#0
-;  LDR r11,=beebit_irq
-;  LDR r2,[r11]
-;  CMP r2,#0
-  ;BLEQ r65c12opcode40end
-;  LDMEQFD sp!,{pc}
-;  BL r65c12saveregs
-;  BL updatetimers
-;  BL r65c12loadregs
-
-;r65c12opcode40end
-  ;LDMFD sp!,{r0-r2,rsp,rps,rpc-r12,pc}
-;  LDMFD sp!,{pc}
-  ;MOV pc,lr
 
 |r65c12opcode41|
   ;EOR
@@ -478,69 +425,11 @@ r65c12opcode50end
 
 |r65c12opcode58|
   ;CLI
-  ;ANDS r0,rps,#IFLAG
-  ;BEQ r6502opcode58end
-
-  ;STMFD sp!,{lr}
-  ;BL r6502saveregs
-  ;BL updatetimers
-  ;BL r6502loadregs
-  ;LDMFD sp!,{pc}
-
-;r6502opcode58cli
   AND rps,rps,#NOTIFLAG
-
   CPU_CYCLES 2
 
-  LDR r11,=beebit_irq
-  LDR r2,[r11]
-  CMP r2,#0
-  ;BEQ r6502opcode58end
-  BEQ r65c12opcode58end2
-
-  STMFD sp!,{lr}
-  ;STR lr,[sp, #-4]! ;error
-  BL r65c12saveregs
-  BL updatetimers
-  BL r65c12loadregs
-  LDMFD sp!,{pc}
-  ;LDR pc, [sp], #4 ;error
-
-r65c12opcode58end
-  ;LDR r11,=r6502_cyclesstored
-  ;STR rcycles,[r11]
-  MOV rcycles,#0
-
-r65c12opcode58end2
+  R6502IRQCHECK1
   R65C12NEXTOPCODE
-
-;|r65c12opcode58old|
-  ;CLI
-  ;STMFD sp!,{r2,rps,r11,lr}
-;  STMFD sp!,{lr}
-  ;LDR r11,=r6502_ps
-  ;LDRB rps,[r11]
-;  AND rps,rps,#NOTIFLAG
-  ;STRB rps,[r11]
-;  CPU_CYCLES 2
-
-  ;LDR r11,=r6522sysvia_irq
-  ;LDRB r2,[r11]
-  ;CMP r2,#0
-  ;LDREQ r11,=r6522usrvia_irq
-  ;LDREQB r2,[r11]
-  ;CMPEQ r2,#0
-;  LDR r11,=beebit_irq
-;  LDR r2,[r11]
-;  CMP r2,#0
-;  LDMEQFD sp!,{pc}
-  ;MOVEQ pc,lr
-;  BL r65c12saveregs
-;  BL updatetimers
-;  BL r65c12loadregs
-  ;LDMFD sp!,{r2,rps,r11,pc}
-;  LDMFD sp!,{pc}
-  ;MOV pc,lr
 
 |r65c12opcode59|
   ;STMFD sp!,{r0-r12,lr}

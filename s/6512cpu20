@@ -48,7 +48,7 @@
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
   IMPORT |r6502_cyclestogo|
-  IMPORT |r6502_cyclesstored|
+  IMPORT |r6502_cyclesoriginal|
   IMPORT |r6502read|
   IMPORT |r6502write|
   IMPORT |r6502readbp|
@@ -208,56 +208,10 @@
   ANDS r0,rps,#IFLAG
   BNE r6512opcode28end
 
-  LDR r11,=beebit_irq
-  LDR r2,[r11]
-  CMP r2,#0
-  BEQ r6512opcode28end
-
-  LDR r11,=r6502_cyclesstored
-  STR rcycles,[r11]
-  MOV rcycles,#1
+  R6502IRQCHECK1
 
 r6512opcode28end
   R6512NEXTOPCODE
-
-;|r6512opcode28|
-  ;PLP
-  ;STMFD sp!,{r0-r12,lr}
-;  STMFD sp!,{lr}
-  ;LDR r12,=memory ;pointer to memory
-  ;LDR r11,=r6502_sp ;pointer to r6502_sp
-  ;LDRB rsp,[r11] ;load r6502_sp
-
-;  STACKPOP rps
-  ;STRB rsp,[r11] ;store r6502_sp
-
-  ;LDR r11,=r6502_ps ;pointer to r6502_ps
-  ;STRB rps,[r11] ;r6502_ps
-
-;  CPU_CYCLES 4
-
-;  ANDS r0,rps,#IFLAG
-;  LDMNEFD sp!,{pc}
-  ;BNE r6512opcode28end
-
-  ;LDR r11,=r6522sysvia_irq
-  ;LDRB r2,[r11]
-  ;CMP r2,#0
-  ;LDREQ r11,=r6522usrvia_irq
-  ;LDREQB r2,[r11]
-  ;CMPEQ r2,#0
-;  LDR r11,=beebit_irq
-;  LDR r2,[r11]
-;  CMP r2,#0
-  ;BLEQ r6512opcode28end
-;  LDMEQFD sp!,{pc}
-;  BL r6512saveregs
-;  BL updatetimers
-;  BL r6512loadregs
-
-;r6512opcode28end
-  ;LDMFD sp!,{r0-r12,pc}
-;  LDMFD sp!,{pc}
 
 |r6512opcode29|
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}

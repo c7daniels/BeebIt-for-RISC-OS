@@ -216,14 +216,7 @@ void updatetimers(void)
 {
   int n1mhzcycles;
   /*fprintf(htrace,"UPDATE TIMERS &%X &%X\n",r6502_cyclesoriginal,r6502_cyclestogo);*/
-  /*if (r6502_cyclesstored == 0)*/
-    r6502_cyclesexpired = (r6502_cyclesoriginal-r6502_cyclestogo); /*+r6502_cycle;*/
-  /*else
-  {
-    r6502_cyclesexpired = (r6502_cyclesoriginal-r6502_cyclesstored);
-    r6502_cyclesexpired += (2-r6502_cyclestogo);
-    r6502_cyclesstored = 0;
-  }*/
+  r6502_cyclesexpired = (r6502_cyclesoriginal-r6502_cyclestogo); /*+r6502_cycle;*/
   /*r6502_cyclesexpired -= r6502_cycle;*/ /*even cycles only*/
   /*fprintf(htrace,"expired=&%X\n",r6502_cyclesexpired);*/
   /*r6502_cyclecount += r6502_cyclesexpired;*/

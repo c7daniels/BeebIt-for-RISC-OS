@@ -344,7 +344,6 @@ void (*cpu_execute)(void);
 int r6502_cyclestogo;
 int r6502_cyclesoriginal;
 int r6502_cyclesexpired;
-int r6502_cyclesstored;
 int r6502_cycle;
 /*int r6502_cyclecount;*/
 unsigned int r6502_cyclesmonotonic = 0; /*used by zeribeepwrite*/
@@ -772,7 +771,6 @@ void r6502reset(int lfull)
     r6502_cyclestogo = 5000;
     r6502_cyclesoriginal = 0;
     r6502_cyclesexpired = 0;
-    r6502_cyclesstored = 0;
     r6502_cycle = 0;
     /*r6502_cyclecount = 0;*/
   }

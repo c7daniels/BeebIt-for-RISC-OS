@@ -103,6 +103,46 @@
   ;MOV pc,lr
   MEND
 
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502IRQCHECK0
+  LDR r11,=beebit_irq
+  LDR r2,[r11]
+  CMP r2,#0
+  ADDEQ pc,pc,#24 ;(7*4)-4
+
+  CMP rcycles,#0
+  ADDLE pc,pc,#16 ;(5*4)-4
+  LDR r11,=r6502_cyclesoriginal
+  LDR r2,[r11]
+  SUB r2,r2,rcycles
+  STR r2,[r11]
+  MOV rcycles,#0
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502IRQCHECK1
+  LDR r11,=beebit_irq
+  LDR r2,[r11]
+  CMP r2,#0
+  ADDEQ pc,pc,#28 ;(8*4)-4
+
+  CMP rcycles,#1
+  ADDLE pc,pc,#20 ;(6*4)-4
+  LDR r11,=r6502_cyclesoriginal
+  LDR r2,[r11]
+  SUB r2,r2,rcycles
+  ADD r2,r2,#1
+  STR r2,[r11]
+  MOV rcycles,#1
+  MEND
+
 ;
 ;rockwell 6502 cpu
 ;
