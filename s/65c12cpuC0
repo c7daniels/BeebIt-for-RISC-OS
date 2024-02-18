@@ -97,27 +97,19 @@
   R65C12NEXTOPCODE
 
 |r65c12opcodeC2|
-  ;SKB
-  ;STMFD sp!,{r0-r2,rpc,r11,lr}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
   R6502SKB
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,rpc,r11,pc}
+  SUB rcycles,rcycles,#2
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
 |r65c12opcodeC3|
-  ;DCP
-  ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  ADDRESSOFPREINDEXED_M ;r0 ;4 cycles
-  MOV r2,r0
-  READMEMM ;1 cycle
-  R6502DEC r0 ;1 cycle
-  R6502CMP ;1 cycle
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEMM ;1 cycle
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -150,16 +142,10 @@
   R65C12NEXTOPCODE
 
 |r65c12opcodeC7|
-  ;DCP
-  ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  ADDRESSOFZEROPAGE_M r2
-  ;MOV r2,r0
-  LDRB r0,[r12,r0]
-  R6502DEC r0
-  R6502CMP
-  STRB r0,[r12,r2]
-  CPU_CYCLES 5
-  ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -199,8 +185,9 @@
   R65C12NEXTOPCODE
 
 |r65c12opcodeCB|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
@@ -244,8 +231,9 @@
   R65C12NEXTOPCODE
 
 |r65c12opcodeCF|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE

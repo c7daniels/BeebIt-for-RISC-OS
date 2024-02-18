@@ -123,26 +123,19 @@
   R65C12NEXTOPCODE
 
 |r65c12opcode82|
-  ;SKB
-  ;STMFD sp!,{r0-r2,rpc,r11,lr}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
   R6502SKB
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,rpc,r11,pc}
+  SUB rcycles,rcycles,#2
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
 |r65c12opcode83|
-  ;SAX
-  ;STMFD sp!,{r0-r2,ra,rx,rpc-r12,lr}
-  ADDRESSOFPREINDEXED_M ;r0 ;4 cycles
-  ;LDR r11,=r6502_a
-  ;LDRB ra,[r11]
-  ;LDR r11,=r6502_x
-  ;LDRB rx,[r11]
-  AND r1,ra,rx ;1 cycle
-  WRITEMEMM ;1 cycle
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,ra,rx,rpc-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -183,17 +176,10 @@
   R65C12NEXTOPCODE
 
 |r65c12opcode87|
-  ;SAX
-  ;STMFD sp!,{r0-r2,ra,rx,rpc-r12,lr}
-  ADDRESSOFZEROPAGE_M r0
-  ;LDR r11,=r6502_a
-  ;LDRB ra,[r11] ;r6502_a
-  ;LDR r11,=r6502_x
-  ;LDRB rx,[r11] ;r6502_x
-  AND r1,ra,rx
-  STRB r1,[r12,r0]
-  CPU_CYCLES 3
-  ;LDMFD sp!,{r0-r2,ra,rx,rpc-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -239,8 +225,9 @@
   R65C12NEXTOPCODE
 
 |r65c12opcode8B|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
@@ -272,17 +259,10 @@
   R65C12NEXTOPCODE
 
 |r65c12opcode8F|
-  ;SAX
-  ;STMFD sp!,{r0-r2,ra,rx,rpc-r12,lr}
-  ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
-  ;LDR r11,=r6502_a
-  ;LDRB ra,[r11]
-  ;LDR r11,=r6502_x
-  ;LDRB rx,[r11]
-  AND r1,ra,rx ;1 cycle
-  WRITEMEMM ;1 cycle
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,ra,rx,rpc-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -388,12 +368,9 @@ r65c12opcode90_2
   R65C12NEXTOPCODE
 
 |r65c12opcode93|
-  ;SAX
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  ADDRESSOFPOSTINDEXEDY_M ;r0 ;3+ cycles
-  AND r1,ra,rx ;1 cycle
-  WRITEMEMM ;1 cycle
-  CPU_CYCLES 2
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
@@ -435,17 +412,10 @@ r65c12opcode90_2
   R65C12NEXTOPCODE
 
 |r65c12opcode97|
-  ;SAX
-  ;STMFD sp!,{r0-r2,ra,rx,rpc-r12,lr}
-  ADDRESSOFZEROPAGEY_M ;;;
-  ;LDR r11,=r6502_a
-  ;LDRB ra,[r11]
-  ;LDR r11,=r6502_x
-  ;LDRB rx,[r11]
-  AND r1,ra,rx
-  STRB r1,[r12,r0]
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r2,ra,rx,rpc-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -493,11 +463,11 @@ r65c12opcode90_2
   R65C12NEXTOPCODE
 
 |r65c12opcode9B|
-  ;NOP
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
-  ;MOV pc,lr
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
+  ;MOV pc,lr
   R65C12NEXTOPCODE
 
 |r65c12opcode9C|

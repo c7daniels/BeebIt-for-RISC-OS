@@ -130,25 +130,28 @@ r65c12opcode40end
   R65C12NEXTOPCODE
 
 |r65c12opcode42|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  R6502SKB
+  SUB rcycles,rcycles,#2
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
 |r65c12opcode43|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
 |r65c12opcode44|
-  ;SKB
-  ;STMFD sp!,{r0-r2,rpc,r11,lr}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
   R6502SKB
-  CPU_CYCLES 3
-  ;LDMFD sp!,{r0-r2,rpc,r11,pc}
+  SUB rcycles,rcycles,#3
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -173,8 +176,9 @@ r65c12opcode40end
   R65C12NEXTOPCODE
 
 |r65c12opcode47|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
@@ -219,11 +223,10 @@ r65c12opcode40end
   R65C12NEXTOPCODE
 
 |r65c12opcode4B|
-  ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  VALUEOFIMMEDIATE_M r0
-  R6502ALR
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -285,8 +288,9 @@ r65c12opcode4C_2
   R65C12NEXTOPCODE
 
 |r65c12opcode4F|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
@@ -381,18 +385,19 @@ r65c12opcode50end
   R65C12NEXTOPCODE
 
 |r65c12opcode53|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
 |r65c12opcode54|
-  ;SKB
-  ;STMFD sp!,{r0-r2,rpc,r11,lr}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
   R6502SKB
-  CPU_CYCLES 3
-  ;LDMFD sp!,{r0-r2,rpc,r11,pc}
+  SUB rcycles,rcycles,#4
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -417,8 +422,9 @@ r65c12opcode50end
   R65C12NEXTOPCODE
 
 |r65c12opcode57|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
@@ -452,18 +458,19 @@ r65c12opcode50end
   R65C12NEXTOPCODE
 
 |r65c12opcode5B|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
 |r65c12opcode5C|
-  ;SKW
-  ;STMFD sp!,{r0-r2,rpc,r11,lr}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
   R6502SKW
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r2,rpc,r11,pc}
+  SUB rcycles,rcycles,#8
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -495,8 +502,9 @@ r65c12opcode50end
   R65C12NEXTOPCODE
 
 |r65c12opcode5F|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE

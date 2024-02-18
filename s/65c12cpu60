@@ -130,42 +130,19 @@ r65c12opcode61_2
   R65C12NEXTOPCODE
 
 |r65c12opcode62|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  R6502SKB
+  SUB rcycles,rcycles,#2
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
 |r65c12opcode63|
-  ;RRA
-  ;STMFD sp!,{r0-r12,lr}
-  ADDRESSOFPREINDEXED_M ;r0 ;4 cycles
-  MOV r2,r0 ;store address
-  READMEMM ;1 cycle
-  R6502ROR r0 ;1 cycle
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEMM ;1 cycle
-
-  ANDS r1,rps,#DFLAG
-  BNE r65c12opcode63_2
-  ;digital
-  R6502ADC ;1 cycle
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
-  R65C12NEXTOPCODE
-r65c12opcode63_2
-  ;BCD
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r65c12saveregs
-  BL adcbcd ;1 cycle
-  BL r65c12loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
-  CPU_CYCLES 5 ;+1
-  ;LDMFD sp!,{r0-r12,pc}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -219,31 +196,10 @@ r65c12opcode65_2
   R65C12NEXTOPCODE
 
 |r65c12opcode67|
-  ;RRA
-  ;STMFD sp!,{r0-r12,lr}
-  VALUEOFZEROPAGE_M
-  R6502ROR r0
-  STRB r0,[r11]
-
-  ANDS r1,rps,#DFLAG
-  BNE r65c12opcode67_2
-  ;digital
-  R6502ADC
-  CPU_CYCLES 5
-  ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
-  R65C12NEXTOPCODE
-r65c12opcode67_2
-  ;BCD
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r65c12saveregs
-  BL adcbcd
-  BL r65c12loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
-  CPU_CYCLES 6 ;+1
-  ;LDMFD sp!,{r0-r12,pc}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -314,9 +270,10 @@ r65c12opcode69_2
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
-r65c12opcode6B
+|r65c12opcode6B|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
@@ -421,35 +378,10 @@ r65c12opcode6D_2
   R65C12NEXTOPCODE
 
 |r65c12opcode6F|
-  ;RRA
-  ;STMFD sp!,{r0-r12,lr}
-  ADDRESSOFABSOLUTE_M ;r0 ;2 cycles
-  MOV r2,r0 ;store address
-  READMEMM ;1 cycle
-  R6502ROR r0
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEMM ;1 cycle
-
-  ANDS r1,rps,#DFLAG
-  BNE r65c12opcode6F_2
-  ;digital
-  R6502ADC
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r12,pc}
-  ;MOV pc,lr
-  R65C12NEXTOPCODE
-r65c12opcode6F_2
-  ;BCD
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r65c12saveregs
-  BL adcbcd
-  BL r65c12loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
-  CPU_CYCLES 5 ;+1
-  ;LDMFD sp!,{r0-r12,pc}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 

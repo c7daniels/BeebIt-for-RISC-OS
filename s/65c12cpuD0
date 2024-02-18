@@ -162,18 +162,19 @@ r65c12opcodeD0end
   R65C12NEXTOPCODE
 
 |r65c12opcodeD3|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
 |r65c12opcodeD4|
-  ;SKB
-  ;STMFD sp!,{r0-r2,rpc,r11,lr}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
   R6502SKB
-  CPU_CYCLES 3
-  ;LDMFD sp!,{r0-r2,rpc,r11,pc}
+  SUB rcycles,rcycles,#4
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -197,8 +198,9 @@ r65c12opcodeD0end
   R65C12NEXTOPCODE
 
 |r65c12opcodeD7|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
@@ -236,18 +238,19 @@ r65c12opcodeD0end
   R65C12NEXTOPCODE
 
 |r65c12opcodeDB|
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  R6502NOP
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
 |r65c12opcodeDC|
-  ;SKW
-  ;STMFD sp!,{r0-r2,rpc,r11,lr}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
   R6502SKW
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r2,rpc,r11,pc}
+  SUB rcycles,rcycles,#4
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -279,18 +282,10 @@ r65c12opcodeD0end
   R65C12NEXTOPCODE
 
 |r65c12opcodeDF|
-  ;DCP
-  ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  ADDRESSOFABSOLUTEX_M ;;; ;r0 ;3 cycles
-  MOV r2,r0
-  READMEMM ;1 cycle
-  R6502DEC r0
-  R6502CMP ;2 cycles
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEMM ;1 cycle
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 

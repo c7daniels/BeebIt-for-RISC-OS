@@ -841,10 +841,8 @@
   ;LDR r11,=r6502_pc
   ;LDR rpc,[r11]
   ADD rpc,rpc,#1
-  ANDS r0,rpc,#&10000
-  MOVNE r0,#&FF00
-  ORRNE r0,r0,#&00FF
-  ANDNE rpc,rpc,r0
+  MOV rpc,rpc,LSL #16
+  MOV rpc,rpc,LSR #16
   ;STR rpc,[r11]
   MEND
 
@@ -860,10 +858,8 @@
   ;LDR r11,=r6502_pc
   ;LDR rpc,[r11]
   ADD rpc,rpc,#2
-  ANDS r0,rpc,#&10000
-  MOVNE r0,#&FF00
-  ORRNE r0,r0,#&00FF
-  ANDNE rpc,rpc,r0
+  MOV rpc,rpc,LSL #16
+  MOV rpc,rpc,LSR #16
   ;STR rpc,[r11]
   MEND
 

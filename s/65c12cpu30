@@ -165,17 +165,10 @@ r65c12opcode30end
   R65C12NEXTOPCODE
 
 |r65c12opcode33|
-  ;RLA
-  ;STMFD sp!,{r0-ra,rps,r11,r12,lr}
-  ADDRESSOFPOSTINDEXEDY_M ;r0 ;3+ cycles
-  MOV r2,r0 ;store address
-  READMEMM ;1 cycle
-  R6502RLA ;3 cycles
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEMM ;1 cycle
-  CPU_CYCLES 5
-  ;LDMFD sp!,{r0-ra,rps,r11,r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -210,15 +203,10 @@ r65c12opcode30end
   R65C12NEXTOPCODE
 
 |r65c12opcode37|
-  ;RLA
-  ;STMFD sp!,{r0-ra,rps,r11,r12,lr}
-  ADDRESSOFZEROPAGEX_M ;;;
-  MOV r2,r0 ;store address
-  LDRB r0,[r12,r2]
-  R6502RLA
-  STRB r0,[r12,r2]
-  CPU_CYCLES 6
-  ;LDMFD sp!,{r0-ra,rps,r11,r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -255,17 +243,10 @@ r65c12opcode30end
   R65C12NEXTOPCODE
 
 |r65c12opcode3B|
-  ;RLA
-  ;STMFD sp!,{r0-ra,rps,r11,r12,lr}
-  ADDRESSOFABSOLUTEY_M ;;; ;r0 ;3 cycles
-  MOV r2,r0 ;store address
-  READMEMM ;1 cycle
-  R6502RLA ;2 cycles
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEMM ;1 cycle
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-ra,rps,r11,r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -307,17 +288,10 @@ r65c12opcode30end
   R65C12NEXTOPCODE
 
 |r65c12opcode3F|
-  ;RLA
-  ;STMFD sp!,{r0-ra,rps,r11,r12,lr}
-  ADDRESSOFABSOLUTEX_M ;;; ;r0 ;3 cycles
-  MOV r2,r0 ;store address
-  READMEMM ;1 cycle
-  R6502RLA ;2 cycles
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEMM ;1 cycle
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-ra,rps,r11,r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 

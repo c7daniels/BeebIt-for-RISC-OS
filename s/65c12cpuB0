@@ -186,21 +186,10 @@ r65c12opcodeB0end
   R65C12NEXTOPCODE
 
 |r65c12opcodeB3|
-  ;LAX
-  ;STMFD sp!,{r0-r2,rpc-r12,lr}
-  ;VALUEOFPOSTINDEXEDY
-  ADDRESSOFPOSTINDEXEDY_M ;r0 ;3+ cycles
-  READMEMM ;1 cycle
-  ;LDR r11,=r6502_a
-  ;STRB r0,[r11] ;ra=r0
-  MOV ra,r0 ;1 cycle
-  ;LDR r11,=r6502_x
-  ;STRB r0,[r11] ;rx=ra
-  MOV rx,r0
-  SETNFLAG r0
-  SETZFLAG r0
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,rpc-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -233,19 +222,10 @@ r65c12opcodeB0end
   R65C12NEXTOPCODE
 
 |r65c12opcodeB7|
-  ;LAX
-  ;STMFD sp!,{r0-r2,rpc-r12,lr}
-  ADDRESSOFZEROPAGEY_M ;;;
-  LDRB ra,[r12,r0] ;r0=ra
-  ;LDR r11,=r6502_a
-  ;STRB r0,[r11] ;ra=r0
-  ;LDR r11,=r6502_x
-  ;STRB r0,[r11] ;rx=ra
-  MOV rx,ra
-  SETNFLAG ra
-  SETZFLAG ra
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r2,rpc-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
@@ -291,22 +271,9 @@ r65c12opcodeB0end
   R65C12NEXTOPCODE
 
 |r65c12opcodeBB|
-  ;LAS
+  ;Reserved NOP
   ;STMFD sp!,{lr}
-  ;VALUEOFABSOLUTEYPLUS
-  ADDRESSOFABSOLUTEYPLUS_M ;r0 ;2+ cycles
-  READMEMM ;1 cycle
-  ANDS ra,r0,rsp ;r0 = r0 and sp
-  ;STRB ra,[r12] ;save a
-  ;set psr
-  ;LDR r12,=r6502_ps
-  ;LDRB rps,[r12] ;load ps
-  ;MOV r0,ra ;r0=ra
-  SETZFLAG0 ;ra
-  SETNFLAG ra
-  MOV rx,ra
-  MOV rsp,ra ;1 cycle
-  CPU_CYCLES 2
+  SUB rcycles,rcycles,#1
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
@@ -345,21 +312,10 @@ r65c12opcodeB0end
   R65C12NEXTOPCODE
 
 |r65c12opcodeBF|
-  ;LAX
-  ;STMFD sp!,{r0-r2,rpc-r12,lr}
-  ;VALUEOFABSOLUTEYPLUS ;r0=ra
-  ADDRESSOFABSOLUTEYPLUS_M ;r0 ;2+ cycles
-  READMEMM ;1 cycle
-  ;LDR r11,=r6502_a
-  ;STRB r0,[r11] ;ra=r0
-  MOV ra,r0
-  ;LDR r11,=r6502_x
-  ;STRB r0,[r11] ;rx=ra
-  MOV rx,r0 ;1 cycle
-  SETNFLAG r0
-  SETZFLAG r0
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,rpc-r12,pc}
+  ;Reserved NOP
+  ;STMFD sp!,{lr}
+  SUB rcycles,rcycles,#1
+  ;LDMFD sp!,{pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
 
