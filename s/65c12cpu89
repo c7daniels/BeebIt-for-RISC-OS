@@ -99,12 +99,19 @@
   ;BRA
   ;STMFD sp!,{r0-r2,rpc,r11,lr}
   VALUEOFIMMEDIATE_M r0
+  MOV r1,rpc,LSR#8
+  AND r1,r1,#&FF
   ANDS r2,r0,#&80 ;r2=(n & 0x80)
   MOVNE r3,#&100
   SUBNE r0,r3,r0 ;r0=(&100-r0)
   SUBNE rpc,rpc,r0 ;rpc=(rpc-r0)
   ADDEQ rpc,rpc,r0 ;rpc=(rpc+r0)
-  CPU_CYCLES 2
+
+  MOV r2,rpc,LSR#8
+  AND r2,r2,#&FF
+  CMP r1,r2
+  SUBNE rcycles,rcycles,#4
+  SUBEQ rcycles,rcycles,#3
   ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;MOV pc,lr
   R65C12NEXTOPCODE
