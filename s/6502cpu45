@@ -172,9 +172,8 @@ r6502opcode40end
   R6502NEXTOPCODE
 
 |r6502opcode42|
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;HLT
+  R6502JAM
   ;MOV pc,lr
   R6502NEXTOPCODE
 
@@ -400,9 +399,8 @@ r6502opcode50end
   R6502NEXTOPCODE
 
 |r6502opcode52|
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;HLT
+  R6502JAM
   ;MOV pc,lr
   R6502NEXTOPCODE
 

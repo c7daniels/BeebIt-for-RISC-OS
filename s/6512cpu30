@@ -159,9 +159,8 @@ r6512opcode30end
   R6512NEXTOPCODE
 
 |r6512opcode32|
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;HLT
+  R6502JAM
   ;MOV pc,lr
   R6512NEXTOPCODE
 

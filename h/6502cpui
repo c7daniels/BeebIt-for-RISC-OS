@@ -103,6 +103,14 @@
   ;MOV pc,lr
   MEND
 
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502JAM
+  SUB rpc,rpc,#1
+  CPU_CYCLES 1
+  MEND
 
 ;
 ;rockwell 6502 cpu

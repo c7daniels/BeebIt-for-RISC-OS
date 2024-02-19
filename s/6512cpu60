@@ -131,9 +131,8 @@ r6512opcode61_2
   R6512NEXTOPCODE
 
 |r6512opcode62|
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;HLT
+  R6502JAM
   ;MOV pc,lr
   R6512NEXTOPCODE
 
