@@ -212,100 +212,98 @@
 ;rockwell 6502 cpu
 ;
   MACRO
-  R6502ADCBCD
-  ;if decimal
-  MOV r1,#1 ;bit
-  MOV r2,#0 ;bit mask
-  ;c flag
-  ANDS r3,rps,#CFLAG
-  ORRNE r2,r2,r1,LSL#29 ;set c flag in bit mask
-  TEQP r3,r2 ;set flags in ARM PSR
-
-  AND r2,ra,#&0F
-  ;MOV r3,ra,ra,LSL#24 ;a=(a<<24)
-  ;MOV r1,#&00FFFFFF ;raFFFFFF
-  ;ORR r3,r3,r1
-  AND r1,r0,#&0F
-  ADC r1,r1,r2 ;=a+n+c
-
-  CMP r1,#10
-  SUBHS r1,r1,#10
-  ;MOV r1,r1,LSL#4
-  MOV r2,r0,LSR#4
-  ADC ra,r2,ra,LSR#4
-
-  CMP ra,#10
-  SUBHS ra,ra,#10
-  ORR ra,r1,ra,LSL#4
-
-  ;MOV r1,#&FF
-  ;ORRCS r0,r0,r1
-
-  MEND
-
-;
-;rockwell 6502 cpu
-;
-  MACRO
-  R6502ADCBCDXX
-  ;if decimal
-  MOV r1,#1 ;bit
-  MOV r2,#0 ;bit mask
-  ;c flag
-  ANDS r3,rps,#CFLAG
-  ORRNE r2,r2,r1,LSL#29 ;set c flag in bit mask
-  TEQP r3,r2 ;set flags in ARM PSR
-
-  AND r3,ra,#&0F
-  MOV r3,ra,ra,LSL#24 ;a=(a<<24)
-  MOV r1,#&00FFFFFF ;raFFFFFF
-  ORR r3,r3,r1
-
-  AND r2,r0,#&0F
-  MOV r2,r2,LSL#24 ;n=(n<<24)
-  ADC r2,r2,r3
-  MOV r2,r2,LSR#24 ;n=(n>>24)
-  CMP r2,#10
-  SUBCS r2,r2,#10
-  MOV ra,ra,LSR#28
-
-  ADCS ra,ra,r0 ;ra=a+n+c
-
-  MEND
-
-;
-;rockwell 6502 cpu
-;
-  MACRO
-  R6502ADCBCD2
+  R6502ADCD
   ;r0=number to adc with A
-  ADD r1,ra,r0 ;r1=ra+r0
-  ANDS r3,rps,#CFLAG
-  ADDNE r1,r1,#1
-  SETZFLAG r1
+  
+  ;if decimal and NMOS
+  MOV r0,r0,LSL #24
 
-  AND r3,ra,#&0F ;ra & 0x0F
-  AND r2,r0,#&0F ;r0 & 0x0F
-  ADD r3,r3,r2 ;lo byte
-  ANDS r1,rps,#CFLAG
-  ADDNE r3,r3,#1 ;lo byte
-  CMP r3,#9
-  ADDGT r3,r3,#6 ;lo byte
+  MOV r1,#&00FFFFFF
+  ORR r1,r1,ra,LSL #24
 
-  MOV r2,ra,LSR#4 ;ra >> 4
-  MOV r1,r0,LSR#4 ;r0 >> 4
-  ADD r2,r2,r1 ;hi byte
-  CMP r3,#&0F ;lo byte
-  ADDGT r2,r2,#1 ;hi byte
+  TEQ r0,rps,LSR #1
 
-  AND r3,r3,#&0F ;lo byte
+  ADCS r3,r1,r0
+  
+  CMP r3,#&01000000
+  ORRCC rps,rps,#ZFLAG
+  ANDCS rps,rps,#NOTZFLAG
 
-  MOV r1,r2,LSL#4 ;hi << 4
-  ADD r1,r1,r3 ;r3=(hi << 4) + lo
-  SETNFLAG r1
+  MOV r3,r1,LSL #4
+  ORR r3,r3,#&0F
+  
+  TEQ r0,rps,LSR #1
+  
+  ADCS r3,r3,r0,LSL #4
+  
+  BIC r0,r0,#&0F000000
+  ORR r1,r1,#&0F000000
+  
+  CMPCC r3,#&A0000000
+  ADDCS r3,r3,#&60000000
+  
+  ADCS r0,r0,r1
 
-  MOV r1,r2,LSL#4 ;hi << 4
+  AND rps,rps,#&3E ;%00111110 ;clear NVubdizC
+  ORRMI rps,rps,#NFLAG
+  ORRVS rps,rps,#VFLAG
 
+  CMPCC r0,#&A0000000
+  ADDCS r0,r0,#&60000000
+  
+  ORRCS rps,rps,#CFLAG
+  ANDCC rps,rps,#NOTCFLAG
+  
+  MOV r0,r0,LSR #28
+  MOV r3,r3,LSR #28
+  ORR ra,r3,r0,LSL #4
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502ADCD_M
+  ;r0=number to adc with A
+  
+  ;if decimal and CMOS
+  MOV r0,r0,LSL #24
+
+  MOV r1,#&00FFFFFF
+  ORR r1,r1,ra,LSL #24
+
+  MOV r3,r1,LSL #4
+  ORR r3,r3,#&0F
+  
+  TEQ r0,rps,LSR #1
+  
+  ADCS r3,r3,r0,LSL #4
+  
+  BIC r0,r0,#&0F000000
+  ORR r1,r1,#&0F000000
+  
+  CMPCC r3,#&A0000000
+  ADDCS r3,r3,#&60000000
+  
+  ADCS r2,r0,r1
+
+  CMPCC r2,#&A0000000
+  ADDCS r2,r2,#&60000000
+  
+  AND rps,rps,#&3C ;%00111100 ;clear NVubdiZC
+  ORRCS rps,rps,#CFLAG
+  TST r2,r2
+  ORRMI rps,rps,#NFLAG
+  
+  EOR r0,r0,r1
+  EOR r1,r1,r2
+  BICS r0,r1,r0
+  ORRMI rps,rps,#VFLAG
+  
+  MOV r2,r2,LSR #28
+  MOV r3,r3,LSR #28
+  ORRS ra,r3,r2,LSL #4
+  ORREQ rps,rps,#ZFLAG
   MEND
 
 ;
@@ -919,6 +917,91 @@
 ;  CMP ra,#0     jdl** combined with MOV above
   ORREQ rps,rps,#ZFLAG
   ;STRB ra,[r12] ;store a
+  MEND
+  
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502SBCD
+  ;r0=number to sbc with A
+
+  ;if decimal and NMOS
+  MOV r0,r0,LSL#24
+
+  MOV ra,ra,LSL#24
+
+  TEQ r0,rps,LSR #1
+
+  SBCS r3,ra,r0
+
+  AND rps,rps,#&3D ;%00111101 ;clear NVubdiZc
+  ORRMI rps,rps,#NFLAG
+  ORRVS rps,rps,#VFLAG
+
+  MOVS r3,r3,LSR#24
+  ORREQ rps,rps,#ZFLAG
+  
+  MOV r3,ra,LSL #4
+  
+  TEQ r0,rps,LSR #1
+
+  SBCS r3,r3,r0,LSL #4
+  SUBCC r3,r3,#&60000000
+  
+  AND ra,ra,#&F0000000
+  AND r0,r0,#&F0000000
+  
+  SBCS r0,ra,r0
+  SUBCC r0,r0,#&60000000
+  
+  ORRCS rps,rps,#CFLAG
+  ANDCC rps,rps,#NOTCFLAG
+  
+  MOV r0,r0,LSR #28
+  MOV r3,r3,LSR #28
+  ORR ra,r3,r0,LSL #4
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502SBCD_M
+  ;r0=number to sbc with A
+
+  ;if decimal and CMOS
+  MOV r0,r0,LSL#24
+
+  MOV ra,ra,LSL#24
+  
+  MOV r3,ra,LSL #4
+  
+  TEQ r0,rps,LSR #1
+
+  SBCS r3,r3,r0,LSL #4
+  SUBCC r3,r3,#&60000000
+  
+  AND ra,ra,#&F0000000
+  AND r0,r0,#&F0000000
+  
+  SBCS r2,ra,r0
+  SUBCC r2,r2,#&60000000
+  
+  AND rps,rps,#&3C ;%00111100 ;clear NVubdiZC
+  ORRCS rps,rps,#CFLAG
+  TST r2,r2
+  ORRMI rps,rps,#NFLAG
+  
+  EOR ra,r0,ra
+  EOR r0,r0,r2
+  ANDS r0,r0,ra
+  ORRMI rps,rps,#VFLAG
+  
+  MOV r2,r2,LSR #28
+  MOV r3,r3,LSR #28
+  ORRS ra,r3,r2,LSL #4
+  ORREQ rps,rps,#ZFLAG
   MEND
 
 ;

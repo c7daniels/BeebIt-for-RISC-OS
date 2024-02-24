@@ -113,13 +113,7 @@
   R6502NEXTOPCODE
 r6502opcodeE1_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd ;1 cycle
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -159,13 +153,7 @@ r6502opcodeE1_2
   R6502NEXTOPCODE
 r6502opcodeE3_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd ;1 cycle
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -196,13 +184,7 @@ r6502opcodeE3_2
   R6502NEXTOPCODE
 r6502opcodeE5_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD
   CPU_CYCLES 3
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -265,13 +247,7 @@ r6502opcodeE5_2
   R6502NEXTOPCODE
 r6502opcodeE9_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -300,13 +276,7 @@ r6502opcodeE9_2
   R6502NEXTOPCODE
 r6502opcodeEB_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -342,13 +312,7 @@ r6502opcodeEB_2
   R6502NEXTOPCODE
 r6502opcodeED_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd ;1 cycle
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -461,13 +425,7 @@ r6502opcodeF0end
   R6502NEXTOPCODE
 r6502opcodeF1_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd ;1 cycle
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -511,13 +469,7 @@ r6502opcodeF1_2
   R6502NEXTOPCODE
 r6502opcodeF5_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -570,13 +522,7 @@ r6502opcodeF5_2
   R6502NEXTOPCODE
 r6502opcodeF9_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd ;1 cycle
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -620,13 +566,7 @@ r6502opcodeF9_2
   R6502NEXTOPCODE
 r6502opcodeFD_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd ;1 cycle
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -666,20 +606,14 @@ r6502opcodeFD_2
   ANDS r1,rps,#DFLAG
   BNE r6502opcodeFF_2
   ;digital
-  R6502SBC ;2 cycles
+  R6502SBC ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
 r6502opcodeFF_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL sbcbcd ;2 cycles
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr

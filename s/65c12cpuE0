@@ -95,13 +95,7 @@
   R65C12NEXTOPCODE
 r65c12opcodeE1_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r65c12saveregs
-  BL sbcbcd ;1 cycle
-  BL r65c12loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD_M ;2 cycles
   CPU_CYCLES 3 ;+1
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -149,13 +143,7 @@ r65c12opcodeE1_2
   R65C12NEXTOPCODE
 r65c12opcodeE5_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r65c12saveregs
-  BL sbcbcd
-  BL r65c12loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD_M
   CPU_CYCLES 4 ;+1
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -208,13 +196,7 @@ r65c12opcodeE5_2
   R65C12NEXTOPCODE
 r65c12opcodeE9_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r65c12saveregs
-  BL sbcbcd
-  BL r65c12loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD_M
   CPU_CYCLES 3 ;+1
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -264,13 +246,7 @@ r65c12opcodeE9_2
   R65C12NEXTOPCODE
 r65c12opcodeED_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r65c12saveregs
-  BL sbcbcd ;1 cycle
-  BL r65c12loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502SBCD_M ;2 cycles
   CPU_CYCLES 3 ;+1
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr

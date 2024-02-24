@@ -120,13 +120,7 @@
   R6502NEXTOPCODE
 r6502opcode77_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL adcbcd
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502ADCD
   CPU_CYCLES 6
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -162,13 +156,7 @@ r6502opcode77_2
   R6502NEXTOPCODE
 r6502opcode79_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL adcbcd ;1 cycle
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502ADCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -194,20 +182,14 @@ r6502opcode79_2
   ANDS r1,rps,#DFLAG
   BNE r6502opcode7B_2
   ;digital
-  R6502ADC ;2 cycles
+  R6502ADC ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
 r6502opcode7B_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL adcbcd ;2 cycles
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502ADCD ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -240,13 +222,7 @@ r6502opcode7B_2
   R6502NEXTOPCODE
 r6502opcode7D_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL adcbcd ;1 cycle
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502ADCD ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
@@ -280,20 +256,14 @@ r6502opcode7D_2
   ANDS r1,rps,#DFLAG
   BNE r6502opcode7F_2
   ;digital
-  R6502ADC ;2 cycles
+  R6502ADC ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
 r6502opcode7F_2
   ;BCD
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  BL r6502saveregs
-  BL adcbcd ;2 cycles
-  BL r6502loadregs
-  ;LDMFD sp!,{lr}
-  LDR lr, [sp], #4
+  R6502ADCD ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
