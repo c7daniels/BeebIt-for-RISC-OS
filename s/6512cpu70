@@ -56,7 +56,6 @@
 
   ;IMPORT |sheilaread|
   ;IMPORT |sheilawrite|
-  IMPORT |adcbcd|
   IMPORT |r6512loadregs|
   IMPORT |r6512saveregs|
   IMPORT |r6512opcodes|

@@ -46,7 +46,6 @@
   IMPORT |r6502write|
   IMPORT |r6502readbp|
   IMPORT |r6502writebp|
-  IMPORT |sbcbcd|
   IMPORT |r6512loadregs|
   IMPORT |r6512saveregs|
   IMPORT |r6512opcodes|

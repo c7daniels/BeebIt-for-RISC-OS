@@ -61,7 +61,6 @@
 
   ;IMPORT |sheilaread|
   ;IMPORT |sheilawrite|
-  IMPORT |adcbcd|
 
 ; Export global symbols
 
