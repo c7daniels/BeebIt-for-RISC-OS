@@ -332,6 +332,57 @@
 ;rockwell 6502 cpu
 ;
   MACRO
+  R6502ARR
+  ;r0=number to arr
+  AND ra,ra,r0
+  MOV r3,ra,LSL#24
+  ADCS r1,r3,r3
+  AND r3,rps,#CFLAG
+  AND rps,rps,#&3C
+  ORRVS rps,rps,#VFLAG
+  ORRCS rps,rps,#CFLAG
+  CMP r3,#0
+  ORRNE ra,ra,#&100
+  ORRNE rps,rps,#NFLAG
+  MOVS ra,ra,LSR #1
+  ORREQ rps,rps,#ZFLAG
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502ARRD
+  ;r0=number to arr
+  AND ra,ra,r0
+  MOV r0,ra
+  MOV r3,ra,LSL#24
+  ADCS r1,r3,r3
+  AND r3,rps,#CFLAG
+  AND rps,rps,#&3C
+  ORRVS rps,rps,#VFLAG
+  CMP r3,#0
+  ORRNE ra,ra,#&100
+  ORRNE rps,rps,#NFLAG
+  MOVS ra,ra,LSR #1
+  ORREQ rps,rps,#ZFLAG
+  AND r3,r0,#&0F
+  CMP r3,#&0A
+  ADDCS r3,ra,#&06
+  ANDCS r3,r3,#&0F
+  ANDCS ra,ra,#&F0
+  ORRCS ra,r3,ra
+  AND r3,r0,#&F0
+  CMP r3,#&A0
+  ADDCS ra,ra,#&60
+  ANDCS ra,ra,#&FF
+  ORRCS rps,rps,#CFLAG
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
   R6502ANC
   ;r0=number to and
   ;LDR r12,=r6502_a
@@ -402,7 +453,7 @@
   MOV r0,r0,LSL #&01 ;shift left
   ;LDR r10,=r6502_a
   ;LDRB ra,[r10]
-  ANDS ra,ra,r0
+  ORR ra,ra,r0
   ;STRB ra,[r10]
   SETZFLAG0 ;ra
   SETNFLAG ra
@@ -719,6 +770,22 @@
 ;rockwell 6502 cpu
 ;
   MACRO
+  R6502LSE
+  ;IN: r0=number to lse
+  ;OUT:r0=result
+  ANDS r1,r0,#&01
+  ORRNE rps,rps,#CFLAG ;set c flag
+  ANDEQ rps,rps,#NOTCFLAG ;clear c flag
+  MOV r0,r0,LSR #&01 ;shift right
+  EORS ra,ra,r0
+  SETZFLAG0 ;ra
+  SETNFLAG ra
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
   R6502LSR $n
   ;IN: $n=number to lsr
   ;OUT:$n=result
@@ -727,7 +794,7 @@
   ANDS r1,$n,#&01
   ORRNE rps,rps,#CFLAG ;set c flag
   ANDEQ rps,rps,#NOTCFLAG ;clear c flag
-  MOV $n,$n,LSR #&01 ;shift left
+  MOV $n,$n,LSR #&01 ;shift right
   AND rps,rps,#NOTNFLAG ;clear n flag
   ANDS $n,$n,#&FF
   SETZFLAG0 ;$n
@@ -918,7 +985,7 @@
   ORREQ rps,rps,#ZFLAG
   ;STRB ra,[r12] ;store a
   MEND
-  
+
 ;
 ;rockwell 6502 cpu
 ;

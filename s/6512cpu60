@@ -258,7 +258,7 @@ r6512opcode67_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;LDMFD sp!,{pc}
-  MOV pc,lr
+  ;MOV pc,lr
   R6512NEXTOPCODE
 r6512opcode69_2
   ;BCD
@@ -266,7 +266,7 @@ r6512opcode69_2
   CPU_CYCLES 2
   ;LDMFD sp!,{r0-r12,pc}
   ;LDMFD sp!,{pc}
-  MOV pc,lr
+  ;MOV pc,lr
   R6512NEXTOPCODE
 
 |r6512opcode6A|
@@ -282,10 +282,20 @@ r6512opcode69_2
   ;MOV pc,lr
   R6512NEXTOPCODE
 
-r6512opcode6B
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+|r6512opcode6B|
+  ;ARR
+  VALUEOFIMMEDIATE_BP r0
+  ANDS r1,rps,#DFLAG
+  BNE r6512opcode6B_2
+  ;digital
+  R6502ARR
+  CPU_CYCLES 2
+  ;MOV pc,lr
+  R6512NEXTOPCODE
+r6512opcode6B_2
+  ;BCD
+  R6502ARRD
+  CPU_CYCLES 2
   ;MOV pc,lr
   R6512NEXTOPCODE
 

@@ -209,7 +209,7 @@
   ;SKB
   ;STMFD sp!,{r0-r2,rpc,r11,lr}
   R6502SKB
-  CPU_CYCLES 3
+  CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;MOV pc,lr
   R6512NEXTOPCODE

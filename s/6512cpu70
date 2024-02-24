@@ -179,10 +179,10 @@ r6512opcode71_2
 |r6512opcode73|
   ;RRA
   ;STMFD sp!,{r0-r12,lr}
-  ADDRESSOFPOSTINDEXEDY_BP ;r0 ;3+ cycles
+  ADDRESSOFPOSTINDEXEDY_STA_BP ;r0 ;4 cycles
   MOV r2,r0 ;store address
   READMEMBP ;1 cycle
-  R6502ROR r0 ;2 cycles
+  R6502ROR r0 ;1 cycles
   MOV r1,r0 ;value
   MOV r0,r2 ;address
   WRITEMEMBP ;1 cycle
@@ -191,14 +191,14 @@ r6512opcode71_2
   BNE r6512opcode73_2
   ;digital
   R6502ADC ;1 cycle
-  CPU_CYCLES 5
+  CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
   R6512NEXTOPCODE
 r6512opcode73_2
   ;BCD
   R6502ADCD ;1 cycle
-  CPU_CYCLES 5
+  CPU_CYCLES 4
   ;LDMFD sp!,{r0-r12,pc}
   ;MOV pc,lr
   R6512NEXTOPCODE
@@ -206,9 +206,8 @@ r6512opcode73_2
 |r6512opcode74|
   ;SKB
   ;STMFD sp!,{r0-r2,rpc,r11,lr}
-  ;STMFD sp!,{r0-r2,rpc,r11,lr}
   R6502SKB
-  CPU_CYCLES 3
+  CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;MOV pc,lr
   R6512NEXTOPCODE

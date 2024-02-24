@@ -299,7 +299,6 @@ r6512opcode28end
   WRITEMEMBP ;1 cycle
   CPU_CYCLES 4
   ;LDMFD sp!,{r0-ra,rps,r11,r12,pc}
-  ;STMFD sp!,{lr}
   ;MOV pc,lr
   R6512NEXTOPCODE
 

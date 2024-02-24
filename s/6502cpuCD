@@ -234,7 +234,7 @@
   SUBS rx,rx,r0
   SETZFLAG0
   SETNFLAG rx
-  SETVFLAG rx
+  AND rx,rx,#&FF
   CPU_CYCLES 2
   ;LDMFD sp!,{pc}
   ;MOV pc,lr
@@ -281,9 +281,20 @@
   R6502NEXTOPCODE
 
 |r6502opcodeCF|
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;DCP
+  ;STMFD sp!,{r0-r2,rps-r12,lr}
+  ;VALUEOFABSOLUTE
+  ADDRESSOFABSOLUTE_B ;r0 ;2 cycles
+  MOV r2,r0 ;store address
+  READMEMB ;1 cycle
+  R6502DEC r0 ;1 cycle
+  R6502CMP
+  MOV r1,r0 ;value
+  MOV r0,r2 ;address
+  ;BL r6502writemem
+  WRITEMEMB ;1 cycle
+  CPU_CYCLES 4
+  ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
 
@@ -438,9 +449,18 @@ r6502opcodeD0_2
   R6502NEXTOPCODE
 
 |r6502opcodeD3|
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;DCP
+  ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
+  ADDRESSOFPOSTINDEXEDY_STA ;r0 ;4 cycles
+  MOV r2,r0
+  READMEMB ;1 cycle
+  R6502DEC r0 ;1 cycle
+  R6502CMP ;1 cycle
+  MOV r1,r0 ;value
+  MOV r0,r2 ;address
+  WRITEMEMB ;1 cycle
+  CPU_CYCLES 4
+  ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
 
@@ -448,7 +468,7 @@ r6502opcodeD0_2
   ;SKB
   ;STMFD sp!,{r0-r2,rpc,r11,lr}
   R6502SKB
-  CPU_CYCLES 3
+  CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
@@ -473,9 +493,16 @@ r6502opcodeD0_2
   R6502NEXTOPCODE
 
 |r6502opcodeD7|
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;DCP
+  ;STMFD sp!,{r0-ra,rps,r11,r12,lr}
+  ADDRESSOFZEROPAGEX
+  MOV r2,r0 ;store address
+  LDRB r0,[r12,r2]
+  R6502DEC r0
+  R6502CMP
+  STRB r0,[r12,r2]
+  CPU_CYCLES 6
+  ;LDMFD sp!,{r0-ra,rps,r11,r12,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
 
@@ -512,9 +539,18 @@ r6502opcodeD0_2
   R6502NEXTOPCODE
 
 |r6502opcodeDB|
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;DCP
+  ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
+  ADDRESSOFABSOLUTEY ;r0 ;3 cycles
+  MOV r2,r0
+  READMEMB ;1 cycle
+  R6502DEC r0 ;2 cycles
+  R6502CMP
+  MOV r1,r0 ;value
+  MOV r0,r2 ;address
+  WRITEMEMB ;1 cycle
+  CPU_CYCLES 4
+  ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
 

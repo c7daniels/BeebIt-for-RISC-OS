@@ -393,7 +393,7 @@ r6502opcode7F_2
   ;SKB
   ;STMFD sp!,{r0-r2,rpc,r11,lr}
   R6502SKB
-  CPU_CYCLES 3
+  CPU_CYCLES 2
   ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
@@ -593,10 +593,16 @@ r6502opcode90end
   R6502NEXTOPCODE
 
 |r6502opcode93|
-  ;SAX
+  ;SHA
   ;STMFD sp!,{lr}
-  ADDRESSOFPOSTINDEXEDY_B ;r0 ;3+ cycles
+  ADDRESSOFPOSTINDEXEDY_STA ;r0 ;4 cycles
+  AND r1,r0,#&FF
+  CMP r1,ry
+  ADD r2,r0,#&0100
   AND r1,ra,rx ;1 cycle
+  AND r1,r1,r2,LSR #8
+  ANDMI r0,r0,#&FF
+  ORRMI r0,r0,r1,LSL #8
   WRITEMEMB ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{pc}

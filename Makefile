@@ -35,11 +35,12 @@ all: @.!RunImage @.RipROMs
 RunImage = @.o.main @.o.beebit \
   @.o.6502cpu @.o.6502cpus @.o.6502cpu!! @.o.6502cpu01 @.o.6502cpu23 \
   @.o.6502cpu45 @.o.6502cpu67 @.o.6502cpu89 @.o.6502cpuAB \
-  @.o.6502cpuCD @.o.6502cpuEF \
+  @.o.6502cpuCD @.o.6502cpuE0 @.o.6502cpuF0 \
   @.o.6512cpu!! @.o.6512cpu00 @.o.6512cpu10 @.o.6512cpu20 \
-  @.o.6512cpu30 @.o.6512cpu45 @.o.6512cpu60 @.o.6512cpu70 \
-  @.o.6512cpu80 @.o.6512cpu90 @.o.6512cpuA0 @.o.6512cpuB0 \
-  @.o.6512cpuC0 @.o.6512cpuD0 @.o.6512cpuE0 @.o.6512cpuF0 \
+  @.o.6512cpu30 @.o.6512cpu40 @.o.6512cpu50 @.o.6512cpu60 \
+  @.o.6512cpu70 @.o.6512cpu80 @.o.6512cpu90 @.o.6512cpuA0 \
+  @.o.6512cpuB0 @.o.6512cpuC0 @.o.6512cpuD0 @.o.6512cpuE0 \
+  @.o.6512cpuF0 \
   @.o.65c12cpu @.o.65c12cpu!! @.o.65c12cpu00 @.o.65c12cpu10 \
   @.o.65c12cpu20 @.o.65c12cpu30 @.o.65c12cpu45 @.o.65c12cpu60 \
   @.o.65c12cpu70 @.o.65c12cpu89 @.o.65c12cpuA0 @.o.65c12cpuB0 \
@@ -172,11 +173,16 @@ o.6502cpuCD: h.6502cpus
 o.6502cpuCD: h.6502cpui
 o.6502cpuCD: h.RegNames
 o.6502cpuCD: h.SWInames
-o.6502cpuEF: s.6502cpuEF
-o.6502cpuEF: h.6502cpus
-o.6502cpuEF: h.6502cpui
-o.6502cpuEF: h.RegNames
-o.6502cpuEF: h.SWInames
+o.6502cpuE0: s.6502cpuE0
+o.6502cpuE0: h.6502cpus
+o.6502cpuE0: h.6502cpui
+o.6502cpuE0: h.RegNames
+o.6502cpuE0: h.SWInames
+o.6502cpuF0: s.6502cpuF0
+o.6502cpuF0: h.6502cpus
+o.6502cpuF0: h.6502cpui
+o.6502cpuF0: h.RegNames
+o.6502cpuF0: h.SWInames
 o.6512cpu!!: s.6512cpu!!
 o.6512cpu!!: h.6502cpus
 o.6512cpu!!: h.6502cpui
@@ -202,11 +208,16 @@ o.6512cpu30: h.6502cpus
 o.6512cpu30: h.6502cpui
 o.6512cpu30: h.RegNames
 o.6512cpu30: h.SWInames
-o.6512cpu45: s.6512cpu45
-o.6512cpu45: h.6502cpus
-o.6512cpu45: h.6502cpui
-o.6512cpu45: h.RegNames
-o.6512cpu45: h.SWInames
+o.6512cpu40: s.6512cpu40
+o.6512cpu40: h.6502cpus
+o.6512cpu40: h.6502cpui
+o.6512cpu40: h.RegNames
+o.6512cpu40: h.SWInames
+o.6512cpu50: s.6512cpu50
+o.6512cpu50: h.6502cpus
+o.6512cpu50: h.6502cpui
+o.6512cpu50: h.RegNames
+o.6512cpu50: h.SWInames
 o.6512cpu60: s.6512cpu60
 o.6512cpu60: h.6502cpus
 o.6512cpu60: h.6502cpui
@@ -418,6 +429,7 @@ o.sheila:	h.videoula
 o.sheila:	h.1770fdc
 o.scrmode:	c.scrmode
 o.scrmode:	h.6502cpu
+o.scrmode:	h.main
 o.scrmode:	C:h.kernel
 o.scrmode:	h.swis
 o.scrmode:	h.scrmode

@@ -578,14 +578,14 @@ r6502opcode10end
 |r6502opcode13|
   ;ASO
   ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  ADDRESSOFPOSTINDEXEDY_B ;r0 ;3+ cycles
+  ADDRESSOFPOSTINDEXEDY_STA ;r0 ;4 cycles
   MOV r2,r0 ;store address
   READMEMB ;1 cycle
-  R6502ASO ;3 cycles
+  R6502ASO ;2 cycles
   MOV r1,r0 ;value
   MOV r0,r2 ;address
   WRITEMEMB ;1 cycle
-  CPU_CYCLES 5
+  CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE
@@ -594,7 +594,7 @@ r6502opcode10end
   ;SKB
   ;STMFD sp!,{r0-r2,rpc,r11,lr}
   R6502SKB
-  CPU_CYCLES 3
+  CPU_CYCLES 4
   ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;MOV pc,lr
   R6502NEXTOPCODE

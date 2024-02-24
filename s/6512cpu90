@@ -219,10 +219,16 @@ r6512opcode90end
   R6512NEXTOPCODE
 
 |r6512opcode93|
-  ;SAX
+  ;SHA
   ;STMFD sp!,{lr}
-  ADDRESSOFPOSTINDEXEDY_BP ;r0 ;3+ cycles
+  ADDRESSOFPOSTINDEXEDY_STA_BP ;r0 ;4 cycles  
+  AND r1,r0,#&FF
+  CMP r1,ry
+  ADD r2,r0,#&0100
   AND r1,ra,rx ;1 cycle
+  AND r1,r1,r2,LSR #8
+  ANDMI r0,r0,#&FF
+  ORRMI r0,r0,r1,LSL #8
   WRITEMEMBP ;1 cycle
   CPU_CYCLES 2
   ;LDMFD sp!,{pc}
@@ -324,17 +330,36 @@ r6512opcode90end
   R6512NEXTOPCODE
 
 |r6512opcode9B|
-  ;STMFD sp!,{lr}
-  ;LDMFD sp!,{pc}
-  R6502NOP
+  ;SHS
+  ;STMFD sp!,{r0-r2,ry,rps-r12,lr}
+  ADDRESSOFABSOLUTEY_BP ;r0 ;3 cycles
+  AND r1,r0,#&FF
+  CMP r1,ry
+  ADD r2,r0,#&0100
+  AND r1,ra,rx ;1 cycle
+  AND r1,r1,r2,LSR #8
+  MOV rsp,r1
+  ANDMI r0,r0,#&FF
+  ORRMI r0,r0,r1,LSL #8
+  WRITEMEMBP ;1 cycle
+  CPU_CYCLES 2
+  ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
   R6512NEXTOPCODE
 
 |r6512opcode9C|
-  ;ILL
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;SHY
+  ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
+  ADDRESSOFABSOLUTEX_BP ;r0 ;3 cycles
+  AND r1,r0,#&FF
+  CMP r1,rx
+  ADD r2,r0,#&0100
+  AND r1,ry,r2,LSR #8 ;1 cycle
+  ANDMI r0,r0,#&FF
+  ORRMI r0,r0,r1,LSL #8
+  WRITEMEMBP ;1 cycle
+  CPU_CYCLES 2
+  ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;MOV pc,lr
   R6512NEXTOPCODE
 
@@ -351,17 +376,35 @@ r6512opcode90end
   R6512NEXTOPCODE
 
 |r6512opcode9E|
-  ;ILL
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;SHX
+  ;STMFD sp!,{r0-r2,ry,rps-r12,lr}
+  ADDRESSOFABSOLUTEY_BP ;r0 ;3 cycles
+  AND r1,r0,#&FF
+  CMP r1,ry
+  ADD r2,r0,#&0100
+  AND r1,rx,r2,LSR #8 ;1 cycle
+  ANDMI r0,r0,#&FF
+  ORRMI r0,r0,r1,LSL #8
+  WRITEMEMBP ;1 cycle
+  CPU_CYCLES 2
+  ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
   R6512NEXTOPCODE
 
 |r6512opcode9F|
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
+  ;SHA
+  ;STMFD sp!,{r0-r2,ry,rps-r12,lr}
+  ADDRESSOFABSOLUTEY_BP ;r0 ;3 cycles
+  AND r1,r0,#&FF
+  CMP r1,ry
+  ADD r2,r0,#&0100
+  AND r1,ra,rx ;1 cycle
+  AND r1,r1,r2,LSR #8
+  ANDMI r0,r0,#&FF
+  ORRMI r0,r0,r1,LSL #8
+  WRITEMEMBP ;1 cycle
+  CPU_CYCLES 2
+  ;LDMFD sp!,{r0-r2,ry,rps-r12,pc}
   ;MOV pc,lr
   R6512NEXTOPCODE
 

@@ -152,7 +152,6 @@ r65c12opcodeF0_2
   R65C12NEXTOPCODE
 r65c12opcodeF1_2
   ;BCD
-  ;STMFD sp!,{lr}
   R6502SBCD_M ;2 cycles
   CPU_CYCLES 3 ;+1
   ;LDMFD sp!,{r0-r12,pc}
@@ -175,7 +174,6 @@ r65c12opcodeF1_2
   R65C12NEXTOPCODE
 r65c12opcodeF2_2
   ;BCD
-  ;STMFD sp!,{lr}
   R6502SBCD_M
   CPU_CYCLES 6 ;+1
   ;LDMFD sp!,{r0-r12,pc}
