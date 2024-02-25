@@ -60,41 +60,17 @@
 
 ; Export global symbols
 
-  EXPORT |r65c12opcode60|
   EXPORT |r65c12opcode61|
   EXPORT |r65c12opcode62|
   EXPORT |r65c12opcode63|
   EXPORT |r65c12opcode64|
   EXPORT |r65c12opcode65|
-  EXPORT |r65c12opcode66|
   EXPORT |r65c12opcode67|
-  EXPORT |r65c12opcode68|
   EXPORT |r65c12opcode69|
-  EXPORT |r65c12opcode6A|
   EXPORT |r65c12opcode6B|
   EXPORT |r65c12opcode6C|
   EXPORT |r65c12opcode6D|
-  EXPORT |r65c12opcode6E|
   EXPORT |r65c12opcode6F|
-
-|r65c12opcode60|
-  ;RTS
-  ;STMFD sp!,{r0-r2,rsp,rpc,r10-r12,lr}
-  ;LDR r12,=memory ;pointer to memory
-  ;LDR r10,=r6502_sp ;pointer to r6502_sp
-  ;LDRB rsp,[r10] ;load r6502_sp
-  STACKPOP r2 ;lo
-  STACKPOP r3 ;hi
-  ;STRB rsp,[r10] ;store r6502_sp
-  ;LDR r11,=r6502_pc
-  ADD rpc,r2,r3,LSL#8 ;r6502_pc=nlo+(nhi<<8)
-  ADD rpc,rpc,#1 ;r6502_pc++ (6502 bug)
-
-  ;STR rpc,[r11]
-  CPU_CYCLES 6
-  ;LDMFD sp!,{r0-r2,rsp,rpc,r10-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
 
 |r65c12opcode61|
   ;ADC
@@ -166,42 +142,9 @@ r65c12opcode65_2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-|r65c12opcode66|
-  ;STMFD sp!,{r0-r4,rps,rpc,r10-r12,lr}
-  VALUEOFZEROPAGE
-  R6502ROR r0
-  STRB r0,[r11]
-  CPU_CYCLES 5
-  ;LDMFD sp!,{r0-r4,rps,rpc,r10-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
 |r65c12opcode67|
   ;Reserved NOP
   SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode68|
-  ;PLA
-  ;STMFD sp!,{r2,rsp,ra,rps,r11-r12,lr}
-  ;LDR r12,=memory ;pointer to memory
-  ;LDR r11,=r6502_sp ;pointer to r6502_sp
-  ;LDRB rsp,[r11] ;load r6502_sp
-  STACKPOP ra
-  ;STRB rsp,[r11]
-
-  ;LDR r11,=r6502_ps ;pointer to r6502_ps
-  ;LDRB rps,[r11] ;r6502_ps
-  SETNFLAG ra
-  SETZFLAG ra
-  ;STRB rps,[r11] ;r6502_ps
-
-  ;LDR r11,=r6502_a ;pointer to r6502_a
-  ;STRB ra,[r11] ;r6502_ps
-
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r2,rsp,ra,rps,r11-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -227,19 +170,6 @@ r65c12opcode69_2
   CPU_CYCLES 3 ;+1
   ;LDMFD sp!,{r0-r12,pc}
   ;LDMFD sp!,{pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode6A|
-  ;STMFD sp!,{r0-r4,rps-r12,lr}
-  ;LDR r10,=r6502_a
-  ;LDRB r0,[r10]
-  ;MOV r0,ra
-  R6502ROR ra
-  ;STRB r0,[r10]
-  ;MOV ra,r0
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r4,rps-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -299,21 +229,6 @@ r65c12opcode6D_2
   R6502ADCD_M ;2 cycles
   CPU_CYCLES 3 ;+1
   ;LDMFD sp!,{r0-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode6E|
-  ;STMFD sp!,{r0-r4,rps-r12,lr}
-  ;VALUEOFABSOLUTE
-  ADDRESSOFABSOLUTE ;r0 ;2 cycles
-  MOV r2,r0 ;store address
-  READMEM ;1 cycle
-  R6502ROR r0 ;2 cycles
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r4,rps-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 

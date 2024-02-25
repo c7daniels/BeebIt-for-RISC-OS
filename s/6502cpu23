@@ -109,39 +109,36 @@
 
 |r6502opcode20|
   ;JSR
+  CMP rpc,#&2FC0
+  ADDGT pc,pc,#12 ;4*4 (-4)
+
+  ;rpc < &2FC1 < &3000
   ADD r11,r12,rpc ;r11=memory+pc (offset)
   LDRB r2,[r11] ;lo
-  LDRB r1,[r11,#1] ;hi
+  LDRB r0,[r11,#1] ;hi
+  ADD pc,pc,#(READMEM_LEN*2)+(3*4)-4 ;9*4 (-4)
 
-  ADD r0,rpc,#1 ;jsr bug
-  ADD rpc,r2,r1,LSL#8 ;r0=lo+(hi<<8)
+  ;rpc > &2FC0
+  MOV r0,rpc
+  READMEM ;1*4
+  MOV r2,r0 ;lo
+
+  ADD r0,rpc,#1 ;rpc += 1
+  READMEM ;1*4 ;hi
+
+  ;continue
+  ADD r3,rpc,#1 ;jsr bug
+  ADD rpc,r2,r0,LSL#8 ;r0=lo+(hi<<8)
 
   ;ADD rpc,rpc,#1 ;jsr bug
-  AND r2,r0,#&FF00 ;pc & 0xFF00
+  AND r2,r3,#&FF00 ;pc & 0xFF00
   MOV r2,r2,LSR#8  ;>>8
   STACKPUSH r2
-  AND r2,r0,#&FF ;pc & 0xFF
+  AND r2,r3,#&FF ;pc & 0xFF
   STACKPUSH r2
   ;MOV rpc,r0
   CPU_CYCLES 6
-
-  ;STMFD sp!,{rpc}
-  ;SWI OS_WriteI+32
-  ;MOV r0,rpc
-  ;LDR r1,=buffer20
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex4 ;BinaryToDecimal
-  ;SWI OS_Write0
-  ;SWI OS_WriteI+32
-  ;LDMFD sp!,{rpc}
-
   R6502NEXTOPCODE
-
-buffer20
-  DCD 0
-  DCD 0
-  DCD 0
-  DCD 0
 
 |r6502opcode21|
   ;AND

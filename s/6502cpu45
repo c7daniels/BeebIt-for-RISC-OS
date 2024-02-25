@@ -280,19 +280,25 @@ r6502opcode40end
 |r6502opcode4C|
   ;JMP
   ;STMFD sp!,{r0-r2,rpc,r10-r12,lr}
-  ;ADDRESSOFABSOLUTE
-  ;LDR r12,=memory ;pointer to memory block
-  ;LDR r11,=r6502_pc
-  ;LDR rpc,[r11]
-  LDRB r2,[r12,rpc] ;lo
-  ADD rpc,rpc,#1
-  LDRB r1,[r12,rpc] ;hi
-  ADD rpc,r2,r1,LSL#8 ;r0=lo+(hi<<8)
+  CMP rpc,#&2FC0
+  ADDGT pc,pc,#12 ;4*4 (-4)
 
-  ;STR rpc,[r11] ;pc
+  ;rpc < &2FC1 < &3000
+  ADD r11,r12,rpc ;r11=memory+pc (offset)
+  LDRB r2,[r11] ;lo
+  LDRB r0,[r11,#1] ;hi
+  ADD pc,pc,#(READMEM_LEN*2)+(3*4)-4 ;9*4 (-4)
+
+  ;rpc > &2FC0
+  MOV r0,rpc
+  READMEM ;lo
+  MOV r2,r0 ;lo
+  ADD r0,rpc,#1
+  READMEM ;hi
+
+  ;continue
+  ADD rpc,r2,r0,LSL#8 ;r0=lo+(hi<<8)
   CPU_CYCLES 3
-  ;LDMFD sp!,{r0-r2,rpc,r10-r12,pc}
-  ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r6502opcode4D|

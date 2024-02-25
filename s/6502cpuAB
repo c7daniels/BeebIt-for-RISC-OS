@@ -273,12 +273,6 @@
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-;bufferdd
-;  DCD 0
-;  DCD 0
-;  DCD 0
-;  DCD 0
-
 |r6502opcodeA6|
   ;LDX
   ;STMFD sp!,{r0-r2,rps-r12,lr}

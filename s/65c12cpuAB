@@ -1,4 +1,4 @@
-;>65c12cpuC0.s
+;>65c12cpuAB.s
 ;
 ; BeebIt - BBC Micro Model B Emulator
 ;
@@ -32,7 +32,6 @@
   AREA |C$$code|, CODE, READONLY
 
 ; Import global symbols
-
   IMPORT |memory|
   IMPORT |r6502_sp|
   IMPORT |r6502_pc|
@@ -50,6 +49,8 @@
   IMPORT |r6502_cyclestogo|
   IMPORT |r6502readmem|
   IMPORT |r6502writemem|
+  IMPORT |r6502loadregs|
+  IMPORT |r6502saveregs|
   IMPORT |r6502opcodes|
 
   ;IMPORT |sheilaread|
@@ -57,38 +58,70 @@
 
 ; Export global symbols
 
-  EXPORT |r65c12opcodeC2|
-  EXPORT |r65c12opcodeC3|
-  EXPORT |r65c12opcodeC7|
-  EXPORT |r65c12opcodeCB|
-  EXPORT |r65c12opcodeCF|
+  EXPORT |r65c12opcodeA3|
+  EXPORT |r65c12opcodeA7|
+  EXPORT |r65c12opcodeAB|
+  EXPORT |r65c12opcodeAF|
+  EXPORT |r65c12opcodeB2|
+  EXPORT |r65c12opcodeB3|
+  EXPORT |r65c12opcodeB7|
+  EXPORT |r65c12opcodeBB|
+  EXPORT |r65c12opcodeBF|
 
-|r65c12opcodeC2|
-  ;Reserved NOP
-  R6502SKB
-  SUB rcycles,rcycles,#2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcodeC3|
+|r65c12opcodeA3|
   ;Reserved NOP
   SUB rcycles,rcycles,#1
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-|r65c12opcodeC7|
+|r65c12opcodeA7|
   ;Reserved NOP
   SUB rcycles,rcycles,#1
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-|r65c12opcodeCB|
+|r65c12opcodeAB|
   ;Reserved NOP
   SUB rcycles,rcycles,#1
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-|r65c12opcodeCF|
+|r65c12opcodeAF|
+  ;Reserved NOP
+  SUB rcycles,rcycles,#1
+  ;LDR pc,[sp],#4
+  R6502NEXTOPCODE
+
+|r65c12opcodeB2|
+  ;LDA
+  ;STMFD sp!,{lr}
+  ADDRESSOFINDZEROPAGE 
+  READMEM ;1 cycle
+  R6502LDA
+  CPU_CYCLES 5
+  ;LDMFD sp!,{pc}
+  ;LDR pc,[sp],#4
+  R6502NEXTOPCODE
+
+|r65c12opcodeB3|
+  ;Reserved NOP
+  SUB rcycles,rcycles,#1
+  ;LDR pc,[sp],#4
+  R6502NEXTOPCODE
+
+|r65c12opcodeB7|
+  ;Reserved NOP
+  SUB rcycles,rcycles,#1
+  ;LDR pc,[sp],#4
+  R6502NEXTOPCODE
+
+|r65c12opcodeBB|
+  ;Reserved NOP
+  SUB rcycles,rcycles,#1
+  ;LDR pc,[sp],#4
+  R6502NEXTOPCODE
+
+|r65c12opcodeBF|
   ;Reserved NOP
   SUB rcycles,rcycles,#1
   ;LDR pc,[sp],#4

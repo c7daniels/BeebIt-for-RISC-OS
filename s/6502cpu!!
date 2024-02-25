@@ -315,6 +315,7 @@
   EXPORT |r6502nmi|
   ;EXPORT |constFFFFFFFF|
   EXPORT |r6502opcodeset|
+  EXPORT |r6512opcodeset|
 
 |r6502loadregs|
   ;STMFD sp!,{lr}
@@ -730,6 +731,7 @@ r6502execute_loop3
 
 
 |r6502opcodeset|
+|r6512opcodeset|
   DCD r6502opcode00
   DCD r6502opcode01
   DCD r6502opcode02

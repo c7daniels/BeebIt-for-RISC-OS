@@ -64,69 +64,20 @@
 
 ; Export global symbols
 
-  EXPORT |r65c12opcode40|
-  EXPORT |r65c12opcode41|
   EXPORT |r65c12opcode42|
   EXPORT |r65c12opcode43|
   EXPORT |r65c12opcode44|
-  EXPORT |r65c12opcode45|
-  EXPORT |r65c12opcode46|
   EXPORT |r65c12opcode47|
-  EXPORT |r65c12opcode48|
-  EXPORT |r65c12opcode49|
-  EXPORT |r65c12opcode4A|
   EXPORT |r65c12opcode4B|
-  EXPORT |r65c12opcode4C|
-  EXPORT |r65c12opcode4D|
-  EXPORT |r65c12opcode4E|
   EXPORT |r65c12opcode4F|
-  EXPORT |r65c12opcode50|
-  EXPORT |r65c12opcode51|
   EXPORT |r65c12opcode52|
   EXPORT |r65c12opcode53|
   EXPORT |r65c12opcode54|
-  EXPORT |r65c12opcode55|
-  EXPORT |r65c12opcode56|
   EXPORT |r65c12opcode57|
-  EXPORT |r65c12opcode58|
-  EXPORT |r65c12opcode59|
   EXPORT |r65c12opcode5A|
   EXPORT |r65c12opcode5B|
   EXPORT |r65c12opcode5C|
-  EXPORT |r65c12opcode5D|
-  EXPORT |r65c12opcode5E|
   EXPORT |r65c12opcode5F|
-
-|r65c12opcode40|
-  ;RTI
-  STACKPOP rps
-  STACKPOP r2 ;lo
-  STACKPOP r3 ;hi
-
-  ADD rpc,r2,r3,LSL#8 ;r6502_pc=nlo+(nhi<<8)
-
-  CPU_CYCLES 6
-
-  ANDS r0,rps,#IFLAG
-  BNE r65c12opcode40end
-
-  R6502IRQCHECK0
-
-r65c12opcode40end
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode41|
-  ;EOR
-  ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  ;VALUEOFPREINDEXED
-  ADDRESSOFPREINDEXED ;r0 ;4 cycles
-  READMEM ;1 cycle
-  R6502EOR ;1 cycle
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
 
 |r65c12opcode42|
   ;Reserved NOP
@@ -148,68 +99,9 @@ r65c12opcode40end
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-|r65c12opcode45|
-  ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  VALUEOFZEROPAGE
-  R6502EOR
-  CPU_CYCLES 3
-  ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode46|
-  ;LSR
-  ;STMFD sp!,{r0-r2,rps-r12,lr}
-  VALUEOFZEROPAGE
-  R6502LSR r0
-  STRB r0,[r11]
-  CPU_CYCLES 5
-  ;LDMFD sp!,{r0-r2,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
 |r65c12opcode47|
   ;Reserved NOP
   SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode48|
-  ;PHA
-  ;STMFD sp!,{r0,rsp,r10-r12,lr}
-  ;LDR r12,=memory ;pointer to memory
-  ;LDR r11,=r6502_sp ;pointer to r6502_sp
-  ;LDRB rsp,[r11] ;load r6502_sp
-  ;LDR r10,=r6502_a
-  ;LDRB r0,[r10]
-  ;MOV r0,ra
-  STACKPUSH ra
-  ;STRB rsp,[r11]
-  CPU_CYCLES 3
-  ;LDMFD sp!,{r0,rsp,r10-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode49|
-  ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  VALUEOFIMMEDIATE r0
-  R6502EOR
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode4A|
-  ;LSR
-  ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ;LDR r12,=r6502_a
-  ;LDRB r0,[r12]
-  ;MOV r0,ra
-  R6502LSR ra
-  ;STRB r0,[r12]
-  ;MOV ra,r0
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -219,139 +111,9 @@ r65c12opcode40end
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-|r65c12opcode4C|
-  ;JMP
-  ;STMFD sp!,{r0-r2,rpc,r10-r12,lr}
-  CMP rpc,#&3000
-  BGE r65c12opcode4C_2
-
-  LDRB r2,[r12,rpc] ;lo
-  ADD rpc,rpc,#1
-  LDRB r1,[r12,rpc] ;hi
-  ADD rpc,r2,r1,LSL#8 ;r0=lo+(hi<<8)
-
-  ;STR rpc,[r11] ;pc
-  CPU_CYCLES 3
-  ;LDMFD sp!,{r0-r2,rpc,r10-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-r65c12opcode4C_2
-  ;master 128
-  MOV r0,rpc
-  READMEM ;lo
-  MOV r2,r0 ;lo
-  ADD r0,rpc,#1
-  READMEM ;hi
-
-  ADD rpc,r2,r0,LSL#8 ;r0=lo+(hi<<8)
-  CPU_CYCLES 3
-  R6502NEXTOPCODE
-
-|r65c12opcode4D|
-  ;STMFD sp!,{r0-r2,ra,rps-r12,lr}
-  ;VALUEOFABSOLUTE
-  ADDRESSOFABSOLUTE ;r0 ;2 cycles
-  READMEM ;1 cycle
-  R6502EOR ;1 cycle
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,ra,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode4E|
-  ;LSR
-  ;STMFD sp!,{r0-r3,rps-r12,lr}
-  ;ADDRESSOFABSOLUTE
-  ADDRESSOFABSOLUTE ;r0 ;2 cycles
-  MOV r2,r0 ;store address
-  READMEM ;1 cycle
-  R6502LSR r0 ;2 cycles
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r3,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
 |r65c12opcode4F|
   ;Reserved NOP
   SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode50|
-  ;BVC
-  ;if condition succeeds
-  ;  if page boundary crossed
-  ;    4 cycles
-  ;  else
-  ;    3 cycles
-  ;else
-  ;  2 cycles
-  ;STMFD sp!,{r0-r12,lr}
-  ;LDR r10,=r6502_ps
-  ;LDRB rps,[r10] ;load ps
-  ;LDR r11,=r6502_pc
-  ;LDR rpc,[r11]
-  ANDS r0,rps,#VFLAG
-  ;if (!(r6502_ps & VFLAG))
-  BEQ r65c12opcode50_2
-  ;else
-  ADD rpc,rpc,#1 ;r6502_pc++
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
-  ;STR rpc,[r11] ;r6502_pc
-  ;LDR r10,=r6502_cyclestogo
-  ;LDR r4,[r10] ;r6502_cyclestogo
-  ;SUB r4,r4,#2
-  ;STR r4,[r10] ;r6502_cyclestogo
-  CPU_CYCLES 2
-  ;B r65c12opcode50end
-  ;LDMFD sp!,{r0-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-r65c12opcode50_2
-  ;LDR r12,=memory ;pointer to memory block
-  VALUEOFIMMEDIATE r0
-  MOV r1,rpc,LSR#8 ;r1=(pc>>8)
-  AND r1,r1,#&FF
-  ANDS r2,r0,#&80 ;r2=(n & 0x80)
-  MOVNE r3,#&100
-  SUBNE r0,r3,r0 ;r0=(&100-r0)
-  SUBNE rpc,rpc,r0 ;rpc=(rpc-r0)
-  ADDEQ rpc,rpc,r0 ;rpc=(rpc+r0)
-
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
-
-  MOV r2,rpc,LSR#8 ;r2=(pc>>8)
-  AND r2,r2,#&FF
-  ;LDR r10,=r6502_cyclestogo
-  ;LDR r3,[r10] ;r6502_cyclestogo
-  CMP r1,r2 ;if (n1 != (r6502_pc >> 8))
-  ;SUBNE r3,r3,#4 ;r3=(r3-4)
-  ;SUBEQ r3,r3,#3 ;r3=(r3-3)
-  SUBNE rcycles,rcycles,#4 ;r3=(r3-4)
-  SUBEQ rcycles,rcycles,#3 ;r3=(r3-3)
-  ;STR r3,[r10] ;r6502_cyclestogo
-r65c12opcode50end
-  ;STR rpc,[r11] ;r6502_pc
-  ;LDMFD sp!,{r0-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode51|
-  ;EOR
-  ;STMFD sp!,{r0-r2,ra,ry,rps-r12,lr}
-  ;VALUEOFPOSTINDEXEDY
-  ADDRESSOFPOSTINDEXEDY ;r0 ;3+ cycles
-  READMEM ;1 cycle
-  R6502EOR ;1 cycle
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,ra,ry,rps-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -379,50 +141,9 @@ r65c12opcode50end
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-|r65c12opcode55|
-  ;STMFD sp!,{r0-r2,ra,rx,rps-r12,lr}
-  VALUEOFZEROPAGEX ;;;
-  R6502EOR
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r2,ra,rx,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode56|
-  ;LSR
-  ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
-  VALUEOFZEROPAGEX ;;;
-  R6502LSR r0
-  STRB r0,[r11]
-  CPU_CYCLES 6
-  ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
 |r65c12opcode57|
   ;Reserved NOP
   SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode58|
-  ;CLI
-  AND rps,rps,#NOTIFLAG
-  CPU_CYCLES 2
-
-  R6502IRQCHECK1
-
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode59|
-  ;STMFD sp!,{r0-r12,lr}
-  ;VALUEOFABSOLUTEYPLUS
-  ADDRESSOFABSOLUTEYPLUS ;r0 ;2+ cycles
-  READMEM ;1 cycle
-  R6502EOR ;1 cycle
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -445,32 +166,6 @@ r65c12opcode50end
   ;Reserved NOP
   R6502SKW
   SUB rcycles,rcycles,#8
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode5D|
-  ;STMFD sp!,{r0-r12,lr}
-  ;VALUEOFABSOLUTEXPLUS
-  ADDRESSOFABSOLUTEXPLUS ;r0 ;2+ cycles
-  READMEM ;1 cycle
-  R6502EOR ;1 cycle
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcode5E|
-  ;LSR
-  ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
-  ADDRESSOFABSOLUTEX ;;; ;r0 ;3 cycles
-  MOV r2,r0 ;store address
-  READMEM ;1 cycle
-  R6502LSR r0 ;2 cycles
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 

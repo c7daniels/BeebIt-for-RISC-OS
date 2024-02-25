@@ -505,7 +505,7 @@ r6502opcode90_2
   SUBNE rcycles,rcycles,#4 ;r3=(r3-4)
   SUBEQ rcycles,rcycles,#3 ;r3=(r3-3)
   ;STR r3,[r10] ;r6502_cyclestogo
-r6502opcode90end
+;r6502opcode90end
   ;STR rpc,[r11] ;r6502_pc
   ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4

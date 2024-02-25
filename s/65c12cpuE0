@@ -49,31 +49,15 @@
 
 ; Export global symbols
 
-  EXPORT |r65c12opcodeE0|
   EXPORT |r65c12opcodeE1|
   EXPORT |r65c12opcodeE2|
   EXPORT |r65c12opcodeE3|
-  EXPORT |r65c12opcodeE4|
   EXPORT |r65c12opcodeE5|
-  EXPORT |r65c12opcodeE6|
   EXPORT |r65c12opcodeE7|
-  EXPORT |r65c12opcodeE8|
   EXPORT |r65c12opcodeE9|
-  EXPORT |r65c12opcodeEA|
   EXPORT |r65c12opcodeEB|
-  EXPORT |r65c12opcodeEC|
   EXPORT |r65c12opcodeED|
-  EXPORT |r65c12opcodeEE|
   EXPORT |r65c12opcodeEF|
-
-|r65c12opcodeE0|
-  ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
-  VALUEOFIMMEDIATE r0
-  R6502CPX
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
 
 |r65c12opcodeE1|
   ;SBC
@@ -112,15 +96,6 @@ r65c12opcodeE1_2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-|r65c12opcodeE4|
-  ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
-  VALUEOFZEROPAGE
-  R6502CPX
-  CPU_CYCLES 3
-  ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
 |r65c12opcodeE5|
   ;SBC
   ;STMFD sp!,{r0-r12,lr}
@@ -143,32 +118,9 @@ r65c12opcodeE5_2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-|r65c12opcodeE6|
-  ;STMFD sp!,{r0-r2,rps-r12,lr}
-  VALUEOFZEROPAGE
-  R6502INC r0
-  STRB r0,[r11]
-  CPU_CYCLES 5
-  ;LDMFD sp!,{r0-r2,rps-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
 |r65c12opcodeE7|
   ;Reserved NOP
   SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcodeE8|
-  ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ;LDR r12,=r6502_x
-  ;LDRB r0,[r12] ;r6502_x
-  ;MOV r0,rx
-  R6502INX
-  ;STRB r0,[r12]
-  ;MOV rx,r0
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -194,27 +146,9 @@ r65c12opcodeE9_2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
-|r65c12opcodeEA|
-  ;STMFD sp!,{lr}
-  R6502NOP
-  ;LDMFD sp!,{pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
 |r65c12opcodeEB|
   ;Reserved NOP
   SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcodeEC|
-  ;STMFD sp!,{r0-r2,rx,rps-r12,lr}
-  ;VALUEOFABSOLUTE
-  ADDRESSOFABSOLUTE ;r0 ;2 cycles
-  READMEM ;1 cycle
-  R6502CPX ;1 cycle
-  CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,rx,rps-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -239,21 +173,6 @@ r65c12opcodeED_2
   R6502SBCD_M ;2 cycles
   CPU_CYCLES 3 ;+1
   ;LDMFD sp!,{r0-r12,pc}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-|r65c12opcodeEE|
-  ;STMFD sp!,{r0-r2,rps-r12,lr}
-  ;VALUEOFABSOLUTE
-  ADDRESSOFABSOLUTE ;r0 ;2 cycles
-  MOV r2,r0 ;store address
-  READMEM ;1 cycle
-  R6502INC r0 ;2 cycles
-  MOV r1,r0 ;value
-  MOV r0,r2 ;address
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r2,rps-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
