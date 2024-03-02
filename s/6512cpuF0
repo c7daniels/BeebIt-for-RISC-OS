@@ -246,7 +246,6 @@ r6512opcodeF5_2
   ADD r0,r0,#1
   AND r0,r0,#&FF
   STRB r0,[r11]
-  MOV r0,r1 ;r0=value
   ;SBC
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps

@@ -162,6 +162,7 @@ r65c12opcodeF1_2
   ;SBC
   ;STMFD sp!,{lr}
   ADDRESSOFINDZEROPAGE_M
+  READMEMM ;1 cycle
   ;LDR r12,=r6502_ps ;pointer to r6502_ps
   ;LDRB rps,[r12] ;load r6502_ps
   ANDS r1,rps,#DFLAG
