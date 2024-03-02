@@ -38,9 +38,11 @@ extern void vsync(void);
   extern void zeribeepwrite(char nvalue);
   extern void zeribeepdetach(void);
 
+  extern void r6502read0000(void);
   extern void r6502read3000(void);
   extern void r6502read8000(void);
   extern void r6502readC000(void);
+  extern void r6502write0000(void);
   extern void r6502write3000(void);
   extern void r6502write8000(void);
   extern void r6502writeC000(void);

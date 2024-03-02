@@ -52,8 +52,8 @@ extern _kernel_swi_regs regs;
 /*void (*zeribeep_writebyte)(void);
 int zeribeep_workspace;*/
 
-char memory[0x10000]; /*65536 bytes*/
-char shadow[0x10000]; /*65536 bytes*/
+/*char memory[0x10000];*/ /*65536 bytes*/
+/*char shadow[0x10000];*/ /*65536 bytes*/
 /*shadow replaces lynne,hazel and andy for speed*/
 /*char lynne[0x5000];*/ /*20480 bytes*/
 /*char hazel[0x2000];*/ /*8192 bytes*/
@@ -64,7 +64,7 @@ char roms[16][0x4000];
 
 int beebit_trace;
 char beebit_osrom[MACHINE_COMPACT+1][128];
-int beebit_romwritable[16];
+/*int beebit_romwritable[16];*/
 int beebit_romwrite[(MACHINE_COMPACT*16)+16];
 char beebit_romimage[(MACHINE_COMPACT*16)+16][128];
 char beebit_rompath[128];
@@ -102,14 +102,15 @@ int beebit_button2; /*joystick button 2*/
 int beebit_romsel; /*ROMSELect*/
 int beebit_acccon; /*ACCCON*/
 int beebit_vdusel; /*VDUSEL (0x80) for B+, D (0x01) for Master 128*/
-int beebit_romselected;
-int beebit_rommodified;
+/*int beebit_romselected;*/
+/*int beebit_rommodified;*/
 int beebit_leds,host_leds;
 int beebit_rommask;
 int beebit_yield; /*yield control on a vsync*/
 int beebit_exit; /*exit the emulation F12 or close window*/
 
-int beebit_irq, beebit_nmi, beebit_oldnmi;
+/*int beebit_irq;*/
+int beebit_nmi, beebit_oldnmi;
 int lexit, lbreak, lprintscreen;
 /*int irqinterrupt, nmiinterrupt, noldnmi;*/
 /*int ncounterstart;*/

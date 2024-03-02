@@ -47,13 +47,9 @@
   ;IMPORT |r6502_i|
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
-  IMPORT |r6502_cyclestogo|
+  IMPORT |r6502workspace|
   IMPORT |r6502readmem|
   IMPORT |r6502writemem|
-  IMPORT |updatetimers|
-  IMPORT |r6502loadregs|
-  IMPORT |r6502saveregs|
-  IMPORT |r6502opcodes|
 
 ; Export global symbols
 
@@ -68,12 +64,10 @@
 
 |r65c12opcode32|
   ;AND
-  ;STMFD sp!,{lr}
-  ADDRESSOFINDZEROPAGE 
+  ADDRESSOFINDZEROPAGE
   READMEM
   R6502AND
   CPU_CYCLES 5
-  ;LDMFD sp!,{pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -85,12 +79,9 @@
 
 |r65c12opcode34|
   ;BIT
-  ;STMFD sp!,{r0-r2,rpc,r11,lr}
-  ADDRESSOFZEROPAGEX
-  LDRB r0,[r12,r0]
+  VALUEOFZEROPAGEX
   R6502BIT
   CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -102,10 +93,8 @@
 
 |r65c12opcode3A|
   ;DEA
-  ;STMFD sp!,{lr}
   R6502DEA
   CPU_CYCLES 2
-  ;LDMFD sp!,{pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -117,12 +106,10 @@
 
 |r65c12opcode3C|
   ;BIT
-  ;STMFD sp!,{r0-r2,rpc,r11,lr}
-  ADDRESSOFABSOLUTEXPLUS ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEXPLUS ;2+ cycles
   READMEM ;1 cycle
   R6502BIT ;1 cycle
   CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r2,rpc,r11,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 

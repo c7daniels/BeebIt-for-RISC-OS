@@ -40,12 +40,9 @@
   IMPORT |r6502_a|
   IMPORT |r6502_x|
   IMPORT |r6502_y|
-  IMPORT |r6502_cyclestogo|
+  IMPORT |r6502workspace|
   IMPORT |r6502readmem|
   IMPORT |r6502writemem|
-  IMPORT |r6502loadregs|
-  IMPORT |r6502saveregs|
-  IMPORT |r6502opcodes|
 
 ; Export global symbols
 
@@ -64,47 +61,37 @@
 
 |r65c12opcodeF1|
   ;SBC
-  ;STMFD sp!,{r0-r12,lr}
-  ;VALUEOFPOSTINDEXEDY
-  ADDRESSOFPOSTINDEXEDY ;r0 ;3+ cycles
+  ADDRESSOFPOSTINDEXEDY ;3+ cycles
   READMEM ;1 cycle
-  ;LDR r12,=r6502_ps ;pointer to r6502_ps
-  ;LDRB rps,[r12] ;load r6502_ps
   ANDS r1,rps,#DFLAG
   BNE r65c12opcodeF1_2
-  ;digital
+  ;binary
   R6502SBC ;1 cycle
   CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r65c12opcodeF1_2
   ;BCD
   R6502SBCD_M ;2 cycles
   CPU_CYCLES 3 ;+1
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r65c12opcodeF2|
   ;SBC
-  ;STMFD sp!,{lr}
-  ADDRESSOFINDZEROPAGE 
-  ;LDR r12,=r6502_ps ;pointer to r6502_ps
-  ;LDRB rps,[r12] ;load r6502_ps
+  ADDRESSOFINDZEROPAGE
+  READMEM ;1 cycle
   ANDS r1,rps,#DFLAG
   BNE r65c12opcodeF2_2
-  ;digital
+  ;binary
   R6502SBC
   CPU_CYCLES 5
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r65c12opcodeF2_2
   ;BCD
   R6502SBCD_M
   CPU_CYCLES 6 ;+1
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -123,23 +110,18 @@ r65c12opcodeF2_2
 
 |r65c12opcodeF5|
   ;SBC
-  ;STMFD sp!,{r0-r12,lr}
   VALUEOFZEROPAGEX
-  ;LDR r12,=r6502_ps ;pointer to r6502_ps
-  ;LDRB rps,[r12] ;load r6502_ps
   ANDS r1,rps,#DFLAG
   BNE r65c12opcodeF5_2
-  ;digital
+  ;binary
   R6502SBC
   CPU_CYCLES 4
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r65c12opcodeF5_2
   ;BCD
   R6502SBCD_M
   CPU_CYCLES 5 ;+1
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -151,25 +133,19 @@ r65c12opcodeF5_2
 
 |r65c12opcodeF9|
   ;SBC
-  ;STMFD sp!,{r0-r12,lr}
-  ;VALUEOFABSOLUTEYPLUS
-  ADDRESSOFABSOLUTEYPLUS ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEYPLUS ;2+ cycles
   READMEM ;1 cycle
-  ;LDR r12,=r6502_ps ;pointer to r6502_ps
-  ;LDRB rps,[r12] ;load r6502_ps
   ANDS r1,rps,#DFLAG
   BNE r65c12opcodeF9_2
-  ;digital
+  ;binary
   R6502SBC ;1 cycle
   CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r65c12opcodeF9_2
   ;BCD
   R6502SBCD_M ;2 cycles
   CPU_CYCLES 3 ;+1
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -197,25 +173,19 @@ r65c12opcodeF9_2
 
 |r65c12opcodeFD|
   ;SBC
-  ;STMFD sp!,{r0-r12,lr}
-  ;VALUEOFABSOLUTEXPLUS
-  ADDRESSOFABSOLUTEXPLUS ;r0 ;2+ cycles
+  ADDRESSOFABSOLUTEXPLUS ;2+ cycles
   READMEM ;1 cycle
-  ;LDR r12,=r6502_ps ;pointer to r6502_ps
-  ;LDRB rps,[r12] ;load r6502_ps
   ANDS r1,rps,#DFLAG
   BNE r65c12opcodeFD_2
-  ;digital
+  ;binary
   R6502SBC ;1 cycle
   CPU_CYCLES 2
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 r65c12opcodeFD_2
   ;BCD
   R6502SBCD_M ;2 cycles
   CPU_CYCLES 3 ;+1
-  ;LDMFD sp!,{r0-r12,pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 

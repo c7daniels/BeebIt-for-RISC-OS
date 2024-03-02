@@ -47,10 +47,9 @@
   ;IMPORT |r6502_i|
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
-  IMPORT |r6502_cyclestogo|
+  IMPORT |r6502workspace|
   IMPORT |r6502readmem|
   IMPORT |r6502writemem|
-  IMPORT |r6502opcodes|
 
 ; Export global symbols
 
@@ -65,12 +64,10 @@
 
 |r65c12opcodeD2|
   ;CMP
-  ;STMFD sp!,{lr}
-  ADDRESSOFINDZEROPAGE 
+  ADDRESSOFINDZEROPAGE
   READMEM ; 1 cycle
   R6502CMP
   CPU_CYCLES 5
-  ;LDMFD sp!,{pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -95,10 +92,8 @@
 
 |r65c12opcodeDA|
   ;PHX
-  ;STMFD sp!,{lr}
   STACKPUSH rx
   CPU_CYCLES 3
-  ;LDMFD sp!,{pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 

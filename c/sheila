@@ -38,10 +38,13 @@ void sheilareset(void)
   /*int i;
   for (i=0;i<=0x100;i++)
     sheila_b[i] = 0xFE;*/
+  int read0000,write0000;
   int read3000,write3000;
   int read8000,write8000,read9000,write9000,readB000,writeB000;
   int readC000,writeC000,readE000,writeE000,readF000,writeF000;
 
+  read0000 = (int)r6502read0000;
+  write0000 = (int)r6502write0000;
   read3000 = (int)r6502read3000;
   write3000 = (int)r6502write3000;
   readB000 = read9000 = read8000 = (int)r6502read8000;
@@ -104,6 +107,9 @@ void sheilareset(void)
         break;
   }
   
+  setword(r6502readoffset, read0000);
+  setword(r6502readoffset+4, read0000);
+  setword(r6502readoffset+8, read0000);
   setword(r6502readoffset+12, read3000);
   setword(r6502readoffset+16, read3000);
   setword(r6502readoffset+20, read3000);
@@ -118,6 +124,9 @@ void sheilareset(void)
   setword(r6502readoffset+56, readE000);
   setword(r6502readoffset+60, readF000);
   
+  setword(r6502writeoffset, write0000);
+  setword(r6502writeoffset+4, write0000);
+  setword(r6502writeoffset+8, write0000);
   setword(r6502writeoffset+12, write3000);
   setword(r6502writeoffset+16, write3000);
   setword(r6502writeoffset+20, write3000);

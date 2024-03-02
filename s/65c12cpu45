@@ -47,20 +47,9 @@
   ;IMPORT |r6502_i|
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
-  IMPORT |r6502_cyclestogo|
-  IMPORT |r6502_cyclesoriginal|
+  IMPORT |r6502workspace|
   IMPORT |r6502readmem|
   IMPORT |r6502writemem|
-  IMPORT |r6502opcodes|
-
-  ;IMPORT |sheilaread|
-  ;IMPORT |sheilawrite|
-  ;IMPORT |r6522sysvia_irq|
-  ;IMPORT |r6522usrvia_irq|
-  IMPORT |beebit_irq|
-  IMPORT |updatetimers|
-  IMPORT |r6502loadregs|
-  IMPORT |r6502saveregs|
 
 ; Export global symbols
 
@@ -119,12 +108,10 @@
 
 |r65c12opcode52|
   ;EOR
-  ;STMFD sp!,{lr}
-  ADDRESSOFINDZEROPAGE 
+  ADDRESSOFINDZEROPAGE
   READMEM
   R6502EOR
   CPU_CYCLES 5
-  ;LDMFD sp!,{pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
@@ -149,10 +136,8 @@
 
 |r65c12opcode5A|
   ;PHY
-  ;STMFD sp!,{lr}
   STACKPUSH ry
   CPU_CYCLES 3
-  ;LDMFD sp!,{pc}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 

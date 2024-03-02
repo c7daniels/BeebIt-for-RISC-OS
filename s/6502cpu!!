@@ -298,22 +298,19 @@
   IMPORT |r6502_x|
   IMPORT |r6502_y|
   IMPORT |r6502_cyclestogo|
+  IMPORT |r6502workspace|
   IMPORT |r6502readmem|
   IMPORT |beebit_trace|
   IMPORT |beebit_romsel|
   IMPORT |beebit_acccon|
-  IMPORT |r6502opcodes|
 
 ; Export global symbols
 
-  EXPORT |r6502loadregs|
-  EXPORT |r6502saveregs|
   EXPORT |r6502execute|
   ;EXPORT |r6502adc|
   ;EXPORT |r6502sbc|
   EXPORT |r6502irq|
   EXPORT |r6502nmi|
-  ;EXPORT |constFFFFFFFF|
   EXPORT |r6502opcodeset|
   EXPORT |r6512opcodeset|
 
@@ -337,7 +334,7 @@
   LDR r12,=r6502_cyclestogo
   LDR rcycles,[r12] ;load sp
 
-  LDR r12,=memory
+  LDR r12,=r6502workspace
   ;LDMFD sp!,{pc}
   LDR pc, [sp], #4
   ;MOV pc,lr
@@ -479,7 +476,7 @@
 ;
 |r6502irq|
   STMFD sp!,{r0-r12,lr}
-  LDR r12,=memory ;pointer to memory
+  LDR r12,=r6502workspace
   LDR r11,=r6502_pc ;pointer to r6502_pc
   LDR rpc,[r11]
   LDR r10,=r6502_sp ;pointer to r6502_sp
@@ -497,7 +494,7 @@
   STACKPUSH r0
   ORR rps,rps,#IFLAG ;set i flag
   STRB rps,[r2]
-  ADD r2,r12,#&10000 ;memory+&10000
+  ADD r2,r12,#:INDEX:R6502_MEMORY+&10000 ;memory+&10000
   LDRB r0,[r2,#-2] ;&FFFE
   LDRB r1,[r2,#-1] ;&FFFF
   ADD rpc,r0,r1,LSL#8
@@ -515,7 +512,7 @@
 ;
 |r6502nmi|
   STMFD sp!,{r0-r12,lr}
-  LDR r12,=memory ;pointer to memory
+  LDR r12,=r6502workspace
   LDR r11,=r6502_pc ;pointer to r6502_pc
   LDR rpc,[r11]
   LDR r10,=r6502_sp ;pointer to r6502_sp
@@ -533,7 +530,7 @@
   STACKPUSH r0
   ORR rps,rps,#IFLAG ;set i flag
   STRB rps,[r2]
-  ADD r2,r12,#&10000 ;memory+&10000
+  ADD r2,r12,#:INDEX:R6502_MEMORY+&10000 ;memory+&10000
   LDRB r0,[r2,#-6] ;&FFFA
   LDRB r1,[r2,#-5] ;&FFFB
   ADD rpc,r0,r1,LSL#8
@@ -567,10 +564,8 @@ r6502execute_loop
   ;SWI OS_Write0
   ;SWI OS_WriteI+32
 
-  ;CMP rpc,#&3000
-  ;LDRLTB r0,[r12,rpc] ;get opcode
-  ;MOVGE r0,rpc
-  ;BLGE r6502readmem ;=r0
+  ;MOV r0,rpc
+  ;BL r6502readmem ;=r0
   ;LDR r1,=buffer
   ;MOV r2,#16
   ;SWI OS_ConvertHex2 ;BinaryToDecimal
@@ -631,21 +626,17 @@ r6502execute_loop
   ;-------------------
 
 r6502execute_loop2
-  CMP rpc,#&3000
-  LDRLTB r0,[r12,rpc] ;get opcode
-  MOVGE r0,rpc
-  BLGE r6502readmem ;=r0
+  MOV r0,rpc
+  BL r6502readmem ;=r0
   ADD rpc,rpc,#1
   ;MOV rpc,rpc,LSL #16
   ;MOV rpc,rpc,LSR #16
   ;STR rpc,[r11] ;pc
 
-  LDR r1,=r6502opcodes
-  ;STMFD sp!,{lr}
+  ADD r1,r12,#:INDEX:R6502_OPCODES
   ADD lr,pc,#4
-  STR lr,[sp,#-4]!
+  STR lr,[sp, #-4]!
   LDR pc,[r1,r0,LSL#2]
-  ;LDMFD sp!,{lr}
 
   ;-------------------
   ;LDR r11,=beebit_trace ;trace
@@ -1003,11 +994,5 @@ buffer
 ;Data Area
 
 ;  AREA    |C$$data|, DATA
-
-;|constFFFFFFFF|
-;  DCD &FFFFFFFF
-
-;r6502_cyclestore
-;  DCD 0
 
   END

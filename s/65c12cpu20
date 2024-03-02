@@ -47,17 +47,9 @@
   ;IMPORT |r6502_i|
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
-  IMPORT |r6502_cyclestogo|
-  IMPORT |r6502_cyclesoriginal|
+  IMPORT |r6502workspace|
   IMPORT |r6502readmem|
   IMPORT |r6502writemem|
-  ;IMPORT |r6522sysvia_irq|
-  ;IMPORT |r6522usrvia_irq|
-  IMPORT |beebit_irq|
-  IMPORT |updatetimers|
-  IMPORT |r6502loadregs|
-  IMPORT |r6502saveregs|
-  IMPORT |r6502opcodes|
 
 ; Export global symbols
 
