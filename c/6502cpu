@@ -457,7 +457,7 @@ char r6502readbp(int naddress)
   {
     /*&8000 - &AFFF*/
     if (beebit_romsel & 0x80)
-      nresult = shadow[naddress];
+      nresult = shadow[naddress-&8000];
     else
       nresult = memory[naddress];
   }
@@ -508,7 +508,7 @@ char r6502readm(int naddress)
     if (beebit_romsel & 0x80)
     {
       /*RAM in ROMSEL (ANDY)*/
-      nresult = shadow[naddress];
+      nresult = shadow[naddress-&8000];
     }
     else
       nresult = memory[naddress];
@@ -524,7 +524,7 @@ char r6502readm(int naddress)
     if (beebit_acccon & 0x08)
     {
       /*HAZEL (Y)*/
-      nresult = shadow[naddress];
+      nresult = shadow[naddress-&B000];
     }
     else
       nresult = memory[naddress];
@@ -629,7 +629,7 @@ void r6502writebp(int naddress, char nvalue)
   {
     /*&8000 - &AFFF (ROM)*/
     if (beebit_romsel & 0x80)
-      shadow[naddress] = nvalue;
+      shadow[naddress-&8000] = nvalue;
     else
     {
       /*check sideways ram write enabled*/
@@ -697,7 +697,7 @@ void r6502writem(int naddress, char nvalue)
     if (beebit_romsel & 0x80)
     {
       /*RAM in ROMSEL (ANDY)*/
-      shadow[naddress] = nvalue;
+      shadow[naddress-&8000] = nvalue;
     }
     else
     {
@@ -725,7 +725,7 @@ void r6502writem(int naddress, char nvalue)
     if (beebit_acccon & 0x08)
     {
       /*HAZEL (Y)*/
-      shadow[naddress] = nvalue;
+      shadow[naddress-&B000] = nvalue;
     }
     /*else
     {*/

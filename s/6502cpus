@@ -431,7 +431,7 @@ r6502readbp3000_ram
   CMP rpc,#&E000 ;if r6502_pc >= &E000
   BGE r6502readbp3000_ram2
 
-  ADD r11,r12,#:INDEX:R6502_SHADOW
+  ADD r11,r12,#:INDEX:R6502_LYNNE-&3000
   LDRB r0,[r11,r0] ;r0=shadow[r0]
   MOV pc,lr
 
@@ -453,14 +453,16 @@ r6502readbp3000_ram2
   LDRGEB r0,[r11,r0] ;r0=memory[r0]
   MOVGE pc,lr
 
-  ADD r11,r12,#:INDEX:R6502_SHADOW
+  ADD r11,r12,#:INDEX:R6502_LYNNE-&3000
   LDRB r0,[r11,r0] ;r0=shadow[r0]
   MOV pc,lr
 
 r6502readbp8000_ram
-  ;&8000 - &AFFF (SIDEWAYS RAM)
-  ADD r11,r12,#:INDEX:R6502_SHADOW
-  LDRB r0,[r11,r0]  ;r0=shadow[address]
+  ;&8000 - &AFFF (ROMSEL b7) (SIDEWAYS RAM)
+r6502readm8000_ram
+  ;&8000 - &8FFF (ROMSEL b7) (SIDEWAYS RAM)
+  ADD r11,r12,#:INDEX:R6502_ANDY-&8000
+  LDRB r0,[r11,r0]  ;r0=shadow[address-&8000]
   MOV pc,lr
 
 r6502readbpF000
@@ -536,7 +538,7 @@ r6502readm3000_x
 
   ;LDMFD sp!,{r0,r1}
 
-  ADD r11,r12,#:INDEX:R6502_SHADOW
+  ADD r11,r12,#:INDEX:R6502_LYNNE-&3000
   LDRB r0,[r11,r0]  ;r0=shadow[address]
   MOV pc,lr
 
@@ -548,20 +550,14 @@ r6502readm3000_e
   CMP rpc,#&E000 ;skip
   BGE r6502read3000 ;if >= &E000
 
-  ADD r11,r12,#:INDEX:R6502_SHADOW
-  LDRB r0,[r11,r0]  ;r0=shadow[address]
-  MOV pc,lr
-
-r6502readm8000_ram
-  ;&8000 - &8FFF (ROMSEL b7) (RAM)
-  ADD r11,r12,#:INDEX:R6502_SHADOW
+  ADD r11,r12,#:INDEX:R6502_LYNNE-&3000
   LDRB r0,[r11,r0]  ;r0=shadow[address]
   MOV pc,lr
 
 r6502readmC000_y
   ;&C000 - &DFFF (ACCCON b3) (RAM)
-  ADD r11,r12,#:INDEX:R6502_SHADOW
-  LDRB r0,[r11,r0]  ;r0=shadow[address]
+  ADD r11,r12,#:INDEX:R6502_HAZEL-&C000
+  LDRB r0,[r11,r0]  ;r0=shadow[address-&B000]
   MOV pc,lr
 
 r6502readmF000
@@ -786,13 +782,16 @@ r6502writebp3000_ram2
   STRGEB r1,[r11,r0] ;memory[r0] = r1;
   MOVGE pc,lr
 
-  ADD r11,r12,#:INDEX:R6502_SHADOW
+  ADD r11,r12,#:INDEX:R6502_LYNNE-&3000
   STRB r1,[r11,r0] ;shadow[r0] = r1;
   MOV pc,lr
 
 r6502writebp8000_ram
-  ADD r11,r12,#:INDEX:R6502_SHADOW
-  STRB r1,[r11,r0] ;shadow[r0] = r1;
+  ;&8000 - &AFFF (ROMSEL b7) (SIDEWAYS RAM)
+r6502writem8000_ram
+  ;&8000 - &8FFF (ROMSEL b7) (SIDEWAYS RAM)
+  ADD r11,r12,#:INDEX:R6502_ANDY-&8000
+  STRB r1,[r11,r0] ;shadow[address-&8000] = r1;
   MOV pc,lr
 
 r6502writebpF000
@@ -876,7 +875,7 @@ r6502writem3000_x
 
   ;LDMFD sp!,{r0,r1}
 
-  ADD r11,r12,#:INDEX:R6502_SHADOW
+  ADD r11,r12,#:INDEX:R6502_LYNNE-&3000
   STRB r1,[r11,r0]  ;shadow[r0] = r1
   MOV pc,lr
 
@@ -919,22 +918,14 @@ r6502writem3000_e
   CMP rpc,#&E000
   BGE r6502write3000 ;if >= &E000
 
-  ADD r11,r12,#:INDEX:R6502_SHADOW
+  ADD r11,r12,#:INDEX:R6502_LYNNE-&3000
   STRB r1,[r11,r0] ;shadow[r0] = r1
-  MOV pc,lr
-
-r6502writem8000_ram
-  ;&8000 - &8FFF (ROMSEL b7) (RAM)
-  ADD r11,r12,#:INDEX:R6502_SHADOW
-  STRB r1,[r11,r0] ;shadow[r0] = r1;
   MOV pc,lr
 
 r6502writemC000_y
   ;&C000 - &DFFF (ACCCON b3) (RAM)
-  ADD r11,r12,#:INDEX:R6502_SHADOW
-  STRB r1,[r11,r0] ;shadow[r0] = r1;
-  SUB r0,r0,#&B000 ;duplicate in memory < &3000 for level 9 adventures
-  STRB r1,[r11,r0] ;shadow[r0] = r1;
+  ADD r11,r12,#:INDEX:R6502_HAZEL-&C000
+  STRB r1,[r11,r0] ;shadow[address-&B000] = r1;
   MOV pc,lr
 
 r6502writemF000
