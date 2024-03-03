@@ -1103,7 +1103,7 @@ r6502writemFE00
 
 ;Data Area
 
-  AREA    |C$$data|, DATA
+  AREA    |C$$bss|, NOINIT
 
 |r6502workspace|
   % R6502_WorkSize
