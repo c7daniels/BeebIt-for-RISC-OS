@@ -54,10 +54,10 @@ int zeribeep_workspace;*/
 
 /*char memory[0x10000];*/ /*65536 bytes*/
 /*char shadow[0x10000];*/ /*65536 bytes*/
-/*shadow replaces lynne,hazel and andy for speed*/
-/*char lynne[0x5000];*/ /*20480 bytes*/
-/*char hazel[0x2000];*/ /*8192 bytes*/
+/*shadow replaces andy,hazel and lynne for speed*/
 /*char andy[0x1000];*/ /*4096 bytes*/
+/*char hazel[0x2000];*/ /*8192 bytes*/
+/*char lynne[0x5000];*/ /*20480 bytes*/
 char roms[16][0x4000];
 
 /*char *shadow;*/ /*pointer to 65536 bytes*/
