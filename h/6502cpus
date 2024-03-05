@@ -48,16 +48,16 @@ R6502_BEEBITIRQ       # &4
 R6502_ABSTEMP         # &4
 R6502_INDTEMP         # &4
 R6502_RMWTEMP         # &4
-R6502_ROMSELECTED     # &4
-R6502_ROMMODIFIED     # &4
+R6502_OPCODE07SWAPS   # &8
 R6502_ROMWRITABLE     # &40
                       # &B20
 R6502_OPCODES         # &400
-R6502_MEMORY          # &10000  ;65536 bytes
+R6502_MEMORY          # &10000  ; 65536 bytes
 R6502_SHADOW          # 0
-R6502_ANDY            # &1000   ; 4096 bytes
-R6502_HAZEL           # &2000   ; 8192 bytes
-R6502_LYNNE           # &5000   ;20480 bytes
+R6502_ANDY            # &1000   ;  4096 bytes
+R6502_HAZEL           # &2000   ;  8192 bytes
+R6502_LYNNE           # &5000   ; 20480 bytes
+R6502_ROMS            # &40000  ;262144 bytes
 R6502_WorkSize        * @
 
 NFLAG EQU &80

@@ -25,7 +25,7 @@ extern void cursorenable(void);
 extern void roundteletextalpha(int naddress, int nupperhalfaddress, int nlowerhalfaddress);
 extern void blankrow(int naddress, int ncount, int nvalue);
 extern void blankrowx(unsigned int naddress, unsigned int ncount, unsigned int nvalue, unsigned int nscreen_width, unsigned int nlines);
-extern void swapbanks(int naddress, int ncount);
+extern void swappages(char *naddress1, char *naddress2, int npagecount);
 extern void bbcvdu(char);
 extern void inttohex4(int);
 extern void inttohex8(int);
@@ -33,18 +33,18 @@ extern void screenstartandlinelength(void);
 extern void vsync(void);
 #ifdef __RISCOS__
   extern int getword(char *cblock);
-  extern void setword(char * naddress, int nvalue);
+  extern void setword(char *naddress, int nvalue);
   extern void zeribeepattach(void);
   extern void zeribeepwrite(char nvalue);
   extern void zeribeepdetach(void);
 
   extern void r6502read0000(void);
   extern void r6502read3000(void);
-  extern void r6502read8000(void);
+  extern void (*r6502read8000_roms[16])(void);
   extern void r6502readC000(void);
   extern void r6502write0000(void);
   extern void r6502write3000(void);
-  extern void r6502write8000(void);
+  extern void (*r6502write8000_roms[16])(void);
   extern void r6502writeC000(void);
 
   extern void r6502readbF000(void);
@@ -177,6 +177,8 @@ extern void vsync(void);
   extern void r6502nmi(void);
 
   /*extern void r6502executeit(void);*/
+
+  extern void (*r6502opcode07swaps[2])(void);
 
   extern char r6502opcodes[0x400];
   extern char r6502opcodeset[0x400];

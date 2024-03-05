@@ -125,8 +125,8 @@
     n = r6502addressofabsolute();
 #else
   #define ADDRESSOFABSOLUTE \
-    nlo = memory[r6502_pc++]; \
-    nhi = memory[r6502_pc++]; \
+    nlo = r6502read(r6502_pc++); \
+    nhi = r6502read(r6502_pc++); \
     n = (nhi<<8)+nlo;
 #endif
 
@@ -179,7 +179,7 @@
     n = r6502addressofzeropage();
 #else
   #define ADDRESSOFZEROPAGE \
-    n = memory[r6502_pc++];
+    n = r6502read(r6502_pc++);
 #endif
 
 #ifdef __RISCOS__
@@ -187,7 +187,7 @@
     n = r6502addressofzeropagex();
 #else
   #define ADDRESSOFZEROPAGEX \
-    n = memory[r6502_pc++]; \
+    n = r6502read(r6502_pc++); \
     n = ((n+r6502_x) & 0xFF);
 #endif
 
@@ -196,7 +196,7 @@
     n = r6502addressofzeropagey();
 #else
   #define ADDRESSOFZEROPAGEY \
-    n = memory[r6502_pc++]; \
+    n = r6502read(r6502_pc++); \
     n = ((n+r6502_y) & 0xFF);
 #endif
 
@@ -206,9 +206,9 @@
 #else
   #define ADDRESSOFINDIRECT \
     ADDRESSOFABSOLUTE \
-    nlo = memory[n]; \
+    nlo = r6502read(n); \
     n1 = ((n+1) & 0xFF); \
-    nhi = memory[(n & 0xFF00)+n1]; \
+    nhi = r6502read((n & 0xFF00)+n1); \
     n = (nhi<<8)+nlo;
 #endif
 
@@ -218,9 +218,9 @@
 #else
   #define ADDRESSOFPREINDEXED \
     ADDRESSOFZEROPAGEX \
-    nlo = memory[n]; \
+    nlo = r6502read(n); \
     n1 = ((n+1) & 0xFF); \
-    nhi = memory[(n & 0xFF00)+n1]; \
+    nhi = r6502read((n & 0xFF00)+n1); \
     n = (nhi<<8)+nlo;
 #endif
 
@@ -270,7 +270,7 @@
     n = r6502valueofimmediate();
 #else
  #define VALUEOFIMMEDIATE \
-    n = memory[r6502_pc++];
+    n = r6502read(r6502_pc++);
 #endif
 
 #ifdef __RISCOS__
@@ -301,8 +301,8 @@
 #endif
 
 /*#define VALUEOFINDIRECT \
-  nlo = memory[r6502_pc++];  \
-  nhi = memory[r6502_pc++]; \
+  nlo = r6502read(r6502_pc++); \
+  nhi = r6502read(r6502_pc++); \
   n = nlo+(nhi<<8);*/
 
 #ifdef __RISCOS__
@@ -408,9 +408,16 @@ char r6502readb(int naddress)
     else*/
       nresult = memory[naddress];
   }
+  else if (naddress < 0xC000)
+  {
+    /*&8000 - &BFFF (PAGED ROM)*/
+    int nrom = beebit_romsel & 0x0F;
+
+    nresult = roms[nrom][naddress-&8000];
+  }
   else if (naddress < 0xFC00)
   {
-    /*&8000 - &FBFF (RAM)*/
+    /*&C000 - &FBFF (OS)*/
     nresult = memory[naddress];
   }
   else if (naddress < 0xFE00)
@@ -455,15 +462,30 @@ char r6502readbp(int naddress)
   }
   else if (naddress < 0xB000)
   {
-    /*&8000 - &AFFF*/
+    /*&8000 - &AFFF (PAGED ROM|ANDY+HAZEL)*/
     if (beebit_romsel & 0x80)
       nresult = shadow[naddress-&8000];
     else
-      nresult = memory[naddress];
+    {
+      int nrom = beebit_romsel & 0x0F;
+      if (nrom == 0x0F)
+        nrom = 0x0E;
+
+      nresult = roms[nrom][naddress-&8000];
+    }
+  }
+  else if (naddress < 0xC000)
+  {
+    /*&B000 - &BFFF (PAGED ROM)*/
+    int nrom = beebit_romsel & 0x0F;
+    if (nrom == 0x0F)
+      nrom = 0x0E;
+
+    nresult = roms[nrom][naddress-&8000];
   }
   else if (naddress < 0xFC00)
   {
-    /*&B000 - &FBFF*/
+    /*&C000 - &FBFF*/
     nresult = memory[naddress];
   }
   else if (naddress < 0xFE00)
@@ -504,19 +526,24 @@ char r6502readm(int naddress)
   }
   else if (naddress < 0x9000)
   {
-    /*&8000 - &8FFF*/
+    /*&8000 - &8FFF (PAGED ROM|ANDY)*/
     if (beebit_romsel & 0x80)
     {
-      /*RAM in ROMSEL (ANDY)*/
       nresult = shadow[naddress-&8000];
     }
     else
-      nresult = memory[naddress];
+    {
+      int nrom = beebit_romsel & 0x0F;
+
+      nresult = roms[nrom][naddress-&8000];
+    }
   }
   else if (naddress < 0xC000)
   {
-    /*&9000 - &BFFF*/
-    nresult = memory[naddress];
+    /*&9000 - &BFFF (PAGED ROM)*/
+    int nrom = beebit_romsel & 0x0F;
+
+    nresult = roms[nrom][naddress-&8000];
   }
   else if (naddress < 0xE000)
   {
@@ -569,13 +596,12 @@ void r6502writeb(int naddress, char nvalue)
   }
   else if (naddress < 0xC000)
   {
-    /*&8000 - &BFFF (SIDEWAYS RAM)*/
-    if (beebit_romwritable[beebit_romselected])
-    {
-      /*check sideways ram write enabled*/
-      memory[naddress] = nvalue;
-      beebit_rommodified = TRUE;
-    }
+    /*&8000 - &BFFF (PAGED ROM)*/
+    int nrom = beebit_romsel & 0x0F;
+
+    /*check sideways ram write enabled*/
+    if (beebit_romwritable[nrom])
+      roms[nrom][naddress-&8000] = nvalue;
   }
   else if (naddress < 0xFC00)
   {
@@ -627,28 +653,30 @@ void r6502writebp(int naddress, char nvalue)
   }
   else if (naddress < 0xB000)
   {
-    /*&8000 - &AFFF (ROM)*/
+    /*&8000 - &AFFF (PAGED ROM|ANDY+HAZEL)*/
     if (beebit_romsel & 0x80)
       shadow[naddress-&8000] = nvalue;
     else
     {
+      int nrom = beebit_romsel & 0x0F;
+      if (nrom == 0x0F)
+        nrom = 0x0E;
+
       /*check sideways ram write enabled*/
-      if (beebit_romwritable[beebit_romselected])
-      {
-        memory[naddress] = nvalue;
-        beebit_rommodified = TRUE;
-      }
+      if (beebit_romwritable[nrom])
+        roms[nrom][naddress-&8000] = nvalue;
     }
   }
   else if (naddress < 0xC000)
   {
-    /*&B000 - &BFFF (ROM)*/
+    /*&B000 - &BFFF (PAGED ROM)*/
+    int nrom = beebit_romsel & 0x0F;
+    if (nrom == 0x0F)
+        nrom = 0x0E;
+
     /*check sideways ram write enabled*/
-    if (beebit_romwritable[beebit_romselected])
-    {
-      memory[naddress] = nvalue;
-      beebit_rommodified = TRUE;
-    }
+    if (beebit_romwritable[nrom])
+      roms[nrom][naddress-&8000] = nvalue;
   }
   else if (naddress < 0xFC00)
   {
@@ -693,31 +721,28 @@ void r6502writem(int naddress, char nvalue)
   }
   else if (naddress < 0x9000)
   {
-    /*&8000 - &8FFF*/
+    /*&8000 - &8FFF (PAGED ROM|ANDY)*/
     if (beebit_romsel & 0x80)
     {
-      /*RAM in ROMSEL (ANDY)*/
       shadow[naddress-&8000] = nvalue;
     }
     else
     {
-      if (beebit_romwritable[beebit_romselected])
-      {
-        /*sideways ram write enabled*/
-        memory[naddress] = nvalue;
-        beebit_rommodified = TRUE;
-      }
+      int nrom = beebit_romsel & 0x0F;
+
+      /*check sideways ram write enabled*/
+      if (beebit_romwritable[nrom])
+        roms[nrom][naddress-&8000] = nvalue;
     }
   }
   else if (naddress < 0xC000)
   {
-    /*&9000 - &BFFF (ROM)*/
-    if (beebit_romwritable[beebit_romselected])
-    {
-      /*sideways ram write enabled*/
-      memory[naddress] = nvalue;
-      beebit_rommodified = TRUE;
-    }
+    /*&9000 - &BFFF (PAGED ROM)*/
+    int nrom = beebit_romsel & 0x0F;
+
+    /*check sideways ram write enabled*/
+    if (beebit_romwritable[nrom])
+      roms[nrom][naddress-&8000] = nvalue;
   }
   else if (naddress < 0xE000)
   {
@@ -1062,29 +1087,30 @@ void sbcbcd(int n)
   fprintf(htrace,"COUNT=&%X\n", memory[cb+3]);
 }*/
 
-  /*relocate = memory[cb+4];
-  regs.r[0] = getword(memory+cb+9]
+  /*r6502opcode07swaps[0]();
+  relocate = memory[cb+4];
+  regs.r[0] = getword(memory+cb+9);
   if (relocate & 1)
     regs.r[0] += memory;
-  regs.r[1] = getword(memory+cb+13]
+  regs.r[1] = getword(memory+cb+13);
   if (relocate & 2)
     regs.r[1] += memory;
-  regs.r[2] = getword(memory+cb+17]
+  regs.r[2] = getword(memory+cb+17);
   if (relocate & 4)
     regs.r[2] += memory;
-  regs.r[3] = getword(memory+cb+21]
+  regs.r[3] = getword(memory+cb+21);
   if (relocate & 8)
     regs.r[3] += memory;
-  regs.r[4] = getword(memory+cb+25]
+  regs.r[4] = getword(memory+cb+25);
   if (relocate & 16)
     regs.r[4] += memory;
-  regs.r[5] = getword(memory+cb+29]
+  regs.r[5] = getword(memory+cb+29);
   if (relocate & 32)
     regs.r[5] += memory;
-  regs.r[6] = getword(memory+cb+33]
+  regs.r[6] = getword(memory+cb+33);
   if (relocate & 64)
     regs.r[6] += memory;
-  regs.r[7] = getword(memory+cb+37]
+  regs.r[7] = getword(memory+cb+37);
   if (relocate & 128)
     regs.r[7] += memory;
 
@@ -1119,50 +1145,51 @@ void sbcbcd(int n)
   {
     if (relocate & 1)
       regs.r[0] -= memory;
-    setword(memory+cb+9,regs.r[0]]
+    setword(memory+cb+9,regs.r[0]);
   }
   if (regcount > 1)
   {
-    regs.r[1] = getword(memory+cb+13]
+    regs.r[1] = getword(memory+cb+13);
     if (relocate & 2)
       regs.r[1] += memory;
   }
   if (regcount > 2)
   {
-    regs.r[2] = getword(memory+cb+17]
+    regs.r[2] = getword(memory+cb+17);
     if (relocate & 4)
       regs.r[2] += memory;
   }
   if (regcount > 3)
   {
-    regs.r[3] = getword(memory+cb+21]
+    regs.r[3] = getword(memory+cb+21);
     if (relocate & 8)
       regs.r[3] += memory;
   }
   if (regcount > 4)
   {
-    regs.r[4] = getword(memory+cb+25]
+    regs.r[4] = getword(memory+cb+25);
     if (relocate & 16)
       regs.r[4] += memory;
   }
   if (regcount > 5)
   {
-    regs.r[5] = getword(memory+cb+29]
+    regs.r[5] = getword(memory+cb+29);
     if (relocate & 32)
       regs.r[5] += memory;
   }
   if (regcount > 6)
   {
-    regs.r[6] = getword(memory+cb+33]
+    regs.r[6] = getword(memory+cb+33);
     if (relocate & 64)
       regs.r[6] += memory;
   }
   if (regcount > 7)
   {
-    regs.r[7] = getword(memory+cb+37]
+    regs.r[7] = getword(memory+cb+37);
     if (relocate & 128)
       regs.r[7] += memory;
-  }*/
+  }
+  r6502opcode07swaps[1]();*/
 /*}*/
 
 #ifndef __RISCOS__
@@ -1178,7 +1205,7 @@ void r6502execute(void)
     fprintf(hh,"A&%X X&%X Y&%X\n",r6502_a,r6502_x,r6502_y);
     fclose(hh);
   }*/
-    opcode = memory[r6502_pc++];
+    opcode = r6502read(r6502_pc++);
     #ifdef __DEVELOP__
       if (beebit_trace)
         fprintf(htrace,"%0.4X %0.2X ",r6502_pc-1,opcode);
@@ -3840,7 +3867,7 @@ void r6502execute(void)
         #ifdef __RISCOS__
           r6502opcodeA0();
         #else
-          r6502_y = memory[r6502_pc++];
+          r6502_y = r6502read(r6502_pc++);
           SETNFLAG(r6502_y)
           SETZFLAG(r6502_y)
           CPU_CYCLES(2)
@@ -3869,7 +3896,7 @@ void r6502execute(void)
         #ifdef __RISCOS__
           r6502opcodeA2();
         #else
-          r6502_x = memory[r6502_pc++];
+          r6502_x = r6502read(r6502_pc++);
           SETNFLAG(r6502_x)
           SETZFLAG(r6502_x)
           CPU_CYCLES(2)
@@ -3983,7 +4010,7 @@ void r6502execute(void)
         #ifdef __RISCOS__
           r6502opcodeA9();
         #else
-          r6502_a = memory[r6502_pc++];
+          r6502_a = r6502read(r6502_pc++);
           SETNFLAG(r6502_a)
           SETZFLAG(r6502_a)
           CPU_CYCLES(2)

@@ -54,6 +54,7 @@
   EXPORT |r6502opcode05|
   EXPORT |r6502opcode06|
   EXPORT |r6502opcode07|
+  EXPORT |r6502opcode07_interface|
   EXPORT |r6502opcode08|
   EXPORT |r6502opcode09|
   EXPORT |r6502opcode0A|
@@ -186,6 +187,11 @@ r6502opcode07_interface
   LDR r11,=r6502_ps
   STRB rps,[r11]
 
+  ;swap in memory overlays
+  MOV lr,pc
+  LDR pc,[r12,#:INDEX:R6502_OPCODE07SWAPS]
+  LDR r12,[sp,#36]
+
   ;pointer to bbc memory
   ADD r12,r12,#:INDEX:R6502_MEMORY
   ;pointer to control block
@@ -289,6 +295,11 @@ r6502opcode07_interface
   STR r7,[r11,#37]
 
 r6502opcode07_2
+  ;swap out memory overlays
+  LDR r12,[sp,#36]
+  MOV lr,pc
+  LDR pc,[r12,#:INDEX:R6502_OPCODE07SWAPS+4]
+
   LDR r11,=r6502_ps
   LDRB rps,[r11]
   LDR r11,=r6502_pc
@@ -359,6 +370,11 @@ r6502opcode07_error4
   STRB r8,[r10]
 
 r6502opcode07_error5
+  ;swap out memory overlays
+  LDR r12,[sp,#36]
+  MOV lr,pc
+  LDR pc,[r12,#:INDEX:R6502_OPCODE07SWAPS+4]
+  
   LDR r11,=r6502_ps
   LDRB rps,[r11]
   LDR r11,=r6502_pc

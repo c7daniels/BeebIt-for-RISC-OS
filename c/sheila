@@ -33,6 +33,95 @@
 /*sheila*/
 /*char sheila_b[0x100];*/
 
+static inline void pageinromb(int nrom)
+{
+  #ifdef __DEBUG__
+    fprintf(htrace,"paging in ROM %u",nrom);
+  #endif
+  int readrom,writerom;
+  
+  readrom = (int)r6502read8000_roms[nrom];
+  writerom = (int)r6502write8000_roms[nrom];
+  
+  setword(r6502readoffset+32, readrom);
+  setword(r6502readoffset+36, readrom);
+  setword(r6502readoffset+40, readrom);
+  setword(r6502readoffset+44, readrom);
+  setword(r6502writeoffset+32, writerom);
+  setword(r6502writeoffset+36, writerom);
+  setword(r6502writeoffset+40, writerom);
+  setword(r6502writeoffset+44, writerom);
+}
+
+static inline void pageinrombp(int nrom, int shadowram)
+{
+  #ifdef __DEBUG__
+    fprintf(htrace,"paging in ROM %u",nrom);
+  #endif
+  int readlow,writelow;
+  int readrom,writerom;
+  
+  if (nrom == 0x0F)
+    nrom = 0x0E;
+
+  readrom = (int)r6502read8000_roms[nrom];
+  writerom = (int)r6502write8000_roms[nrom];
+  
+  if (shadowram)
+  {
+    /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
+    readlow = (int)r6502readbp8000_ram;
+    writelow = (int)r6502writebp8000_ram;
+  }
+  else
+  {
+    readlow = readrom;
+    writelow = writerom;
+  }
+  
+  setword(r6502readoffset+32, readlow);
+  setword(r6502readoffset+36, readlow);
+  setword(r6502readoffset+40, readlow);
+  setword(r6502readoffset+44, readrom);
+  setword(r6502writeoffset+32, writelow);
+  setword(r6502writeoffset+36, writelow);
+  setword(r6502writeoffset+40, writelow);
+  setword(r6502writeoffset+44, writerom);
+}
+
+static inline void pageinromm(int nrom, int shadowram)
+{
+  #ifdef __DEBUG__
+    fprintf(htrace,"paging in ROM %u",nrom);
+  #endif
+  int readlow,writelow;
+  int readrom,writerom;
+  
+  readrom = (int)r6502read8000_roms[nrom];
+  writerom = (int)r6502write8000_roms[nrom];
+  
+  if (shadowram)
+  {
+    /*ROMSEL b7 (RAM) (&8000-&8FFF)*/
+    readlow = (int)r6502readm8000_ram;
+    writelow = (int)r6502writem8000_ram;
+  }
+  else
+  {
+    readlow = readrom;
+    writelow = writerom;
+  }
+  
+  setword(r6502readoffset+32, readlow);
+  setword(r6502readoffset+36, readrom);
+  setword(r6502readoffset+40, readrom);
+  setword(r6502readoffset+44, readrom);
+  setword(r6502writeoffset+32, writelow);
+  setword(r6502writeoffset+36, writerom);
+  setword(r6502writeoffset+40, writerom);
+  setword(r6502writeoffset+44, writerom);
+}
+
 void sheilareset(void)
 {
   /*int i;
@@ -40,21 +129,19 @@ void sheilareset(void)
     sheila_b[i] = 0xFE;*/
   int read0000,write0000;
   int read3000,write3000;
-  int read8000,write8000,read9000,write9000,readB000,writeB000;
   int readC000,writeC000,readE000,writeE000,readF000,writeF000;
 
   read0000 = (int)r6502read0000;
   write0000 = (int)r6502write0000;
   read3000 = (int)r6502read3000;
   write3000 = (int)r6502write3000;
-  readB000 = read9000 = read8000 = (int)r6502read8000;
-  writeB000 = write9000 = write8000 = (int)r6502write8000;
   readE000 = readC000 = (int)r6502readC000;
   writeE000 = writeC000 = (int)r6502writeC000;
 
   switch (beebit_machinetype)
   {
       case MACHINE_MODELB:
+        pageinromb(beebit_romsel & 0x0F);
         readF000 = (int)r6502readbF000;
         writeF000 = (int)r6502writebF000;
         break;
@@ -65,11 +152,7 @@ void sheilareset(void)
           write3000 = (int)r6502writebp3000_ram;
         }
         
-        if (beebit_romsel & 0x80)
-        {
-          read9000 = read8000 = (int)r6502readbp8000_ram;
-          write9000 = write8000 = (int)r6502writebp8000_ram;
-        }
+        pageinrombp(beebit_romsel & 0x0F, beebit_romsel & 0x80);
         readF000 = (int)r6502readbpF000;
         writeF000 = (int)r6502writebpF000;
         break;
@@ -92,11 +175,8 @@ void sheilareset(void)
           write3000 = (int)r6502writem3000_x;
           break;
         }
-        if (beebit_romsel & 0x80)
-        {
-          read8000 = (int)r6502readm8000_ram;
-          write8000 = (int)r6502writem8000_ram;
-        }
+
+        pageinromm(beebit_romsel & 0x0F, beebit_romsel & 0x80);
         if (beebit_acccon & 0x08)
         {
           readC000 = (int)r6502readmC000_y;
@@ -115,10 +195,6 @@ void sheilareset(void)
   setword(r6502readoffset+20, read3000);
   setword(r6502readoffset+24, read3000);
   setword(r6502readoffset+28, read3000);
-  setword(r6502readoffset+32, read8000);
-  setword(r6502readoffset+36, read9000);
-  setword(r6502readoffset+40, read9000);
-  setword(r6502readoffset+44, readB000);
   setword(r6502readoffset+48, readC000);
   setword(r6502readoffset+52, readC000);
   setword(r6502readoffset+56, readE000);
@@ -132,10 +208,6 @@ void sheilareset(void)
   setword(r6502writeoffset+20, write3000);
   setword(r6502writeoffset+24, write3000);
   setword(r6502writeoffset+28, write3000);
-  setword(r6502writeoffset+32, write8000);
-  setword(r6502writeoffset+36, write9000);
-  setword(r6502writeoffset+40, write9000);
-  setword(r6502writeoffset+44, writeB000);
   setword(r6502writeoffset+48, writeC000);
   setword(r6502writeoffset+52, writeC000);
   setword(r6502writeoffset+56, writeE000);
@@ -562,32 +634,13 @@ char sheilaread_m(int naddress)
         fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,beebit_romsel);
       #endif
       nresult = beebit_romsel;
-      /*bbcvdu(70);
-      bbcvdu(69);
-      bbcvdu(51);
-      bbcvdu(48);
-      bbcvdu(32);
-      inttohex4(r6502_pc);
-      bbcvdu(61);
-      inttohex4(nresult);
-      bbcvdu(13);*/
       break;
     case 0x34:
       /*FE34-&FE37 (ACCCON)*/
       #ifdef __DEVELOPXX__
         fprintf(htrace," &%X ACCCON=&%X\n",naddress,beebit_acccon);
       #endif
-      /*if (beebit_acccon == 0x0B)
-        beebit_acccon = 0x18;*/
       nresult = beebit_acccon;
-      /*bbcvdu(65);
-      bbcvdu(67);
-      bbcvdu(61);
-      bbcvdu(32);
-      inttohex4(r6502_pc);
-      bbcvdu(32);
-      inttohex4(nresult);
-      bbcvdu(13);*/
       break;
     case 0x38:
       /*FE38-&FE3B (INTOFF)*/
@@ -758,21 +811,15 @@ void sheilawrite_b(int naddress, char nvalue)
       #ifdef __DEVELOPxx__
         fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
       #endif
-      if (beebit_romselected != nvalue)
-      {
-        beebit_romsel = nvalue;
-        pageinrom(beebit_romsel & 0x0F, FALSE);
-      }
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"=&%X\n",beebit_romsel);
-      #endif
+      beebit_romsel = nvalue;
+      pageinromb(beebit_romsel & 0x0F);
       break;
     case 0x34:
       /*&FE34 - &FE37 (ACCCON)*/
-      beebit_acccon = nvalue;
       #ifdef __DEVELOPxx__
         fprintf(htrace,"ACCCON(&%X,&%X)\n",naddress,nvalue);
       #endif
+      beebit_acccon = nvalue;
       break;
     case 0x38:
       /*&FE38 - &FE3B (INTOFF)*/
@@ -924,73 +971,17 @@ void sheilawrite_bp(int naddress, char nvalue)
       break;
     case 0x30:
       /*&FE30 - &FE33 (ROMSEL)*/
-      /*bbcvdu(82);
-      inttohex4(r6502_pc);
-      bbcvdu(32);
-      inttohex4(nvalue);
-      bbcvdu(13);
-      bbcvdu(10);*/
       #ifdef __DEVELOPxx__
         fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
       #endif
-      /*if ((nvalue & 0x0F) > 1)
-      {*/
-        /*&02 - &0F*/
-        /*beebit_romsel = (nvalue & 0x7F);*/
-        /*make rom F use rom E*/
-        /*if ((nvalue & 0x0F) == 0x0F)
-          nvalue &= 0xFE;
-        if (beebit_romselected != (nvalue & 0x0F))
-          pageinrom(nvalue & 0x0F, FALSE);
-      }*/
-      beebit_romsel = (nvalue & 0x0F);
-      if (beebit_romsel == 0x0F)
-        beebit_romsel = 0x0E;
-      /*if (beebit_romsel > 0)
-      {*/
-        if (beebit_romselected != beebit_romsel)
-          pageinrom(beebit_romsel, FALSE);
-      /*}*/
-
-      if (nvalue & 0x80)
-      {
-        /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
-        setword(r6502readoffset+32, (int)r6502readbp8000_ram);
-        setword(r6502readoffset+36, (int)r6502readbp8000_ram);
-        setword(r6502readoffset+40, (int)r6502readbp8000_ram);
-        setword(r6502writeoffset+32, (int)r6502writebp8000_ram);
-        setword(r6502writeoffset+36, (int)r6502writebp8000_ram);
-        setword(r6502writeoffset+40, (int)r6502writebp8000_ram);
-      }
-      else
-      {
-        setword(r6502readoffset+32, (int)r6502read8000);
-        setword(r6502readoffset+36, (int)r6502read8000);
-        setword(r6502readoffset+40, (int)r6502read8000);
-        setword(r6502writeoffset+32, (int)r6502write8000);
-        setword(r6502writeoffset+36, (int)r6502write8000);
-        setword(r6502writeoffset+40, (int)r6502write8000);
-      }
-
-      /*beebit_romsel |= (nvalue & 0x80);*/
       beebit_romsel = nvalue;
-      /*else
-      {*/
-        /*&00 - &01*/
-        /*beebit_romsel &= 0x0F;
-        beebit_romsel |= (nvalue & 0xF0);
-        if (beebit_romsel & 0xF0)
-          blankrow(*shadow+0xB000,0x1000,0);
-      }*/
+      pageinrombp(nvalue & 0x0F, nvalue & 0x80);
       break;
     case 0x34:
       /*&FE34 - &FE37 (ACCCON)*/
-      /*bbcvdu(65);
-      inttohex4(r6502_pc);
-      bbcvdu(32);
-      inttohex4(nvalue);
-      bbcvdu(13);
-      bbcvdu(10);*/
+      #ifdef __DEVELOPxx__
+        fprintf(htrace,"ACCCON(&%X,&%X)\n",naddress,nvalue);
+      #endif
       if (nvalue & 0x80)
       {
         /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
@@ -1019,10 +1010,6 @@ void sheilawrite_bp(int naddress, char nvalue)
         setword(r6502writeoffset+28, (int)r6502write3000);
       }
       beebit_acccon = nvalue;
-
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ACCCON(&%X,&%X)\n",naddress,nvalue);
-      #endif
       break;
     case 0x38:
       /*&FE38 - &FE3B (INTOFF)*/
@@ -1108,8 +1095,6 @@ void sheilawrite_bp(int naddress, char nvalue)
 
 void sheilawrite_m(int naddress, char nvalue)
 {
-  /*int aaa;*/
-
   #ifdef __DEBUG__
     fprintf(htrace,"WRITEsheila=&%X,&%X\n",naddress,nvalue);
   #endif
@@ -1168,149 +1153,14 @@ void sheilawrite_m(int naddress, char nvalue)
       #ifdef __DEVELOPxx__
         fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
       #endif
-
-      /*bbcvdu(70);
-      bbcvdu(69);
-      bbcvdu(51);
-      bbcvdu(48);
-      bbcvdu(32);
-      inttohex4(r6502_pc);
-      bbcvdu(32);
-      inttohex4(nvalue);*/
-      /*bbcvdu(32);
-
-      aaa = memory[0xBA];
-      bbcvdu(77);
-      inttohex4(aaa);
-      aaa = memory[0xBB];
-      inttohex4(aaa);
-
-      bbcvdu(32);
-      aaa = shadow[0xBA];
-      bbcvdu(83);
-      inttohex4(aaa);
-      aaa = shadow[0xBB];
-      inttohex4(aaa);
-      bbcvdu(32);
-
-      aaa = memory[0x8008];
-      bbcvdu(78);
-      inttohex4(aaa);
-      aaa = shadow[0x8008];
-      bbcvdu(32);
-      inttohex4(aaa);*/
-      /*bbcvdu(10);
-      bbcvdu(13);*/
-
-      /*if private ram in, copy it out*/
-      /*if (beebit_romsel & 0x80)*/
-        /*ANDY (SRAM)*/
-        /*swapbanks(0x8000,0x1000);*/
-      /*don't do this check. if mosram set, rom won't get swapped in later*/
-      /*if (beebit_romselected != (nvalue & 0x0F))*/
-        pageinrom(nvalue & 0x0F,nvalue & 0x80);
-      /*if private ram out, copy it in*/
-      /*if (nvalue & 0x80)*/
-        /*ANDY (SRAM)*/
-        /*swapbanks(0x8000,0x1000);*/
-      if (nvalue & 0x80)
-      {
-        /*ROMSEL b7 (RAM)*/
-        setword(r6502readoffset+32, (int)r6502readm8000_ram);
-        setword(r6502writeoffset+32, (int)r6502writem8000_ram);
-      }
-      else
-      {
-        setword(r6502readoffset+32, (int)r6502read8000);
-        setword(r6502writeoffset+32, (int)r6502write8000);
-      }
       beebit_romsel = nvalue;
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"=&%X\n",beebit_romsel);
-      #endif
-
-      /*aaa = memory[0xBA];
-      bbcvdu(77);
-      inttohex4(aaa);
-      aaa = memory[0xBB];
-      inttohex4(aaa);
-
-      bbcvdu(32);
-      aaa = shadow[0xBA];
-      bbcvdu(83);
-      inttohex4(aaa);
-      aaa = shadow[0xBB];
-      inttohex4(aaa);
-      bbcvdu(32);
-
-      aaa = memory[0x8008];
-      bbcvdu(78);
-      inttohex4(aaa);
-      aaa = shadow[0x8008];
-      bbcvdu(32);
-      inttohex4(aaa);
-      bbcvdu(13);*/
-
+      pageinromm(nvalue & 0x0F, nvalue & 0x80);
       break;
     case 0x34:
       /*&FE34 - &FE37 (ACCCON)*/
-      /*nvalue = nvalue & 0xFC;*/
-
-      /*bbcvdu(65);
-      bbcvdu(67);
-      bbcvdu(87);
-      bbcvdu(32);
-      inttohex4(r6502_pc);
-      bbcvdu(32);
-      inttohex4(nvalue);
-      bbcvdu(13);*/
-
-      /*if ((nvalue & 0x06) AND !(beebit_acccon & 0x06))
-      {
-        lflag = 0;*/
-        /*LYNNE (E,X)*/
-        /*if (nvalue & 0x04)
-          lflag = 1;
-        else if (nvalue & 0x02)
-        {
-          if ((r6502_pc >= 0xC000) AND (r6502_pc < 0x8000))
-            lflag = 1;
-        }
-        if (lflag)
-          swapbanks(0x3000,0x5000);
-      }
-      else if (!(nvalue & 0x06) AND (beebit_acccon & 0x06))*/
-        /*swap shadow out*/
-        /*swapbanks(0x3000,0x5000);*/
-
-        /*bbcvdu(78);
-        inttohex(beebit_acccon);
-        bbcvdu(77);
-        inttohex(beebit_memorymap);*/
-      /*if ((nvalue & 0x04) != (beebit_acccon & 0x04))
-      {*/
-        /*LYNNE (X)*/
-        /*bbcvdu(79);
-        inttohex(beebit_romsel);
-        swapbanks(0x3000,0x5000);*/
-        /*set the memory map swap flag*/
-        /*0 = shadow is not swapped in*/
-        /*1 = shadow is swapped in*/
-        /*beebit_memorymap = (beebit_memorymap ^ 0x04);*/
-        /*beebit_memorymap = (nvalue & 0x04);*/
-        /*bbcvdu(79);
-        inttohex(beebit_memorymap);*/
-        /*regs.r[0] = 0x81;
-        regs.r[1] = 0x20;
-        regs.r[2] = 0x00;
-        _kernel_swi(OS_Byte,&regs,&regs);*/
-      /*}*/
-
-      /*if ((nvalue & 0x08) != (beebit_acccon & 0x08))*/
-        /*LYNNE (Y)*/
-        /*this is called all the time!*/
-        /*swapbanks(0xC000,0x2000);*/
-
+      #ifdef __DEVELOPxx__
+        fprintf(htrace,"ACCCON(&%X,&%X)\n",naddress,nvalue);
+      #endif
       switch (nvalue & 0x06)
       {
         case 0x00:
@@ -1384,15 +1234,6 @@ void sheilawrite_m(int naddress, char nvalue)
         nvalue &= 0x7F;
       }
       beebit_acccon = nvalue;
-
-      /*bbcvdu(32);
-      inttohex4(beebit_acccon);
-      bbcvdu(13);*/
-
-
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ACCCON(&%X,&%X)\n",naddress,nvalue);
-      #endif
       break;
     case 0x38:
       /*&FE38 - &FE3B (INTOFF)*/

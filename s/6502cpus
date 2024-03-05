@@ -63,9 +63,8 @@
   EXPORT |r6502workspace|
   EXPORT |memory|
   EXPORT |shadow|
+  EXPORT |roms|
   EXPORT |beebit_romwritable|
-  EXPORT |beebit_romselected|
-  EXPORT |beebit_rommodified|
   EXPORT |beebit_irq|
 
   ;EXPORT |r6502addressofabsolute|
@@ -109,14 +108,15 @@
   EXPORT |r6502_cyclesoriginal|
   EXPORT |r6502_cyclestogo|
   EXPORT |r6502opcodes|
+  EXPORT |r6502opcode07swaps|
 
   EXPORT |r6502read0000|
   EXPORT |r6502read3000|
-  EXPORT |r6502read8000|
+  EXPORT |r6502read8000_roms|
   EXPORT |r6502readC000|
   EXPORT |r6502write0000|
   EXPORT |r6502write3000|
-  EXPORT |r6502write8000|
+  EXPORT |r6502write8000_roms|
   EXPORT |r6502writeC000|
 
   EXPORT |r6502readbF000|
@@ -365,11 +365,124 @@
 
 r6502read0000
 r6502read3000
-r6502read8000
 r6502readC000
   ADD r11,r12,#:INDEX:R6502_MEMORY
   LDRB r0,[r11,r0]  ;r0 = memory[address]
   MOV pc,lr
+
+r6502read8000_0
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS-&8000
+  LDRB r0,[r11,r0]  ;r0 = roms[0][address-&8000]
+  MOV pc,lr
+
+r6502read8000_1
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS-&4000
+  LDRB r0,[r11,r0]  ;r0 = roms[1][address-&8000]
+  MOV pc,lr
+
+r6502read8000_2
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS
+  LDRB r0,[r11,r0]  ;r0 = roms[2][address-&8000]
+  MOV pc,lr
+
+r6502read8000_3
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&4000
+  LDRB r0,[r11,r0]  ;r0 = roms[3][address-&8000]
+  MOV pc,lr
+
+r6502read8000_4
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&8000
+  LDRB r0,[r11,r0]  ;r0 = roms[4][address-&8000]
+  MOV pc,lr
+
+r6502read8000_5
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&C000
+  LDRB r0,[r11,r0]  ;r0 = roms[5][address-&8000]
+  MOV pc,lr
+
+r6502read8000_6
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&10000
+  LDRB r0,[r11,r0]  ;r0 = roms[6][address-&8000]
+  MOV pc,lr
+
+r6502read8000_7
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&14000
+  LDRB r0,[r11,r0]  ;r0 = roms[7][address-&8000]
+  MOV pc,lr
+
+r6502read8000_8
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&18000
+  LDRB r0,[r11,r0]  ;r0 = roms[8][address-&8000]
+  MOV pc,lr
+
+r6502read8000_9
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&1C000
+  LDRB r0,[r11,r0]  ;r0 = roms[9][address-&8000]
+  MOV pc,lr
+
+r6502read8000_10
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&20000
+  LDRB r0,[r11,r0]  ;r0 = roms[10][address-&8000]
+  MOV pc,lr
+
+r6502read8000_11
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&24000
+  LDRB r0,[r11,r0]  ;r0 = roms[11][address-&8000]
+  MOV pc,lr
+
+r6502read8000_12
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&28000
+  LDRB r0,[r11,r0]  ;r0 = roms[12][address-&8000]
+  MOV pc,lr
+
+r6502read8000_13
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&2C000
+  LDRB r0,[r11,r0]  ;r0 = roms[13][address-&8000]
+  MOV pc,lr
+
+r6502read8000_14
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&30000
+  LDRB r0,[r11,r0]  ;r0 = roms[14][address-&8000]
+  MOV pc,lr
+
+r6502read8000_15
+  ;&8000 - &BFFF
+  ADD r11,r12,#:INDEX:R6502_ROMS+&34000
+  LDRB r0,[r11,r0]  ;r0 = roms[15][address-&8000]
+  MOV pc,lr
+
+r6502read8000_roms
+  DCD r6502read8000_0 ;0
+  DCD r6502read8000_1 ;1
+  DCD r6502read8000_2 ;2
+  DCD r6502read8000_3 ;3
+  DCD r6502read8000_4 ;4
+  DCD r6502read8000_5 ;5
+  DCD r6502read8000_6 ;6
+  DCD r6502read8000_7 ;7
+  DCD r6502read8000_8 ;8
+  DCD r6502read8000_9 ;9
+  DCD r6502read8000_10 ;A
+  DCD r6502read8000_11 ;B
+  DCD r6502read8000_12 ;C
+  DCD r6502read8000_13 ;D
+  DCD r6502read8000_14 ;E
+  DCD r6502read8000_15 ;F
 
 ;
 ;rockwell 6502 cpu
@@ -679,19 +792,151 @@ r6502write3000
   STRB r1,[r11,r0] ;memory[r0] = r1;
   MOV pc,lr
 
-r6502write8000
-  ;&8000 - &BFFF (SIDEWAYS RAM)
-  ADD r11,r12,#:INDEX:R6502_ROMWRITABLE
-  LDR r3,[r12,#:INDEX:R6502_ROMSELECTED]
-  LDR r2,[r11,r3,LSL#2] ;r2 = beebit_romwritable[beebit_romselected]
-  CMP r2,#&00 ;if beebit_romwritable[beebit_romselected]
-  MOVEQ pc,lr
-
-  ADD r11,r12,#:INDEX:R6502_MEMORY
-  STRB r1,[r11,r0] ;memory[r0] = r1;
-  MOV r3,#&FF
-  STR r3,[r12,#:INDEX:R6502_ROMMODIFIED] ;beebit_rommodified = TRUE
+r6502write8000_0
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE] ;r2 = beebit_romwritable[0]
+  ADD r11,r12,#:INDEX:R6502_ROMS-&8000
+  CMP r2,#&00 ;if beebit_romwritable[0]
+  STRNEB r1,[r11,r0] ;roms[0][address-&8000] = r1;
   MOV pc,lr
+
+r6502write8000_1
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+4] ;r2 = beebit_romwritable[1]
+  ADD r11,r12,#:INDEX:R6502_ROMS-&4000
+  CMP r2,#&00 ;if beebit_romwritable[1]
+  STRNEB r1,[r11,r0] ;roms[1][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_2
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+8] ;r2 = beebit_romwritable[2]
+  ADD r11,r12,#:INDEX:R6502_ROMS
+  CMP r2,#&00 ;if beebit_romwritable[2]
+  STRNEB r1,[r11,r0] ;roms[2][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_3
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+12] ;r2 = beebit_romwritable[3]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&4000
+  CMP r2,#&00 ;if beebit_romwritable[3]
+  STRNEB r1,[r11,r0] ;roms[3][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_4
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+16] ;r2 = beebit_romwritable[4]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&8000
+  CMP r2,#&00 ;if beebit_romwritable[4]
+  STRNEB r1,[r11,r0] ;roms[4][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_5
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+20] ;r2 = beebit_romwritable[5]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&C000
+  CMP r2,#&00 ;if beebit_romwritable[5]
+  STRNEB r1,[r11,r0] ;roms[5][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_6
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+24] ;r2 = beebit_romwritable[6]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&10000
+  CMP r2,#&00 ;if beebit_romwritable[6]
+  STRNEB r1,[r11,r0] ;roms[6][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_7
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+28] ;r2 = beebit_romwritable[7]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&14000
+  CMP r2,#&00 ;if beebit_romwritable[7]
+  STRNEB r1,[r11,r0] ;roms[7][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_8
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+32] ;r2 = beebit_romwritable[8]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&18000
+  CMP r2,#&00 ;if beebit_romwritable[8]
+  STRNEB r1,[r11,r0] ;roms[8][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_9
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+36] ;r2 = beebit_romwritable[9]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&1C000
+  CMP r2,#&00 ;if beebit_romwritable[9]
+  STRNEB r1,[r11,r0] ;roms[9][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_10
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+40] ;r2 = beebit_romwritable[10]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&20000
+  CMP r2,#&00 ;if beebit_romwritable[10]
+  STRNEB r1,[r11,r0] ;roms[10][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_11
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+44] ;r2 = beebit_romwritable[11]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&24000
+  CMP r2,#&00 ;if beebit_romwritable[11]
+  STRNEB r1,[r11,r0] ;roms[11][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_12
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+48] ;r2 = beebit_romwritable[12]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&28000
+  CMP r2,#&00 ;if beebit_romwritable[12]
+  STRNEB r1,[r11,r0] ;roms[12][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_13
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+52] ;r2 = beebit_romwritable[13]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&2C000
+  CMP r2,#&00 ;if beebit_romwritable[13]
+  STRNEB r1,[r11,r0] ;roms[13][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_14
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+56] ;r2 = beebit_romwritable[14]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&30000
+  CMP r2,#&00 ;if beebit_romwritable[14]
+  STRNEB r1,[r11,r0] ;roms[14][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_15
+  ;&8000 - &BFFF
+  LDR r2,[r12,#:INDEX:R6502_ROMWRITABLE+60] ;r2 = beebit_romwritable[15]
+  ADD r11,r12,#:INDEX:R6502_ROMS+&34000
+  CMP r2,#&00 ;if beebit_romwritable[15]
+  STRNEB r1,[r11,r0] ;roms[15][address-&8000] = r1;
+  MOV pc,lr
+
+r6502write8000_roms
+  DCD r6502write8000_0 ;0
+  DCD r6502write8000_1 ;1
+  DCD r6502write8000_2 ;2
+  DCD r6502write8000_3 ;3
+  DCD r6502write8000_4 ;4
+  DCD r6502write8000_5 ;5
+  DCD r6502write8000_6 ;6
+  DCD r6502write8000_7 ;7
+  DCD r6502write8000_8 ;8
+  DCD r6502write8000_9 ;9
+  DCD r6502write8000_10 ;A
+  DCD r6502write8000_11 ;B
+  DCD r6502write8000_12 ;C
+  DCD r6502write8000_13 ;D
+  DCD r6502write8000_14 ;E
+  DCD r6502write8000_15 ;F
 
 r6502writeC000
   ;&C000 - &DFFF (OS - should not be allowed!)
@@ -1104,12 +1349,12 @@ r6502writemFE00
 |r6502_cyclesoriginal| * r6502workspace+:INDEX:R6502_CYCLESORIGINAL
 |r6502_cyclestogo| * r6502workspace+:INDEX:R6502_CYCLESTOGO
 |beebit_irq| * r6502workspace+:INDEX:R6502_BEEBITIRQ
-|beebit_romselected| * r6502workspace+:INDEX:R6502_ROMSELECTED
-|beebit_rommodified| * r6502workspace+:INDEX:R6502_ROMMODIFIED
 |beebit_romwritable| * r6502workspace+:INDEX:R6502_ROMWRITABLE
 |r6502opcodes| * r6502workspace+:INDEX:R6502_OPCODES
+|r6502opcode07swaps| * r6502workspace+:INDEX:R6502_OPCODE07SWAPS
 |memory| * r6502workspace+:INDEX:R6502_MEMORY
 |shadow| * r6502workspace+:INDEX:R6502_SHADOW
+|roms| * r6502workspace+:INDEX:R6502_ROMS
 
 ;buffermem
 ;  DCD 0
