@@ -70,7 +70,7 @@
   ;ADC
   ADDRESSOFPOSTINDEXEDY ;3+ cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcode71_2
   ;binary
   R6502ADC ;1 cycle
@@ -88,7 +88,7 @@ r65c12opcode71_2
   ;ADC
   ADDRESSOFINDZEROPAGE
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcode72_2
   ;binary
   R6502ADC
@@ -112,8 +112,8 @@ r65c12opcode72_2
   ;STZ
   ADDRESSOFZEROPAGEX
   ADD r11,r12,#:INDEX:R6502_MEMORY
-  MOV r1,#0
-  STRB r1,[r11,r0]
+  MOV r0,#0
+  STRB r0,[r11,r1,LSR #24]
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -121,7 +121,7 @@ r65c12opcode72_2
 |r65c12opcode75|
   ;ADC
   VALUEOFZEROPAGEX
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcode75_2
   ;binary
   R6502ADC
@@ -145,7 +145,7 @@ r65c12opcode75_2
   ;ADC
   ADDRESSOFABSOLUTEYPLUS ;2+ cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcode79_2
   ;binary
   R6502ADC ;1 cycle
@@ -177,16 +177,15 @@ r65c12opcode79_2
 |r65c12opcode7C|
   ;JMP
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_ABSTEMP] ;store address
   READMEM
-  STR r0,[r12,#:INDEX:R6502_INDTEMP] ;lo
+  STR r0,[r12,#:INDEX:R6502_ABSTEMP] ;lo
 
-  LDR r3,[r12,#:INDEX:R6502_ABSTEMP]
-  ADD r0,r3,#1 ;address+=1
+  ADD r1,r1,#&10000 ;address += 1
   READMEM ;hi
-  LDR r2,[r12,#:INDEX:R6502_INDTEMP] ;lo
-
-  ADD rpc,r2,r0,LSL#8 ;rpc=lo+(hi<<8)
+  LDR r2,[r12,#:INDEX:R6502_ABSTEMP] ;lo
+  
+  MOV r2,r2,LSL #16
+  ADD rpc,r2,r0,LSL #24 ;r6502_pc=lo+(hi<<8)
   CPU_CYCLES 3
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -195,7 +194,7 @@ r65c12opcode79_2
   ;ADC
   ADDRESSOFABSOLUTEXPLUS ;2+ cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcode7D_2
   ;binary
   R6502ADC ;1 cycle

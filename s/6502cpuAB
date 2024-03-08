@@ -103,14 +103,13 @@
 |r6502opcode9B|
   ;SHS
   ADDRESSOFABSOLUTEY ;3 cycles
-  AND r1,r0,#&FF
-  CMP r1,ry
-  ADD r2,r0,#&0100
-  AND r1,ra,rx ;1 cycle
-  AND r1,r1,r2,LSR #8
-  MOV rsp,r1
-  ANDMI r0,r0,#&FF
-  ORRMI r0,r0,r1,LSL #8
+  AND r3,r1,#&00FF0000
+  CMP r3,ry,LSL #16
+  ADD r2,r1,#&01000000
+  AND r0,ra,rx ;1 cycle
+  AND r0,r0,r2,LSR #24
+  MOV rsp,r0
+  ORRMI r1,r3,r0,LSL #24
   WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
@@ -119,12 +118,11 @@
 |r6502opcode9C|
   ;SHY
   ADDRESSOFABSOLUTEX ;3 cycles
-  AND r1,r0,#&FF
-  CMP r1,rx
-  ADD r2,r0,#&0100
-  AND r1,ry,r2,LSR #8 ;1 cycle
-  ANDMI r0,r0,#&FF
-  ORRMI r0,r0,r1,LSL #8
+  AND r3,r1,#&00FF0000
+  CMP r3,ry,LSL #16
+  ADD r2,r1,#&01000000
+  AND r0,ry,r2,LSR #24 ;1 cycle
+  ORRMI r1,r3,r0,LSL #24
   WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
@@ -133,7 +131,7 @@
 |r6502opcode9D|
   ;STA
   ADDRESSOFABSOLUTEX ;3 cycles
-  MOV r1,ra ;1 cycle
+  MOV r0,ra ;1 cycle
   WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
@@ -142,12 +140,11 @@
 |r6502opcode9E|
   ;SHX
   ADDRESSOFABSOLUTEY ;3 cycles
-  AND r1,r0,#&FF
-  CMP r1,ry
-  ADD r2,r0,#&0100
-  AND r1,rx,r2,LSR #8 ;1 cycle
-  ANDMI r0,r0,#&FF
-  ORRMI r0,r0,r1,LSL #8
+  AND r3,r1,#&00FF0000
+  CMP r3,ry,LSL #16
+  ADD r2,r1,#&01000000
+  AND r0,rx,r2,LSR #24 ;1 cycle
+  ORRMI r1,r3,r0,LSL #24
   WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
@@ -156,13 +153,12 @@
 |r6502opcode9F|
   ;SHA
   ADDRESSOFABSOLUTEY ;3 cycles
-  AND r1,r0,#&FF
-  CMP r1,ry
-  ADD r2,r0,#&0100
-  AND r1,ra,rx ;1 cycle
-  AND r1,r1,r2,LSR #8
-  ANDMI r0,r0,#&FF
-  ORRMI r0,r0,r1,LSL #8
+  AND r3,r1,#&00FF0000
+  CMP r3,ry,LSL #16
+  ADD r2,r1,#&01000000
+  AND r0,ra,rx ;1 cycle
+  AND r0,r0,r2,LSR #24
+  ORRMI r1,r3,r0,LSL #24
   WRITEMEM ;1 cycle
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
@@ -213,7 +209,7 @@
   ;LDY
   ADDRESSOFZEROPAGE
   ADD r11,r12,#:INDEX:R6502_MEMORY
-  LDRB ry,[r11,r0]
+  LDRB ry,[r11,r1,LSR #24]
   SETNFLAG ry
   SETZFLAG ry
   CPU_CYCLES 3
@@ -224,7 +220,7 @@
   ;LDA
   ADDRESSOFZEROPAGE
   ADD r11,r12,#:INDEX:R6502_MEMORY
-  LDRB ra,[r11,r0]
+  LDRB ra,[r11,r1,LSR #24]
   SETNFLAG ra
   SETZFLAG ra
   CPU_CYCLES 3
@@ -235,7 +231,7 @@
   ;LDX
   ADDRESSOFZEROPAGE
   ADD r11,r12,#:INDEX:R6502_MEMORY
-  LDRB rx,[r11,r0]
+  LDRB rx,[r11,r1,LSR #24]
   SETNFLAG rx
   SETZFLAG rx
   CPU_CYCLES 3
@@ -246,7 +242,7 @@
   ;LAX
   ADDRESSOFZEROPAGE
   ADD r11,r12,#:INDEX:R6502_MEMORY
-  LDRB ra,[r11,r0] ;r0=ra
+  LDRB ra,[r11,r1,LSR #24]
   MOV rx,ra
   SETNFLAG ra
   SETZFLAG ra
@@ -342,9 +338,7 @@
   ;if (r6502_ps & CFLAG)
   BNE r6502opcodeB0_2
   ;else
-  ADD rpc,rpc,#1 ;r6502_pc++
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
+  ADD rpc,rpc,#&10000 ;r6502_pc++
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -408,7 +402,7 @@ r6502opcodeB0_2
   ;LAX
   ADDRESSOFZEROPAGEY
   ADD r11,r12,#:INDEX:R6502_MEMORY
-  LDRB ra,[r11,r0]
+  LDRB ra,[r11,r1,LSR #24]
   MOV rx,ra
   SETNFLAG ra
   SETZFLAG ra

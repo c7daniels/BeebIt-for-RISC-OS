@@ -113,12 +113,9 @@
 |r6502opcodeC3|
   ;DCP
   ADDRESSOFPREINDEXED ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502DEC r0 ;1 cycle
   R6502CMP ;1 cycle
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -206,13 +203,9 @@
   R6502NEXTOPCODE
 
 |r6502opcodeCE|
-  ;VALUEOFABSOLUTE
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502DEC r0 ;1 cycle
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -221,12 +214,9 @@
 |r6502opcodeCF|
   ;DCP
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502DEC r0 ;1 cycle
   R6502CMP
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -245,9 +235,7 @@
   ;if (!(r6502_ps & ZFLAG))
   BEQ r6502opcodeD0_2
   ;else
-  ADD rpc,rpc,#1 ;r6502_pc++
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
+  ADD rpc,rpc,#&10000 ;r6502_pc++
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -276,12 +264,9 @@ r6502opcodeD0_2
 |r6502opcodeD3|
   ;DCP
   ADDRESSOFPOSTINDEXEDY_STA ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502DEC r0 ;1 cycle
   R6502CMP ;1 cycle
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -344,12 +329,9 @@ r6502opcodeD0_2
 |r6502opcodeDB|
   ;DCP
   ADDRESSOFABSOLUTEY ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502DEC r0 ;2 cycles
   R6502CMP
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -373,11 +355,8 @@ r6502opcodeD0_2
 
 |r6502opcodeDE|
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502DEC r0 ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -386,12 +365,9 @@ r6502opcodeD0_2
 |r6502opcodeDF|
   ;DCP
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502DEC r0 ;2 cycles
   R6502CMP
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4

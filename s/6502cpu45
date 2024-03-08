@@ -101,11 +101,8 @@
 
 |r6502opcode3E|
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ROL r0 ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -114,11 +111,8 @@
 |r6502opcode3F|
   ;RLA
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502RLA ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -129,8 +123,8 @@
   STACKPOP rps
   STACKPOP r2 ;lo
   STACKPOP r3 ;hi
-
-  ADD rpc,r2,r3,LSL#8 ;r6502_pc=nlo+(nhi<<8)
+  MOV r2,r2,LSL #16
+  ADD rpc,r2,r3,LSL #24 ;r6502_pc=lo+(hi<<8)
 
   CPU_CYCLES 6
 
@@ -160,11 +154,8 @@ r6502opcode40end
 |r6502opcode43|
   ;LSE
   ADDRESSOFPOSTINDEXEDY_STA ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502LSE ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -228,15 +219,16 @@ r6502opcode40end
 
 |r6502opcode4C|
   ;JMP
-  MOV r0,rpc
+  MOV r1,rpc
   READMEM
   STR r0,[r12,#:INDEX:R6502_ABSTEMP] ;lo
 
-  ADD r0,rpc,#1 ;rpc += 1
+  ADD r1,r1,#&10000 ;rpc + 1
   READMEM ;hi
   LDR r2,[r12,#:INDEX:R6502_ABSTEMP] ;lo
+  MOV r2,r2,LSL #16
 
-  ADD rpc,r2,r0,LSL#8 ;r0=lo+(hi<<8)
+  ADD rpc,r2,r0,LSL #24 ;r6502_pc=lo+(hi<<8)
   CPU_CYCLES 3
   R6502NEXTOPCODE
 
@@ -251,11 +243,8 @@ r6502opcode40end
 |r6502opcode4E|
   ;LSR
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502LSR r0 ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -264,11 +253,8 @@ r6502opcode40end
 |r6502opcode4F|
   ;LSE
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502LSE ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -287,9 +273,7 @@ r6502opcode40end
   ;if (!(r6502_ps & VFLAG))
   BEQ r6502opcode50_2
   ;else
-  ADD rpc,rpc,#1 ;r6502_pc++
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
+  ADD rpc,rpc,#&10000 ;r6502_pc++
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -318,11 +302,8 @@ r6502opcode50_2
 |r6502opcode53|
   ;LSE
   ADDRESSOFPOSTINDEXEDY_STA ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502LSE ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -387,11 +368,8 @@ r6502opcode50_2
 |r6502opcode5B|
   ;LSE
   ADDRESSOFABSOLUTEY ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502LSE ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -416,11 +394,8 @@ r6502opcode50_2
 |r6502opcode5E|
   ;LSR
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502LSR r0 ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -429,11 +404,8 @@ r6502opcode50_2
 |r6502opcode5F|
   ;LSE
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502LSE ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4

@@ -22,11 +22,11 @@
   R6502NEXTOPCODE ;_FAST ;rename for tracing
   CMP rcycles,#0
   LDRLE pc,[sp],#4
-  MOV r0,rpc
+  MOV r1,rpc
   READMEM
-  ADD rpc,rpc,#1
-  ADD r1,r12,#:INDEX:R6502_OPCODES
-  LDR pc,[r1,r0,LSL#2]
+  ADD rpc,rpc,#&10000
+  ADD r2,r12,#:INDEX:R6502_OPCODES
+  LDR pc,[r2,r0,LSL#2]
   ;LDR pc,[sp],#4
   MEND
 
@@ -35,7 +35,7 @@
 ;
   MACRO
   R6502JAM
-  SUB rpc,rpc,#1
+  SUB rpc,rpc,#&10000
   CPU_CYCLES 1
   MEND
 
@@ -221,7 +221,7 @@
   ;r0=number to arr
   AND ra,ra,r0
   MOV r3,ra,LSL#24
-  ADCS r1,r3,r3
+  ADCS r2,r3,r3
   AND r3,rps,#CFLAG
   AND rps,rps,#&3C
   ORRVS rps,rps,#VFLAG
@@ -242,7 +242,7 @@
   AND ra,ra,r0
   MOV r0,ra
   MOV r3,ra,LSL#24
-  ADCS r1,r3,r3
+  ADCS r2,r3,r3
   AND r3,rps,#CFLAG
   AND rps,rps,#&3C
   ORRVS rps,rps,#VFLAG
@@ -295,7 +295,7 @@
   R6502ASL $n
   ;IN: $n=number to asl
   ;OUT:$n=result
-  ANDS r1,$n,#&80
+  TST $n,#&80
   ORRNE rps,rps,#CFLAG ;set c flag
   ANDEQ rps,rps,#NOTCFLAG ;clear c flag
   MOV $n,$n,LSL #&01 ;shift left
@@ -311,7 +311,7 @@
   R6502ASO
   ;IN: r0=number to aso
   ;OUT:r0=result
-  ANDS r1,r0,#&80
+  TST r0,#&80
   ORRNE rps,rps,#CFLAG
   ANDNE rps,rps,#NOTCFLAG
   MOV r0,r0,LSL #&01 ;shift left
@@ -327,22 +327,13 @@
   MACRO
   R6502BRA
   ;IN: r0=offset
-  MOV r1,rpc,LSR#8 ;r1=(pc>>8)
-  AND r1,r1,#&FF
-  ANDS r2,r0,#&80 ;r2=(n & 0x80)
-  MOVNE r3,#&100
-  SUBNE r0,r3,r0 ;r0=(&100-r0)
-  SUBNE rpc,rpc,r0 ;rpc=(rpc-r0)
-  ADDEQ rpc,rpc,r0 ;rpc=(rpc+r0)
-
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
-
-  MOV r2,rpc,LSR#8 ;r2=(pc>>8)
-  AND r2,r2,#&FF
-  CMP r1,r2 ;if (n1 != (r6502_pc >> 8))
-  SUBNE rcycles,rcycles,#4 ;r3=(r3-4)
-  SUBEQ rcycles,rcycles,#3 ;r3=(r3-3)
+  MOV r2,rpc,LSR #24
+  TST r0,#&80 ;if (n & 0x80)
+  SUBNE rpc,rpc,#&01000000
+  ADD rpc,rpc,r0,LSL #16
+  TEQ r2,rpc,LSR #24
+  SUBEQ rcycles,rcycles,#3 ;r6502_cyclestogo -= 3
+  SUBNE rcycles,rcycles,#4 ;r6502_cyclestogo -= 4
   MEND
 
 ;
@@ -351,8 +342,8 @@
   MACRO
   R6502BIT
   ;r0=number to bit
-  ANDS r1,ra,r0 ;a=(a and n)
-  SETZFLAG0 ;r1 ;against r1
+  TST ra,r0 ;a=(a and n)
+  SETZFLAG0 ;from TST
   SETNFLAG r0 ;against r0
   SETVFLAG r0 ;against r0
   MEND
@@ -569,7 +560,7 @@
   R6502LSE
   ;IN: r0=number to lse
   ;OUT:r0=result
-  ANDS r1,r0,#&01
+  TST r0,#&01
   ORRNE rps,rps,#CFLAG ;set c flag
   ANDEQ rps,rps,#NOTCFLAG ;clear c flag
   MOV r0,r0,LSR #&01 ;shift right
@@ -585,7 +576,7 @@
   R6502LSR $n
   ;IN: $n=number to lsr
   ;OUT:$n=result
-  ANDS r1,$n,#&01
+  TST $n,#&01
   ORRNE rps,rps,#CFLAG ;set c flag
   ANDEQ rps,rps,#NOTCFLAG ;clear c flag
   MOV $n,$n,LSR #&01 ;shift right
@@ -626,7 +617,7 @@
   ;IN: r0=number to rla
   ;OUT:r0=result
   AND r3,rps,#CFLAG ;store c flag
-  ANDS r1,r0,#&80
+  TST r0,#&80
   ORRNE rps,rps,#CFLAG ;set c flag
   ANDEQ rps,rps,#NOTCFLAG ;clear c flag
   MOV r0,r0,LSL #&01 ;shift left
@@ -646,7 +637,7 @@
   ;IN: $n=number to rol
   ;OUT:$n=result
   AND r3,rps,#CFLAG ;store c flag
-  ANDS r1,$n,#&80
+  TST $n,#&80
   ORRNE rps,rps,#CFLAG ;set c flag
   ANDEQ rps,rps,#NOTCFLAG ;clear c flag
   MOV $n,$n,LSL #&01 ;shift left
@@ -665,7 +656,7 @@
   ;IN: $n=number to ror
   ;OUT:$n=result
   AND r3,rps,#CFLAG ;store c flag
-  ANDS r1,$n,#&01
+  TST $n,#&01
   ORRNE rps,rps,#CFLAG ;set c flag
   ANDEQ rps,rps,#NOTCFLAG ;clear c flag
   MOV $n,$n,LSR #&01 ;shift right
@@ -681,16 +672,7 @@
 ;
   MACRO
   R6502SKB
-  ;SWI OS_WriteI+32
-  ;SWI OS_WriteI+83
-  ;SWI OS_WriteI+75
-  ;SWI OS_WriteI+66
-  ;LDR r11,=r6502_pc
-  ;LDR rpc,[r11]
-  ADD rpc,rpc,#1
-  MOV rpc,rpc,LSL #16
-  MOV rpc,rpc,LSR #16
-  ;STR rpc,[r11]
+  ADD rpc,rpc,#&10000
   MEND
 
 ;
@@ -698,16 +680,7 @@
 ;
   MACRO
   R6502SKW
-  ;SWI OS_WriteI+32
-  ;SWI OS_WriteI+83
-  ;SWI OS_WriteI+75
-  ;SWI OS_WriteI+87
-  ;LDR r11,=r6502_pc
-  ;LDR rpc,[r11]
-  ADD rpc,rpc,#2
-  MOV rpc,rpc,LSL #16
-  MOV rpc,rpc,LSR #16
-  ;STR rpc,[r11]
+  ADD rpc,rpc,#&20000
   MEND
 
 ;

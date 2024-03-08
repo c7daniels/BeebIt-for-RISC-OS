@@ -81,8 +81,9 @@
   ;RTS
   STACKPOP r2 ;lo
   STACKPOP r3 ;hi
-  ADD rpc,r2,r3,LSL#8 ;r6502_pc=nlo+(nhi<<8)
-  ADD rpc,rpc,#1 ;r6502_pc++ (6502 bug)
+  MOV r2,r2,LSL #16
+  ADD rpc,r2,r3,LSL#24 ;r6502_pc=lo+(hi<<8)
+  ADD rpc,rpc,#&10000 ;r6502_pc++ (6502 bug)
 
   CPU_CYCLES 6
   ;LDR pc,[sp],#4
@@ -92,7 +93,7 @@
   ;ADC
   ADDRESSOFPREINDEXED ;4 cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode61_2
   ;binary
   R6502ADC ;1 cycle
@@ -115,14 +116,11 @@ r6502opcode61_2
 |r6502opcode63|
   ;RRA
   ADDRESSOFPREINDEXED ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ROR r0 ;1 cycle
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
 
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode63_2
   ;binary
   R6502ADC ;1 cycle
@@ -146,7 +144,7 @@ r6502opcode63_2
 |r6502opcode65|
   ;ADC
   VALUEOFZEROPAGE
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode65_2
   ;binary
   R6502ADC
@@ -174,7 +172,7 @@ r6502opcode65_2
   R6502ROR r0
   STRB r0,[r11]
 
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode67_2
   ;binary
   R6502ADC
@@ -200,7 +198,7 @@ r6502opcode67_2
 |r6502opcode69|
   ;ADC
   VALUEOFIMMEDIATE
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode69_2
   ;binary
   R6502ADC
@@ -223,7 +221,7 @@ r6502opcode69_2
 |r6502opcode6B|
   ;ARR
   VALUEOFIMMEDIATE
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode6B_2
   ;binary
   R6502ARR
@@ -240,18 +238,17 @@ r6502opcode6B_2
 |r6502opcode6C|
   ;JMP
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_ABSTEMP] ;store address
   READMEM
-  STR r0,[r12,#:INDEX:R6502_INDTEMP] ;lo
+  STR r0,[r12,#:INDEX:R6502_ABSTEMP] ;lo
 
-  LDR r3,[r12,#:INDEX:R6502_ABSTEMP]
-  ADD r0,r3,#1 ;address += 1
-  TST r0,#&FF
-  SUBEQ r0,r0,#&100 ;emulate NMOS CPU loss of carry
+  ADD r1,r1,#&10000 ;address += 1
+  TST r1,#&00FF0000
+  SUBEQ r0,r0,#&01000000 ;emulate NMOS CPU loss of carry
   READMEM ;hi
-  LDR r2,[r12,#:INDEX:R6502_INDTEMP] ;lo
+  LDR r2,[r12,#:INDEX:R6502_ABSTEMP] ;lo
+  MOV r2,r2,LSL #16
 
-  ADD rpc,r2,r0,LSL#8 ;rpc=lo+(hi<<8)
+  ADD rpc,r2,r0,LSL #24 ;r6502_pc=lo+(hi<<8)
 
   CPU_CYCLES 3
   ;LDR pc,[sp],#4
@@ -261,7 +258,7 @@ r6502opcode6B_2
   ;ADC
   ADDRESSOFABSOLUTE ;2 cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode6D_2
   ;binary
   R6502ADC ;1 cycle
@@ -277,11 +274,8 @@ r6502opcode6D_2
 
 |r6502opcode6E|
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ROR r0 ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -290,14 +284,11 @@ r6502opcode6D_2
 |r6502opcode6F|
   ;RRA
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ROR r0
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
 
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode6F_2
   ;binary
   R6502ADC
@@ -324,9 +315,7 @@ r6502opcode6F_2
   ;if (r6502_ps & VFLAG)
   BNE r6502opcode70_2
   ;else
-  ADD rpc,rpc,#1 ;r6502_pc++
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
+  ADD rpc,rpc,#&10000 ;r6502_pc++
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -341,7 +330,7 @@ r6502opcode70_2
   ;ADC
   ADDRESSOFPOSTINDEXEDY ;3+ cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode71_2
   ;binary
   R6502ADC ;1 cycle
@@ -364,14 +353,11 @@ r6502opcode71_2
 |r6502opcode73|
   ;RRA
   ADDRESSOFPOSTINDEXEDY_STA ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ROR r0 ;1 cycle
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
 
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode73_2
   ;binary
   R6502ADC ;1 cycle
@@ -395,7 +381,7 @@ r6502opcode73_2
 |r6502opcode75|
   ;ADC
   VALUEOFZEROPAGEX
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcode75_2
   ;binary
   R6502ADC

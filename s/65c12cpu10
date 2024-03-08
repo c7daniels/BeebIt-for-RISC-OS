@@ -72,16 +72,11 @@
 
 |r65c12opcode14|
   ;TRB
-  ADDRESSOFZEROPAGE
-  ADD r11,r12,#:INDEX:R6502_MEMORY
-  LDRB r3,[r11,r0]
-
-  AND r1,ra,r3 ;and it
-  SETZFLAG r1
-  ;r0 and not ra
-  EOR r1,ra,#&FF
-  AND r1,r1,r3
-  STRB r1,[r11,r0]
+  VALUEOFZEROPAGE
+  TST ra,r0 ;and it
+  SETZFLAG0
+  BIC r0,r0,ra ;r0 and not ra
+  STRB r0,[r11]
   CPU_CYCLES 5
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -108,15 +103,10 @@
 |r65c12opcode1C|
   ;TRB
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
-  AND r1,ra,r0
-  SETZFLAG r1
-  ;r0 and not ra
-  ;EOR r1,ra,#&FF ;complement of a
-  ;AND r1,r0,r1 ;and with memory
-  BIC r1,r0,ra
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
+  TST ra,r0 ;and it
+  SETZFLAG0
+  BIC r0,r0,ra ;r0 and not ra
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4

@@ -63,7 +63,7 @@
   ;SBC
   ADDRESSOFPOSTINDEXEDY ;3+ cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcodeF1_2
   ;binary
   R6502SBC ;1 cycle
@@ -81,7 +81,7 @@ r65c12opcodeF1_2
   ;SBC
   ADDRESSOFINDZEROPAGE
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcodeF2_2
   ;binary
   R6502SBC
@@ -111,7 +111,7 @@ r65c12opcodeF2_2
 |r65c12opcodeF5|
   ;SBC
   VALUEOFZEROPAGEX
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcodeF5_2
   ;binary
   R6502SBC
@@ -135,7 +135,7 @@ r65c12opcodeF5_2
   ;SBC
   ADDRESSOFABSOLUTEYPLUS ;2+ cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcodeF9_2
   ;binary
   R6502SBC ;1 cycle
@@ -175,7 +175,7 @@ r65c12opcodeF9_2
   ;SBC
   ADDRESSOFABSOLUTEXPLUS ;2+ cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcodeFD_2
   ;binary
   R6502SBC ;1 cycle

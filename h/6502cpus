@@ -46,9 +46,8 @@ R6502_CYCLESORIGINAL  # &4
 R6502_CYCLESTOGO      # &4
 R6502_BEEBITIRQ       # &4
 R6502_ABSTEMP         # &4
-R6502_INDTEMP         # &4
-R6502_RMWTEMP         # &4
 R6502_OPCODE07SWAPS   # &8
+                      # &8
 R6502_ROMWRITABLE     # &40
                       # &B20
 R6502_OPCODES         # &400
@@ -94,7 +93,7 @@ rsp RN 4
   MACRO
   SETNFLAG $n
   ;IN :$n=register
-  ANDS r1,$n,#NFLAG
+  TST $n,#NFLAG
   ;set bit 7 (N)
   ORRNE rps,rps,#NFLAG
   ;clear bit 7 (N)
@@ -104,7 +103,7 @@ rsp RN 4
   MACRO
   SETVFLAG $n
   ;IN :$n=register
-  ANDS r1,$n,#VFLAG
+  TST $n,#VFLAG
   ;set bit 6 (V)
   ORRNE rps,rps,#VFLAG
   ;clear bit 6 (V)
@@ -114,7 +113,7 @@ rsp RN 4
   MACRO
   SETBFLAG $n
   ;IN :$n=register
-  ANDS r1,$n,#BFLAG
+  TST $n,#BFLAG
   ;set bit 4 (B)
   ORRNE rps,rps,#BFLAG
   ;clear bit 4 (B)
@@ -124,7 +123,7 @@ rsp RN 4
   MACRO
   SETIFLAG $n
   ;IN :$n=register
-  ANDS r1,$n,#IFLAG
+  TST $n,#IFLAG
   ;set bit 2 (I)
   ORRNE rps,rps,#IFLAG
   ;clear bit 2 (I)
@@ -202,174 +201,151 @@ WRITEMEM_LEN EQU 1*4
 
   MACRO
   ADDRESSOFABSOLUTE_BASE
-  ;OUT:r0 =address
+  ;OUT:r1 =address:LSL:16
   ;LDR r12,=r6502workspace
 
-  MOV r0,rpc
+  MOV r1,rpc
   READMEM
   STR r0,[r12,#:INDEX:R6502_ABSTEMP] ;lo
 
-  ADD r0,rpc,#1 ;rpc += 1
+  ADD r1,r1,#&10000 ;rpc + 1
   READMEM ;hi
   LDR r2,[r12,#:INDEX:R6502_ABSTEMP] ;lo
+  MOV r2,r2,LSL #16
 
-  ADD rpc,rpc,#2 ;pc += 2
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
-  ADD r0,r2,r0,LSL#8 ;r0=lo+(hi<<8)
+  ADD rpc,rpc,#&20000 ;pc+=2
+  ADD r1,r2,r0,LSL #24 ;r1=((lo+(hi<<8))<<16)
   MEND
 
   MACRO
   ADDRESSOFABSOLUTE
+  ;OUT:r1 =address:LSL:16
   ADDRESSOFABSOLUTE_BASE
   CPU_CYCLES 2
   MEND
 
   MACRO
   ADDRESSOFABSOLUTEX
-  ;OUT:r0 =address
+  ;OUT:r1 =address:LSL:16
   ADDRESSOFABSOLUTE_BASE
-  ADD r0,r0,rx ;r0=r0+x
-  ;mask with #&FFFF
-  MOV r0,r0,LSL #16
-  MOV r0,r0,LSR #16
+  ADD r1,r1,rx,LSL #16 ;r1=(r1+(x<<16))
   CPU_CYCLES 3
   MEND
 
   MACRO
   ADDRESSOFABSOLUTEY
-  ;OUT:r0 =address
+  ;OUT:r1 =address:LSL:16
   ADDRESSOFABSOLUTE_BASE
-  ADD r0,r0,ry ;r0=r0+y
-  ;mask with #&FFFF
-  MOV r0,r0,LSL #16
-  MOV r0,r0,LSR #16
+  ADD r1,r1,ry,LSL #16 ;r1=(r1+(y<<16))
   CPU_CYCLES 3
   MEND
 
   MACRO
   ADDRESSOFABSOLUTEXPLUS
-  ;OUT:r0 =address
+  ;OUT:r1 =address:LSL:16
   ADDRESSOFABSOLUTE_BASE
-  MOV r1,r0,LSR #8
-  ADD r0,r0,rx ;r0=r0+x
-  ;mask with #&FFFF
-  MOV r0,r0,LSL #16
-  MOV r0,r0,LSR #16
-
-  MOV r2,r0,LSR#8 ;r3=(r0>>8)
-  CMP r2,r1 ;if (r2=hi)
+  MOV r2,r1,LSR #24
+  ADD r1,r1,rx,LSL #16 ;r1=(r1+(x<<16))
+  TEQ r2,r1,LSR #24
   SUBEQ rcycles,rcycles,#2 ;r6502_cyclestogo -= 2
   SUBNE rcycles,rcycles,#3 ;r6502_cyclestogo -= 3
   MEND
 
   MACRO
   ADDRESSOFABSOLUTEYPLUS
-  ;OUT:r0 =address
-  ADDRESSOFABSOLUTE
-  MOV r1,r0,LSR #8
-  ADD r0,r0,ry ;r0=r0+y
-  ;mask with #&FFFF
-  MOV r0,r0,LSL #16
-  MOV r0,r0,LSR #16
-
-  MOV r2,r0,LSR#8 ;r2=(r0>>8)
-  CMP r2,r1 ;if (r2<>hi)
+  ;OUT:r1 =address:LSL:16
+  ADDRESSOFABSOLUTE_BASE
+  MOV r2,r1,LSR #24
+  ADD r1,r1,ry,LSL #16 ;r1=(r1+(y<<16))
+  TEQ r2,r1,LSR #24
   SUBEQ rcycles,rcycles,#2 ;r6502_cyclestogo -= 2
   SUBNE rcycles,rcycles,#3 ;r6502_cyclestogo -= 3
   MEND
 
   MACRO
   ADDRESSOFZEROPAGE
-  ;OUT:$n =address
-  MOV r0,rpc
+  ;OUT:r1 =address:LSL:24
+  MOV r1,rpc
   READMEM
-  ADD rpc,rpc,#1 ;pc+=1
-  MEND
-
-  MACRO
-  ADDRESSOFINDZEROPAGE
-  ;OUT:r0 =address
-  ADDRESSOFZEROPAGE
-  ADD r11,r12,#:INDEX:R6502_MEMORY
-
-  LDRB r2,[r11,r0] ;lo
-  ADD r0,r0,#1
-  AND r0,r0,#&FF
-  LDRB r1,[r11,r0] ;hi
-
-  ADD r0,r2,r1,LSL#8 ;r0=lo+(hi<<8)
+  ADD rpc,rpc,#&10000 ;pc+=1
+  MOV r1,r0,LSL #24
   MEND
 
   MACRO
   ADDRESSOFZEROPAGEX
-  ;OUT:r0 =address
+  ;OUT:r1 =address:LSL:24
   ADDRESSOFZEROPAGE
-  ADD r0,r0,rx
-  AND r0,r0,#&FF
+  ADD r1,r1,rx,LSL #24
   MEND
 
   MACRO
   ADDRESSOFZEROPAGEY
-  ;OUT:r0 =address
+  ;OUT:r1 =address:LSL:24
   ADDRESSOFZEROPAGE
-  ADD r0,r0,ry
-  AND r0,r0,#&FF
+  ADD r1,r1,ry,LSL #24
+  MEND
+
+  MACRO
+  ADDRESSOFINDZEROPAGE
+  ;OUT:r1 =address:LSL:16
+  ADDRESSOFZEROPAGE
+  ADD r11,r12,#:INDEX:R6502_MEMORY
+
+  LDRB r2,[r11,r1,LSR #24] ;lo
+  ADD r1,r1,#&01000000
+  LDRB r0,[r11,r1,LSR #24] ;hi
+  MOV r0,r0,LSL #24
+
+  ADD r1,r0,r2,LSL #16 ;r1=((lo+(hi<<8))<<16)
   MEND
 
   MACRO
   ADDRESSOFPREINDEXED ;(IND,X)
-  ;OUT:r0 =address
-  ADDRESSOFZEROPAGEX
+  ;OUT:r1 =address:LSL:16
+  ADDRESSOFZEROPAGE
+  ADD r1,r1,rx,LSL #24
   ADD r11,r12,#:INDEX:R6502_MEMORY
 
-  LDRB r2,[r11,r0] ;lo
-  ADD r0,r0,#1
-  AND r0,r0,#&FF
-  LDRB r1,[r11,r0] ;hi
+  LDRB r2,[r11,r1,LSR #24] ;lo
+  ADD r1,r1,#&01000000
+  LDRB r0,[r11,r1,LSR #24] ;hi
+  MOV r0,r0,LSL #24
 
-  ADD r0,r2,r1,LSL#8 ;r0=lo+(hi<<8)
+  ADD r1,r0,r2,LSL #16 ;r1=((lo+(hi<<8))<<16)
   CPU_CYCLES 4
   MEND
 
   MACRO
   ADDRESSOFPOSTINDEXEDY ;(IND),Y
-  ;OUT:r0 =address
+  ;OUT:r1 =address:LSL:16
   ADDRESSOFZEROPAGE
   ADD r11,r12,#:INDEX:R6502_MEMORY
 
-  LDRB r2,[r11,r0] ;lo
-  ADD r0,r0,#1
-  AND r0,r0,#&FF
-  LDRB r1,[r11,r0] ;hi
-
-  ADD r0,r2,r1,LSL#8 ;r0=lo+(hi<<8) ;check for page boundary cross
-  ADD r0,r0,ry
-  ;mask with #&FFFF
-  MOV r0,r0,LSL #16
-  MOV r0,r0,LSR #16
-  MOV r2,r0,LSR#8 ;r2=(r0>>8)
-  CMP r2,r1 ;if (r2<>hi)
+  LDRB r2,[r11,r1,LSR #24] ;lo
+  ADD r1,r1,#&01000000
+  LDRB r0,[r11,r1,LSR #24] ;hi
+  MOV r0,r0,LSL #24
+  
+  ADD r2,r2,ry
+  ADD r1,r0,r2,LSL #16 ;r1=((lo+y+(hi<<8))<<16)
+  TST r2,#&100
   SUBEQ rcycles,rcycles,#3 ;r6502_cyclestogo -= 3
   SUBNE rcycles,rcycles,#4 ;r6502_cyclestogo -= 4
   MEND
 
   MACRO
   ADDRESSOFPOSTINDEXEDY_STA ;(IND),Y
-  ;OUT:r0 =address
+  ;OUT:r1 =address:LSL:16
   ADDRESSOFZEROPAGE
   ADD r11,r12,#:INDEX:R6502_MEMORY
 
-  LDRB r2,[r11,r0] ;lo
-  ADD r0,r0,#1
-  AND r0,r0,#&FF
-  LDRB r1,[r11,r0] ;hi
+  LDRB r2,[r11,r1,LSR #24] ;lo
+  ADD r1,r1,#&01000000
+  LDRB r0,[r11,r1,LSR #24] ;hi
+  MOV r0,r0,LSL #24
 
-  ADD r0,r2,r1,LSL#8 ;r0=lo+(hi<<8)
-  ADD r0,r0,ry
-  ;mask with #&FFFF
-  MOV r0,r0,LSL #16
-  MOV r0,r0,LSR #16
+  ADD r2,r2,ry
+  ADD r1,r0,r2,LSL #16 ;r1=((lo+y+(hi<<8))<<16)
   CPU_CYCLES 4
   MEND
 
@@ -399,12 +375,10 @@ WRITEMEM_LEN EQU 1*4
   ;OUT:r0=value
   ;LDR r12,=r6502workspace
 
-  MOV r0,rpc
+  MOV r1,rpc
   READMEM
 
-  ADD rpc,rpc,#1 ;pc+=1
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
+  ADD rpc,rpc,#&10000 ;pc+=1
   MEND
 
   MACRO
@@ -412,7 +386,7 @@ WRITEMEM_LEN EQU 1*4
   ;OUT:r0 =value
   ADDRESSOFZEROPAGE
   ADD r11,r12,#:INDEX:R6502_MEMORY
-  ADD r11,r11,r0 ;r11=memory+r0 (offset)
+  ADD r11,r11,r1,LSR #24 ;r11=memory+address
   LDRB r0,[r11] ;r0
   MEND
 
@@ -421,7 +395,7 @@ WRITEMEM_LEN EQU 1*4
   ;OUT:r0 =value
   ADDRESSOFZEROPAGEX
   ADD r11,r12,#:INDEX:R6502_MEMORY
-  ADD r11,r11,r0 ;r11=memory+r0 (offset)
+  ADD r11,r11,r1,LSR #24 ;r11=memory+address
   LDRB r0,[r11] ;r0
   MEND
 
@@ -430,7 +404,7 @@ WRITEMEM_LEN EQU 1*4
   ;OUT:r0 =value
   ADDRESSOFZEROPAGEY
   ADD r11,r12,#:INDEX:R6502_MEMORY
-  ADD r11,r11,r0 ;r11=memory+r0 (offset)
+  ADD r11,r11,r1,LSR #24 ;r11=memory+address
   LDRB r0,[r11] ;r0
   MEND
 

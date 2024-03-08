@@ -77,9 +77,7 @@
   ;if (r6502_ps & ZFLAG)
   BNE r6502opcodeF0_2
   ;else
-  ADD rpc,rpc,#1 ;r6502_pc++
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
+  ADD rpc,rpc,#&10000 ;r6502_pc++
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -94,7 +92,7 @@ r6502opcodeF0_2
   ;SBC
   ADDRESSOFPOSTINDEXEDY ;3+ cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcodeF1_2
   ;binary
   R6502SBC ;1 cycle
@@ -117,16 +115,12 @@ r6502opcodeF1_2
 |r6502opcodeF3|
   ;ISB
   ADDRESSOFPOSTINDEXEDY_STA ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   ADD r0,r0,#1
   AND r0,r0,#&FF
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
-  MOV r0,r1 ;r0=value
   ;SBC
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcodeF3_2
   ;binary
   R6502SBC ;1 cycle
@@ -150,7 +144,7 @@ r6502opcodeF3_2
 |r6502opcodeF5|
   ;SBC
   VALUEOFZEROPAGEX
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcodeF5_2
   ;binary
   R6502SBC
@@ -179,7 +173,7 @@ r6502opcodeF5_2
   AND r0,r0,#&FF
   STRB r0,[r11]
   ;SBC
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcodeF7_2
   ;binary
   R6502SBC ;1 cycle
@@ -204,7 +198,7 @@ r6502opcodeF7_2
   ;SBC
   ADDRESSOFABSOLUTEYPLUS ;2+ cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcodeF9_2
   ;binary
   R6502SBC ;1 cycle
@@ -227,16 +221,12 @@ r6502opcodeF9_2
 |r6502opcodeFB|
   ;ISB
   ADDRESSOFABSOLUTEY ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   ADD r0,r0,#1
   AND r0,r0,#&FF
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
-  MOV r0,r1 ;r0=value
   ;SBC
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcodeFB_2
   ;binary
   R6502SBC ;1 cycle
@@ -261,7 +251,7 @@ r6502opcodeFB_2
   ;SBC
   ADDRESSOFABSOLUTEXPLUS ;2+ cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcodeFD_2
   ;binary
   R6502SBC ;1 cycle
@@ -277,11 +267,8 @@ r6502opcodeFD_2
 
 |r6502opcodeFE|
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502INC r0 ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -290,16 +277,12 @@ r6502opcodeFD_2
 |r6502opcodeFF|
   ;ISB
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   ADD r0,r0,#1
   AND r0,r0,#&FF
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
-  MOV r0,r1 ;r0=value
   ;SBC
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r6502opcodeFF_2
   ;binary
   R6502SBC ;1 cycle

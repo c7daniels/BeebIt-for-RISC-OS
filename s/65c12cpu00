@@ -70,20 +70,18 @@
 
 |r65c12opcode04|
   ;TSB
-  ADDRESSOFZEROPAGE
-  ADD r11,r12,#:INDEX:R6502_MEMORY
-  LDRB r3,[r11,r0]
-  AND r1,ra,r3 ;and it
-  SETZFLAG r1
-  ORR r1,ra,r3 ;or it
-  STRB r1,[r11,r0]
+  VALUEOFZEROPAGE
+  TST ra,r0 ;and it
+  SETZFLAG0
+  ORR r0,r0,ra ;or it
+  STRB r0,[r11]
   CPU_CYCLES 5
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
 
 |r65c12opcode07|
   ;check if it's called from the ROM space
-  ANDS r0,rpc,#&8000
+  TST rpc,#&80000000
   BNE r6502opcode07_interface
   ;Reserved NOP
   SUB rcycles,rcycles,#1
@@ -99,12 +97,10 @@
 |r65c12opcode0C|
   ;TSB
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
-  AND r1,r0,ra ;and it
-  SETZFLAG r1
-  ORR r1,r0,ra ;or it
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
+  TST ra,r0 ;and it
+  SETZFLAG0
+  ORR r0,r0,ra ;or it
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4

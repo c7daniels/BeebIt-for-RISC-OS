@@ -60,7 +60,7 @@
   ;SBC
   ADDRESSOFPREINDEXED ;4 cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcodeE1_2
   ;binary
   R6502SBC ;1 cycle
@@ -90,7 +90,7 @@ r65c12opcodeE1_2
 |r65c12opcodeE5|
   ;SBC
   VALUEOFZEROPAGE
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcodeE5_2
   ;binary
   R6502SBC
@@ -113,7 +113,7 @@ r65c12opcodeE5_2
 |r65c12opcodeE9|
   ;SBC
   VALUEOFIMMEDIATE
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcodeE9_2
   ;binary
   R6502SBC
@@ -137,7 +137,7 @@ r65c12opcodeE9_2
   ;SBC
   ADDRESSOFABSOLUTE ;2 cycles
   READMEM ;1 cycle
-  ANDS r1,rps,#DFLAG
+  TST rps,#DFLAG
   BNE r65c12opcodeED_2
   ;binary
   R6502SBC ;1 cycle

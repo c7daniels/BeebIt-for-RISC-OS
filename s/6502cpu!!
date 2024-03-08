@@ -326,6 +326,7 @@
 
   LDR r12,=r6502_pc
   LDR rpc,[r12] ;load pc
+  MOV rpc,rpc,LSL #16
   LDR r12,=r6502_ps
   LDRB rps,[r12] ;load ps
   LDR r12,=r6502_sp
@@ -349,6 +350,7 @@
   STRB ry,[r12] ;save y
 
   LDR r12,=r6502_pc
+  MOV rpc,rpc,LSR #16
   STR rpc,[r12] ;save pc
   LDR r12,=r6502_ps
   STRB rps,[r12] ;save ps
@@ -479,6 +481,7 @@
   LDR r12,=r6502workspace
   LDR r11,=r6502_pc ;pointer to r6502_pc
   LDR rpc,[r11]
+  MOV rpc,rpc,LSL #16
   LDR r10,=r6502_sp ;pointer to r6502_sp
   LDRB rsp,[r10] ;load r6502_sp
   AND r0,rpc,#&FF00
@@ -557,14 +560,14 @@ r6502execute_loop
   ;CMP r0,#00
   ;BEQ r6502execute_loop2
 
-  ;MOV r0, rpc ;get RPC
+  ;MOV r0, rpc, LSL #16 ;get RPC
   ;LDR r1,=buffer
   ;MOV r2,#16
   ;SWI OS_ConvertHex4 ;BinaryToDecimal
   ;SWI OS_Write0
   ;SWI OS_WriteI+32
 
-  ;MOV r0,rpc
+  ;MOV r1,rpc
   ;BL r6502readmem ;=r0
   ;LDR r1,=buffer
   ;MOV r2,#16
@@ -626,17 +629,14 @@ r6502execute_loop
   ;-------------------
 
 r6502execute_loop2
-  MOV r0,rpc
+  MOV r1,rpc
   BL r6502readmem ;=r0
-  ADD rpc,rpc,#1
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
-  ;STR rpc,[r11] ;pc
+  ADD rpc,rpc,#&10000
 
-  ADD r1,r12,#:INDEX:R6502_OPCODES
+  ADD r2,r12,#:INDEX:R6502_OPCODES
   ADD lr,pc,#4
   STR lr,[sp, #-4]!
-  LDR pc,[r1,r0,LSL#2]
+  LDR pc,[r2,r0,LSL#2]
 
   ;-------------------
   ;LDR r11,=beebit_trace ;trace

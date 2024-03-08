@@ -88,11 +88,8 @@
 |r6502opcode1F|
   ;ASO
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ASO ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -100,21 +97,22 @@
 
 |r6502opcode20|
   ;JSR
-  MOV r0,rpc
+  MOV r1,rpc
   READMEM
   STR r0,[r12,#:INDEX:R6502_ABSTEMP] ;lo
 
-  ADD r0,rpc,#1 ;rpc += 1
+  ADD r1,r1,#&10000 ;rpc + 1
   READMEM ;hi
   LDR r2,[r12,#:INDEX:R6502_ABSTEMP] ;lo
+  MOV r2,r2,LSL #16
 
-  ADD r3,rpc,#1 ;jsr bug
-  ADD rpc,r2,r0,LSL#8 ;r0=lo+(hi<<8)
+  ADD r3,rpc,#&10000 ;jsr bug
+  ADD rpc,r2,r0,LSL #24 ;rpc=lo+(hi<<8)
 
-  AND r2,r3,#&FF00 ;pc & 0xFF00
-  MOV r2,r2,LSR#8  ;>>8
+  MOV r2,r3,LSR #24  ;hi
   STACKPUSH r2
-  AND r2,r3,#&FF ;pc & 0xFF
+  MOV r2,#&00FF
+  AND r2,r2,r3,LSR #16 ;lo
   STACKPUSH r2
   CPU_CYCLES 6
   R6502NEXTOPCODE
@@ -137,11 +135,8 @@
 |r6502opcode23|
   ;RLA
   ADDRESSOFPREINDEXED ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502RLA ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -232,11 +227,8 @@ r6502opcode28end
 
 |r6502opcode2E|
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ROL r0 ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -245,11 +237,8 @@ r6502opcode28end
 |r6502opcode2F|
   ;RLA
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502RLA ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -268,9 +257,7 @@ r6502opcode28end
   ;if (r6502_ps & NFLAG)
   BNE r6502opcode30_2
   ;else
-  ADD rpc,rpc,#1 ;r6502_pc++
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
+  ADD rpc,rpc,#&10000 ;r6502_pc++
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -299,11 +286,8 @@ r6502opcode30_2
 |r6502opcode33|
   ;RLA
   ADDRESSOFPOSTINDEXEDY_STA ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502RLA ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -364,11 +348,8 @@ r6502opcode30_2
 |r6502opcode3B|
   ;RLA
   ADDRESSOFABSOLUTEY ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502RLA ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4

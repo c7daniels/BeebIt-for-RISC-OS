@@ -81,15 +81,13 @@
 
 |r6502opcode00|
   ;BRK
-  ADD rpc,rpc,#1
+  ADD rpc,rpc,#&10000
 
-  MOV r1,#&FF00
-  AND r0,rpc,r1
-  MOV r0,r0,LSR#8 ;r0=(r0>>8)
+  MOV r0,rpc,LSR #24 ;hi
   STACKPUSH r0 ;(r6502_pc & 0xFF00)
 
   MOV r1,#&00FF
-  AND r0,rpc,r1
+  AND r0,r1,rpc,LSR #16 ;lo
   STACKPUSH r0 ;(r6502_pc & 0x00FF)
 
   ORR rps,rps,#BFLAG
@@ -103,7 +101,8 @@
   ADD r2,r12,#:INDEX:R6502_MEMORY+&10000 ;memory+&10000
   LDRB r0,[r2,#-1] ;&FFFF
   LDRB r1,[r2,#-2] ;&FFFE
-  ADD rpc,r1,r0,LSL#8
+  MOV r1,r1,LSL #16
+  ADD rpc,r1,r0,LSL #24
   CPU_CYCLES 7
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -125,11 +124,8 @@
 |r6502opcode03|
   ;ASO
   ADDRESSOFPREINDEXED ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ASO ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -161,7 +157,7 @@
 
 |r6502opcode07|
   ;check if it's called from the ROM space
-  ANDS r0,rpc,#&8000
+  TST rpc,#&80000000
   BNE r6502opcode07_interface
   ;ASO
   VALUEOFZEROPAGE
@@ -182,6 +178,7 @@ r6502opcode07_interface
   ;SWI OS_WriteI+55
   ;save the pc for later
   LDR r11,=r6502_pc
+  MOV rpc,rpc,LSR #16
   STR rpc,[r11]
   ;save the ps for later
   LDR r11,=r6502_ps
@@ -304,6 +301,7 @@ r6502opcode07_2
   LDRB rps,[r11]
   LDR r11,=r6502_pc
   LDR rpc,[r11]
+  MOV rpc,rpc,LSL #16
   LDMFD sp!,{r0-ry,r11-r12}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -379,6 +377,7 @@ r6502opcode07_error5
   LDRB rps,[r11]
   LDR r11,=r6502_pc
   LDR rpc,[r11]
+  MOV rpc,rpc,LSL #16
   LDMFD sp!,{r0-ry,r11-r12}
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -432,11 +431,8 @@ r6502opcode07_error5
 |r6502opcode0E|
   ;ASL
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ASL r0 ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -445,11 +441,8 @@ r6502opcode07_error5
 |r6502opcode0F|
   ;ASO
   ADDRESSOFABSOLUTE ;2 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ASO ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -468,9 +461,7 @@ r6502opcode07_error5
   ;if (!(r6502_ps & NFLAG))
   BEQ r6502opcode10_2
   ;else
-  ADD rpc,rpc,#1 ;r6502_pc++
-  ;MOV rpc,rpc,LSL #16
-  ;MOV rpc,rpc,LSR #16
+  ADD rpc,rpc,#&10000 ;r6502_pc++
   CPU_CYCLES 2
   ;LDR pc,[sp],#4
   R6502NEXTOPCODE
@@ -499,11 +490,8 @@ r6502opcode10_2
 |r6502opcode13|
   ;ASO
   ADDRESSOFPOSTINDEXEDY_STA ;4 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ASO ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -565,11 +553,8 @@ r6502opcode10_2
 |r6502opcode1B|
   ;ASO
   ADDRESSOFABSOLUTEY ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ASO ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
@@ -594,11 +579,8 @@ r6502opcode10_2
 |r6502opcode1E|
   ;ASL
   ADDRESSOFABSOLUTEX ;3 cycles
-  STR r0,[r12,#:INDEX:R6502_RMWTEMP] ;store address
   READMEM ;1 cycle
   R6502ASL r0 ;2 cycles
-  MOV r1,r0 ;value
-  LDR r0,[r12,#:INDEX:R6502_RMWTEMP] ;address
   WRITEMEM ;1 cycle
   CPU_CYCLES 4
   ;LDR pc,[sp],#4
