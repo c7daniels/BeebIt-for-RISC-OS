@@ -124,8 +124,8 @@ static inline void pageinromm(int nrom, int shadowram)
 
 void sheilareset(void)
 {
-  /*int i;
-  for (i=0;i<=0x100;i++)
+  int i;
+  /*for (i=0;i<=0x100;i++)
     sheila_b[i] = 0xFE;*/
   int read0000,write0000;
   int read3000,write3000;
@@ -144,6 +144,12 @@ void sheilareset(void)
         pageinromb(beebit_romsel & 0x0F);
         readF000 = (int)r6502readbF000;
         writeF000 = (int)r6502writebF000;
+
+        for (i=0; i<256; i++)
+        {
+          setword(r6502sheilareads+(i<<2), (int)r6502sheilaread_b);
+          setword(r6502sheilawrites+(i<<2), (int)r6502sheilawrite_b);
+        }
         break;
       case MACHINE_MODELBPLUS:
         if (beebit_acccon & 0x80)
@@ -155,6 +161,12 @@ void sheilareset(void)
         pageinrombp(beebit_romsel & 0x0F, beebit_romsel & 0x80);
         readF000 = (int)r6502readbpF000;
         writeF000 = (int)r6502writebpF000;
+
+        for (i=0; i<256; i++)
+        {
+          setword(r6502sheilareads+(i<<2), (int)r6502sheilaread_bp);
+          setword(r6502sheilawrites+(i<<2), (int)r6502sheilawrite_bp);
+        }
         break;
       case MACHINE_MASTER128:
       case MACHINE_COMPACT:
@@ -184,6 +196,12 @@ void sheilareset(void)
         }
         readF000 = (int)r6502readmF000;
         writeF000 = (int)r6502writemF000;
+
+        for (i=0; i<256; i++)
+        {
+          setword(r6502sheilareads+(i<<2), (int)r6502sheilaread_m);
+          setword(r6502sheilawrites+(i<<2), (int)r6502sheilawrite_m);
+        }
         break;
   }
   

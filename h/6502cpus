@@ -49,8 +49,10 @@ R6502_ABSTEMP         # &4
 R6502_OPCODE07SWAPS   # &8
                       # &8
 R6502_ROMWRITABLE     # &40
-                      # &B20
+                      # &320
 R6502_OPCODES         # &400
+R6502_SHEILAREADS     # &400
+R6502_SHEILAWRITES    # &400
 R6502_MEMORY          # &10000  ; 65536 bytes
 R6502_SHADOW          # 0
 R6502_ANDY            # &1000   ;  4096 bytes

@@ -395,6 +395,16 @@ extern void vsync(void);
   extern void r6502opcodeFD(void);
   extern void r6502opcodeFE(void);
   extern void r6502opcodeFF(void);
+
+  extern char r6502sheilareads[0x400];
+  extern char r6502sheilawrites[0x400];
+
+  extern void r6502sheilaread_b(void);
+  extern void r6502sheilaread_bp(void);
+  extern void r6502sheilaread_m(void);
+  extern void r6502sheilawrite_b(void);
+  extern void r6502sheilawrite_bp(void);
+  extern void r6502sheilawrite_m(void);
 #endif
 
 extern void keyclaim(void);
