@@ -481,7 +481,6 @@
   LDR r12,=r6502workspace
   LDR r11,=r6502_pc ;pointer to r6502_pc
   LDR rpc,[r11]
-  MOV rpc,rpc,LSL #16
   LDR r10,=r6502_sp ;pointer to r6502_sp
   LDRB rsp,[r10] ;load r6502_sp
   AND r0,rpc,#&FF00
