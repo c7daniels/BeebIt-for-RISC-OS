@@ -827,11 +827,13 @@ r6502zeropageyread2
   R6502NEXTCYCLE r6502absoluteread
 
 |r6502hiabsolutexreadreadforwrite|
-  ADD r0,r0,rx
+  MOV r3,rx,LSL #24
   ADD rpc,rpc,#&10000
   ADD r1,r1,#&10000
+  ADDS r3,r3,r0,LSL #24
+  MOV r0,r3,LSR #24
   STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
-  R6502NEXTCYCLE r6502absolutepagefixreadreadforwrite
+  R6502NEXTCYCLE_CCorCS r6502absolutereadreadforwrite,r6502absolutepagefixreadreadforwrite
 
 |r6502hiabsolutexreadwrite|
   ADD r0,r0,rx
@@ -856,11 +858,13 @@ r6502zeropageyread2
   R6502NEXTCYCLE_LSorHI r6502absoluteread, r6502absolutepagecrossread
 
 |r6502hiabsoluteyreadreadforwrite|
-  ADD r0,r0,ry
+  MOV r3,ry,LSL #24
   ADD rpc,rpc,#&10000
   ADD r1,r1,#&10000
+  ADDS r3,r3,r0,LSL #24
+  MOV r0,r3,LSR #24
   STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
-  R6502NEXTCYCLE r6502absolutepagefixreadreadforwrite
+  R6502NEXTCYCLE_CCorCS r6502absolutereadreadforwrite,r6502absolutepagefixreadreadforwrite
 
 |r6502hiabsoluteyreadwrite|
   ADD r0,r0,ry
@@ -1055,7 +1059,7 @@ r6502indirectpagefixforwrite
   AND r2,r2,#&FF
   MOV r1,#R6502_READCODE
   ORR r1,r1,r2,LSL #16
-  ORR r1,r1,r0,LSL #24  
+  ORR r1,r1,r0,LSL #24
   R6502NEXTCYCLE r6502forwritepagefixed
 
 r6502absolutepagecrossread
@@ -1065,7 +1069,7 @@ r6502indirectpagecrossread
   AND r2,r2,#&FF
   MOV r1,#R6502_READCODE
   ORR r1,r1,r2,LSL #16
-  ORR r1,r1,r0,LSL #24  
+  ORR r1,r1,r0,LSL #24
   R6502NEXTCYCLE r6502pagecrossed
 
 r6502absoluteread

@@ -116,7 +116,7 @@
   R6502NEXTCYCLE r6502storedone
 
 |r6502php|
-  ORR r0,rps,#UFLAG
+  ORR r0,rps,#UFLAG+BFLAG
   MOV r1,#R6502_WRITECODE
   ORR r1,r1,rsp,LSR #8
   SUB rsp,rsp,#&01000000
