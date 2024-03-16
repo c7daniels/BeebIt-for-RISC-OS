@@ -33,24 +33,35 @@
 
 ; Import global symbols
 
-  IMPORT |memory|
-  IMPORT |shadow|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  ;IMPORT |r6502_n|
-  ;IMPORT |r6502_v|
-  ;IMPORT |r6502_b|
-  ;IMPORT |r6502_d|
-  ;IMPORT |r6502_i|
-  ;IMPORT |r6502_z|
-  ;IMPORT |r6502_c|
-  IMPORT |r6502workspace|
-  IMPORT |r6502readmem|
-  IMPORT |r6502writemem|
+  IMPORT |r6502busop|
+  
+  IMPORT |r6502immediatedone|
+  IMPORT |r6502zeropagereadwrite|
+  IMPORT |r6502zeropageread|
+  IMPORT |r6502zeropagexreadwrite|
+  IMPORT |r6502zeropagexread|
+  IMPORT |r6502hiabsolutereadwrite|
+  IMPORT |r6502hiabsoluteread|
+  IMPORT |r6502hiabsolutexreadwrite|
+  IMPORT |r6502hiabsolutexread|
+  IMPORT |r6502hiabsoluteyreadwrite|
+  IMPORT |r6502hiabsoluteyread|
+  IMPORT |r6502zeropagexindirectreadwrite|
+  IMPORT |r6502zeropagexindirectread|
+  IMPORT |r6502zeropageindirectyreadwrite|
+  IMPORT |r6502zeropageindirectyread|
+
+  IMPORT |r6502bne|
+  IMPORT |r6502cld|
+  IMPORT |r6502dex|
+  IMPORT |r6502dec|
+  IMPORT |r6502iny|
+  IMPORT |r6502cmp|
+  IMPORT |r6502cpy|
+  IMPORT |r6502sbx|
+  IMPORT |r6502dcp|
+  IMPORT |r6502nop|
+  IMPORT |r6502halt|
 
 ; Export global symbols
 
@@ -88,290 +99,100 @@
   EXPORT |r6502opcodeDF|
 
 |r6502opcodeC0|
-  VALUEOFIMMEDIATE
-  R6502CPY
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502cpy
 
 |r6502opcodeC1|
-  ;CMP
-  ADDRESSOFPREINDEXED ;4 cycles
-  READMEM ;1 cycle
-  R6502CMP ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  PREINDEXEDLOAD r6502cmp
 
 |r6502opcodeC2|
-  ;SKB
-  R6502SKB
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502nop
 
 |r6502opcodeC3|
-  ;DCP
-  ADDRESSOFPREINDEXED ;4 cycles
-  READMEM ;1 cycle
-  R6502DEC r0 ;1 cycle
-  R6502CMP ;1 cycle
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  PREINDEXEDMODIFYN r6502dcp
 
 |r6502opcodeC4|
-  VALUEOFZEROPAGE
-  R6502CPY
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGELOAD r6502cpy
 
 |r6502opcodeC5|
-  VALUEOFZEROPAGE
-  R6502CMP
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGELOAD r6502cmp
 
 |r6502opcodeC6|
-  VALUEOFZEROPAGE
-  R6502DEC r0
-  STRB r0,[r11]
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEMODIFYN r6502dec
 
 |r6502opcodeC7|
-  ;DCP
-  VALUEOFZEROPAGE
-  R6502DEC r0
-  R6502CMP
-  STRB r0,[r11]
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEMODIFYN r6502dcp
 
 |r6502opcodeC8|
-  R6502INY
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r6502iny
 
 |r6502opcodeC9|
-  VALUEOFIMMEDIATE
-  R6502CMP
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502cmp
 
 |r6502opcodeCA|
-  R6502DEX
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r6502dex
 
 |r6502opcodeCB|
-  ;SAX
-  VALUEOFIMMEDIATE
-  AND rx,ra,rx
-  SUBS rx,rx,r0
-  SETZFLAG0
-  SETNFLAG rx
-  AND rx,rx,#&FF
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502sbx
 
 |r6502opcodeCC|
-  ;CPY
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502CPY ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTELOAD r6502cpy
 
 |r6502opcodeCD|
-  ;CMP
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502CMP ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTELOAD r6502cmp
 
 |r6502opcodeCE|
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502DEC r0 ;1 cycle
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEMODIFYN r6502dec
 
 |r6502opcodeCF|
-  ;DCP
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502DEC r0 ;1 cycle
-  R6502CMP
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEMODIFYN r6502dcp
 
 |r6502opcodeD0|
-  ;BNE
-  ;if condition succeeds
-  ;  if page boundary crossed
-  ;    4 cycles
-  ;  else
-  ;    3 cycles
-  ;else
-  ;  2 cycles
-  ANDS r0,rps,#ZFLAG
-  ;if (!(r6502_ps & ZFLAG))
-  BEQ r6502opcodeD0_2
-  ;else
-  ADD rpc,rpc,#&10000 ;r6502_pc++
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-r6502opcodeD0_2
-  VALUEOFIMMEDIATE
-  R6502BRA
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502bne
 
 |r6502opcodeD1|
-  ;CMP
-  ADDRESSOFPOSTINDEXEDY ;3+ cycles
-  READMEM ;1 cycle
-  R6502CMP ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  POSTINDEXEDYLOAD r6502cmp
 
 |r6502opcodeD2|
-  ;HLT
-  R6502JAM
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502halt
 
 |r6502opcodeD3|
-  ;DCP
-  ADDRESSOFPOSTINDEXEDY_STA ;4 cycles
-  READMEM ;1 cycle
-  R6502DEC r0 ;1 cycle
-  R6502CMP ;1 cycle
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  POSTINDEXEDYMODIFYN r6502dcp
 
 |r6502opcodeD4|
-  ;SKB
-  R6502SKB
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXLOAD r6502nop
 
 |r6502opcodeD5|
-  VALUEOFZEROPAGEX
-  R6502CMP
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXLOAD r6502cmp
 
 |r6502opcodeD6|
-  VALUEOFZEROPAGEX
-  R6502DEC r0
-  STRB r0,[r11]
-  CPU_CYCLES 6
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXMODIFYN r6502dec
 
 |r6502opcodeD7|
-  ;DCP
-  VALUEOFZEROPAGEX
-  R6502DEC r0
-  R6502CMP
-  STRB r0,[r11]
-  CPU_CYCLES 6
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXMODIFYN r6502dcp
 
 |r6502opcodeD8|
-  ;CLD
-  AND rps,rps,#NOTDFLAG
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r6502cld
 
 |r6502opcodeD9|
-  ;CMP
-  ADDRESSOFABSOLUTEYPLUS ;2+ cycles
-  READMEM ;1 cycle
-  R6502CMP ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEYLOAD r6502cmp
 
 |r6502opcodeDA|
-  ;NOP
-  R6502NOP
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r6502nop
 
 |r6502opcodeDB|
-  ;DCP
-  ADDRESSOFABSOLUTEY ;3 cycles
-  READMEM ;1 cycle
-  R6502DEC r0 ;2 cycles
-  R6502CMP
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEYMODIFYN r6502dcp
 
 |r6502opcodeDC|
-  ;SKW
-  R6502SKW
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXLOAD r6502nop
 
 |r6502opcodeDD|
-  ;CMP
-  ADDRESSOFABSOLUTEXPLUS ;2+ cycles
-  READMEM ;1 cycle
-  R6502CMP ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXLOAD r6502cmp
 
 |r6502opcodeDE|
-  ADDRESSOFABSOLUTEX ;3 cycles
-  READMEM ;1 cycle
-  R6502DEC r0 ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXMODIFYN r6502dec
 
 |r6502opcodeDF|
-  ;DCP
-  ADDRESSOFABSOLUTEX ;3 cycles
-  READMEM ;1 cycle
-  R6502DEC r0 ;2 cycles
-  R6502CMP
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXMODIFYN r6502dcp
 
 ;Data Area
 

@@ -22,8 +22,8 @@
   R6502NEXTOPCODE ;_FAST ;rename for tracing
   CMP rcycles,#0
   LDRLE pc,[sp],#4
-  MOV r1,rpc
-  READMEM
+  ORR r1,rpc,#R6502_READCODE
+  BL r6502busop
   ADD rpc,rpc,#&10000
   ADD r2,r12,#:INDEX:R6502_OPCODES
   LDR pc,[r2,r0,LSL#2]
@@ -34,16 +34,89 @@
 ;rockwell 6502 cpu
 ;
   MACRO
-  R6502JAM
-  SUB rpc,rpc,#&10000
-  CPU_CYCLES 1
+  R6502NEXTCYCLE_BASE
+  SUB rcycles,rcycles,#1
+  B r6502busop
   MEND
 
 ;
 ;rockwell 6502 cpu
 ;
   MACRO
-  R6502IRQCHECK0
+  R6502CONTINUECYCLE
+  LDR pc,[r12,#:INDEX:R6502_CONTINUATION2]
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502NEXTCYCLE $o
+  LDR lr,=$o
+  R6502NEXTCYCLE_BASE
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502NEXTCYCLE_LSorHI $o,$p
+  LDRLS lr,=$o
+  LDRHI lr,=$p
+  R6502NEXTCYCLE_BASE
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502NEXTCYCLE_CCorCS $o,$p
+  LDRCC lr,=$o
+  LDRCS lr,=$p
+  R6502NEXTCYCLE_BASE
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502ENDINSTRUCTION
+  SUB rcycles,rcycles,#1
+  R6502NEXTOPCODE_SLOW
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502ENDNEINSTRUCTION
+  ADDEQ pc,pc,#8-4
+  R6502ENDINSTRUCTION
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502ENDEQINSTRUCTION
+  ADDNE pc,pc,#8-4
+  R6502ENDINSTRUCTION
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502TAKEBRANCH
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502branch
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
+  R6502UPDATEIRQ
   LDR r2,[r12,#:INDEX:R6502_BEEBITIRQ]
   CMP r2,#0
   ADDEQ pc,pc,#20 ;(6*4)-4
@@ -54,24 +127,6 @@
   SUB r2,r2,rcycles
   STR r2,[r12,#:INDEX:R6502_CYCLESORIGINAL]
   MOV rcycles,#0
-  MEND
-
-;
-;rockwell 6502 cpu
-;
-  MACRO
-  R6502IRQCHECK1
-  LDR r2,[r12,#:INDEX:R6502_BEEBITIRQ]
-  CMP r2,#0
-  ADDEQ pc,pc,#24 ;(7*4)-4
-
-  CMP rcycles,#1
-  ADDLE pc,pc,#16 ;(5*4)-4
-  LDR r2,[r12,#:INDEX:R6502_CYCLESORIGINAL]
-  SUB r2,r2,rcycles
-  ADD r2,r2,#1
-  STR r2,[r12,#:INDEX:R6502_CYCLESORIGINAL]
-  MOV rcycles,#1
   MEND
 
 ;
@@ -791,39 +846,6 @@
   MOV r3,r3,LSR #28
   ORRS ra,r3,r2,LSL #4
   ORREQ rps,rps,#ZFLAG
-  MEND
-
-;
-;rockwell 6502 cpu
-;
-  MACRO
-  R6502STA
-  ;r1=value of ra
-  ;LDR r11,=r6502_a
-  ;LDRB r1,[r11] ;load a
-  MOV r1,ra
-  MEND
-
-;
-;rockwell 6502 cpu
-;
-  MACRO
-  R6502STX
-  ;r1=value of rx
-  ;LDR r11,=r6502_x
-  ;LDRB r1,[r11] ;load x
-  MOV r1,rx
-  MEND
-
-;
-;rockwell 6502 cpu
-;
-  MACRO
-  R6502STY
-  ;r1=value of ry
-  ;LDR r11,=r6502_y
-  ;LDRB r1,[r11] ;load y
-  MOV r1,ry
   MEND
 
   END

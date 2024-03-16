@@ -33,88 +33,61 @@
 
 ; Import global symbols
 
-  IMPORT |memory|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  ;IMPORT |r6502_n|
-  ;IMPORT |r6502_v|
-  ;IMPORT |r6502_b|
-  ;IMPORT |r6502_d|
-  ;IMPORT |r6502_i|
-  ;IMPORT |r6502_z|
-  ;IMPORT |r6502_c|
-  IMPORT |r6502workspace|
-  IMPORT |r6502readmem|
-  IMPORT |r6502writemem|
+  IMPORT |r6502busop|
+  
+  IMPORT |r6502zeropagexreadreadforwrite|
+  IMPORT |r6502zeropagexread|
+  IMPORT |r6502hiabsoluteread|
+  IMPORT |r6502hiabsolutexreadreadforwrite|
+  IMPORT |r6502zeropageindirectread|
+
+  IMPORT |r6502dec|
+  IMPORT |r6502cmp|
+  IMPORT |r65c12phx|
+  IMPORT |r6502nop|
 
 ; Export global symbols
 
   EXPORT |r65c12opcodeD2|
   EXPORT |r65c12opcodeD3|
   EXPORT |r65c12opcodeD4|
+  EXPORT |r65c12opcodeD6|
   EXPORT |r65c12opcodeD7|
   EXPORT |r65c12opcodeDA|
   EXPORT |r65c12opcodeDB|
   EXPORT |r65c12opcodeDC|
+  EXPORT |r65c12opcodeDE|
   EXPORT |r65c12opcodeDF|
 
 |r65c12opcodeD2|
-  ;CMP
-  ADDRESSOFINDZEROPAGE
-  READMEM ; 1 cycle
-  R6502CMP
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  INDIRECTLOAD r6502cmp
 
 |r65c12opcodeD3|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcodeD4|
-  ;Reserved NOP
-  R6502SKB
-  SUB rcycles,rcycles,#4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXLOAD r6502nop
+
+|r65c12opcodeD6|
+  ZEROPAGEXMODIFYC r6502dec
 
 |r65c12opcodeD7|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcodeDA|
-  ;PHX
-  STACKPUSH rx
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r65c12phx
 
 |r65c12opcodeDB|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcodeDC|
-  ;Reserved NOP
-  R6502SKW
-  SUB rcycles,rcycles,#4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTELOAD r6502nop
+
+|r65c12opcodeDE|
+  ABSOLUTEXMODIFYC r6502dec
 
 |r65c12opcodeDF|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 ;Data Area
 

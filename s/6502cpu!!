@@ -299,6 +299,7 @@
   IMPORT |r6502_y|
   IMPORT |r6502_cyclestogo|
   IMPORT |r6502workspace|
+  IMPORT |r6502busop|
   IMPORT |r6502readmem|
   IMPORT |beebit_trace|
   IMPORT |beebit_romsel|
@@ -307,10 +308,47 @@
 ; Export global symbols
 
   EXPORT |r6502execute|
-  ;EXPORT |r6502adc|
-  ;EXPORT |r6502sbc|
+  EXPORT |r6502instruction|
+  EXPORT |r6502fivenop|
+  EXPORT |r6502nop|
+  EXPORT |r6502halt|
   EXPORT |r6502irq|
   EXPORT |r6502nmi|
+  EXPORT |r6502immediatedone|
+  EXPORT |r6502zeropagereadreadforwrite|
+  EXPORT |r6502zeropagereadwrite|
+  EXPORT |r6502zeropageforwrite|
+  EXPORT |r6502zeropageread|
+  EXPORT |r6502zeropagexreadreadforwrite|
+  EXPORT |r6502zeropagexreadwrite|
+  EXPORT |r6502zeropagexforwrite|
+  EXPORT |r6502zeropagexread|
+  EXPORT |r6502zeropageyreadreadforwrite|
+  EXPORT |r6502zeropageyreadwrite|
+  EXPORT |r6502zeropageyforwrite|
+  EXPORT |r6502zeropageyread|
+  EXPORT |r6502hiabsolutereadreadforwrite|
+  EXPORT |r6502hiabsolutereadwrite|
+  EXPORT |r6502hiabsoluteforwrite|
+  EXPORT |r6502hiabsoluteread|
+  EXPORT |r6502hiabsolutexreadreadforwrite|
+  EXPORT |r6502hiabsolutexreadwrite|
+  EXPORT |r6502hiabsolutexforwrite|
+  EXPORT |r6502hiabsolutexread|
+  EXPORT |r6502hiabsoluteyreadreadforwrite|
+  EXPORT |r6502hiabsoluteyreadwrite|
+  EXPORT |r6502hiabsoluteyforwrite|
+  EXPORT |r6502hiabsoluteyread|
+  EXPORT |r6502zeropageindirectforwrite|
+  EXPORT |r6502zeropageindirectread|
+  EXPORT |r6502zeropagexindirectreadreadforwrite|
+  EXPORT |r6502zeropagexindirectreadwrite|
+  EXPORT |r6502zeropagexindirectforwrite|
+  EXPORT |r6502zeropagexindirectread|
+  EXPORT |r6502zeropageindirectyreadreadforwrite|
+  EXPORT |r6502zeropageindirectyreadwrite|
+  EXPORT |r6502zeropageindirectyforwrite|
+  EXPORT |r6502zeropageindirectyread|
   EXPORT |r6502opcodeset|
   EXPORT |r6512opcodeset|
 
@@ -331,9 +369,10 @@
   LDRB rps,[r12] ;load ps
   LDR r12,=r6502_sp
   LDRB rsp,[r12] ;load sp
+  MOV rsp,rsp,LSL #24
 
   LDR r12,=r6502_cyclestogo
-  LDR rcycles,[r12] ;load sp
+  LDR rcycles,[r12] ;load cycles
 
   LDR r12,=r6502workspace
   ;LDMFD sp!,{pc}
@@ -355,123 +394,13 @@
   LDR r12,=r6502_ps
   STRB rps,[r12] ;save ps
   LDR r12,=r6502_sp
+  MOV rsp,rsp,LSR #24
   STRB rsp,[r12] ;save sp
 
   LDR r12,=r6502_cyclestogo
-  STR rcycles,[r12] ;load sp
+  STR rcycles,[r12] ;save cycles
 
   LDMFD sp!,{r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502adc|
-  ;r0=number to adc with A
-  STMFD sp!,{r0-r12,lr}
-
-  ;if not decimal
-  MOV r0,r0,LSL#24 ;n=(n<<24)
-
-  LDR r12,=r6502_a
-  LDRB ra,[r12] ;load a
-  MOV ra,ra,LSL#24 ;a=(a<<24)
-  MOV r1,#&00FFFFFF ;raFFFFFF
-  ORR ra,ra,r1
-
-  MOV r1,#1 ;bit
-  MOV r2,#0 ;bit mask
-  LDR r11,=r6502_ps
-  LDRB rps,[r11]
-
-  ;n flag
-  ;ANDS r3,rps,#NFLAG
-  ;ORRNE r2,r2,r1,LSL#31 ;set n flag in bit mask
-  ;z flag
-  ;ANDS r3,rps,#ZFLAG
-  ;ORRNE r2,r2,r1,LSL#30 ;set z flag in bit mask
-  ;c flag
-  ANDS r3,rps,#CFLAG
-  ORRNE r2,r2,r1,LSL#29 ;set c flag in bit mask
-  ;v flag
-  ;ANDS r3,rps,#VFLAG
-  ;ORRNE r2,r2,r1,LSL#28 ;set v flag in bit mask
-  ;TEQP r3,r2 ;set flags in ARM PSR
-
-  TEQ PC,PC
-  TEQNEP r3,r2 ;set flags in ARM PSR
-  MSREQ CPSR_f,R2
-
-  ADCS ra,ra,r0 ;ra=a+n+c
-
-  AND rps,rps,#&3C ;%00111100 ;clear NVubdiZC
-  ORRMI rps,rps,#NFLAG
-  ;ORREQ rps,rps,#ZFLAG
-  ORRCS rps,rps,#CFLAG
-  ORRVS rps,rps,#VFLAG
-  STRB rps,[r11]
-
-  MOV ra,ra,LSR#24 ;(a=(a>>24)
-  CMP ra,#0
-  ORREQ rps,rps,#ZFLAG
-  STRB ra,[r12] ;store a
-
-  LDMFD sp!,{r0-r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502sbc|
-  ;r0=number to sbc with A
-  STMFD sp!,{r0-r12,lr}
-
-  ;if not decimal
-  MOV r0,r0,LSL#24 ;n=(n<<24)
-
-  LDR r12,=r6502_a
-  LDRB ra,[r12] ;load a
-  MOV ra,ra,LSL#24 ;a=(a<<24)
-
-  MOV r1,#1 ;bit
-  MOV r2,#0 ;bit mask
-  LDR r11,=r6502_ps
-  LDRB rps,[r11]
-  ;n flag
-  ;ANDS r3,rps,#NFLAG
-  ;ORRNE r2,r2,r1,LSL#31 ;set n flag in bit mask
-  ;z flag
-  ;ANDS r3,rps,#ZFLAG
-  ;ORRNE r2,r2,r1,LSL#30 ;set z flag in bit mask
-  ;c flag
-  ANDS r3,rps,#CFLAG
-  ORRNE r2,r2,r1,LSL#29 ;set c flag in bit mask
-  ;v flag
-  ;ANDS r3,rps,#VFLAG
-  ;ORRNE r2,r2,r1,LSL#28 ;set v flag in bit mask
-  ;TEQP r3,r2 ;set flags in ARM PSR
-
-  TEQ PC,PC
-  TEQNEP r3,r2 ;set flags in ARM PSR
-  MSREQ CPSR_f,R2
-
-  SBCS ra,ra,r0 ;ra=a-n-c
-
-  AND rps,rps,#&3C ;%00111100 ;clear NVubdiZC
-  ;n flag
-  ORRMI rps,rps,#NFLAG
-  ;z flag
-  ;ORREQ rps,rps,#ZFLAG
-  ;c flag
-  ORRCS rps,rps,#CFLAG
-  ;v flag
-  ORRVS rps,rps,#VFLAG
-  STRB rps,[r11]
-
-  MOV ra,ra,LSR#24 ;(a=(a>>24)
-  CMP ra,#0
-  ORREQ rps,rps,#ZFLAG
-  STRB ra,[r12] ;store a
-
-  LDMFD sp!,{r0-r12,pc}
 
 ;
 ;rockwell 6502 cpu
@@ -483,6 +412,7 @@
   LDR rpc,[r11]
   LDR r10,=r6502_sp ;pointer to r6502_sp
   LDRB rsp,[r10] ;load r6502_sp
+  MOV rsp,rsp,LSL #24
   AND r0,rpc,#&FF00
   MOV r0,r0,LSR#8
   STACKPUSH r0
@@ -500,7 +430,9 @@
   LDRB r0,[r2,#-2] ;&FFFE
   LDRB r1,[r2,#-1] ;&FFFF
   ADD rpc,r0,r1,LSL#8
+  MOV rsp,rsp,LSR #24
   STRB rsp,[r10]
+  LDR r11,=r6502_pc ;pointer to r6502_pc
   STR rpc,[r11]
 
   LDR r11,=r6502_cyclestogo
@@ -519,6 +451,7 @@
   LDR rpc,[r11]
   LDR r10,=r6502_sp ;pointer to r6502_sp
   LDRB rsp,[r10] ;load r6502_sp
+  MOV rsp,rsp,LSL #24
   AND r0,rpc,#&FF00
   MOV r0,r0,LSR#8
   STACKPUSH r0
@@ -536,7 +469,9 @@
   LDRB r0,[r2,#-6] ;&FFFA
   LDRB r1,[r2,#-5] ;&FFFB
   ADD rpc,r0,r1,LSL#8
+  MOV rsp,rsp,LSR #24
   STRB rsp,[r10]
+  LDR r11,=r6502_pc ;pointer to r6502_pc
   STR rpc,[r11]
 
   LDR r11,=r6502_cyclestogo
@@ -628,14 +563,12 @@ r6502execute_loop
   ;-------------------
 
 r6502execute_loop2
-  MOV r1,rpc
-  BL r6502readmem ;=r0
-  ADD rpc,rpc,#&10000
+  ORR r1,rpc,#R6502_READCODE
+  BL r6502busop
 
-  ADD r2,r12,#:INDEX:R6502_OPCODES
   ADD lr,pc,#4
   STR lr,[sp, #-4]!
-  LDR pc,[r2,r0,LSL#2]
+  B r6502instruction
 
   ;-------------------
   ;LDR r11,=beebit_trace ;trace
@@ -718,6 +651,493 @@ r6502execute_loop3
   BL r6502saveregs
   ;SWI OS_WriteI+90
   LDMFD sp!,{r0-r12,pc}
+
+|r6502instruction|
+  ADD r2,r12,#:INDEX:R6502_OPCODES
+  ADD rpc,rpc,#&10000
+  LDR pc,[r2,r0,LSL#2]
+
+|r6502fivenop|
+  R6502NEXTCYCLE r6502fournop
+
+r6502fournop
+  R6502NEXTCYCLE r6502threenop
+
+r6502threenop
+  R6502NEXTCYCLE r6502twonop
+
+r6502twonop
+  R6502NEXTCYCLE r6502nop
+
+|r6502nop|
+  R6502ENDINSTRUCTION
+
+|r6502halt|
+  SUB rpc,rpc,#&10000
+  R6502ENDINSTRUCTION
+
+|r6502immediatedone|
+  ADD rpc,rpc,#&10000
+  R6502CONTINUECYCLE
+
+|r6502zeropagereadreadforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502readsameforwrite
+
+|r6502zeropagereadwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502writesame
+
+|r6502zeropageforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_WRITECODE
+  ORR r1,r1,r0,LSL #16
+  R6502CONTINUECYCLE
+
+|r6502zeropageread|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502addressingdone
+
+|r6502zeropagexreadreadforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropagexreadreadforwrite2
+
+r6502zeropagexreadreadforwrite2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,rx,LSL #24
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502readsameforwrite
+
+|r6502zeropagexreadwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropagexreadwrite2
+
+r6502zeropagexreadwrite2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,rx,LSL #24
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502writesame
+
+|r6502zeropagexforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropagexforwrite2
+
+r6502zeropagexforwrite2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,rx,LSL #24
+  MOV r1,r1,LSR #8
+  ORR r1,r1,#R6502_WRITECODE-R6502_READCODE
+  R6502CONTINUECYCLE
+
+|r6502zeropagexread|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropagexread2
+
+r6502zeropagexread2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,rx,LSL #24
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502addressingdone
+
+|r6502zeropageyreadreadforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropageyreadreadforwrite2
+
+r6502zeropageyreadreadforwrite2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,ry,LSL #24
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502readsameforwrite
+
+|r6502zeropageyreadwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropageyreadwrite2
+
+r6502zeropageyreadwrite2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,ry,LSL #24
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502writesame
+
+|r6502zeropageyforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropageyforwrite2
+
+r6502zeropageyforwrite2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,ry,LSL #24
+  MOV r1,r1,LSR #8
+  ORR r1,r1,#R6502_WRITECODE-R6502_READCODE
+  R6502CONTINUECYCLE
+
+|r6502zeropageyread|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropageyread2
+
+r6502zeropageyread2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,ry,LSL #24
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502addressingdone
+
+|r6502hiabsolutereadreadforwrite|
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502absolutereadreadforwrite
+
+|r6502hiabsolutereadwrite|
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502absolutereadwrite
+
+|r6502hiabsoluteforwrite|
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502absoluteforwrite
+
+|r6502hiabsoluteread|
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502absoluteread
+
+|r6502hiabsolutexreadreadforwrite|
+  ADD r0,r0,rx
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502absolutepagefixreadreadforwrite
+
+|r6502hiabsolutexreadwrite|
+  ADD r0,r0,rx
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502absolutepagefixreadwrite
+
+|r6502hiabsolutexforwrite|
+  ADD r0,r0,rx
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502absolutepagefixforwrite
+
+|r6502hiabsolutexread|
+  ADD r0,r0,rx
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  CMP r0,#&FF
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE_LSorHI r6502absoluteread, r6502absolutepagecrossread
+
+|r6502hiabsoluteyreadreadforwrite|
+  ADD r0,r0,ry
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502absolutepagefixreadreadforwrite
+
+|r6502hiabsoluteyreadwrite|
+  ADD r0,r0,ry
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502absolutepagefixreadwrite
+
+|r6502hiabsoluteyforwrite|
+  ADD r0,r0,ry
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502absolutepagefixforwrite
+
+|r6502hiabsoluteyread|
+  ADD r0,r0,ry
+  ADD rpc,rpc,#&10000
+  ADD r1,r1,#&10000
+  CMP r0,#&FF
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE_LSorHI r6502absoluteread, r6502absolutepagecrossread
+
+|r6502zeropageindirectforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropageindirectforwrite2
+
+r6502zeropageindirectforwrite2
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,r1,LSL #8
+  ADD r1,r1,#&01000000
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502indirectforwrite
+
+|r6502zeropageindirectread|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropagehiindirectread
+
+|r6502zeropagexindirectreadreadforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropagexindirectreadreadforwrite2
+
+r6502zeropagexindirectreadreadforwrite2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,rx,LSL #24
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502zeropagexindirectreadreadforwrite3
+
+r6502zeropagexindirectreadreadforwrite3
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,r1,LSL #8
+  ADD r1,r1,#&01000000
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502indirectreadreadforwrite
+
+|r6502zeropagexindirectreadwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropagexindirectreadwrite2
+
+r6502zeropagexindirectreadwrite2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,rx,LSL #24
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502zeropagexindirectreadwrite3
+
+r6502zeropagexindirectreadwrite3
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,r1,LSL #8
+  ADD r1,r1,#&01000000
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502indirectreadwrite
+
+|r6502zeropagexindirectforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropagexindirectforwrite2
+
+r6502zeropagexindirectforwrite2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,rx,LSL #24
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502zeropagexindirectforwrite3
+
+r6502zeropagexindirectforwrite3
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,r1,LSL #8
+  ADD r1,r1,#&01000000
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502indirectforwrite
+
+|r6502zeropagexindirectread|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropagexindirectread2
+
+r6502zeropagexindirectread2
+  MOV r1,r1,LSL #8
+  ADD r1,r1,rx,LSL #24
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502zeropagehiindirectread
+
+|r6502zeropageindirectyreadreadforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropageindirectyreadreadforwrite2
+
+r6502zeropageindirectyreadreadforwrite2
+  ADD r0,r0,ry
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502indirectpagefixreadreadforwrite
+
+|r6502zeropageindirectyreadwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropageindirectyreadwrite2
+
+r6502zeropageindirectyreadwrite2
+  ADD r0,r0,ry
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502indirectpagefixreadwrite
+
+|r6502zeropageindirectyforwrite|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropageindirectyforwrite2
+
+r6502zeropageindirectyforwrite2
+  ADD r0,r0,ry
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502indirectpagefixforwrite
+
+|r6502zeropageindirectyread|
+  ADD rpc,rpc,#&10000
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r0,LSL #16
+  R6502NEXTCYCLE r6502zeropageindirectyread2
+
+r6502zeropageindirectyread2
+  ADD r0,r0,ry
+  ADD r1,r1,#&10000
+  CMP r0,#&FF
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE_LSorHI r6502indirectread, r6502indirectpagecrossread
+
+r6502zeropagehiindirectread
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,r1,LSL #8
+  ADD r1,r1,#&01000000
+  MOV r1,r1,LSR #8
+  R6502NEXTCYCLE r6502indirectread
+
+r6502absolutepagefixreadreadforwrite
+  ADD rpc,rpc,#&10000
+r6502indirectpagefixreadreadforwrite
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  AND r2,r2,#&FF
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r0,LSL #24  
+  R6502NEXTCYCLE r6502readreadforwritepagefixed
+
+r6502absolutepagefixreadwrite
+  ADD rpc,rpc,#&10000
+r6502indirectpagefixreadwrite
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  AND r2,r2,#&FF
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r0,LSL #24  
+  R6502NEXTCYCLE r6502readwritepagefixed
+
+r6502absolutepagefixforwrite
+  ADD rpc,rpc,#&10000
+r6502indirectpagefixforwrite
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  AND r2,r2,#&FF
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r0,LSL #24  
+  R6502NEXTCYCLE r6502forwritepagefixed
+
+r6502absolutepagecrossread
+  ADD rpc,rpc,#&10000
+r6502indirectpagecrossread
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  AND r2,r2,#&FF
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r0,LSL #24  
+  R6502NEXTCYCLE r6502pagecrossed
+
+r6502absoluteread
+  ADD rpc,rpc,#&10000
+r6502indirectread
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r0,LSL #24
+  R6502NEXTCYCLE r6502addressingdone
+
+r6502absolutereadreadforwrite
+  ADD rpc,rpc,#&10000
+r6502indirectreadreadforwrite
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r0,LSL #24
+  R6502NEXTCYCLE r6502readsameforwrite
+
+r6502absolutereadwrite
+  ADD rpc,rpc,#&10000
+r6502indirectreadwrite
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r0,LSL #24
+  R6502NEXTCYCLE r6502writesame
+
+r6502absoluteforwrite
+  ADD rpc,rpc,#&10000
+r6502indirectforwrite
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,#R6502_WRITECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r0,LSL #24
+  R6502CONTINUECYCLE
+
+r6502readreadforwritepagefixed
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  BIC r1,r1,#&00FF0000
+  ADD r1,r1,r2,LSL #16
+  R6502NEXTCYCLE r6502readsameforwrite
+
+r6502readwritepagefixed
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  BIC r1,r1,#&00FF0000
+  ADD r1,r1,r2,LSL #16
+  R6502NEXTCYCLE r6502writesame
+
+r6502readsameforwrite
+  R6502NEXTCYCLE r6502forwritesame
+
+r6502writesame
+  ORR r1,r1,#R6502_WRITECODE-R6502_READCODE
+  R6502NEXTCYCLE r6502addressingdone
+
+r6502pagecrossed
+  ADD r1,r1,#&01000000
+r6502addressingsameagain
+  R6502NEXTCYCLE r6502addressingdone
+
+r6502forwritepagefixed
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  BIC r1,r1,#&00FF0000
+  ADD r1,r1,r2,LSL #16
+r6502forwritesame
+  ORR r1,r1,#R6502_WRITECODE-R6502_READCODE
+r6502addressingdone
+  R6502CONTINUECYCLE
+
+  LTORG
 
 
 |r6502opcodeset|

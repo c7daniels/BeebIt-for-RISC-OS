@@ -36,23 +36,18 @@
 
 ; Import global symbols
 
-  IMPORT |memory|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  ;IMPORT |r6502_n|
-  ;IMPORT |r6502_v|
-  ;IMPORT |r6502_b|
-  ;IMPORT |r6502_d|
-  ;IMPORT |r6502_i|
-  ;IMPORT |r6502_z|
-  ;IMPORT |r6502_c|
-  IMPORT |r6502workspace|
-  IMPORT |r6502readmem|
-  IMPORT |r6502writemem|
+  IMPORT |r6502busop|
+  
+  IMPORT |r6502immediatedone|
+  IMPORT |r6502hiabsoluteforwrite|
+  IMPORT |r6502hiabsolutexforwrite|
+  IMPORT |r6502zeropageindirectforwrite|
+
+  IMPORT |r6502bit|
+  IMPORT |r6502sta|
+  IMPORT |r65c12stz|
+  IMPORT |r65c12bra|
+  IMPORT |r6502nop|
 
 ; Export global symbols
 
@@ -72,101 +67,46 @@
   EXPORT |r65c12opcode9F|
 
 |r65c12opcode80|
-  ;BRA
-  VALUEOFIMMEDIATE
-  R6502BRA
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r65c12bra
 
 |r65c12opcode82|
-  ;Reserved NOP
-  R6502SKB
-  SUB rcycles,rcycles,#2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502nop
 
 |r65c12opcode83|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode87|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode89|
-  ;BIT
-  VALUEOFIMMEDIATE
-  R6502BIT
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502bit
 
 |r65c12opcode8B|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode8F|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode92|
-  ;STA
-  ADDRESSOFINDZEROPAGE
-  MOV r0,ra
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  INDIRECTSTORE r6502sta
 
 |r65c12opcode93|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode97|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode9B|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode9C|
-  ;STZ
-  ADDRESSOFABSOLUTE ;2 cycles
-  MOV r0,#0 ;1 cycle
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTESTORE r65c12stz
 
 |r65c12opcode9E|
-  ;STZ
-  ADDRESSOFABSOLUTEX ;3 cycles
-  MOV r0,#0 ;1 cycle
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXSTORE r65c12stz
 
 |r65c12opcode9F|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 ;Data Area
 

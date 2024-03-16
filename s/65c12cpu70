@@ -33,23 +33,25 @@
 
 ; Import global symbols
 
-  IMPORT |memory|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  ;IMPORT |r6502_n|
-  ;IMPORT |r6502_v|
-  ;IMPORT |r6502_b|
-  ;IMPORT |r6502_d|
-  ;IMPORT |r6502_i|
-  ;IMPORT |r6502_z|
-  ;IMPORT |r6502_c|
-  IMPORT |r6502workspace|
-  IMPORT |r6502readmem|
-  IMPORT |r6502writemem|
+  IMPORT |r6502busop|
+  
+  IMPORT |r6502immediatedone|
+  IMPORT |r6502zeropagexreadreadforwrite|
+  IMPORT |r6502zeropagexforwrite|
+  IMPORT |r6502zeropagexread|
+  IMPORT |r6502hiabsolutexreadreadforwrite|
+  IMPORT |r6502hiabsolutexread|
+  IMPORT |r6502hiabsoluteyread|
+  IMPORT |r6502zeropageindirectread|
+  IMPORT |r6502zeropageindirectyread|
+  
+  IMPORT |r6502adc|
+  IMPORT |r65c12adcd|
+  IMPORT |r65c12ply|
+  IMPORT |r6502ror|
+  IMPORT |r65c12stz|
+  IMPORT |r65c12jmpxind|
+  IMPORT |r6502nop|
 
 ; Export global symbols
 
@@ -58,161 +60,57 @@
   EXPORT |r65c12opcode73|
   EXPORT |r65c12opcode74|
   EXPORT |r65c12opcode75|
+  EXPORT |r65c12opcode76|
   EXPORT |r65c12opcode77|
   EXPORT |r65c12opcode79|
   EXPORT |r65c12opcode7A|
   EXPORT |r65c12opcode7B|
   EXPORT |r65c12opcode7C|
   EXPORT |r65c12opcode7D|
+  EXPORT |r65c12opcode7E|
   EXPORT |r65c12opcode7F|
 
 |r65c12opcode71|
-  ;ADC
-  ADDRESSOFPOSTINDEXEDY ;3+ cycles
-  READMEM ;1 cycle
-  TST rps,#DFLAG
-  BNE r65c12opcode71_2
-  ;binary
-  R6502ADC ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-r65c12opcode71_2
-  ;BCD
-  R6502ADCD_M ;2 cycles
-  CPU_CYCLES 3 ;+1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  POSTINDEXEDYLOAD_DECIMALFORK r6502adc,r65c12adcd
 
 |r65c12opcode72|
-  ;ADC
-  ADDRESSOFINDZEROPAGE
-  READMEM ;1 cycle
-  TST rps,#DFLAG
-  BNE r65c12opcode72_2
-  ;binary
-  R6502ADC
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-r65c12opcode72_2
-  ;BCD
-  R6502ADCD_M
-  CPU_CYCLES 6 ;+1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  INDIRECTLOAD_DECIMALFORK r6502adc,r65c12adcd
 
 |r65c12opcode73|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode74|
-  ;STZ
-  ADDRESSOFZEROPAGEX
-  ADD r11,r12,#:INDEX:R6502_MEMORY
-  MOV r0,#0
-  STRB r0,[r11,r1,LSR #24]
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXSTORE r65c12stz
 
 |r65c12opcode75|
-  ;ADC
-  VALUEOFZEROPAGEX
-  TST rps,#DFLAG
-  BNE r65c12opcode75_2
-  ;binary
-  R6502ADC
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-r65c12opcode75_2
-  ;BCD
-  R6502ADCD_M
-  CPU_CYCLES 5 ;+1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXLOAD_DECIMALFORK r6502adc,r65c12adcd
+
+|r65c12opcode76|
+  ZEROPAGEXMODIFYC r6502ror
 
 |r65c12opcode77|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode79|
-  ;ADC
-  ADDRESSOFABSOLUTEYPLUS ;2+ cycles
-  READMEM ;1 cycle
-  TST rps,#DFLAG
-  BNE r65c12opcode79_2
-  ;binary
-  R6502ADC ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-r65c12opcode79_2
-  ;BCD
-  R6502ADCD_M ;2 cycles
-  CPU_CYCLES 3 ;+1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEYLOAD_DECIMALFORK r6502adc,r65c12adcd
 
 |r65c12opcode7A|
-  ;PLY
-  STACKPOP ry
-  SETNFLAG ry
-  SETZFLAG ry
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r65c12ply
 
 |r65c12opcode7B|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode7C|
-  ;JMP
-  ADDRESSOFABSOLUTEX ;3 cycles
-  READMEM
-  STR r0,[r12,#:INDEX:R6502_ABSTEMP] ;lo
-
-  ADD r1,r1,#&10000 ;address += 1
-  READMEM ;hi
-  LDR r2,[r12,#:INDEX:R6502_ABSTEMP] ;lo
-  
-  MOV r2,r2,LSL #16
-  ADD rpc,r2,r0,LSL #24 ;r6502_pc=lo+(hi<<8)
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r65c12jmpxind
 
 |r65c12opcode7D|
-  ;ADC
-  ADDRESSOFABSOLUTEXPLUS ;2+ cycles
-  READMEM ;1 cycle
-  TST rps,#DFLAG
-  BNE r65c12opcode7D_2
-  ;binary
-  R6502ADC ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-r65c12opcode7D_2
-  ;BCD
-  R6502ADCD_M ;2 cycles
-  CPU_CYCLES 3 ;+1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXLOAD_DECIMALFORK r6502adc,r65c12adcd
+
+|r65c12opcode7E|
+  ABSOLUTEXMODIFYC r6502ror
 
 |r65c12opcode7F|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 ;Data Area
 

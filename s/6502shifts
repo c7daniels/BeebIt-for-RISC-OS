@@ -1,0 +1,108 @@
+;>6502shifts.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; (C) Copyright Michael J Foot, 1998-1999
+;
+; Email: <mikef@voyager.co.nz>
+;
+; r12=pointer to variable
+; r11=pointer to variable
+; r10=cyclestogo
+; r9=PC
+; r8=PS
+; r7=Y
+; r6=X
+; r5=A
+
+  GET h.6502cpus
+
+  GET h.6502cpui
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET h.RegNames
+
+; Use the GET directive to include a list of SWI names as if typed here
+
+  GET h.SWInames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+  IMPORT |r6502busop|
+  IMPORT |r6502storedone|
+
+; Export global symbols
+
+  EXPORT |r6502asla|
+  EXPORT |r6502rola|
+  EXPORT |r6502lsra|
+  EXPORT |r6502rora|
+
+  EXPORT |r6502anc|
+  EXPORT |r6502alr|
+
+  EXPORT |r6502asl|
+  EXPORT |r6502rol|
+  EXPORT |r6502lsr|
+  EXPORT |r6502ror|
+
+|r6502asla|
+  R6502ASL ra
+  R6502ENDINSTRUCTION
+
+|r6502rola|
+  R6502ROL ra
+  R6502ENDINSTRUCTION
+
+|r6502lsra|
+  R6502LSR ra
+  R6502ENDINSTRUCTION
+
+|r6502rora|
+  R6502ROR ra
+  R6502ENDINSTRUCTION
+
+|r6502anc|
+  ANDS ra,ra,r0 ;a = a and n
+  SETZFLAG0 ;ra
+  ANDS r0,ra,#&80
+  ORRNE rps,rps,#(NFLAG+CFLAG)
+  ANDEQ rps,rps,#&7E ;(NOTNFLAG+NOTCFLAG)
+  R6502ENDINSTRUCTION
+
+|r6502alr|
+  AND ra,ra,r0 ;a = a and n
+  ANDS r0,ra,#&01
+  ORRNE rps,rps,#CFLAG ;set c flag
+  ANDEQ rps,rps,#NOTCFLAG ;clear c flag
+  MOVS ra,ra,LSR #&01 ;shift right
+  SETZFLAG0 ;ra
+  AND rps,rps,#NOTNFLAG
+  R6502ENDINSTRUCTION
+
+|r6502asl|
+  R6502ASL r0
+  R6502NEXTCYCLE r6502storedone
+
+|r6502rol|
+  R6502ROL r0
+  R6502NEXTCYCLE r6502storedone
+
+|r6502lsr|
+  R6502LSR r0
+  R6502NEXTCYCLE r6502storedone
+
+|r6502ror|
+  R6502ROR r0
+  R6502NEXTCYCLE r6502storedone
+
+;Data Area
+
+;  AREA    |C$$data|, DATA
+
+  END

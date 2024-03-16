@@ -30,10 +30,7 @@
 #define CPU_CYCLES(ncycles) \
   r6502_cyclestogo -= ncycles;
 
-#ifdef __RISCOS__
-  #define SETNFLAG(nreg) \
-    r6502setnflag(nreg);
-#else
+#ifndef __RISCOS__
   #define SETNFLAG(nreg) \
     /*clear bit 7 (N)*/ \
     r6502_ps = (r6502_ps & NOTNFLAG); \
@@ -41,10 +38,7 @@
     r6502_ps = (r6502_ps | (nreg & NFLAG));
 #endif
 
-#ifdef __RISCOS__
-  #define SETVFLAG(nreg) \
-    r6502setvflag(nreg);
-#else
+#ifndef __RISCOS__
   #define SETVFLAG(nreg) \
     /*clear bit 6 (V)*/ \
     r6502_ps = (r6502_ps & NOTVFLAG); \
@@ -52,10 +46,7 @@
     r6502_ps = (r6502_ps | (nreg & VFLAG));
 #endif
 
-#ifdef __RISCOS__
-  #define SETBFLAG(nreg) \
-    r6502setbflag(nreg);
-#else
+#ifndef __RISCOS__
   #define SETBFLAG(nreg) \
     /*clear bit 4 (B)*/ \
     r6502_ps = (r6502_ps & NOTBFLAG); \
@@ -63,10 +54,7 @@
     r6502_ps = (r6502_ps | (nreg & BFLAG));
 #endif
 
-#ifdef __RISCOS__
-  #define SETIFLAG(nreg) \
-    r6502setiflag(nreg);
-#else
+#ifndef __RISCOS__
   #define SETIFLAG(nreg) \
     /*clear bit 3 (I)*/ \
     r6502_ps = (r6502_ps & NOTIFLAG); \
@@ -74,10 +62,7 @@
     r6502_ps = (r6502_ps | (nreg & IFLAG));
 #endif
 
-#ifdef __RISCOS__
-  #define SETZFLAG(nreg) \
-    r6502setzflag(nreg);
-#else
+#ifndef __RISCOS__
   #define SETZFLAG(nreg) \
     /*clear bit 1 (Z)*/ \
     r6502_ps = (r6502_ps & NOTZFLAG); \
@@ -100,18 +85,12 @@
 #define PROCESSORSTATUS(nflag) \
   (r6502_ps | UFLAG | nflag);
 
-#ifdef __RISCOS__
-  #define STACK_PUSH(n) \
-    r6502stackpush(n);
-#else
+#ifndef __RISCOS__
   #define STACK_PUSH(n) \
     memory[STACK_START+(r6502_sp--)] = n;
 #endif
 
-#ifdef __RISCOS__
-  #define STACK_POP(n) \
-    n = r6502stackpop();
-#else
+#ifndef __RISCOS__
   #define STACK_POP(n) \
     n = memory[STACK_START+(++r6502_sp)];
 #endif
@@ -120,38 +99,26 @@
   if (beebit_irq AND !r6502_i) \
     r6502doirq();*/
 
-#ifdef __RISCOS__
-  #define ADDRESSOFABSOLUTE \
-    n = r6502addressofabsolute();
-#else
+#ifndef __RISCOS__
   #define ADDRESSOFABSOLUTE \
     nlo = r6502read(r6502_pc++); \
     nhi = r6502read(r6502_pc++); \
     n = (nhi<<8)+nlo;
 #endif
 
-#ifdef __RISCOS__
-  #define ADDRESSOFABSOLUTEX \
-    n = r6502addressofabsolutex();
-#else
+#ifndef __RISCOS__
   #define ADDRESSOFABSOLUTEX \
     ADDRESSOFABSOLUTE \
     n += r6502_x;
 #endif
 
-#ifdef __RISCOS__
-  #define ADDRESSOFABSOLUTEY \
-    n = r6502addressofabsolutey();
-#else
+#ifndef __RISCOS__
   #define ADDRESSOFABSOLUTEY \
     ADDRESSOFABSOLUTE \
     n += r6502_y;
 #endif
 
-#ifdef __RISCOS__
-  #define ADDRESSOFABSOLUTEXPLUS \
-    n = r6502addressofabsolutexplus();
-#else
+#ifndef __RISCOS__
     /*n1 = ((n & 0xFF00) >> 8); \*/
   #define ADDRESSOFABSOLUTEXPLUS \
     ADDRESSOFABSOLUTE \
@@ -161,10 +128,7 @@
     /*counter -= (n1-nhi);*/
 #endif
 
-#ifdef __RISCOS__
-  #define ADDRESSOFABSOLUTEYPLUS \
-    n = r6502addressofabsoluteyplus();
-#else
+#ifndef __RISCOS__
     /*n1 = ((n & 0xFF00) >> 8); \*/
   #define ADDRESSOFABSOLUTEYPLUS \
     ADDRESSOFABSOLUTE \
@@ -174,36 +138,24 @@
     /*counter -= (n1-nhi);*/
 #endif
 
-#ifdef __RISCOS__
-  #define ADDRESSOFZEROPAGE \
-    n = r6502addressofzeropage();
-#else
+#ifndef __RISCOS__
   #define ADDRESSOFZEROPAGE \
     n = r6502read(r6502_pc++);
 #endif
 
-#ifdef __RISCOS__
-  #define ADDRESSOFZEROPAGEX \
-    n = r6502addressofzeropagex();
-#else
+#ifndef __RISCOS__
   #define ADDRESSOFZEROPAGEX \
     n = r6502read(r6502_pc++); \
     n = ((n+r6502_x) & 0xFF);
 #endif
 
-#ifdef __RISCOS__
-  #define ADDRESSOFZEROPAGEY \
-    n = r6502addressofzeropagey();
-#else
+#ifndef __RISCOS__
   #define ADDRESSOFZEROPAGEY \
     n = r6502read(r6502_pc++); \
     n = ((n+r6502_y) & 0xFF);
 #endif
 
-#ifdef __RISCOS__
-  #define ADDRESSOFINDIRECT \
-    n = r6502addressofindirect();
-#else
+#ifndef __RISCOS__
   #define ADDRESSOFINDIRECT \
     ADDRESSOFABSOLUTE \
     nlo = r6502read(n); \
@@ -212,10 +164,7 @@
     n = (nhi<<8)+nlo;
 #endif
 
-#ifdef __RISCOS__
-  #define ADDRESSOFPREINDEXED \
-    n = r6502addressofpreindexed();
-#else
+#ifndef __RISCOS__
   #define ADDRESSOFPREINDEXED \
     ADDRESSOFZEROPAGEX \
     nlo = r6502read(n); \
@@ -224,10 +173,7 @@
     n = (nhi<<8)+nlo;
 #endif
 
-#ifdef __RISCOS__
-  #define ADDRESSOFPOSTINDEXEDY \
-    n = r6502addressofpostindexedy();
-#else
+#ifndef __RISCOS__
     /*n1 = (((n & 0xFF)+1) & 0xFF); \*/
   #define ADDRESSOFPOSTINDEXEDY \
     ADDRESSOFZEROPAGE \
@@ -238,63 +184,42 @@
     n += r6502_y;
 #endif
 
-#ifdef __RISCOS__
-  #define VALUEOFABSOLUTE \
-   n = r6502valueofabsolute();
-#else
+#ifndef __RISCOS__
   #define VALUEOFABSOLUTE \
     ADDRESSOFABSOLUTE \
     n = r6502read(n);
 #endif
 
-#ifdef __RISCOS__
-  #define VALUEOFABSOLUTEXPLUS \
-   n = r6502valueofabsolutexplus();
-#else
+#ifndef __RISCOS__
   #define VALUEOFABSOLUTEXPLUS \
     ADDRESSOFABSOLUTEXPLUS \
     n = r6502read(n);
 #endif
 
-#ifdef __RISCOS__
-  #define VALUEOFABSOLUTEYPLUS \
-   n = r6502valueofabsoluteyplus();
-#else
+#ifndef __RISCOS__
   #define VALUEOFABSOLUTEYPLUS \
     ADDRESSOFABSOLUTEYPLUS \
     n = r6502read(n);
 #endif
 
-#ifdef __RISCOS__
-  #define VALUEOFIMMEDIATE \
-    n = r6502valueofimmediate();
-#else
+#ifndef __RISCOS__
  #define VALUEOFIMMEDIATE \
     n = r6502read(r6502_pc++);
 #endif
 
-#ifdef __RISCOS__
-  #define VALUEOFZEROPAGE \
-    n = r6502valueofzeropage();
-#else
+#ifndef __RISCOS__
   #define VALUEOFZEROPAGE \
     ADDRESSOFZEROPAGE \
     n = memory[n];
 #endif
 
-#ifdef __RISCOS__
-  #define VALUEOFZEROPAGEX \
-    n = r6502valueofzeropagex();
-#else
+#ifndef __RISCOS__
   #define VALUEOFZEROPAGEX \
     ADDRESSOFZEROPAGEX \
     n = memory[n];
 #endif
 
-#ifdef __RISCOS__
-  #define VALUEOFZEROPAGEY \
-    n = r6502valueofzeropagey();
-#else
+#ifndef __RISCOS__
   #define VALUEOFZEROPAGEY \
     ADDRESSOFZEROPAGEY \
     n = memory[n];
@@ -305,19 +230,13 @@
   nhi = r6502read(r6502_pc++); \
   n = nlo+(nhi<<8);*/
 
-#ifdef __RISCOS__
-  #define VALUEOFPREINDEXED \
-    n = r6502valueofpreindexed();
-#else
+#ifndef __RISCOS__
   #define VALUEOFPREINDEXED \
     ADDRESSOFPREINDEXED \
     n = r6502read(n);
 #endif
 
-#ifdef __RISCOS__
-  #define VALUEOFPOSTINDEXEDY \
-    n = r6502valueofpostindexedy();
-#else
+#ifndef __RISCOS__
     /*n1 = ((n & 0xFF00) >> 8); \*/
   #define VALUEOFPOSTINDEXEDY \
     ADDRESSOFPOSTINDEXEDY \
@@ -357,6 +276,7 @@ char n1,n2;
 
 extern int getword(char *cblock);
 
+#ifndef __RISCOS__
 void r6502badopcode(void)
 {
   bbcvdu(7);
@@ -389,6 +309,7 @@ void r6502badopcode(void)
     break;
   }
 }
+#endif
 
 #ifndef __RISCOS__
 char r6502readb(int naddress)
@@ -809,23 +730,19 @@ void r6502doirq(void)
     fprintf(htrace,"Doing Interrupts ");
     /*getchar();*/
   #endif
-  #ifdef __RISCOS__
-    r6502irq();
-  #else
-    /*systemviaset();*/
-    STACK_PUSH((r6502_pc & 0xFF00)>>8);
-    STACK_PUSH(r6502_pc & 0x00FF);
-    CLEARFLAG(BFLAG);
-    n = PROCESSORSTATUS(0);
-    STACK_PUSH(n)
-    SETFLAG(IFLAG)
-    /*#ifdef __DEBUG__
-      fprintf(htrace," ps = %X",n);
-      fprintf(htrace," N=&%X V=&%X B=&%X D=&%X I=&%X Z=&%X C=&%X",fn,fv,fb,fd,fi,fz,r6502_c;
-    #endif*/
-    r6502_pc = (memory[0xFFFF]<<8) + memory[0xFFFE];
-    CPU_CYCLES(7)
-  #endif
+  /*systemviaset();*/
+  STACK_PUSH((r6502_pc & 0xFF00)>>8);
+  STACK_PUSH(r6502_pc & 0x00FF);
+  CLEARFLAG(BFLAG);
+  n = PROCESSORSTATUS(0);
+  STACK_PUSH(n)
+  SETFLAG(IFLAG)
+  /*#ifdef __DEBUG__
+    fprintf(htrace," ps = %X",n);
+    fprintf(htrace," N=&%X V=&%X B=&%X D=&%X I=&%X Z=&%X C=&%X",fn,fv,fb,fd,fi,fz,r6502_c;
+  #endif*/
+  r6502_pc = (memory[0xFFFF]<<8) + memory[0xFFFE];
+  CPU_CYCLES(7)
   #ifdef __DEBUG__
     fprintf(htrace," r6502_pc = &%X",r6502_pc);
   #endif
@@ -833,18 +750,14 @@ void r6502doirq(void)
 
 void r6502donmi(void)
 {
-  #ifdef __RISCOS__
-    r6502nmi();
-  #else
-    STACK_PUSH((r6502_pc & 0xFF00)>>8);
-    STACK_PUSH(r6502_pc & 0x00FF);
-    CLEARFLAG(BFLAG);
-    n = PROCESSORSTATUS(0);
-    STACK_PUSH(n)
-    SETFLAG(IFLAG)
-    r6502_pc = (memory[0xFFFB]<<8) + memory[0xFFFA];
-    CPU_CYCLES(7)
-  #endif
+  STACK_PUSH((r6502_pc & 0xFF00)>>8);
+  STACK_PUSH(r6502_pc & 0x00FF);
+  CLEARFLAG(BFLAG);
+  n = PROCESSORSTATUS(0);
+  STACK_PUSH(n)
+  SETFLAG(IFLAG)
+  r6502_pc = (memory[0xFFFB]<<8) + memory[0xFFFA];
+  CPU_CYCLES(7)
 }
 #endif
 
@@ -859,25 +772,21 @@ void adc(int n)
   {
     /*fprintf(htrace,"ADC0 &%X+&%X &%X\n",r6502_a,n,r6502_ps);*/
     /*r6502showps();*/
-    #ifdef __RISCOS__
-      r6502adc(n);
-    #else
-      nval = r6502_a+n;
-      if (r6502_ps & CFLAG)
-        nval++;
-      if (nval >= 0x100)
-        SETFLAG(CFLAG)
-      else
-        CLEARFLAG(CFLAG)
-      if (!((r6502_a ^ n) & 0x80) AND ((r6502_a ^ nval) & 0x80))
-        SETFLAG(VFLAG)
-      else
-        CLEARFLAG(VFLAG)
-      nval &= 0xFF;
-      r6502_a = nval;
-      SETNFLAG(r6502_a)
-      SETZFLAG(r6502_a)
-    #endif
+    nval = r6502_a+n;
+    if (r6502_ps & CFLAG)
+      nval++;
+    if (nval >= 0x100)
+      SETFLAG(CFLAG)
+    else
+      CLEARFLAG(CFLAG)
+    if (!((r6502_a ^ n) & 0x80) AND ((r6502_a ^ nval) & 0x80))
+      SETFLAG(VFLAG)
+    else
+      CLEARFLAG(VFLAG)
+    nval &= 0xFF;
+    r6502_a = nval;
+    SETNFLAG(r6502_a)
+    SETZFLAG(r6502_a)
     /*fprintf(htrace,"ADC1 &%X &%X\n",r6502_a,r6502_ps);*/
     /*r6502showps();*/
   }
@@ -912,38 +821,6 @@ void adc(int n)
 }
 #endif
 
-void adcbcd(int n)
-{
-  int nval;
-  int nlob, nhib;
-
-  nval = r6502_a+n;
-  if (r6502_ps & CFLAG)
-    nval++;
-  SETZFLAG(nval)
-  nlob = (r6502_a & 0x0F)+(n & 0x0F);
-  if (r6502_ps & CFLAG)
-    nlob++;
-  if (nlob > 9)
-    nlob += 6;
-  nhib = (r6502_a >> 4)+(n >> 4);
-  if (nlob > 0x0F)
-    nhib++;
-  nval = (nhib << 4) + (nlob & 0x0F);
-  SETNFLAG(nval)
-  if ((((nhib << 4) ^ r6502_a) & 0x80) AND !((r6502_a ^ n) & 0x80))
-    SETFLAG(VFLAG)
-  else
-    CLEARFLAG(VFLAG)
-  if (nhib > 9)
-    nhib +=6;
-  if (nhib > 0x0F)
-    SETFLAG(CFLAG)
-  else
-    CLEARFLAG(CFLAG)
-  r6502_a = (nhib << 4) + (nlob & 0x0F);
-}
-
 
 /*frodo version*/
 #ifndef __RISCOS__
@@ -953,25 +830,21 @@ void sbc(int n)
   int nlob, nhib;
   if (!(r6502_ps & DFLAG))
   {
-    #ifdef __RISCOS__
-      r6502sbc(n);
-    #else
-      nval = r6502_a-n;
-      if (!(r6502_ps & CFLAG))
-        nval--;
-      if (nval >= 0)
-        SETFLAG(CFLAG)
-      else
-        CLEARFLAG(CFLAG)
-      if (((r6502_a ^ nval) & 0x80) AND ((r6502_a ^ n) & 0x80))
-        SETFLAG(VFLAG)
-      else
-        CLEARFLAG(VFLAG)
-      nval &= 0xFF;
-      SETNFLAG(nval)
-      SETZFLAG(nval)
-      r6502_a = nval;
-    #endif
+    nval = r6502_a-n;
+    if (!(r6502_ps & CFLAG))
+      nval--;
+    if (nval >= 0)
+      SETFLAG(CFLAG)
+    else
+      CLEARFLAG(CFLAG)
+    if (((r6502_a ^ nval) & 0x80) AND ((r6502_a ^ n) & 0x80))
+      SETFLAG(VFLAG)
+    else
+      CLEARFLAG(VFLAG)
+    nval &= 0xFF;
+    SETNFLAG(nval)
+    SETZFLAG(nval)
+    r6502_a = nval;
   }
   else
   {
@@ -1005,40 +878,6 @@ void sbc(int n)
   }
 }
 #endif
-
-void sbcbcd(int n)
-{
-  int nval;
-  int nlob, nhib;
-
-  nval = r6502_a-n;
-  if (!(r6502_ps & CFLAG))
-    nval--;
-  nlob = (r6502_a & 0x0F)-(n & 0x0F);
-  if (!(r6502_ps & CFLAG))
-    nlob--;
-  nhib = (r6502_a >> 4)-(n >> 4);
-  if (nlob & 0x10)
-  {
-    nlob -= 6;
-    nlob &= 0x0F;
-    nhib--;
-  }
-  if (nhib & 0x10)
-    nhib -= 6;
-  if (nval >= 0)
-    SETFLAG(CFLAG)
-  else
-    CLEARFLAG(CFLAG)
-  if (((r6502_a ^ nval) & 0x80) AND ((r6502_a ^ n) & 0x80))
-    SETFLAG(VFLAG)
-  else
-    CLEARFLAG(VFLAG)
-  nval &= 0xFF;
-  SETNFLAG(nval)
-  SETZFLAG(nval)
-  r6502_a = (nhib << 4) + (nlob & 0x0F);
-}
 
 /*extern void r6502executehere(void);*/
 /*extern void r6502executeit(void);*/
@@ -1221,38 +1060,27 @@ void r6502execute(void)
       case 0x00:
         /*BRK*/
         /*fprintf(htrace,"BRK");*/
-        #ifdef __RISCOS__
-          r6502opcode00();
-          /*r6502_pc = (memory[0xFFFF]<<8) + memory[0xFFFE];
-          CPU_CYCLES(7)*/
-        #else
-          r6502_pc++;
-          STACK_PUSH((r6502_pc & 0xFF00)>>8);
-          STACK_PUSH(r6502_pc & 0x00FF);
-          SETFLAG(BFLAG)
-          n = PROCESSORSTATUS(BFLAG)
-          STACK_PUSH(n)
-          SETFLAG(IFLAG)
-          r6502_pc = (memory[0xFFFF]<<8) + memory[0xFFFE];
-          fprintf(htrace,"PC=&%X\n",r6502_pc);
-          #ifdef __DEVELOP__
-            fprintf(htrace,"BRK");
-          #endif
-          CPU_CYCLES(7)
+        r6502_pc++;
+        STACK_PUSH((r6502_pc & 0xFF00)>>8);
+        STACK_PUSH(r6502_pc & 0x00FF);
+        SETFLAG(BFLAG)
+        n = PROCESSORSTATUS(BFLAG)
+        STACK_PUSH(n)
+        SETFLAG(IFLAG)
+        r6502_pc = (memory[0xFFFF]<<8) + memory[0xFFFE];
+        fprintf(htrace,"PC=&%X\n",r6502_pc);
+        #ifdef __DEVELOP__
+          fprintf(htrace,"BRK");
         #endif
+        CPU_CYCLES(7)
         break;
       case 0x01:
         /*ORA*/
-        #ifdef __RISCOS__
-          /*r6502ora(n);*/
-          r6502opcode01();
-        #else
-          VALUEOFPREINDEXED
-          r6502_a |= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(6)
-        #endif
+        VALUEOFPREINDEXED
+        r6502_a |= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"ORA 01");
         #endif
@@ -1264,74 +1092,56 @@ void r6502execute(void)
       case 0x03:
         /*ASO*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode03();
-          #else
-            ADDRESSOFPREINDEXED
-            n1 = r6502read(n);
-            if (n1 & 0x80)
-              SETFLAG(CFLAG)
-            else
-              CLEARFLAG(CFLAG)
-            n1 = (n1 << 1);
-            r6502write(n,n1);
-            r6502_a |= n1;
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            CPU_CYCLES(8)
-          #endif
+          ADDRESSOFPREINDEXED
+          n1 = r6502read(n);
+          if (n1 & 0x80)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          n1 = (n1 << 1);
+          r6502write(n,n1);
+          r6502_a |= n1;
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          CPU_CYCLES(8)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x04:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcode04();
-        #else
-          r6502_pc++;
-          /*not sure if we need this?*/
-          /*VALUEOFZEROPAGE*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(3)
+        r6502_pc++;
+        /*not sure if we need this?*/
+        /*VALUEOFZEROPAGE*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(3)
         break;
       case 0x05:
         /*ORA*/
-        #ifdef __RISCOS__
-          /*r6502ora(n);*/
-          r6502opcode05();
-        #else
-          VALUEOFZEROPAGE
-          r6502_a |= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(3)
-        #endif
+        VALUEOFZEROPAGE
+        r6502_a |= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(3)
         #ifdef __DEBUG__
           fprintf(htrace,"ORA 05");
         #endif
         break;
       case 0x06:
         /*ASL*/
-        #ifdef __RISCOS__
-          /*n2 = r6502asl(n1);*/
-          r6502opcode06();
-        #else
-          ADDRESSOFZEROPAGE
-          n1 = memory[n];
-          if (n1 & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n2 = (n1<<1);
-          SETNFLAG(n2)
-          SETZFLAG(n2)
-          memory[n] = n2;
-          CPU_CYCLES(5)
-        #endif
+        ADDRESSOFZEROPAGE
+        n1 = memory[n];
+        if (n1 & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n2 = (n1<<1);
+        SETNFLAG(n2)
+        SETZFLAG(n2)
+        memory[n] = n2;
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
           fprintf(htrace,"ASL &%X",n);
         #endif
@@ -1339,138 +1149,101 @@ void r6502execute(void)
       case 0x07:
         /*ASO*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode07();
-          #else
-            ADDRESSOFZEROPAGE
-            n1 = memory[n];
-            if (n1 & 0x80)
-              SETFLAG(CFLAG)
-            else
-              CLEARFLAG(CFLAG)
-            n1 = (n1 << 1);
-            memory[n] = n1;
-            r6502_a |= n1;
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            CPU_CYCLES(5)
-          #endif
+          ADDRESSOFZEROPAGE
+          n1 = memory[n];
+          if (n1 & 0x80)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          n1 = (n1 << 1);
+          memory[n] = n1;
+          r6502_a |= n1;
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          CPU_CYCLES(5)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x08:
         /*PHP*/
-        #ifdef __RISCOS__
-          /*r6502php();*/
-          r6502opcode08();
-        #else
-          n = PROCESSORSTATUS(BFLAG)
-          STACK_PUSH(n)
-          CPU_CYCLES(3)
-        #endif
+        n = PROCESSORSTATUS(BFLAG)
+        STACK_PUSH(n)
+        CPU_CYCLES(3)
         #ifdef __DEBUG__
           fprintf(htrace,"PHP &%X (sp=&%X)",n, r6502_sp);
         #endif
         break;
       case 0x09:
         /*ORA*/
-        #ifdef __RISCOS__
-          /*r6502ora(n);*/
-          r6502opcode09();
-        #else
-          VALUEOFIMMEDIATE
-          r6502_a |= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(2)
-        #endif
+        VALUEOFIMMEDIATE
+        r6502_a |= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"ORA #&%X",n);
         #endif
         break;
       case 0x0A:
         /*ASL*/
-        #ifdef __RISCOS__
-          /*r6502_a = r6502asl(r6502_a);*/
-          r6502opcode0A();
-        #else
-          if (r6502_a & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          r6502_a = (r6502_a<<1);
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(2)
-        #endif
+        if (r6502_a & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        r6502_a = (r6502_a<<1);
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"ASL A");
         #endif
         break;
       case 0x0B:
         /*ANC*/
-        #ifdef __RISCOS__
-          r6502opcode0B();
-        #else
-          VALUEOFIMMEDIATE
-          r6502_a &= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          if (r6502_a & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          CPU_CYCLES(2)
-          #ifdef __DEBUG__
-            fprintf(htrace,"ANC #&%X",n);
-          #endif
+        VALUEOFIMMEDIATE
+        r6502_a &= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        if (r6502_a & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        CPU_CYCLES(2)
+        #ifdef __DEBUG__
+          fprintf(htrace,"ANC #&%X",n);
         #endif
         break;
       case 0x0C:
         /*SKW*/
-        #ifdef __RISCOS__
-          r6502opcode0C();
-        #else
-          r6502_pc += 2;
-          /*VALUEOFABSOLUTE*/
-          CPU_CYCLES(4)
-        #endif
+        r6502_pc += 2;
+        /*VALUEOFABSOLUTE*/
+        CPU_CYCLES(4)
         break;
       case 0x0D:
         /*ORA*/
-        #ifdef __RISCOS__
-          /*r6502ora(n);*/
-          r6502opcode0D();
-        #else
-          VALUEOFABSOLUTE
-          r6502_a |= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTE
+        r6502_a |= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"ORA");
         #endif
         break;
       case 0x0E:
         /*ASL*/
-        #ifdef __RISCOS__
-          /*n2 = r6502asl(n1);*/
-          r6502opcode0E();
-        #else
-          ADDRESSOFABSOLUTE
-          n1 = r6502read(n);
-          if (n1 & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n2 = (n1<<1);
-          SETNFLAG(n2)
-          SETZFLAG(n2)
-          r6502write(n,n2);
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFABSOLUTE
+        n1 = r6502read(n);
+        if (n1 & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n2 = (n1<<1);
+        SETNFLAG(n2)
+        SETZFLAG(n2)
+        r6502write(n,n2);
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"ASL &%X",n);
         #endif
@@ -1478,13 +1251,9 @@ void r6502execute(void)
       case 0x0F:
         /*ASO*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode0F();
-          #else
-            ADDRESSOFABSOLUTE
-            CPU_CYCLES(6)
-            r6502badopcode();
-          #endif
+          ADDRESSOFABSOLUTE
+          CPU_CYCLES(6)
+          r6502badopcode();
         #else
           r6502badopcode();
         #endif
@@ -1500,48 +1269,39 @@ void r6502execute(void)
           if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A0A)
           fprintf(htrace,"BPL %X",(r6502_ps & NFLAG));
         #endif
-        #ifdef __RISCOS__
-          r6502opcode10();
-        #else
-          if (!(r6502_ps & NFLAG))
-          {
-            VALUEOFIMMEDIATE
-            /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
-            n1 = (r6502_pc >> 8);
-            if (n & 0x80)
-              r6502_pc -= (0x100 - n);
-            else
-              r6502_pc += n;
-            /*if page boundary crossed*/
-            /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
-            if (n1 != (r6502_pc >> 8))
-              CPU_CYCLES(4)
-            else
-              CPU_CYCLES(3)
-            #ifdef __DEBUG__
-              if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A0A)
-                fprintf(htrace," &%X",r6502_pc);
-            #endif
-          }
+        if (!(r6502_ps & NFLAG))
+        {
+          VALUEOFIMMEDIATE
+          /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
+          n1 = (r6502_pc >> 8);
+          if (n & 0x80)
+            r6502_pc -= (0x100 - n);
           else
-          {
-            r6502_pc++;
-            CPU_CYCLES(2)
-          }
-        #endif
+            r6502_pc += n;
+          /*if page boundary crossed*/
+          /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
+          if (n1 != (r6502_pc >> 8))
+            CPU_CYCLES(4)
+          else
+            CPU_CYCLES(3)
+          #ifdef __DEBUG__
+            if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A0A)
+              fprintf(htrace," &%X",r6502_pc);
+          #endif
+        }
+        else
+        {
+          r6502_pc++;
+          CPU_CYCLES(2)
+        }
         break;
       case 0x11:
         /*ORA*/
-        #ifdef __RISCOS__
-          /*r6502ora(n);*/
-          r6502opcode11();
-        #else
-          VALUEOFPOSTINDEXEDY
-          r6502_a |= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(5)
-        #endif
+        VALUEOFPOSTINDEXEDY
+        r6502_a |= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
           fprintf(htrace,"ORA");
         #endif
@@ -1552,64 +1312,46 @@ void r6502execute(void)
       case 0x13:
         /*ASO*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode13();
-          #else
-            ADDRESSOFPOSTINDEXEDY
-            CPU_CYCLES(8)
-            r6502badopcode();
-          #endif
+          ADDRESSOFPOSTINDEXEDY
+          CPU_CYCLES(8)
+          r6502badopcode();
         #else
           r6502badopcode();
         #endif
         break;
       case 0x14:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcode14();
-        #else
-          r6502_pc++;
-          /*VALUEOFZEROPAGEX*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(3)
+        r6502_pc++;
+        /*VALUEOFZEROPAGEX*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(3)
         break;
       case 0x15:
         /*ORA*/
-        #ifdef __RISCOS__
-          /*r6502ora(n);*/
-          r6502opcode15();
-        #else
-          VALUEOFZEROPAGEX
-          r6502_a |= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFZEROPAGEX
+        r6502_a |= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"ORA");
         #endif
         break;
       case 0x16:
         /*ASL*/
-        #ifdef __RISCOS__
-          /*n2 = r6502asl(n1);*/
-          r6502opcode16();
-        #else
-          ADDRESSOFZEROPAGEX
-          n1 = memory[n];
-          if (n1 & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n2 = (n1<<1);
-          SETNFLAG(n2)
-          SETZFLAG(n2)
-          memory[n] = n2;
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFZEROPAGEX
+        n1 = memory[n];
+        if (n1 & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n2 = (n1<<1);
+        SETNFLAG(n2)
+        SETZFLAG(n2)
+        memory[n] = n2;
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"ASL &%X",n);
         #endif
@@ -1617,41 +1359,28 @@ void r6502execute(void)
       case 0x17:
         /*ASO*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode17();
-          #else
-            ADDRESSOFZEROPAGEX
-            CPU_CYCLES(6)
-            r6502badopcode();
-          #endif
+          ADDRESSOFZEROPAGEX
+          CPU_CYCLES(6)
+          r6502badopcode();
         #else
           r6502badopcode();
         #endif
         break;
       case 0x18:
         /*CLC*/
-        #ifdef __RISCOS__
-          r6502opcode18();
-        #else
-          CLEARFLAG(CFLAG);
-          #ifdef __DEBUG__
-            fprintf(htrace,"CLC");
-          #endif
-          CPU_CYCLES(2)
+        CLEARFLAG(CFLAG);
+        #ifdef __DEBUG__
+          fprintf(htrace,"CLC");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0x19:
         /*ORA*/
-        #ifdef __RISCOS__
-          /*r6502ora(n);*/
-          r6502opcode19();
-        #else
-          VALUEOFABSOLUTEYPLUS
-          r6502_a |= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTEYPLUS
+        r6502_a |= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"ORA");
         #endif
@@ -1667,61 +1396,43 @@ void r6502execute(void)
       case 0x1B:
         /*ASO*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode18();
-          #else
-            ADDRESSOFABSOLUTEY
-            CPU_CYCLES(7)
-            r6502badopcode();
-          #endif
+          ADDRESSOFABSOLUTEY
+          CPU_CYCLES(7)
+          r6502badopcode();
         #else
           r6502badopcode();
         #endif
         break;
       case 0x1C:
         /*SKW*/
-        #ifdef __RISCOS__
-          r6502opcode1C();
-        #else
-          r6502_pc += 2;
-          /*VALUEOFABSOLUTEXPLUS*/
-          CPU_CYCLES(4)
-        #endif
+        r6502_pc += 2;
+        /*VALUEOFABSOLUTEXPLUS*/
+        CPU_CYCLES(4)
         break;
       case 0x1D:
         /*ORA*/
-        #ifdef __RISCOS__
-          /*r6502ora(n);*/
-          r6502opcode1D();
-        #else
-          VALUEOFABSOLUTEXPLUS
-          r6502_a |= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTEXPLUS
+        r6502_a |= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"ORA");
         #endif
         break;
       case 0x1E:
         /*ASL*/
-        #ifdef __RISCOS__
-          /*n2 = r6502asl(n1);*/
-          r6502opcode1E();
-        #else
-          ADDRESSOFABSOLUTEX
-          n1 = r6502read(n);
-          if (n1 & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n2 = (n1<<1);
-          SETNFLAG(n2)
-          SETZFLAG(n2)
-          r6502write(n,n2);
-          CPU_CYCLES(7)
-        #endif
+        ADDRESSOFABSOLUTEX
+        n1 = r6502read(n);
+        if (n1 & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n2 = (n1<<1);
+        SETNFLAG(n2)
+        SETZFLAG(n2)
+        r6502write(n,n2);
+        CPU_CYCLES(7)
         #ifdef __DEBUG__
           fprintf(htrace,"ASL &%X",n);
         #endif
@@ -1729,57 +1440,43 @@ void r6502execute(void)
       case 0x1F:
         /*ASO*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode1F();
-          #else
-            ADDRESSOFABSOLUTEX
-            CPU_CYCLES(7)
-            r6502badopcode();
-          #endif
+          ADDRESSOFABSOLUTEX
+          CPU_CYCLES(7)
+          r6502badopcode();
         #else
           r6502badopcode();
         #endif
         break;
       case 0x20:
         /*JSR*/
-        #ifdef __RISCOS__
-          /*r6502jsr();*/
-          r6502opcode20();
-        #else
-          ADDRESSOFABSOLUTE
-          /*if (n == 0xFFEE)
-            fprintf(htrace,"<<&%X=%c>>",r6502_a,r6502_a);*/
-          #ifdef __DEVELOP__
-            if (beebit_trace)
-              fprintf(htrace,"JSR &%X ",n);
-          #endif
-          #ifdef __DEBUG__
-            if (r6502_pc < 0x8000)
-            {
-              if (n == 0xFFEE)
-                fprintf(htrace,"<<%c>>",r6502_a);
-              fprintf(htrace,"JSR &%X",n);
-            }
-          #endif
-          r6502_pc--;
-          STACK_PUSH((r6502_pc & 0xFF00)>>8);
-          STACK_PUSH(r6502_pc & 0x00FF);
-          r6502_pc = n;
-          CPU_CYCLES(6)
+        ADDRESSOFABSOLUTE
+        /*if (n == 0xFFEE)
+          fprintf(htrace,"<<&%X=%c>>",r6502_a,r6502_a);*/
+        #ifdef __DEVELOP__
+          if (beebit_trace)
+            fprintf(htrace,"JSR &%X ",n);
         #endif
+        #ifdef __DEBUG__
+          if (r6502_pc < 0x8000)
+          {
+            if (n == 0xFFEE)
+              fprintf(htrace,"<<%c>>",r6502_a);
+            fprintf(htrace,"JSR &%X",n);
+          }
+        #endif
+        r6502_pc--;
+        STACK_PUSH((r6502_pc & 0xFF00)>>8);
+        STACK_PUSH(r6502_pc & 0x00FF);
+        r6502_pc = n;
+        CPU_CYCLES(6)
         break;
       case 0x21:
         /*AND*/
-        #ifdef __RISCOS__
-          /*r6502and(n);*/
-          r6502opcode21();
-        #else
-          VALUEOFPREINDEXED
-          r6502_a &= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(6)
-        #endif
+        VALUEOFPREINDEXED
+        r6502_a &= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"AND");
         #endif
@@ -1791,44 +1488,36 @@ void r6502execute(void)
         /*RLA*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace,"RLA 23 &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode23();
-          #else
-            ADDRESSOFPREINDEXED
-            n1 = (r6502_ps & CFLAG);
-            n2 = r6502read(n);
-            if (n2 & 0x80)
-              SETFLAG(CFLAG)
-            else
-              CLEARFLAG(CFLAG)
-            n2 = (n2<<1);
-            if (n1)
-              n2 += 1;
-            r6502write(n,n2);
-            r6502_a &= n2;
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            #ifdef __DEBUG__
-              fprintf(htrace,"RLA &%X",n);
-            #endif
-            CPU_CYCLES(8)
+          ADDRESSOFPREINDEXED
+          n1 = (r6502_ps & CFLAG);
+          n2 = r6502read(n);
+          if (n2 & 0x80)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          n2 = (n2<<1);
+          if (n1)
+            n2 += 1;
+          r6502write(n,n2);
+          r6502_a &= n2;
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          #ifdef __DEBUG__
+            fprintf(htrace,"RLA &%X",n);
           #endif
+          CPU_CYCLES(8)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x24:
         /*BIT*/
-        #ifdef __RISCOS__
-          r6502opcode24();
-        #else
-          VALUEOFZEROPAGE
-          n1 = (r6502_a & n);
-          SETZFLAG(n1)
-          SETNFLAG(n)
-          SETVFLAG(n)
-          CPU_CYCLES(3)
-        #endif
+        VALUEOFZEROPAGE
+        n1 = (r6502_a & n);
+        SETZFLAG(n1)
+        SETNFLAG(n)
+        SETVFLAG(n)
+        CPU_CYCLES(3)
         #ifdef __DEBUG__
         if (beebit_trace)
           fprintf(htrace,"BIT &%X=&%X Z=&%X N=&%X V=&%X ", memory[r6502_pc-1],n,r6502_z,r6502_n,r6502_v);
@@ -1836,43 +1525,32 @@ void r6502execute(void)
         break;
       case 0x25:
         /*AND*/
-        #ifdef __RISCOS__
-          /*r6502and(n);*/
-          r6502opcode25();
-        #else
-          VALUEOFZEROPAGE
-          r6502_a &= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(3)
-        #endif
+        VALUEOFZEROPAGE
+        r6502_a &= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(3)
         #ifdef __DEBUG__
           fprintf(htrace,"AND %X",n);
         #endif
         break;
       case 0x26:
         /*ROL*/
-        #ifdef __RISCOS__
-          /*n1 = r6502rol(n1);*/
-          r6502opcode26();
-        #else
-          ADDRESSOFZEROPAGE
-          n1 = memory[n];
-          n2 = (r6502_ps & CFLAG);
-          if (n1 & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n1 = (n1<<1);
-          if (n2)
-            n1 |= 1;
-          SETNFLAG(n1)
-          SETZFLAG(n1)
-          memory[n] = n1;
-          CPU_CYCLES(5)
-        #endif
+        ADDRESSOFZEROPAGE
+        n1 = memory[n];
+        n2 = (r6502_ps & CFLAG);
+        if (n1 & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n1 = (n1<<1);
+        if (n2)
+          n1 |= 1;
+        SETNFLAG(n1)
+        SETZFLAG(n1)
+        memory[n] = n1;
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
-          if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A0A)
           fprintf(htrace,"ROL &%X",n);
         #endif
         break;
@@ -1880,63 +1558,50 @@ void r6502execute(void)
         /*RLA*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace,"RLA 27\n");
-          #ifdef __RISCOS__
-            r6502opcode27();
-          #else
-            ADDRESSOFZEROPAGE
-            n1 = (r6502_ps & CFLAG);
-            if (memory[n] & 0x80)
-              SETFLAG(CFLAG)
-            else
-              CLEARFLAG(CFLAG)
-            n2 = (memory[n]<<1);
-            if (n1)
-              n2 += 1;
-            memory[n] = n2;
-            r6502_a &= n2;
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            #ifdef __DEBUG__
-              fprintf(htrace,"RLA &%X",n);
-            #endif
-            CPU_CYCLES(5)
+          ADDRESSOFZEROPAGE
+          n1 = (r6502_ps & CFLAG);
+          if (memory[n] & 0x80)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          n2 = (memory[n]<<1);
+          if (n1)
+            n2 += 1;
+          memory[n] = n2;
+          r6502_a &= n2;
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          #ifdef __DEBUG__
+            fprintf(htrace,"RLA &%X",n);
           #endif
+          CPU_CYCLES(5)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x28:
         /*PLP*/
-        #ifdef __RISCOS__
-          r6502opcode28();
-        #else
-          STACK_POP(r6502_ps);
-          CPU_CYCLES(4)
-          /*if (beebit_irq AND !(r6502_ps & IFLAG))*/
-          if (!(r6502_ps & IFLAG))
-          {
-            /*beebit_irq = (r6522sysvia_irq | r6522usrvia_irq);*/
-            if (beebit_irq)
-              updatetimers();
-            /*r6502doirq();*/
-          }
-          #ifdef __DEBUG__
-            fprintf(htrace,"PLP &%X",n);
-          #endif
+        STACK_POP(r6502_ps);
+        CPU_CYCLES(4)
+        /*if (beebit_irq AND !(r6502_ps & IFLAG))*/
+        if (!(r6502_ps & IFLAG))
+        {
+          /*beebit_irq = (r6522sysvia_irq | r6522usrvia_irq);*/
+          if (beebit_irq)
+            updatetimers();
+          /*r6502doirq();*/
+        }
+        #ifdef __DEBUG__
+          fprintf(htrace,"PLP &%X",n);
         #endif
         break;
       case 0x29:
         /*AND*/
-        #ifdef __RISCOS__
-          /*r6502and(n);*/
-          r6502opcode29();
-        #else
-          VALUEOFIMMEDIATE
-          r6502_a &= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(2)
-        #endif
+        VALUEOFIMMEDIATE
+        r6502_a &= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(2)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"AND #&%X",n);
@@ -1944,98 +1609,75 @@ void r6502execute(void)
         break;
       case 0x2A:
         /*ROL*/
-        #ifdef __RISCOS__
-          /*r6502_a = r6502rol(r6502_a);*/
-          r6502opcode2A();
-        #else
-          n2 = (r6502_ps & CFLAG); /*old c flag*/
-          if (r6502_a & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          r6502_a = (r6502_a<<1);
-          if (n2)
-            r6502_a |= 1;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(2)
-        #endif
+        n2 = (r6502_ps & CFLAG); /*old c flag*/
+        if (r6502_a & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        r6502_a = (r6502_a<<1);
+        if (n2)
+          r6502_a |= 1;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"ROL A");
         #endif
         break;
       case 0x2B:
         /*ANC*/
-        #ifdef __RISCOS__
-          r6502opcode2B();
-        #else
-          VALUEOFIMMEDIATE
-          r6502_a &= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          if (r6502_a & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          CPU_CYCLES(2)
-          #ifdef __DEBUG__
-            fprintf(htrace,"ANC #&%X",n);
-          #endif
+        VALUEOFIMMEDIATE
+        r6502_a &= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        if (r6502_a & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        CPU_CYCLES(2)
+        #ifdef __DEBUG__
+          fprintf(htrace,"ANC #&%X",n);
         #endif
         break;
       case 0x2C:
         /*BIT*/
-        #ifdef __RISCOS__
-          r6502opcode2C();
-        #else
-          VALUEOFABSOLUTE
-          n1 = (r6502_a & n);
-          SETZFLAG(n1)
-          SETNFLAG(n)
-          SETVFLAG(n)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTE
+        n1 = (r6502_a & n);
+        SETZFLAG(n1)
+        SETNFLAG(n)
+        SETVFLAG(n)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"BIT &%X",n);
         #endif
         break;
       case 0x2D:
         /*AND*/
-        #ifdef __RISCOS__
-          /*r6502and(n);*/
-          r6502opcode2D();
-        #else
-          VALUEOFABSOLUTE
-          r6502_a &= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTE
+        r6502_a &= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"AND (&%X)",n);
         #endif
         break;
       case 0x2E:
         /*ROL*/
-        #ifdef __RISCOS__
-          /*n1 = r6502rol(n1);*/
-          r6502opcode2E();
-        #else
-          ADDRESSOFABSOLUTE
-          n1 = r6502read(n);
-          n2 = (r6502_ps & CFLAG);
-          if (n1 & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n1 = (n1<<1);
-          if (n2)
-            n1 |= 1;
-          SETNFLAG(n1)
-          SETZFLAG(n1)
-          r6502write(n,n1);
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFABSOLUTE
+        n1 = r6502read(n);
+        n2 = (r6502_ps & CFLAG);
+        if (n1 & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n1 = (n1<<1);
+        if (n2)
+          n1 |= 1;
+        SETNFLAG(n1)
+        SETZFLAG(n1)
+        r6502write(n,n1);
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"ROL &%X",n);
         #endif
@@ -2044,13 +1686,9 @@ void r6502execute(void)
         /*RLA*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace,"RLA 2F\n");
-          #ifdef __RISCOS__
-            r6502opcode2F();
-          #else
-            ADDRESSOFABSOLUTE
-            CPU_CYCLES(6)
-            r6502badopcode();
-          #endif
+          ADDRESSOFABSOLUTE
+          CPU_CYCLES(6)
+          r6502badopcode();
         #endif
         break;
       case 0x30:
@@ -2063,47 +1701,38 @@ void r6502execute(void)
         #ifdef __DEBUG__
           fprintf(htrace,"BMI %X",(r6502_ps & NFLAG));
         #endif
-        #ifdef __RISCOS__
-          r6502opcode30();
-        #else
-          if (r6502_ps & NFLAG)
-          {
-            VALUEOFIMMEDIATE
-            /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
-            n1 = (r6502_pc >> 8);
-            if (n & 0x80)
-              r6502_pc -= (0x100 - n);
-            else
-              r6502_pc += n;
-            /*if page boundary crossed*/
-            /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
-            if (n1 != (r6502_pc >> 8))
-              CPU_CYCLES(4)
-            else
-              CPU_CYCLES(3)
-            #ifdef __DEBUG__
-              fprintf(htrace," &%X",r6502_pc);
-            #endif
-          }
+        if (r6502_ps & NFLAG)
+        {
+          VALUEOFIMMEDIATE
+          /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
+          n1 = (r6502_pc >> 8);
+          if (n & 0x80)
+            r6502_pc -= (0x100 - n);
           else
-          {
-            r6502_pc++;
-            CPU_CYCLES(2)
-          }
-        #endif
+            r6502_pc += n;
+          /*if page boundary crossed*/
+          /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
+          if (n1 != (r6502_pc >> 8))
+            CPU_CYCLES(4)
+          else
+            CPU_CYCLES(3)
+          #ifdef __DEBUG__
+            fprintf(htrace," &%X",r6502_pc);
+          #endif
+        }
+        else
+        {
+          r6502_pc++;
+          CPU_CYCLES(2)
+        }
         break;
       case 0x31:
         /*AND*/
-        #ifdef __RISCOS__
-          /*r6502and(n);*/
-          r6502opcode31();
-        #else
-          VALUEOFPOSTINDEXEDY
-          r6502_a &= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(5)
-        #endif
+        VALUEOFPOSTINDEXEDY
+        r6502_a &= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
           fprintf(htrace,"AND");
         #endif
@@ -2115,83 +1744,65 @@ void r6502execute(void)
         /*RLA*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace,"RLA 23 &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode33();
-          #else
-            ADDRESSOFPOSTINDEXEDY
-            n1 = (r6502_ps & CFLAG);
-            n2 = r6502read(n);
-            if (n2 & 0x80)
-              SETFLAG(CFLAG)
-            else
-              CLEARFLAG(CFLAG)
-            n2 = (n2<<1);
-            if (n1)
-              n2 += 1;
-            r6502write(n,n2);
-            r6502_a &= n2;
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            #ifdef __DEBUG__
-              fprintf(htrace,"RLA &%X",n);
-            #endif
-            CPU_CYCLES(8)
+          ADDRESSOFPOSTINDEXEDY
+          n1 = (r6502_ps & CFLAG);
+          n2 = r6502read(n);
+          if (n2 & 0x80)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          n2 = (n2<<1);
+          if (n1)
+            n2 += 1;
+          r6502write(n,n2);
+          r6502_a &= n2;
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          #ifdef __DEBUG__
+            fprintf(htrace,"RLA &%X",n);
           #endif
+          CPU_CYCLES(8)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x34:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcode34();
-        #else
-          r6502_pc++;
-          /*VALUEOFZEROPAGEX*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(3)
+        r6502_pc++;
+        /*VALUEOFZEROPAGEX*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(3)
         break;
       case 0x35:
         /*AND*/
-        #ifdef __RISCOS__
-          /*r6502and(n);*/
-          r6502opcode35();
-        #else
-          VALUEOFZEROPAGEX
-          r6502_a &= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFZEROPAGEX
+        r6502_a &= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"AND");
         #endif
         break;
       case 0x36:
         /*ROL*/
-        #ifdef __RISCOS__
-          /*n1 = r6502rol(n1);*/
-          r6502opcode36();
-        #else
-          ADDRESSOFZEROPAGEX
-          n1 = memory[n];
-          /*save old cflag*/
-          n2 = (r6502_ps & CFLAG);
-          if (n1 & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n1 = (n1<<1);
-          if (n2)
-            n1 |= 1;
-          SETNFLAG(n1)
-          SETZFLAG(n1)
-          memory[n] = n1;
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFZEROPAGEX
+        n1 = memory[n];
+        /*save old cflag*/
+        n2 = (r6502_ps & CFLAG);
+        if (n1 & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n1 = (n1<<1);
+        if (n2)
+          n1 |= 1;
+        SETNFLAG(n1)
+        SETZFLAG(n1)
+        memory[n] = n1;
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"ROL &%X",n);
         #endif
@@ -2200,41 +1811,28 @@ void r6502execute(void)
         /*RLA*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace,"RLA 37 &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode37();
-          #else
-            ADDRESSOFZEROPAGEX
-            CPU_CYCLES(6)
-            r6502badopcode();
-          #endif
+          ADDRESSOFZEROPAGEX
+          CPU_CYCLES(6)
+          r6502badopcode();
         #else
           r6502badopcode();
         #endif
         break;
       case 0x38:
         /*SEC*/
-        #ifdef __RISCOS__
-          r6502opcode38();
-        #else
-          SETFLAG(CFLAG)
-          #ifdef __DEBUG__
-            fprintf(htrace,"SEC");
-          #endif
-          CPU_CYCLES(2)
+        SETFLAG(CFLAG)
+        #ifdef __DEBUG__
+          fprintf(htrace,"SEC");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0x39:
         /*AND*/
-        #ifdef __RISCOS__
-          /*r6502and(n);*/
-          r6502opcode39();
-        #else
-          VALUEOFABSOLUTEYPLUS
-          r6502_a &= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTEYPLUS
+        r6502_a &= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"AND");
         #endif
@@ -2251,80 +1849,62 @@ void r6502execute(void)
         /*RLA*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace,"RLA 3B &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode3B();
-          #else
-            ADDRESSOFABSOLUTEY
-            n1 = (r6502_ps & CFLAG);
-            n2 = r6502read(n);
-            if (n2 & 0x80)
-              SETFLAG(CFLAG)
-            else
-              CLEARFLAG(CFLAG)
-            n2 = (n2<<1);
-            if (n1)
-              n2 += 1;
-            r6502write(n,n2);
-            r6502_a &= n2;
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            #ifdef __DEBUG__
-              fprintf(htrace,"RLA &%X",n);
-            #endif
-            CPU_CYCLES(7)
+          ADDRESSOFABSOLUTEY
+          n1 = (r6502_ps & CFLAG);
+          n2 = r6502read(n);
+          if (n2 & 0x80)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          n2 = (n2<<1);
+          if (n1)
+            n2 += 1;
+          r6502write(n,n2);
+          r6502_a &= n2;
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          #ifdef __DEBUG__
+            fprintf(htrace,"RLA &%X",n);
           #endif
+          CPU_CYCLES(7)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x3C:
         /*SKW*/
-        #ifdef __RISCOS__
-          r6502opcode3C();
-        #else
-          r6502_pc += 2;
-          /*VALUEOFABSOLUTEXPLUS*/
-          CPU_CYCLES(4)
-        #endif
+        r6502_pc += 2;
+        /*VALUEOFABSOLUTEXPLUS*/
+        CPU_CYCLES(4)
         break;
       case 0x3D:
         /*AND*/
-        #ifdef __RISCOS__
-          /*r6502and(n);*/
-          r6502opcode3D();
-        #else
-          VALUEOFABSOLUTEXPLUS
-          r6502_a &= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTEXPLUS
+        r6502_a &= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"AND");
         #endif
         break;
       case 0x3E:
         /*ROL*/
-        #ifdef __RISCOS__
-          /*n1 = r6502rol(n1);*/
-          r6502opcode3E();
-        #else
-          ADDRESSOFABSOLUTEX
-          n1 = r6502read(n);
-          /*save old cflag*/
-          n2 = (r6502_ps & CFLAG);
-          if (n1 & 0x80)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n1 = (n1<<1);
-          if (n2)
-            n1 |= 1;
-          SETNFLAG(n1)
-          SETZFLAG(n1)
-          r6502write(n,n1);
-          CPU_CYCLES(7)
-        #endif
+        ADDRESSOFABSOLUTEX
+        n1 = r6502read(n);
+        /*save old cflag*/
+        n2 = (r6502_ps & CFLAG);
+        if (n1 & 0x80)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n1 = (n1<<1);
+        if (n2)
+          n1 |= 1;
+        SETNFLAG(n1)
+        SETZFLAG(n1)
+        r6502write(n,n1);
+        CPU_CYCLES(7)
         #ifdef __DEBUG__
           fprintf(htrace,"ROL &%X",n);
         #endif
@@ -2333,25 +1913,21 @@ void r6502execute(void)
         /*RLA*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace,"RLA 3F &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode3F();
-          #else
-            ADDRESSOFABSOLUTEX
-            n1 = (r6502_ps & CFLAG);
-            n2 = r6502read(n);
-            if (n2 & 0x80)
-              SETFLAG(CFLAG)
-            else
-              CLEARFLAG(CFLAG)
-            n2 = (n2<<1);
-            if (n1)
-              n2 += 1;
-            r6502write(n,n2);
-            r6502_a &= n2;
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            CPU_CYCLES(7)
-          #endif
+          ADDRESSOFABSOLUTEX
+          n1 = (r6502_ps & CFLAG);
+          n2 = r6502read(n);
+          if (n2 & 0x80)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          n2 = (n2<<1);
+          if (n1)
+            n2 += 1;
+          r6502write(n,n2);
+          r6502_a &= n2;
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          CPU_CYCLES(7)
         #else
           r6502badopcode();
         #endif
@@ -2361,41 +1937,31 @@ void r6502execute(void)
         #ifdef __DEBUG__
           fprintf(htrace,"RTI");
         #endif
-        #ifdef __RISCOS__
-          /*r6502rti();*/
-          r6502opcode40();
-        #else
-          STACK_POP(r6502_ps)
-          STACK_POP(nlo);
-          STACK_POP(nhi);
-          r6502_pc = (nhi<<8)+nlo;
-          CPU_CYCLES(6)
-          /*Rig Attack goes into an endless loop if this check is here*/
-          /*if (beebit_trace)
-            fprintf(htrace,"IRQ=&%X &%X\n",r6522sysvia_irq,r6522usrvia_irq);*/
-          /*beebit_irq = (r6522sysvia_irq | r6522usrvia_irq);
-          if (beebit_irq AND !(r6502_ps & IFLAG))*/
-          if (!(r6502_ps & IFLAG))
-          {
-            beebit_irq = (r6522sysvia_irq | r6522usrvia_irq);
-            if (beebit_irq)
-              updatetimers();
-            /*r6502doirq();*/
-          }
-        #endif
+        STACK_POP(r6502_ps)
+        STACK_POP(nlo);
+        STACK_POP(nhi);
+        r6502_pc = (nhi<<8)+nlo;
+        CPU_CYCLES(6)
+        /*Rig Attack goes into an endless loop if this check is here*/
+        /*if (beebit_trace)
+          fprintf(htrace,"IRQ=&%X &%X\n",r6522sysvia_irq,r6522usrvia_irq);*/
+        /*beebit_irq = (r6522sysvia_irq | r6522usrvia_irq);
+        if (beebit_irq AND !(r6502_ps & IFLAG))*/
+        if (!(r6502_ps & IFLAG))
+        {
+          beebit_irq = (r6522sysvia_irq | r6522usrvia_irq);
+          if (beebit_irq)
+            updatetimers();
+          /*r6502doirq();*/
+        }
         break;
       case 0x41:
         /*EOR*/
-        #ifdef __RISCOS__
-          /*r6502eor(n);*/
-          r6502opcode41();
-        #else
-          VALUEOFPREINDEXED
-          r6502_a ^= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(6)
-        #endif
+        VALUEOFPREINDEXED
+        r6502_a ^= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"EOR");
         #endif
@@ -2421,51 +1987,37 @@ void r6502execute(void)
         break;
       case 0x44:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcode44();
-        #else
-          r6502_pc++;
-          /*VALUEOFZEROPAGE*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(3)
+        r6502_pc++;
+        /*VALUEOFZEROPAGE*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(3)
         break;
       case 0x45:
         /*EOR*/
-        #ifdef __RISCOS__
-          /*r6502eor(n);*/
-          r6502opcode45();
-        #else
-          VALUEOFZEROPAGE
-          r6502_a ^= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(3)
-        #endif
+        VALUEOFZEROPAGE
+        r6502_a ^= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(3)
         #ifdef __DEBUG__
           fprintf(htrace,"EOR");
         #endif
         break;
       case 0x46:
         /*LSR*/
-        #ifdef __RISCOS__
-          /*n2 = r6502lsr(n1);*/
-          r6502opcode46();
-        #else
-          ADDRESSOFZEROPAGE
-          n1 = memory[n];
-          if (n1 & 0x01)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n2 = (n1>>1);
-          CLEARFLAG(NFLAG);
-          SETZFLAG(n2)
-          memory[n] = n2;
-          CPU_CYCLES(5)
-        #endif
+        ADDRESSOFZEROPAGE
+        n1 = memory[n];
+        if (n1 & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n2 = (n1>>1);
+        CLEARFLAG(NFLAG);
+        SETZFLAG(n2)
+        memory[n] = n2;
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
           fprintf(htrace,"LSR &%X",n);
         #endif
@@ -2482,119 +2034,87 @@ void r6502execute(void)
         break;
       case 0x48:
         /*PHA*/
-        #ifdef __RISCOS__
-          r6502opcode48();
-        #else
-          STACK_PUSH(r6502_a);
-          #ifdef __DEBUG__
-            if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A0A)
-              fprintf(htrace,"PHA &%X (sp=&%X)",r6502_a,r6502_sp);
-          #endif
-          CPU_CYCLES(3)
+        STACK_PUSH(r6502_a);
+        #ifdef __DEBUG__
+          if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A0A)
+            fprintf(htrace,"PHA &%X (sp=&%X)",r6502_a,r6502_sp);
         #endif
+        CPU_CYCLES(3)
         break;
       case 0x49:
         /*EOR*/
-        #ifdef __RISCOS__
-          /*r6502eor(n);*/
-          r6502opcode49();
-        #else
-          VALUEOFIMMEDIATE
-          r6502_a ^= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(2)
-        #endif
+        VALUEOFIMMEDIATE
+        r6502_a ^= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"EOR");
         #endif
         break;
       case 0x4A:
         /*LSR*/
-        #ifdef __RISCOS__
-          /*r6502_a = r6502lsr(r6502_a);*/
-          r6502opcode4A();
-        #else
-          if (r6502_a & 0x01)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          r6502_a = (r6502_a>>1);
-          CLEARFLAG(NFLAG);
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(2)
-        #endif
+        if (r6502_a & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        r6502_a = (r6502_a>>1);
+        CLEARFLAG(NFLAG);
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"LSR A");
         #endif
         break;
       case 0x4B:
         /*ALR*/
-        #ifdef __RISCOS__
-          r6502opcode4B();
-        #else
-          VALUEOFIMMEDIATE
-          r6502_a &= n;
-          if (r6502_a & 0x01)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          r6502_a = (r6502_a>>1);
-          CLEARFLAG(NFLAG);
-          SETZFLAG(r6502_a)
-          #ifdef __DEBUG__
-            fprintf(htrace,"ALR");
-          #endif
-          CPU_CYCLES(2)
+        VALUEOFIMMEDIATE
+        r6502_a &= n;
+        if (r6502_a & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        r6502_a = (r6502_a>>1);
+        CLEARFLAG(NFLAG);
+        SETZFLAG(r6502_a)
+        #ifdef __DEBUG__
+          fprintf(htrace,"ALR");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0x4C:
         /*JMP*/
-        #ifdef __RISCOS__
-          r6502opcode4C();
-        #else
-          ADDRESSOFABSOLUTE
-          r6502_pc = n;
-          CPU_CYCLES(3)
-        #endif
+        ADDRESSOFABSOLUTE
+        r6502_pc = n;
+        CPU_CYCLES(3)
         #ifdef __DEBUG__
           fprintf(htrace,"JMP &%X",n);
         #endif
         break;
       case 0x4D:
         /*EOR*/
-        #ifdef __RISCOS__
-          /*r6502eor(n);*/
-          r6502opcode4D();
-        #else
-          VALUEOFABSOLUTE
-          r6502_a ^= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTE
+        r6502_a ^= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"EOR");
         #endif
         break;
       case 0x4E:
         /*LSR*/
-        #ifdef __RISCOS__
-          /*n2 = r6502lsr(n1);*/
-          r6502opcode4E();
-        #else
-          ADDRESSOFABSOLUTE
-          n1 = r6502read(n);
-          if (n1 & 0x01)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n2 = (n1>>1);
-          CLEARFLAG(NFLAG)
-          SETZFLAG(n2)
-          r6502write(n,n2);
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFABSOLUTE
+        n1 = r6502read(n);
+        if (n1 & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n2 = (n1>>1);
+        CLEARFLAG(NFLAG)
+        SETZFLAG(n2)
+        r6502write(n,n2);
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"LSR &%X",n);
         #endif
@@ -2620,48 +2140,39 @@ void r6502execute(void)
           fprintf(htrace,"BVC");
           fprintf(htrace," V=&%X",r6502_v);
         #endif
-        #ifdef __RISCOS__
-          r6502opcode50();
-        #else
-          if (!(r6502_ps & VFLAG))
-          {
-            VALUEOFIMMEDIATE
-            /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
-            n1 = (r6502_pc >> 8);
-            if (n & 0x80)
-              r6502_pc -= (0x100 - n);
-            else
-              r6502_pc += n;
-            /*if page boundary crossed*/
-            /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
-            if (n1 != (r6502_pc >> 8))
-              CPU_CYCLES(4)
-            else
-              CPU_CYCLES(3)
-            #ifdef __DEBUG__
-              fprintf(htrace," &%X",r6502_pc);
-            #endif
-          }
+        if (!(r6502_ps & VFLAG))
+        {
+          VALUEOFIMMEDIATE
+          /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
+          n1 = (r6502_pc >> 8);
+          if (n & 0x80)
+            r6502_pc -= (0x100 - n);
           else
-          {
-            r6502_pc++;
-            CPU_CYCLES(2)
-          }
-        #endif
+            r6502_pc += n;
+          /*if page boundary crossed*/
+          /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
+          if (n1 != (r6502_pc >> 8))
+            CPU_CYCLES(4)
+          else
+            CPU_CYCLES(3)
+          #ifdef __DEBUG__
+            fprintf(htrace," &%X",r6502_pc);
+          #endif
+        }
+        else
+        {
+          r6502_pc++;
+          CPU_CYCLES(2)
+        }
         break;
       case 0x51:
         /*EOR*/
         /*does this use 5 or 7 cycles?*/
-        #ifdef __RISCOS__
-          /*r6502eor(n);*/
-          r6502opcode51();
-        #else
-          VALUEOFPOSTINDEXEDY
-          r6502_a ^= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(5)
-        #endif
+        VALUEOFPOSTINDEXEDY
+        r6502_a ^= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
           fprintf(htrace,"EOR");
         #endif
@@ -2677,51 +2188,37 @@ void r6502execute(void)
         break;
       case 0x54:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcode54();
-        #else
-          r6502_pc++;
-          /*VALUEOFZEROPAGEX*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(3)
+        r6502_pc++;
+        /*VALUEOFZEROPAGEX*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(3)
         break;
       case 0x55:
         /*EOR*/
-        #ifdef __RISCOS__
-          /*r6502eor(n);*/
-          r6502opcode55();
-        #else
-          VALUEOFZEROPAGEX
-          r6502_a ^= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFZEROPAGEX
+        r6502_a ^= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"EOR");
         #endif
         break;
       case 0x56:
         /*LSR*/
-        #ifdef __RISCOS__
-          /*n2 = r6502lsr(n1);*/
-          r6502opcode56();
-        #else
-          ADDRESSOFZEROPAGEX
-          n1 = memory[n];
-          if (n1 & 0x01)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n2 = (n1>>1);
-          CLEARFLAG(NFLAG);
-          SETZFLAG(n2)
-          memory[n] = n2;
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFZEROPAGEX
+        n1 = memory[n];
+        if (n1 & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n2 = (n1>>1);
+        CLEARFLAG(NFLAG);
+        SETZFLAG(n2)
+        memory[n] = n2;
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"LSR &%X",n);
         #endif
@@ -2738,32 +2235,23 @@ void r6502execute(void)
         break;
       case 0x58:
         /*CLI*/
-        #ifdef __RISCOS__
-          r6502opcode58();
-        #else
-          CLEARFLAG(IFLAG);
-          CPU_CYCLES(2)
-          /*beebit_irq = (r6522sysvia_irq | r6522usrvia_irq);*/
-          if (beebit_irq) /* AND !(r6502_ps & IFLAG))*/
-            updatetimers();
-            /*r6502doirq();*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"CLI IRQ=&%x",beebit_irq);
-          #endif
+        CLEARFLAG(IFLAG);
+        CPU_CYCLES(2)
+        /*beebit_irq = (r6522sysvia_irq | r6522usrvia_irq);*/
+        if (beebit_irq) /* AND !(r6502_ps & IFLAG))*/
+          updatetimers();
+          /*r6502doirq();*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"CLI IRQ=&%x",beebit_irq);
         #endif
         break;
       case 0x59:
         /*EOR*/
-        #ifdef __RISCOS__
-          /*r6502eor(n);*/
-          r6502opcode59();
-        #else
           VALUEOFABSOLUTEYPLUS
           r6502_a ^= n;
           SETNFLAG(r6502_a)
           SETZFLAG(r6502_a)
           CPU_CYCLES(4)
-        #endif
         #ifdef __DEBUG__
           fprintf(htrace,"EOR");
         #endif
@@ -2791,48 +2279,34 @@ void r6502execute(void)
         break;
       case 0x5C:
         /*SKW*/
-        #ifdef __RISCOS__
-          r6502opcode5C();
-        #else
-          r6502_pc += 2;
-          /*VALUEOFABSOLUTEXPLUS*/
-          CPU_CYCLES(4)
-        #endif
+        r6502_pc += 2;
+        /*VALUEOFABSOLUTEXPLUS*/
+        CPU_CYCLES(4)
         break;
       case 0x5D:
         /*EOR*/
-        #ifdef __RISCOS__
-          /*r6502eor(n);*/
-          r6502opcode5D();
-        #else
-          VALUEOFABSOLUTEXPLUS
-          r6502_a ^= n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTEXPLUS
+        r6502_a ^= n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"EOR");
         #endif
         break;
       case 0x5E:
         /*LSR*/
-        #ifdef __RISCOS__
-          /*n2 = r6502lsr(n1);*/
-          r6502opcode5E();
-        #else
-          ADDRESSOFABSOLUTEXPLUS
-          n1 = r6502read(n);
-          if (n1 & 0x01)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          n2 = (n1>>1);
-          CLEARFLAG(NFLAG);
-          SETZFLAG(n2)
-          r6502write(n,n2);
-          CPU_CYCLES(7)
-        #endif
+        ADDRESSOFABSOLUTEXPLUS
+        n1 = r6502read(n);
+        if (n1 & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n2 = (n1>>1);
+        CLEARFLAG(NFLAG);
+        SETZFLAG(n2)
+        r6502write(n,n2);
+        CPU_CYCLES(7)
         #ifdef __DEBUG__
           fprintf(htrace,"LSR &%X",n);
         #endif
@@ -2849,15 +2323,11 @@ void r6502execute(void)
         break;
       case 0x60:
         /*RTS*/
-        #ifdef __RISCOS__
-          r6502opcode60();
-        #else
-          STACK_POP(nlo);
-          STACK_POP(nhi);
-          r6502_pc = (nhi<<8)+nlo;
-          r6502_pc++;
-          CPU_CYCLES(6)
-        #endif
+        STACK_POP(nlo);
+        STACK_POP(nhi);
+        r6502_pc = (nhi<<8)+nlo;
+        r6502_pc++;
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           /*if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A0A)*/
             fprintf(htrace,"RTS &%X\n",r6502_pc);
@@ -2865,16 +2335,12 @@ void r6502execute(void)
         break;
       case 0x61:
         /*ADC*/
-        #ifdef __RISCOS__
-          r6502opcode61();
-        #else
-          VALUEOFPREINDEXED
-          adc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"ADC &%X",n);
-          #endif
-          CPU_CYCLES(6)
+        VALUEOFPREINDEXED
+        adc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"ADC &%X",n);
         #endif
+        CPU_CYCLES(6)
         break;
       case 0x62:
         r6502badopcode();
@@ -2883,66 +2349,68 @@ void r6502execute(void)
         /*RRA*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace,"RRA 63 &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode63();
-          #else
-            ADDRESSOFPREINDEXED
-            n1 = r6502read(n);
-            #ifdef __RISCOS__
-              n1 = r6502ror(n1);
-            #else
-              n2 = (r6502_ps & CFLAG);
-              if (n1 & 0x01)
-                SETFLAG(CFLAG)
-              else
-                CLEARFLAG(CFLAG)
-              n1 = (n1>>1);
-              if (n2)
-                n1 |= 0x80;
-              SETNFLAG(n1)
-              SETZFLAG(n1)
-            #endif
-            r6502write(n,n1);
-            /*n = n1;*/
-            adc(n1);
-            CPU_CYCLES(8)
-          #endif
+          ADDRESSOFPREINDEXED
+          n1 = r6502read(n);
+          n2 = (r6502_ps & CFLAG);
+          if (n1 & 0x01)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          n1 = (n1>>1);
+          if (n2)
+            n1 |= 0x80;
+          SETNFLAG(n1)
+          SETZFLAG(n1)
+          r6502write(n,n1);
+          /*n = n1;*/
+          adc(n1);
+          CPU_CYCLES(8)
         #else
           r6502_badopcode();
         #endif
         break;
       case 0x64:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcode64();
-        #else
-          r6502_pc++;
-          /*VALUEOFZEROPAGE*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(3)
+        r6502_pc++;
+        /*VALUEOFZEROPAGE*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(3)
         break;
       case 0x65:
         /*ADC*/
-        #ifdef __RISCOS__
-          r6502opcode65();
-        #else
-          VALUEOFZEROPAGE
-          adc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"ADC &%X",n);
-          #endif
-          CPU_CYCLES(3)
+        VALUEOFZEROPAGE
+        adc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"ADC &%X",n);
         #endif
+        CPU_CYCLES(3)
         break;
       case 0x66:
         /*ROR*/
-        #ifdef __RISCOS__
-          /*n1 = r6502ror(n1);*/
-          r6502opcode66();
-        #else
+        ADDRESSOFZEROPAGE
+        n1 = memory[n];
+        n2 = (r6502_ps & CFLAG);
+        if (n1 & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n1 = (n1>>1);
+        if (n2)
+          n1 |= 0x80;
+        SETNFLAG(n1)
+        SETZFLAG(n1)
+        memory[n] = n1;
+        CPU_CYCLES(5)
+        #ifdef __DEBUG__
+          fprintf(htrace,"ROR &%X",n);
+        #endif
+        break;
+      case 0x67:
+        /*RRA*/
+        #ifdef __UNDOCUMENTED__
+          fprintf(htrace,"RRA 67 &%X\n",r6502_pc);
           ADDRESSOFZEROPAGE
           n1 = memory[n];
           n2 = (r6502_ps & CFLAG);
@@ -2956,89 +2424,45 @@ void r6502execute(void)
           SETNFLAG(n1)
           SETZFLAG(n1)
           memory[n] = n1;
+          /*n = n1;*/
+          adc(n1);
           CPU_CYCLES(5)
-        #endif
-        #ifdef __DEBUG__
-          fprintf(htrace,"ROR &%X",n);
-        #endif
-        break;
-      case 0x67:
-        /*RRA*/
-        #ifdef __UNDOCUMENTED__
-          fprintf(htrace,"RRA 67 &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode67();
-          #else
-            ADDRESSOFZEROPAGE
-            n1 = memory[n];
-            #ifdef __RISCOS__
-              n1 = r6502ror(n1);
-            #else
-              n2 = (r6502_ps & CFLAG);
-              if (n1 & 0x01)
-                SETFLAG(CFLAG)
-              else
-                CLEARFLAG(CFLAG)
-              n1 = (n1>>1);
-              if (n2)
-                n1 |= 0x80;
-              SETNFLAG(n1)
-              SETZFLAG(n1)
-            #endif
-            memory[n] = n1;
-            /*n = n1;*/
-            adc(n1);
-            CPU_CYCLES(5)
-          #endif
         #else
           r6502badopcode();
         #endif
         break;
       case 0x68:
         /*PLA*/
-        #ifdef __RISCOS__
-          r6502opcode68();
-        #else
-          STACK_POP(r6502_a)
-          SETZFLAG(r6502_a)
-          SETNFLAG(r6502_a)
-          #ifdef __DEBUG__
-            fprintf(htrace,"PLA &%X (sp=&%X)",r6502_a,r6502_sp);
-          #endif
-          CPU_CYCLES(4)
+        STACK_POP(r6502_a)
+        SETZFLAG(r6502_a)
+        SETNFLAG(r6502_a)
+        #ifdef __DEBUG__
+          fprintf(htrace,"PLA &%X (sp=&%X)",r6502_a,r6502_sp);
         #endif
+        CPU_CYCLES(4)
         break;
       case 0x69:
         /*ADC*/
-        #ifdef __RISCOS__
-          r6502opcode69();
-        #else
-          VALUEOFIMMEDIATE
-          adc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"ADC #&%X",n);
-          #endif
-          CPU_CYCLES(2)
+        VALUEOFIMMEDIATE
+        adc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"ADC #&%X",n);
         #endif
+        CPU_CYCLES(2)
         break;
       case 0x6A:
         /*ROR*/
-        #ifdef __RISCOS__
-          /*r6502_a = r6502ror(r6502_a);*/
-          r6502opcode6A();
-        #else
-          n2 = (r6502_ps & CFLAG);
-          if (r6502_a & 0x01)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          r6502_a = (r6502_a>>1);
-          if (n2)
-            r6502_a |= 0x80;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(2)
-        #endif
+        n2 = (r6502_ps & CFLAG);
+        if (r6502_a & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        r6502_a = (r6502_a>>1);
+        if (n2)
+          r6502_a |= 0x80;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"ROR A");
         #endif
@@ -3051,36 +2475,46 @@ void r6502execute(void)
         break;
       case 0x6C:
         /*JMP*/
-        #ifdef __RISCOS__
-          r6502opcode6C();
-        #else
-          ADDRESSOFINDIRECT
-          r6502_pc = n;
-          CPU_CYCLES(5)
-       #endif
+        ADDRESSOFINDIRECT
+        r6502_pc = n;
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
           fprintf(htrace,"JMP &%X",n);
         #endif
         break;
       case 0x6D:
         /*ADC*/
-        #ifdef __RISCOS__
-          r6502opcode6D();
-        #else
-          VALUEOFABSOLUTE
-          adc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"ADC &%X",n);
-          #endif
-          CPU_CYCLES(4)
+        VALUEOFABSOLUTE
+        adc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"ADC &%X",n);
         #endif
+        CPU_CYCLES(4)
         break;
       case 0x6E:
         /*ROR*/
-        #ifdef __RISCOS__
-          /*n1 = r6502ror(n1);*/
-          r6502opcode6E();
-        #else
+        ADDRESSOFABSOLUTE
+        n1 = r6502read(n);
+        n2 = (r6502_ps & CFLAG);
+        if (n1 & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n1 = (n1>>1);
+        if (n2)
+          n1 |= 0x80;
+        SETNFLAG(n1)
+        SETZFLAG(n1)
+        r6502write(n,n1);
+        CPU_CYCLES(6)
+        #ifdef __DEBUG__
+          fprintf(htrace,"ROR &%X",n);
+        #endif
+        break;
+      case 0x6F:
+        /*RRA*/
+        #ifdef __UNDOCUMENTED__
+          fprintf(htrace,"RRA 6F &%X\n",r6502_pc);
           ADDRESSOFABSOLUTE
           n1 = r6502read(n);
           n2 = (r6502_ps & CFLAG);
@@ -3094,40 +2528,9 @@ void r6502execute(void)
           SETNFLAG(n1)
           SETZFLAG(n1)
           r6502write(n,n1);
+          /*n = n1;*/
+          adc(n1);
           CPU_CYCLES(6)
-        #endif
-        #ifdef __DEBUG__
-          fprintf(htrace,"ROR &%X",n);
-        #endif
-        break;
-      case 0x6F:
-        /*RRA*/
-        #ifdef __UNDOCUMENTED__
-          fprintf(htrace,"RRA 6F &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode6F();
-          #else
-            ADDRESSOFABSOLUTE
-            n1 = r6502read(n);
-            #ifdef __RISCOS__
-              n1 = r6502ror(n1);
-            #else
-              n2 = (r6502_ps & CFLAG);
-              if (n1 & 0x01)
-                SETFLAG(CFLAG)
-              else
-                CLEARFLAG(CFLAG)
-              n1 = (n1>>1);
-              if (n2)
-                n1 |= 0x80;
-              SETNFLAG(n1)
-              SETZFLAG(n1)
-            #endif
-            r6502write(n,n1);
-            /*n = n1;*/
-            adc(n1);
-            CPU_CYCLES(6)
-          #endif
         #else
           r6502badopcode();
         #endif
@@ -3142,47 +2545,39 @@ void r6502execute(void)
         #ifdef __DEBUG__
           fprintf(htrace,"BVS");
         #endif
-        #ifdef __RISCOS__
-          r6502opcode70();
-        #else
-          if (r6502_ps & VFLAG)
-          {
-            VALUEOFIMMEDIATE
-            /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
-            n1 = (r6502_pc >> 8);
-            if (n & 0x80)
-              r6502_pc -= (0x100 - n);
-            else
-              r6502_pc += n;
-            /*if page boundary crossed*/
-            /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
-            if (n1 != (r6502_pc >> 8))
-              CPU_CYCLES(4)
-            else
-              CPU_CYCLES(3)
-            #ifdef __DEBUG__
-              fprintf(htrace," &%X",r6502_pc);
-            #endif
-          }
+        if (r6502_ps & VFLAG)
+        {
+          VALUEOFIMMEDIATE
+          /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
+          n1 = (r6502_pc >> 8);
+          if (n & 0x80)
+            r6502_pc -= (0x100 - n);
           else
-          {
-            r6502_pc++;
-            CPU_CYCLES(2)
-          }
-        #endif
+            r6502_pc += n;
+          /*if page boundary crossed*/
+          /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
+          if (n1 != (r6502_pc >> 8))
+            CPU_CYCLES(4)
+          else
+            CPU_CYCLES(3)
+          #ifdef __DEBUG__
+            fprintf(htrace," &%X",r6502_pc);
+          #endif
+        }
+        else
+        {
+          r6502_pc++;
+          CPU_CYCLES(2)
+        }
         break;
       case 0x71:
         /*ADC*/
-        #ifdef __RISCOS__
-          r6502opcode71();
-        #else
-          VALUEOFPOSTINDEXEDY
-          adc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"ADC &%X",n);
-          #endif
-          CPU_CYCLES(5)
+        VALUEOFPOSTINDEXEDY
+        adc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"ADC &%X",n);
         #endif
+        CPU_CYCLES(5)
         break;
       case 0x72:
         r6502badopcode();
@@ -3191,66 +2586,68 @@ void r6502execute(void)
         /*RRA*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace,"RRA 73 &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode73();
-          #else
-            ADDRESSOFPOSTINDEXEDY
-            n1 = r6502read(n);
-            #ifdef __RISCOS__
-              n1 = r6502ror(n1);
-            #else
-              n2 = (r6502_ps & CFLAG);
-              if (n1 & 0x01)
-                SETFLAG(CFLAG)
-              else
-                CLEARFLAG(CFLAG)
-              n1 = (n1>>1);
-              if (n2)
-                n1 |= 0x80;
-              SETNFLAG(n1)
-              SETZFLAG(n1)
-            #endif
-            r6502write(n,n1);
-            /*n = n1;*/
-            adc(n1);
-            CPU_CYCLES(8)
-          #endif
+          ADDRESSOFPOSTINDEXEDY
+          n1 = r6502read(n);
+          n2 = (r6502_ps & CFLAG);
+          if (n1 & 0x01)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          n1 = (n1>>1);
+          if (n2)
+            n1 |= 0x80;
+          SETNFLAG(n1)
+          SETZFLAG(n1)
+          r6502write(n,n1);
+          /*n = n1;*/
+          adc(n1);
+          CPU_CYCLES(8)
         #else
           r6502_badopcode();
         #endif
         break;
       case 0x74:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcode74();
-        #else
-          r6502_pc++;
-          /*VALUEOFZEROPAGEX*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(3)
+        r6502_pc++;
+        /*VALUEOFZEROPAGEX*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(3)
         break;
       case 0x75:
         /*ADC*/
-        #ifdef __RISCOS__
-          r6502opcode75();
-        #else
-          VALUEOFZEROPAGEX
-          adc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"ADC &%X",n);
-          #endif
-          CPU_CYCLES(4)
+        VALUEOFZEROPAGEX
+        adc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"ADC &%X",n);
         #endif
+        CPU_CYCLES(4)
         break;
       case 0x76:
         /*ROR*/
-        #ifdef __RISCOS__
-          /*n1 = r6502ror(n1);*/
-          r6502opcode76();
-        #else
+        ADDRESSOFZEROPAGEX
+        n1 = memory[n];
+        n2 = (r6502_ps & CFLAG);
+        if (n1 & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n1 = (n1>>1);
+        if (n2)
+          n1 |= 0x80;
+        SETNFLAG(n1)
+        SETZFLAG(n1)
+        memory[n] = n1;
+        CPU_CYCLES(6)
+        #ifdef __DEBUG__
+          fprintf(htrace,"ROR &%X",n);
+        #endif
+        break;
+      case 0x77:
+        /*RRA*/
+        #ifdef __UNDOCUMENTED__
+          fprintf(htrace,"RRA 77 &%X\n",r6502_pc);
           ADDRESSOFZEROPAGEX
           n1 = memory[n];
           n2 = (r6502_ps & CFLAG);
@@ -3264,85 +2661,42 @@ void r6502execute(void)
           SETNFLAG(n1)
           SETZFLAG(n1)
           memory[n] = n1;
+          /*n = n1;*/
+          adc(n1);
+          r6502badopcode();
           CPU_CYCLES(6)
-        #endif
-        #ifdef __DEBUG__
-          fprintf(htrace,"ROR &%X",n);
-        #endif
-        break;
-      case 0x77:
-        /*RRA*/
-        #ifdef __UNDOCUMENTED__
-          fprintf(htrace,"RRA 77 &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode77();
-          #else
-            ADDRESSOFZEROPAGEX
-            n1 = memory[n];
-            #ifdef __RISCOS__
-              n1 = r6502ror(n1);
-            #else
-              n2 = (r6502_ps & CFLAG);
-              if (n1 & 0x01)
-                SETFLAG(CFLAG)
-              else
-                CLEARFLAG(CFLAG)
-              n1 = (n1>>1);
-              if (n2)
-                n1 |= 0x80;
-              SETNFLAG(n1)
-              SETZFLAG(n1)
-            #endif
-            memory[n] = n1;
-            /*n = n1;*/
-            adc(n1);
-            r6502badopcode();
-            CPU_CYCLES(6)
-          #endif
         #else
           r6502badopcode();
         #endif
         break;
       case 0x78:
         /*SEI*/
-        #ifdef __RISCOS__
-          r6502opcode78();
-        #else
-          SETFLAG(IFLAG)
-          #ifdef __DEBUG__
-            fprintf(htrace,"SEI");
-          #endif
-          CPU_CYCLES(2)
+        SETFLAG(IFLAG)
+        #ifdef __DEBUG__
+          fprintf(htrace,"SEI");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0x79:
         /*ADC*/
-        #ifdef __RISCOS__
-          r6502opcode79();
-        #else
-          VALUEOFABSOLUTEYPLUS
-          adc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"ADC &%X",n);
-          #endif
-          CPU_CYCLES(4)
+        VALUEOFABSOLUTEYPLUS
+        adc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"ADC &%X",n);
         #endif
+        CPU_CYCLES(4)
         break;
       case 0x7A:
         if (beebit_machinetype = MACHINE_MASTER128 OR beebit_machinetype = MACHINE_COMPACT)
         {
           /*PLY*/
-          #ifdef __RISCOS__
-            r6502opcode7A();
-          #else
-            STACK_POP(r6502_y)
-            SETZFLAG(r6502_y)
-            SETNFLAG(r6502_y)
-            #ifdef __DEBUG__
-              fprintf(htrace,"PLY &%X (sp=&%X)",r6502_y,r6502_sp);
-            #endif
-            CPU_CYCLES(4)
+          STACK_POP(r6502_y)
+          SETZFLAG(r6502_y)
+          SETNFLAG(r6502_y)
+          #ifdef __DEBUG__
+            fprintf(htrace,"PLY &%X (sp=&%X)",r6502_y,r6502_sp);
           #endif
+          CPU_CYCLES(4)
         }
         else
         {
@@ -3358,64 +2712,7 @@ void r6502execute(void)
         /*RRA*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace,"RRA 7B &%X\n",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcode7B();
-          #else
-            ADDRESSOFABSOLUTEY
-            n1 = r6502read(n);
-            #ifdef __RISCOS__
-              n1 = r6502ror(n1);
-            #else
-              n2 = (r6502_ps & CFLAG);
-              if (n1 & 0x01)
-                SETFLAG(CFLAG)
-              else
-                CLEARFLAG(CFLAG)
-              n1 = (n1>>1);
-              if (n2)
-                n1 |= 0x80;
-              SETNFLAG(n1)
-              SETZFLAG(n1)
-            #endif
-            r6502write(n,n1);
-            /*n = n1;*/
-            adc(n1);
-            CPU_CYCLES(7)
-          #endif
-        #else
-          r6502_badopcode();
-        #endif
-        break;
-      case 0x7C:
-        /*SKW*/
-        #ifdef __RISCOS__
-          r6502opcode7C();
-        #else
-          r6502_pc += 2;
-          /*VALUEOFABSOLUTEXPLUS*/
-          CPU_CYCLES(4)
-        #endif
-        break;
-      case 0x7D:
-        /*ADC*/
-        #ifdef __RISCOS__
-          r6502opcode7D();
-        #else
-          VALUEOFABSOLUTEXPLUS
-          adc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"ADC &%X",n);
-          #endif
-          CPU_CYCLES(4)
-        #endif
-        break;
-      case 0x7E:
-        /*ROR*/
-        #ifdef __RISCOS__
-          /*n1 = r6502ror(n1);*/
-          r6502opcode7E();
-        #else
-          ADDRESSOFABSOLUTEX
+          ADDRESSOFABSOLUTEY
           n1 = r6502read(n);
           n2 = (r6502_ps & CFLAG);
           if (n1 & 0x01)
@@ -3428,8 +2725,44 @@ void r6502execute(void)
           SETNFLAG(n1)
           SETZFLAG(n1)
           r6502write(n,n1);
+          /*n = n1;*/
+          adc(n1);
           CPU_CYCLES(7)
+        #else
+          r6502_badopcode();
         #endif
+        break;
+      case 0x7C:
+        /*SKW*/
+          r6502_pc += 2;
+          /*VALUEOFABSOLUTEXPLUS*/
+          CPU_CYCLES(4)
+        break;
+      case 0x7D:
+        /*ADC*/
+        VALUEOFABSOLUTEXPLUS
+        adc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"ADC &%X",n);
+        #endif
+        CPU_CYCLES(4)
+        break;
+      case 0x7E:
+        /*ROR*/
+        ADDRESSOFABSOLUTEX
+        n1 = r6502read(n);
+        n2 = (r6502_ps & CFLAG);
+        if (n1 & 0x01)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        n1 = (n1>>1);
+        if (n2)
+          n1 |= 0x80;
+        SETNFLAG(n1)
+        SETZFLAG(n1)
+        r6502write(n,n1);
+        CPU_CYCLES(7)
         #ifdef __DEBUG__
           fprintf(htrace,"ROR &%X",n);
         #endif
@@ -3437,96 +2770,68 @@ void r6502execute(void)
       case 0x7F:
         /*RRA*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode7F();
-          #else
-            ADDRESSOFABSOLUTEX
-            n1 = r6502read(n);
-            #ifdef __RISCOS__
-              n1 = r6502ror(n1);
-            #else
-              n2 = (r6502_ps & CFLAG);
-              if (n1 & 0x01)
-                SETFLAG(CFLAG)
-              else
-                CLEARFLAG(CFLAG)
-              n1 = (n1 >> 1);
-              if (n2)
-                n1 |= 0x80;
-              SETNFLAG(n1)
-              SETZFLAG(n1);
-            #endif
-            r6502write(n,n1);
-            /*n = n1;*/
-            adc(n1);
-            CPU_CYCLES(7)
-          #endif
+          ADDRESSOFABSOLUTEX
+          n1 = r6502read(n);
+          n2 = (r6502_ps & CFLAG);
+          if (n1 & 0x01)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          n1 = (n1 >> 1);
+          if (n2)
+            n1 |= 0x80;
+          SETNFLAG(n1)
+          SETZFLAG(n1);
+          r6502write(n,n1);
+          /*n = n1;*/
+          adc(n1);
+          CPU_CYCLES(7)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x80:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcode80();
-        #else
-          r6502_pc++;
-          /*VALUEOFIMMEDIATE*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(2)
+        r6502_pc++;
+        /*VALUEOFIMMEDIATE*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0x81:
         /*STA*/
-        #ifdef __RISCOS__
-          r6502opcode81();
-        #else
-          ADDRESSOFPREINDEXED
-          r6502write(n,r6502_a);
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFPREINDEXED
+        r6502write(n,r6502_a);
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"STA &%X",n);
         #endif
         break;
       case 0x82:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcode82();
-        #else
-          r6502_pc++;
-          /*VALUEOFIMMEDIATE*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(2)
+        r6502_pc++;
+        /*VALUEOFIMMEDIATE*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0x83:
         /*SAX*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode83();
-          #else
-            ADDRESSOFPREINDEXED
-            r6502write(n,(r6502_a & r6502_x));
-            CPU_CYCLES(6)
-          #endif
+          ADDRESSOFPREINDEXED
+          r6502write(n,(r6502_a & r6502_x));
+          CPU_CYCLES(6)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x84:
         /*STY*/
-        #ifdef __RISCOS__
-          r6502opcode84();
-        #else
-          ADDRESSOFZEROPAGE
-          memory[n] = r6502_y;
-          CPU_CYCLES(3)
-        #endif
+        ADDRESSOFZEROPAGE
+        memory[n] = r6502_y;
+        CPU_CYCLES(3)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"STY &%X ",n);
@@ -3534,13 +2839,9 @@ void r6502execute(void)
         break;
       case 0x85:
         /*STA*/
-        #ifdef __RISCOS__
-          r6502opcode85();
-        #else
-          ADDRESSOFZEROPAGE
-          memory[n] = r6502_a;
-          CPU_CYCLES(3)
-        #endif
+        ADDRESSOFZEROPAGE
+        memory[n] = r6502_a;
+        CPU_CYCLES(3)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"STA &%X ",n);
@@ -3548,13 +2849,9 @@ void r6502execute(void)
         break;
       case 0x86:
         /*STX*/
-        #ifdef __RISCOS__
-          r6502opcode86();
-        #else
-          ADDRESSOFZEROPAGE
-          memory[n] = r6502_x;
-          CPU_CYCLES(3)
-        #endif
+        ADDRESSOFZEROPAGE
+        memory[n] = r6502_x;
+        CPU_CYCLES(3)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"STX &%X ",n);
@@ -3563,27 +2860,19 @@ void r6502execute(void)
       case 0x87:
         /*SAX*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode87();
-          #else
-            ADDRESSOFZEROPAGE
-            memory[n] = (r6502_a & r6502_x);
-            CPU_CYCLES(3)
-         #endif
+          ADDRESSOFZEROPAGE
+          memory[n] = (r6502_a & r6502_x);
+          CPU_CYCLES(3)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x88:
         /*DEY*/
-        #ifdef __RISCOS__
-          r6502opcode88();
-        #else
-          r6502_y--;
-          SETNFLAG(r6502_y)
-          SETZFLAG(r6502_y)
-          CPU_CYCLES(2)
-        #endif
+        r6502_y--;
+        SETNFLAG(r6502_y)
+        SETZFLAG(r6502_y)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"DEY ");
         #endif
@@ -3591,30 +2880,22 @@ void r6502execute(void)
       case 0x89:
         /*SKB*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode89();
-          #else
-            r6502_pc++;
-            /*VALUEOFIMMEDIATE*/
-            #ifdef __DEBUG__
-              fprintf(htrace,"SKB");
-            #endif
-            CPU_CYCLES(3)
+          r6502_pc++;
+          /*VALUEOFIMMEDIATE*/
+          #ifdef __DEBUG__
+            fprintf(htrace,"SKB");
           #endif
+          CPU_CYCLES(3)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x8A:
         /*TXA*/
-        #ifdef __RISCOS__
-          r6502opcode8A();
-        #else
-          r6502_a = r6502_x;
-          SETZFLAG(r6502_a)
-          SETNFLAG(r6502_a)
-          CPU_CYCLES(2)
-        #endif
+        r6502_a = r6502_x;
+        SETZFLAG(r6502_a)
+        SETNFLAG(r6502_a)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A0A)
             fprintf(htrace,"TXA");
@@ -3625,26 +2906,18 @@ void r6502execute(void)
         break;
       case 0x8C:
         /*STY*/
-        #ifdef __RISCOS__
-          r6502opcode8C();
-        #else
-          ADDRESSOFABSOLUTE
-          r6502write(n,r6502_y);
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFABSOLUTE
+        r6502write(n,r6502_y);
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"STY &%X",n);
         #endif
         break;
       case 0x8D:
         /*STA*/
-        #ifdef __RISCOS__
-          r6502opcode8D();
-        #else
-          ADDRESSOFABSOLUTE
-          r6502write(n,r6502_a);
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFABSOLUTE
+        r6502write(n,r6502_a);
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           /*if (beebit_trace)*/
             fprintf(htrace,"STA &%X,&%X ",n,r6502_a);
@@ -3652,13 +2925,9 @@ void r6502execute(void)
         break;
       case 0x8E:
         /*STX*/
-        #ifdef __RISCOS__
-          r6502opcode8E();
-        #else
-          ADDRESSOFABSOLUTE
-          r6502write(n,r6502_x);
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFABSOLUTE
+        r6502write(n,r6502_x);
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"STX &%X",n);
         #endif
@@ -3666,13 +2935,9 @@ void r6502execute(void)
       case 0x8F:
         /*SAX*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode8F();
-          #else
-            ADDRESSOFABSOLUTE
-            r6502write(n,(r6502_a & r6502_x));
-            CPU_CYCLES(4)
-          #endif
+          ADDRESSOFABSOLUTE
+          r6502write(n,(r6502_a & r6502_x));
+          CPU_CYCLES(4)
         #else
           r6502badopcode();
         #endif
@@ -3688,48 +2953,40 @@ void r6502execute(void)
           if (beebit_trace)
             fprintf(htrace,"BCC (%X) ",r6502_c);
         #endif
-        #ifdef __RISCOS__
-          r6502opcode90();
-        #else
-          if (!(r6502_ps & CFLAG))
-          {
-            VALUEOFIMMEDIATE
-            /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
-            n1 = (r6502_pc >> 8);
-            if (n & 0x80)
-              r6502_pc -= (0x100 - n);
-            else
-              r6502_pc += n;
-            /*if page boundary crossed*/
-            /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
-            if (n1 != (r6502_pc >> 8))
-              CPU_CYCLES(4)
-            else
-              CPU_CYCLES(3)
-            #ifdef __DEVELOP__
-              if (beebit_trace)
-                fprintf(htrace,"&%X ",r6502_pc);
-            #endif
-          }
+        if (!(r6502_ps & CFLAG))
+        {
+          VALUEOFIMMEDIATE
+          /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
+          n1 = (r6502_pc >> 8);
+          if (n & 0x80)
+            r6502_pc -= (0x100 - n);
           else
-          {
-            r6502_pc++;
-            CPU_CYCLES(2)
-          }
-        #endif
+            r6502_pc += n;
+          /*if page boundary crossed*/
+          /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
+          if (n1 != (r6502_pc >> 8))
+            CPU_CYCLES(4)
+          else
+            CPU_CYCLES(3)
+          #ifdef __DEVELOP__
+            if (beebit_trace)
+              fprintf(htrace,"&%X ",r6502_pc);
+          #endif
+        }
+        else
+        {
+          r6502_pc++;
+          CPU_CYCLES(2)
+        }
         break;
       case 0x91:
         /*STA*/
-        #ifdef __RISCOS__
-          r6502opcode91();
-        #else
-          ADDRESSOFPOSTINDEXEDY
-          r6502write(n,r6502_a);
-          #ifdef __DEBUG__
-            fprintf(htrace,"STA (&%X),y",n);
-          #endif
-          CPU_CYCLES(6)
+        ADDRESSOFPOSTINDEXEDY
+        r6502write(n,r6502_a);
+        #ifdef __DEBUG__
+          fprintf(htrace,"STA (&%X),y",n);
         #endif
+        CPU_CYCLES(6)
         break;
       case 0x92:
         r6502badopcode();
@@ -3739,13 +2996,9 @@ void r6502execute(void)
         break;
       case 0x94:
         /*STY*/
-        #ifdef __RISCOS__
-          r6502opcode94();
-        #else
-          ADDRESSOFZEROPAGEX
-          memory[n] = r6502_y;
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFZEROPAGEX
+        memory[n] = r6502_y;
+        CPU_CYCLES(4)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"STY &%X ",n);
@@ -3753,13 +3006,9 @@ void r6502execute(void)
         break;
       case 0x95:
         /*STA*/
-        #ifdef __RISCOS__
-          r6502opcode95();
-        #else
-          ADDRESSOFZEROPAGEX
-          memory[n] = r6502_a;
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFZEROPAGEX
+        memory[n] = r6502_a;
+        CPU_CYCLES(4)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"STA &%X ",n);
@@ -3767,13 +3016,9 @@ void r6502execute(void)
         break;
       case 0x96:
         /*STX*/
-        #ifdef __RISCOS__
-          r6502opcode96();
-        #else
-          ADDRESSOFZEROPAGEY
-          memory[n] = r6502_x;
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFZEROPAGEY
+        memory[n] = r6502_x;
+        CPU_CYCLES(4)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"STX &%X ",n);
@@ -3782,27 +3027,19 @@ void r6502execute(void)
       case 0x97:
         /*SAX*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcode97();
-          #else
-            ADDRESSOFZEROPAGEY
-            memory[n] = (r6502_a & r6502_x);
-            CPU_CYCLES(4)
-         #endif
+          ADDRESSOFZEROPAGEY
+          memory[n] = (r6502_a & r6502_x);
+          CPU_CYCLES(4)
         #else
           r6502badopcode();
         #endif
         break;
       case 0x98:
         /*TYA*/
-        #ifdef __RISCOS__
-          r6502opcode98();
-        #else
-          r6502_a = r6502_y;
-          SETZFLAG(r6502_a)
-          SETNFLAG(r6502_a)
-          CPU_CYCLES(2)
-        #endif
+        r6502_a = r6502_y;
+        SETZFLAG(r6502_a)
+        SETNFLAG(r6502_a)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A0A)
           fprintf(htrace,"TYA");
@@ -3810,13 +3047,9 @@ void r6502execute(void)
         break;
       case 0x99:
         /*STA*/
-        #ifdef __RISCOS__
-          r6502opcode99();
-        #else
-          ADDRESSOFABSOLUTEY
-          r6502write(n,r6502_a);
-          CPU_CYCLES(5)
-        #endif
+        ADDRESSOFABSOLUTEY
+        r6502write(n,r6502_a);
+        CPU_CYCLES(5)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"STA &%X ",n);
@@ -3824,12 +3057,8 @@ void r6502execute(void)
         break;
       case 0x9A:
         /*TXS*/
-        #ifdef __RISCOS__
-          r6502opcode9A();
-        #else
-          r6502_sp = r6502_x;
-          CPU_CYCLES(2)
-        #endif
+        r6502_sp = r6502_x;
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"TXS &%X",r6502_sp);
         #endif
@@ -3842,13 +3071,9 @@ void r6502execute(void)
         break;
       case 0x9D:
         /*STA*/
-        #ifdef __RISCOS__
-          r6502opcode9D();
-        #else
-          ADDRESSOFABSOLUTEX
-          r6502write(n,r6502_a);
-          CPU_CYCLES(5)
-        #endif
+        ADDRESSOFABSOLUTEX
+        r6502write(n,r6502_a);
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
           if (beebit_trace)
             fprintf(htrace,"STA &%X",n);
@@ -3864,43 +3089,31 @@ void r6502execute(void)
         break;
       case 0xA0:
         /*LDY*/
-        #ifdef __RISCOS__
-          r6502opcodeA0();
-        #else
-          r6502_y = r6502read(r6502_pc++);
-          SETNFLAG(r6502_y)
-          SETZFLAG(r6502_y)
-          CPU_CYCLES(2)
-        #endif
+        r6502_y = r6502read(r6502_pc++);
+        SETNFLAG(r6502_y)
+        SETZFLAG(r6502_y)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"LDY #&%X",r6502_y);
         #endif
         break;
       case 0xA1:
         /*LDA*/
-        #ifdef __RISCOS__
-          r6502opcodeA1();
-        #else
-          ADDRESSOFPREINDEXED
-          r6502_a = r6502read(n);
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFPREINDEXED
+        r6502_a = r6502read(n);
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"LDA &%X",n);
         #endif
         break;
       case 0xA2:
         /*LDX*/
-        #ifdef __RISCOS__
-          r6502opcodeA2();
-        #else
-          r6502_x = r6502read(r6502_pc++);
-          SETNFLAG(r6502_x)
-          SETZFLAG(r6502_x)
-          CPU_CYCLES(2)
-        #endif
+        r6502_x = r6502read(r6502_pc++);
+        SETNFLAG(r6502_x)
+        SETZFLAG(r6502_x)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"LDX #&%X",r6502_x);
         #endif
@@ -3908,49 +3121,37 @@ void r6502execute(void)
       case 0xA3:
         /*LAX*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcodeA3();
-          #else
-            ADDRESSOFPREINDEXED
-            r6502_a = r6502read(n);
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            r6502_x = r6502_a;
-            #ifdef __DEBUG__
-              fprintf(htrace,"LAX &%X",r6502_a);
-            #endif
-            CPU_CYCLES(6)
+          ADDRESSOFPREINDEXED
+          r6502_a = r6502read(n);
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          r6502_x = r6502_a;
+          #ifdef __DEBUG__
+            fprintf(htrace,"LAX &%X",r6502_a);
           #endif
+          CPU_CYCLES(6)
         #else
           r6502badopcode();
         #endif
         break;
       case 0xA4:
         /*LDY*/
-        #ifdef __RISCOS__
-          r6502opcodeA4();
-        #else
-          ADDRESSOFZEROPAGE
-          r6502_y = memory[n];
-          SETNFLAG(r6502_y)
-          SETZFLAG(r6502_y)
-          CPU_CYCLES(3)
-        #endif
+        ADDRESSOFZEROPAGE
+        r6502_y = memory[n];
+        SETNFLAG(r6502_y)
+        SETZFLAG(r6502_y)
+        CPU_CYCLES(3)
         #ifdef __DEBUG__
           fprintf(htrace,"LDY &%X",n);
         #endif
         break;
       case 0xA5:
         /*LDA*/
-        #ifdef __RISCOS__
-          r6502opcodeA5();
-        #else
-          ADDRESSOFZEROPAGE
-          r6502_a = memory[n];
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(3)
-        #endif
+        ADDRESSOFZEROPAGE
+        r6502_a = memory[n];
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(3)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"LDA &%X ",n);
@@ -3958,15 +3159,11 @@ void r6502execute(void)
         break;
       case 0xA6:
         /*LDX*/
-        #ifdef __RISCOS__
-          r6502opcodeA6();
-        #else
-          ADDRESSOFZEROPAGE
-          r6502_x = memory[n];
-          SETNFLAG(r6502_x)
-          SETZFLAG(r6502_x)
-          CPU_CYCLES(3)
-        #endif
+        ADDRESSOFZEROPAGE
+        r6502_x = memory[n];
+        SETNFLAG(r6502_x)
+        SETZFLAG(r6502_x)
+        CPU_CYCLES(3)
         #ifdef __DEBUG__
           fprintf(htrace,"LDX &%X",n);
         #endif
@@ -3974,47 +3171,35 @@ void r6502execute(void)
       case 0xA7:
         /*LAX*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcodeA7();
-          #else
-            ADDRESSOFZEROPAGE
-            r6502_a = memory[n];
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            r6502_x = r6502_a;
-            #ifdef __DEBUG__
-              fprintf(htrace,"LAX &%X",r6502_a);
-            #endif
-            CPU_CYCLES(3)
+          ADDRESSOFZEROPAGE
+          r6502_a = memory[n];
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          r6502_x = r6502_a;
+          #ifdef __DEBUG__
+            fprintf(htrace,"LAX &%X",r6502_a);
           #endif
+          CPU_CYCLES(3)
         #else
           r6502badopcode();
         #endif
         break;
       case 0xA8:
         /*TAY*/
-        #ifdef __RISCOS__
-          r6502opcodeA8();
-        #else
-          r6502_y = r6502_a;
-          SETZFLAG(r6502_y)
-          SETNFLAG(r6502_y)
-          CPU_CYCLES(2)
-        #endif
+        r6502_y = r6502_a;
+        SETZFLAG(r6502_y)
+        SETNFLAG(r6502_y)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"TAY");
         #endif
         break;
       case 0xA9:
         /*LDA*/
-        #ifdef __RISCOS__
-          r6502opcodeA9();
-        #else
-          r6502_a = r6502read(r6502_pc++);
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(2)
-        #endif
+        r6502_a = r6502read(r6502_pc++);
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(2)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"LDA #&%X ",r6502_a);
@@ -4022,14 +3207,10 @@ void r6502execute(void)
         break;
       case 0xAA:
         /*TAX*/
-        #ifdef __RISCOS__
-          r6502opcodeAA();
-        #else
-          r6502_x = r6502_a;
-          SETZFLAG(r6502_x)
-          SETNFLAG(r6502_x)
-          CPU_CYCLES(2)
-        #endif
+        r6502_x = r6502_a;
+        SETZFLAG(r6502_x)
+        SETNFLAG(r6502_x)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"TAX");
         #endif
@@ -4039,30 +3220,22 @@ void r6502execute(void)
         break;
       case 0xAC:
         /*LDY*/
-        #ifdef __RISCOS__
-          r6502opcodeAC();
-        #else
-          ADDRESSOFABSOLUTE
-          r6502_y = r6502read(n);
-          SETNFLAG(r6502_y)
-          SETZFLAG(r6502_y)
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFABSOLUTE
+        r6502_y = r6502read(n);
+        SETNFLAG(r6502_y)
+        SETZFLAG(r6502_y)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"LDY &%X ",n);
         #endif
         break;
       case 0xAD:
         /*LDA*/
-        #ifdef __RISCOS__
-          r6502opcodeAD();
-        #else
-          ADDRESSOFABSOLUTE
-          r6502_a = r6502read(n);
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFABSOLUTE
+        r6502_a = r6502read(n);
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEVELOP__
           if (beebit_trace)
           fprintf(htrace,"LDA &%X ",n);
@@ -4070,15 +3243,11 @@ void r6502execute(void)
         break;
       case 0xAE:
         /*LDX*/
-        #ifdef __RISCOS__
-          r6502opcodeAE();
-        #else
-          ADDRESSOFABSOLUTE
-          r6502_x = r6502read(n);
-          SETNFLAG(r6502_x)
-          SETZFLAG(r6502_x)
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFABSOLUTE
+        r6502_x = r6502read(n);
+        SETNFLAG(r6502_x)
+        SETZFLAG(r6502_x)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"LDX &%X ",n);
         #endif
@@ -4086,19 +3255,15 @@ void r6502execute(void)
       case 0xAF:
         /*LAX*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcodeAF();
-          #else
-            ADDRESSOFABSOLUTE
-            r6502_a = r6502read(n);
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            r6502_x = r6502_a;
-            #ifdef __DEBUG__
-              fprintf(htrace,"LAX &%X ",r6502_a);
-            #endif
-            CPU_CYCLES(4)
+          ADDRESSOFABSOLUTE
+          r6502_a = r6502read(n);
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          r6502_x = r6502_a;
+          #ifdef __DEBUG__
+            fprintf(htrace,"LAX &%X ",r6502_a);
           #endif
+          CPU_CYCLES(4)
         #else
           r6502badopcode();
         #endif
@@ -4113,48 +3278,40 @@ void r6502execute(void)
         #ifdef __DEBUG__
           fprintf(htrace,"BCS (%X)",(r6502_ps & CFLAG));
         #endif
-        #ifdef __RISCOS__
-          r6502opcodeB0();
-        #else
-          if ((r6502_ps & CFLAG))
-          {
-            VALUEOFIMMEDIATE
-            /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
-            n1 = (r6502_pc >> 8);
-            if (n & 0x80)
-              r6502_pc -= (0x100 - n);
-            else
-              r6502_pc += n;
-            /*if page boundary crossed*/
-            /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
-            if (n1 != (r6502_pc >> 8))
-              CPU_CYCLES(4)
-            else
-              CPU_CYCLES(3)
-            #ifdef __DEBUG__
-              fprintf(htrace," &%X",r6502_pc);
-            #endif
-          }
+        if ((r6502_ps & CFLAG))
+        {
+          VALUEOFIMMEDIATE
+          /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
+          n1 = (r6502_pc >> 8);
+          if (n & 0x80)
+            r6502_pc -= (0x100 - n);
           else
-          {
-            r6502_pc++;
-            CPU_CYCLES(2)
-          }
-        #endif
+            r6502_pc += n;
+          /*if page boundary crossed*/
+          /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
+          if (n1 != (r6502_pc >> 8))
+            CPU_CYCLES(4)
+          else
+            CPU_CYCLES(3)
+          #ifdef __DEBUG__
+            fprintf(htrace," &%X",r6502_pc);
+          #endif
+        }
+        else
+        {
+          r6502_pc++;
+          CPU_CYCLES(2)
+        }
         break;
       case 0xB1:
         /*LDA*/
-        #ifdef __RISCOS__
-          r6502opcodeB1();
-        #else
-          /*ADDRESSOFPOSTINDEXEDY
-          r6502_a = r6502read(n);*/
-          VALUEOFPOSTINDEXEDY
-          r6502_a = n;
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(5)
-        #endif
+        /*ADDRESSOFPOSTINDEXEDY
+        r6502_a = r6502read(n);*/
+        VALUEOFPOSTINDEXEDY
+        r6502_a = n;
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
           fprintf(htrace,"LDA (&%X),y",(nhi<<8)+nlo+r6502_y);
         #endif
@@ -4165,64 +3322,48 @@ void r6502execute(void)
       case 0xB3:
         /*LAX*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcodeB3();
-          #else
-            VALUEOFPOSTINDEXEDY
-            r6502_a = n;
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            r6502_x = r6502_a;
-            #ifdef __DEBUG__
-              fprintf(htrace,"LAX &%X",r6502_a);
-            #endif
-            CPU_CYCLES(5)
+          VALUEOFPOSTINDEXEDY
+          r6502_a = n;
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          r6502_x = r6502_a;
+          #ifdef __DEBUG__
+            fprintf(htrace,"LAX &%X",r6502_a);
           #endif
+          CPU_CYCLES(5)
         #else
           r6502badopcode();
         #endif
         break;
       case 0xB4:
         /*LDY*/
-        #ifdef __RISCOS__
-          r6502opcodeB4();
-        #else
-          ADDRESSOFZEROPAGEX
-          r6502_y = memory[n];
-          SETNFLAG(r6502_y)
-          SETZFLAG(r6502_y)
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFZEROPAGEX
+        r6502_y = memory[n];
+        SETNFLAG(r6502_y)
+        SETZFLAG(r6502_y)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"LDY &%X",n);
         #endif
         break;
       case 0xB5:
         /*LDA*/
-        #ifdef __RISCOS__
-          r6502opcodeB5();
-        #else
-          ADDRESSOFZEROPAGEX
-          r6502_a = memory[n];
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFZEROPAGEX
+        r6502_a = memory[n];
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"LDA &%X",r6502_a);
         #endif
         break;
       case 0xB6:
         /*LDX*/
-        #ifdef __RISCOS__
-          r6502opcodeB6();
-        #else
-          ADDRESSOFZEROPAGEY
-          r6502_x = memory[n];
-          SETNFLAG(r6502_x)
-          SETZFLAG(r6502_x)
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFZEROPAGEY
+        r6502_x = memory[n];
+        SETNFLAG(r6502_x)
+        SETZFLAG(r6502_x)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"LDX &%X",r6502_x);
         #endif
@@ -4230,60 +3371,44 @@ void r6502execute(void)
       case 0xB7:
         /*LAX*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcodeB7();
-          #else
-            ADDRESSOFZEROPAGEY
-            r6502_a = memory[n];
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            r6502_x = r6502_a;
-            #ifdef __DEBUG__
-              fprintf(htrace,"LAX &%X",r6502_a);
-            #endif
-            CPU_CYCLES(4)
+          ADDRESSOFZEROPAGEY
+          r6502_a = memory[n];
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          r6502_x = r6502_a;
+          #ifdef __DEBUG__
+            fprintf(htrace,"LAX &%X",r6502_a);
           #endif
+          CPU_CYCLES(4)
         #else
           r6502badopcode();
         #endif
         break;
       case 0xB8:
         /*CLV*/
-        #ifdef __RISCOS__
-          r6502opcodeB8();
-        #else
-          CLEARFLAG(VFLAG);
-          #ifdef __DEBUG__
-            fprintf(htrace,"CLV");
-          #endif
-          CPU_CYCLES(2)
+        CLEARFLAG(VFLAG);
+        #ifdef __DEBUG__
+          fprintf(htrace,"CLV");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0xB9:
         /*LDA*/
-        #ifdef __RISCOS__
-          r6502opcodeB9();
-        #else
-          ADDRESSOFABSOLUTEYPLUS
-          r6502_a = r6502read(n);
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFABSOLUTEYPLUS
+        r6502_a = r6502read(n);
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"LDA &%X,y",n);
         #endif
         break;
       case 0xBA:
         /*TSX*/
-        #ifdef __RISCOS__
-          r6502opcodeBA();
-        #else
-          r6502_x = r6502_sp;
-          SETZFLAG(r6502_x)
-          SETNFLAG(r6502_x)
-          CPU_CYCLES(2)
-        #endif
+        r6502_x = r6502_sp;
+        SETZFLAG(r6502_x)
+        SETNFLAG(r6502_x)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"TSX");
         #endif
@@ -4293,45 +3418,33 @@ void r6502execute(void)
         break;
       case 0xBC:
         /*LDY*/
-        #ifdef __RISCOS__
-          r6502opcodeBC();
-        #else
-          ADDRESSOFABSOLUTEXPLUS
-          r6502_y = r6502read(n);
-          SETNFLAG(r6502_y)
-          SETZFLAG(r6502_y)
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFABSOLUTEXPLUS
+        r6502_y = r6502read(n);
+        SETNFLAG(r6502_y)
+        SETZFLAG(r6502_y)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"LDY &%X,x",n);
         #endif
         break;
       case 0xBD:
         /*LDA*/
-        #ifdef __RISCOS__
-          r6502opcodeBD();
-        #else
-          ADDRESSOFABSOLUTEXPLUS
-          r6502_a = r6502read(n);
-          SETNFLAG(r6502_a)
-          SETZFLAG(r6502_a)
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFABSOLUTEXPLUS
+        r6502_a = r6502read(n);
+        SETNFLAG(r6502_a)
+        SETZFLAG(r6502_a)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"LDA &%X=&%X",n,r6502_a);
         #endif
         break;
       case 0xBE:
         /*LDX*/
-        #ifdef __RISCOS__
-          r6502opcodeBE();
-        #else
-          ADDRESSOFABSOLUTEYPLUS
-          r6502_x = r6502read(n);
-          SETNFLAG(r6502_x)
-          SETZFLAG(r6502_x)
-          CPU_CYCLES(4)
-        #endif
+        ADDRESSOFABSOLUTEYPLUS
+        r6502_x = r6502read(n);
+        SETNFLAG(r6502_x)
+        SETZFLAG(r6502_x)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"LDX &%X",n);
         #endif
@@ -4339,18 +3452,14 @@ void r6502execute(void)
       case 0xBF:
         /*LAX*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcodeBF();
-          #else
-            ADDRESSOFABSOLUTEYPLUS
-            r6502_a = r6502read(n);
-            SETNFLAG(r6502_a)
-            SETZFLAG(r6502_a)
-            r6502_x = r6502_a;
-            CPU_CYCLES(4)
-            #ifdef __DEBUG__
-              fprintf(htrace,"LAX &%X",r6502_a);
-            #endif
+          ADDRESSOFABSOLUTEYPLUS
+          r6502_a = r6502read(n);
+          SETNFLAG(r6502_a)
+          SETZFLAG(r6502_a)
+          r6502_x = r6502_a;
+          CPU_CYCLES(4)
+          #ifdef __DEBUG__
+            fprintf(htrace,"LAX &%X",r6502_a);
           #endif
         #else
           r6502badopcode();
@@ -4358,121 +3467,88 @@ void r6502execute(void)
         break;
       case 0xC0:
         /*CPY*/
-        #ifdef __RISCOS__
-          /*r6502cpy(n);*/
-          r6502opcodeC0();
-        #else
-          VALUEOFIMMEDIATE
-          n1 = (r6502_y-n);
-          if (r6502_y >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(2)
-        #endif
+        VALUEOFIMMEDIATE
+        n1 = (r6502_y-n);
+        if (r6502_y >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"CPY &%X",r6502_y);
         #endif
         break;
       case 0xC1:
         /*CMP*/
-        #ifdef __RISCOS__
-          /*r6502cmp(n);*/
-          r6502opcodeC1();
-        #else
-          VALUEOFPREINDEXED
-          n1 = (r6502_a-n);
-          if (r6502_a >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(6)
-        #endif
+        VALUEOFPREINDEXED
+        n1 = (r6502_a-n);
+        if (r6502_a >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"CMP &%X ",n);
         #endif
         break;
       case 0xC2:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcodeC2();
-        #else
-          r6502_pc++;
-          /*VALUEOFIMMEDIATE*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(2)
+        r6502_pc++;
+        /*VALUEOFIMMEDIATE*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0xC3:
         /*DCP*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcodeC3();
-          #else
-            ADDRESSOFPREINDEXED
-            n1 = r6502read(n);
-            #ifdef __RISCOS__
-              n1 = r6502dec(n1);
-              r6502cmp(n1);
-            #else
-              n1--;
-              n1 = (r6502_a-n1);
-              if (r6502_a >= n1)
-                SETFLAG(CFLAG)
-              else
-                CLEARFLAG(CFLAG)
-              SETZFLAG(n1)
-              SETNFLAG(n1)
-            #endif
-            r6502write(n,n1);
-            CPU_CYCLES(8)
-          #endif
+          ADDRESSOFPREINDEXED
+          n1 = r6502read(n);
+          n1--;
+          n1 = (r6502_a-n1);
+          if (r6502_a >= n1)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          SETZFLAG(n1)
+          SETNFLAG(n1)
+          r6502write(n,n1);
+          CPU_CYCLES(8)
         #else
           r6502badopcode();
         #endif
         break;
       case 0xC4:
         /*CPY*/
-        #ifdef __RISCOS__
-          /*r6502cpy(n);*/
-          r6502opcodeC4();
-        #else
-          VALUEOFZEROPAGE
-          n1 = (r6502_y-n);
-          if (r6502_y >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(3)
-        #endif
+        VALUEOFZEROPAGE
+        n1 = (r6502_y-n);
+        if (r6502_y >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(3)
         #ifdef __DEBUG__
           fprintf(htrace,"CPY &%X",r6502_y);
         #endif
         break;
       case 0xC5:
         /*CMP*/
-        #ifdef __RISCOS__
-          /*r6502cmp(n);*/
-          r6502opcodeC5();
-        #else
-          VALUEOFZEROPAGE
-          n1 = (r6502_a-n);
-          if (r6502_a >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(3)
-        #endif
+        VALUEOFZEROPAGE
+        n1 = (r6502_a-n);
+        if (r6502_a >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(3)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"CMP &%X ",memory[r6502_pc-1]);
@@ -4480,18 +3556,13 @@ void r6502execute(void)
         break;
       case 0xC6:
         /*DEC*/
-        #ifdef __RISCOS__
-          /*n1 = r6502dec(n1);*/
-          r6502opcodeC6();
-        #else
-          ADDRESSOFZEROPAGE
-          n1 = memory[n];
-          n1--;
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          memory[n] = n1;
-          CPU_CYCLES(5)
-        #endif
+        ADDRESSOFZEROPAGE
+        n1 = memory[n];
+        n1--;
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        memory[n] = n1;
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
           fprintf(htrace,"DEC &%X",n);
         #endif
@@ -4499,61 +3570,43 @@ void r6502execute(void)
       case 0xC7:
         /*DCP*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcodeC7();
-          #else
-            ADDRESSOFZEROPAGE
-            n1 = memory[n];
-            #ifdef __RISCOS__
-              n1 = r6502dec(n1);
-              r6502cmp(n1);
-            #else
-              n1--;
-              n1 = (r6502_a-n1);
-              if (r6502_a >= n1)
-                SETFLAG(CFLAG)
-              else
-                CLEARFLAG(CFLAG)
-              SETZFLAG(n1)
-              SETNFLAG(n1)
-            #endif
-            memory[n] = n1;
-            CPU_CYCLES(5)
-          #endif
+          ADDRESSOFZEROPAGE
+          n1 = memory[n];
+          n1--;
+          n1 = (r6502_a-n1);
+          if (r6502_a >= n1)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          SETZFLAG(n1)
+          SETNFLAG(n1)
+          memory[n] = n1;
+          CPU_CYCLES(5)
         #else
           r6502badopcode();
         #endif
         break;
       case 0xC8:
         /*INY*/
-        #ifdef __RISCOS__
-          r6502opcodeC8();
-        #else
-          r6502_y++;
-          SETNFLAG(r6502_y)
-          SETZFLAG(r6502_y)
-          CPU_CYCLES(2)
-        #endif
+        r6502_y++;
+        SETNFLAG(r6502_y)
+        SETZFLAG(r6502_y)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"INY");
         #endif
         break;
       case 0xC9:
         /*CMP*/
-        #ifdef __RISCOS__
-          /*r6502cmp(n);*/
-          r6502opcodeC9();
-        #else
-          VALUEOFIMMEDIATE
-          n1 = (r6502_a-n);
-          if (r6502_a >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(2)
-        #endif
+        VALUEOFIMMEDIATE
+        n1 = (r6502_a-n);
+        if (r6502_a >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(2)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"CMP #&%X ",n);
@@ -4561,14 +3614,10 @@ void r6502execute(void)
         break;
       case 0xCA:
         /*DEX*/
-        #ifdef __RISCOS__
-          r6502opcodeCA();
-        #else
-          r6502_x--;
-          SETNFLAG(r6502_x)
-          SETZFLAG(r6502_x)
-          CPU_CYCLES(2)
-        #endif
+        r6502_x--;
+        SETNFLAG(r6502_x)
+        SETZFLAG(r6502_x)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"DEX");
         #endif
@@ -4578,40 +3627,30 @@ void r6502execute(void)
         break;
       case 0xCC:
         /*CPY*/
-        #ifdef __RISCOS__
-          /*r6502cpy(n);*/
-          r6502opcodeCC();
-        #else
-          VALUEOFABSOLUTE
-          n1 = (r6502_y-n);
-          if (r6502_y >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTE
+        n1 = (r6502_y-n);
+        if (r6502_y >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"CPY &%X",r6502_y);
         #endif
         break;
       case 0xCD:
         /*CMP*/
-        #ifdef __RISCOS__
-          /*r6502cmp(n);*/
-          r6502opcodeCD();
-        #else
-          VALUEOFABSOLUTE
-          n1 = (r6502_a-n);
-          if (r6502_a >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTE
+        n1 = (r6502_a-n);
+        if (r6502_a >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"CMP &%X (&%X)\n",n,(nhi<<8)+nlo);
           /*fprintf(htrace,"A=&%X X=&%X Y=&%X\n",r6502_a,r6502_x,r6502_y);*/
@@ -4619,22 +3658,17 @@ void r6502execute(void)
         break;
       case 0xCE:
         /*DEC*/
-        #ifdef __RISCOS__
-          /*n1 = r6502dec(n1);*/
-          r6502opcodeCE();
-        #else
-          ADDRESSOFABSOLUTE
-          n1 = r6502read(n);
-          /*CPU_CYCLES(4)
-          r6502write(n,n1);*/
-          n1--;
-          /*CPU_CYCLES(1)*/
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          r6502write(n,n1);
-          /*CPU_CYCLES(1)*/
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFABSOLUTE
+        n1 = r6502read(n);
+        /*CPU_CYCLES(4)
+        r6502write(n,n1);*/
+        n1--;
+        /*CPU_CYCLES(1)*/
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        r6502write(n,n1);
+        /*CPU_CYCLES(1)*/
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"DEC &%X",n);
         #endif
@@ -4653,52 +3687,43 @@ void r6502execute(void)
           if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A0A)
             fprintf(htrace,"BNE");
         #endif
-        #ifdef __RISCOS__
-          r6502opcodeD0();
-        #else
-          if (!(r6502_ps & ZFLAG))
-          {
-            VALUEOFIMMEDIATE
-            /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
-            n1 = (r6502_pc >> 8);
-            if (n & 0x80)
-              r6502_pc -= (0x100 - n);
-            else
-              r6502_pc += n;
-            /*if page boundary crossed*/
-            /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
-            if (n1 != (r6502_pc >> 8))
-              CPU_CYCLES(4)
-            else
-              CPU_CYCLES(3)
-            #ifdef __DEBUG__
-              if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A00)
-              fprintf(htrace," &%X",r6502_pc);
-            #endif
-          }
+        if (!(r6502_ps & ZFLAG))
+        {
+          VALUEOFIMMEDIATE
+          /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
+          n1 = (r6502_pc >> 8);
+          if (n & 0x80)
+            r6502_pc -= (0x100 - n);
           else
-          {
-            r6502_pc++;
-            CPU_CYCLES(2)
-          }
-        #endif
+            r6502_pc += n;
+          /*if page boundary crossed*/
+          /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
+          if (n1 != (r6502_pc >> 8))
+            CPU_CYCLES(4)
+          else
+            CPU_CYCLES(3)
+          #ifdef __DEBUG__
+            if (r6502_pc >= 0x1900 AND r6502_pc < 0x1A00)
+            fprintf(htrace," &%X",r6502_pc);
+          #endif
+        }
+        else
+        {
+          r6502_pc++;
+          CPU_CYCLES(2)
+        }
         break;
       case 0xD1:
         /*CMP*/
-        #ifdef __RISCOS__
-          /*r6502cmp(n);*/
-          r6502opcodeD1();
-        #else
-          VALUEOFPOSTINDEXEDY
-          n1 = (r6502_a-n);
-          if (r6502_a >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(5)
-        #endif
+        VALUEOFPOSTINDEXEDY
+        n1 = (r6502_a-n);
+        if (r6502_a >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(5)
         #ifdef __DEBUG__
           fprintf(htrace,"CMP &%X",n);
         #endif
@@ -4711,51 +3736,37 @@ void r6502execute(void)
         break;
       case 0xD4:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcodeD4();
-        #else
-          r6502_pc++;
-          /*VALUEOFZEROPAGEX*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(3)
+        r6502_pc++;
+        /*VALUEOFZEROPAGEX*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(3)
         break;
       case 0xD5:
         /*CMP*/
-        #ifdef __RISCOS__
-          /*r6502cmp(n);*/
-          r6502opcodeD5();
-        #else
-          VALUEOFZEROPAGEX
-          n1 = (r6502_a-n);
-          if (r6502_a >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFZEROPAGEX
+        n1 = (r6502_a-n);
+        if (r6502_a >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"CMP &%X",n);
         #endif
         break;
       case 0xD6:
         /*DEC*/
-        #ifdef __RISCOS__
-          /*n1 = r6502dec(n1);*/
-          r6502opcodeD6();
-        #else
-          ADDRESSOFZEROPAGEX
-          n1 = memory[n];
-          n1--;
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          memory[n] = n1;
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFZEROPAGEX
+        n1 = memory[n];
+        n1--;
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        memory[n] = n1;
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"DEC &%X",n);
         #endif
@@ -4765,32 +3776,23 @@ void r6502execute(void)
         break;
       case 0xD8:
         /*CLD*/
-        #ifdef __RISCOS__
-          r6502opcodeD8();
-        #else
-          CLEARFLAG(DFLAG);
-          #ifdef __DEBUG__
-            fprintf(htrace,"CLD");
-          #endif
-          CPU_CYCLES(2)
+        CLEARFLAG(DFLAG);
+        #ifdef __DEBUG__
+          fprintf(htrace,"CLD");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0xD9:
         /*CMP*/
-        #ifdef __RISCOS__
-          /*r6502cmp(n);*/
-          r6502opcodeD9();
-        #else
-          VALUEOFABSOLUTEYPLUS
-          n1 = (r6502_a-n);
-          if (r6502_a >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTEYPLUS
+        n1 = (r6502_a-n);
+        if (r6502_a >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"CMP &%X",n);
         #endif
@@ -4811,48 +3813,34 @@ void r6502execute(void)
         break;
       case 0xDC:
         /*SKW*/
-        #ifdef __RISCOS__
-          r6502opcodeDC();
-        #else
-          r6502_pc += 2;
-          /*VALUEOFABSOLUTEXPLUS*/
-          CPU_CYCLES(4)
-        #endif
+        r6502_pc += 2;
+        /*VALUEOFABSOLUTEXPLUS*/
+        CPU_CYCLES(4)
         break;
       case 0xDD:
         /*CMP*/
-        #ifdef __RISCOS__
-          /*r6502cmp(n);*/
-          r6502opcodeDD();
-        #else
-          VALUEOFABSOLUTEXPLUS
-          n1 = (r6502_a-n);
-          if (r6502_a >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTEXPLUS
+        n1 = (r6502_a-n);
+        if (r6502_a >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"CMP &%X",n);
         #endif
         break;
       case 0xDE:
         /*DEC*/
-        #ifdef __RISCOS__
-          /*n1 = r6502dec(n1);*/
-          r6502opcodeDE();
-        #else
-          ADDRESSOFABSOLUTEX
-          n1 = r6502read(n);
-          n1--;
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          r6502write(n,n1);
-          CPU_CYCLES(7)
-        #endif
+        ADDRESSOFABSOLUTEX
+        n1 = r6502read(n);
+        n1--;
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        r6502write(n,n1);
+        CPU_CYCLES(7)
         #ifdef __DEBUG__
           fprintf(htrace,"DEC &%X=&%X",n,n1);
         #endif
@@ -4860,127 +3848,91 @@ void r6502execute(void)
       case 0xDF:
         /*DCP*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcodeDF();
-          #else
-            ADDRESSOFABSOLUTEX
-            n1 = r6502read(n);
-            #ifdef __RISCOS__
-              n1 = r6502dec(n1);
-              r6502cmp(n1);
-            #else
-              n1--;
-              n1 = (r6502_a-n1);
-              if (r6502_a >= n1)
-                SETFLAG(CFLAG)
-              else
-                CLEARFLAG(CFLAG)
-              SETZFLAG(n1)
-              SETNFLAG(n1)
-            #endif
-            r6502write(n,n1);
-            CPU_CYCLES(7)
-          #endif
+          ADDRESSOFABSOLUTEX
+          n1 = r6502read(n);
+          n1--;
+          n1 = (r6502_a-n1);
+          if (r6502_a >= n1)
+            SETFLAG(CFLAG)
+          else
+            CLEARFLAG(CFLAG)
+          SETZFLAG(n1)
+          SETNFLAG(n1)
+          r6502write(n,n1);
+          CPU_CYCLES(7)
         #else
           r6502badopcode();
         #endif
         break;
       case 0xE0:
         /*CPX*/
-        #ifdef __RISCOS__
-          /*r6502cpx(n);*/
-          r6502opcodeE0();
-        #else
-          VALUEOFIMMEDIATE
-          n1 = (r6502_x-n);
-          if (r6502_x >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(2)
-        #endif
+        VALUEOFIMMEDIATE
+        n1 = (r6502_x-n);
+        if (r6502_x >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"CPX &%X",n);
         #endif
         break;
       case 0xE1:
         /*SBC*/
-        #ifdef __RISCOS__
-          r6502opcodeE1();
-        #else
-          VALUEOFPREINDEXED
-          sbc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"SBC");
-          #endif
-          CPU_CYCLES(6)
+        VALUEOFPREINDEXED
+        sbc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"SBC");
         #endif
+        CPU_CYCLES(6)
         break;
       case 0xE2:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcodeE2();
-        #else
-          r6502_pc++;
-          /*VALUEOFIMMEDIATE*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(2)
+        r6502_pc++;
+        /*VALUEOFIMMEDIATE*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0xE3:
         r6502badopcode();
         break;
       case 0xE4:
         /*CPX*/
-        #ifdef __RISCOS__
-          /*r6502cpx(n);*/
-          r6502opcodeE4();
-        #else
-          VALUEOFZEROPAGE
-          n1 = (r6502_x-n);
-          if (r6502_x >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(3)
-        #endif
+        VALUEOFZEROPAGE
+        n1 = (r6502_x-n);
+        if (r6502_x >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(3)
         #ifdef __DEBUG__
           fprintf(htrace,"CPX &%X",n);
         #endif
         break;
       case 0xE5:
         /*SBC*/
-        #ifdef __RISCOS__
-          r6502opcodeE5();
-        #else
-          VALUEOFZEROPAGE
-          sbc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"SBC");
-          #endif
-          CPU_CYCLES(3)
+        VALUEOFZEROPAGE
+        sbc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"SBC");
         #endif
+        CPU_CYCLES(3)
         break;
       case 0xE6:
         /*INC*/
-        #ifdef __RISCOS__
-          /*n1 = r6502inc(n1);*/
-          r6502opcodeE6();
-        #else
-          ADDRESSOFZEROPAGE
-          n1 = memory[n];
-          n1++;
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          memory[n] = n1;
-          CPU_CYCLES(5)
-        #endif
+        ADDRESSOFZEROPAGE
+        n1 = memory[n];
+        n1++;
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        memory[n] = n1;
+        CPU_CYCLES(5)
         #ifdef __DEVELOP__
           if (beebit_trace)
             fprintf(htrace,"INC &%X ",n);
@@ -4991,30 +3943,22 @@ void r6502execute(void)
         break;
       case 0xE8:
         /*INX*/
-        #ifdef __RISCOS__
-          r6502opcodeE8();
-        #else
-          r6502_x++;
-          SETNFLAG(r6502_x)
-          SETZFLAG(r6502_x)
-          CPU_CYCLES(2)
-        #endif
+        r6502_x++;
+        SETNFLAG(r6502_x)
+        SETZFLAG(r6502_x)
+        CPU_CYCLES(2)
         #ifdef __DEBUG__
           fprintf(htrace,"INX");
         #endif
         break;
       case 0xE9:
         /*SBC*/
-        #ifdef __RISCOS__
-          r6502opcodeE9();
-        #else
-          VALUEOFIMMEDIATE
-          sbc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"SBC &%X",n);
-          #endif
-          CPU_CYCLES(2)
+        VALUEOFIMMEDIATE
+        sbc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"SBC &%X",n);
         #endif
+        CPU_CYCLES(2)
         break;
       case 0xEA:
         /*NOP*/
@@ -5023,67 +3967,49 @@ void r6502execute(void)
       case 0xEB:
         /*SBC*/
         #ifdef __UNDOCUMENTED__
-          #ifdef __RISCOS__
-            r6502opcodeEB();
-          #else
-            VALUEOFIMMEDIATE
-            sbc(n);
-            #ifdef __DEBUG__
-              fprintf(htrace,"SBC");
-            #endif
-            CPU_CYCLES(2)
+          VALUEOFIMMEDIATE
+          sbc(n);
+          #ifdef __DEBUG__
+            fprintf(htrace,"SBC");
           #endif
+          CPU_CYCLES(2)
         #else
           r6502badopcode();
         #endif
         break;
       case 0xEC:
         /*CPX*/
-        #ifdef __RISCOS__
-          /*r6502cpx(n);*/
-          r6502opcodeEC();
-        #else
-          VALUEOFABSOLUTE
-          n1 = (r6502_x-n);
-          if (r6502_x >= n)
-            SETFLAG(CFLAG)
-          else
-            CLEARFLAG(CFLAG)
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          CPU_CYCLES(4)
-        #endif
+        VALUEOFABSOLUTE
+        n1 = (r6502_x-n);
+        if (r6502_x >= n)
+          SETFLAG(CFLAG)
+        else
+          CLEARFLAG(CFLAG)
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        CPU_CYCLES(4)
         #ifdef __DEBUG__
           fprintf(htrace,"CPX &%X",n);
         #endif
         break;
       case 0xED:
         /*SBC*/
-        #ifdef __RISCOS__
-          r6502opcodeED();
-        #else
-          VALUEOFABSOLUTE
-          sbc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"SBC");
-          #endif
-          CPU_CYCLES(4)
+        VALUEOFABSOLUTE
+        sbc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"SBC");
         #endif
+        CPU_CYCLES(4)
         break;
       case 0xEE:
         /*INC*/
-        #ifdef __RISCOS__
-          /*n1 = r6502inc(n1);*/
-          r6502opcodeEE();
-        #else
-          ADDRESSOFABSOLUTE
-          n1 = r6502read(n);
-          n1++;
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          r6502write(n,n1);
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFABSOLUTE
+        n1 = r6502read(n);
+        n1++;
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        r6502write(n,n1);
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"INC &%X",n);
         #endif
@@ -5103,48 +4029,40 @@ void r6502execute(void)
             fprintf(htrace,"BEQ Z=&%X ",r6502_z);*/
           /*fprintf(htrace," Z=&%X",r6502_z;
         #endif*/
-        #ifdef __RISCOS__
-          r6502opcodeF0();
-        #else
-          if ((r6502_ps & ZFLAG))
-          {
-            VALUEOFIMMEDIATE
-            /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
-            n1 = (r6502_pc >> 8);
-            if (n & 0x80)
-              r6502_pc -= (0x100 - n);
-            else
-              r6502_pc += n;
-            /*if page boundary crossed*/
-            /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
-            if (n1 != (r6502_pc >> 8))
-              CPU_CYCLES(4)
-            else
-              CPU_CYCLES(3)
-            #ifdef __DEVELOP__
-              /*if (beebit_trace)
-                fprintf(htrace,"&%X ", r6502_pc);*/
-            #endif
-          }
+        if ((r6502_ps & ZFLAG))
+        {
+          VALUEOFIMMEDIATE
+          /*n1 = ((r6502_pc & 0xFF00) >> 8);*/
+          n1 = (r6502_pc >> 8);
+          if (n & 0x80)
+            r6502_pc -= (0x100 - n);
           else
-          {
-            r6502_pc++;
-            CPU_CYCLES(2)
-          }
-        #endif
+            r6502_pc += n;
+          /*if page boundary crossed*/
+          /*if (n1 != ((r6502_pc & 0xFF00) >> 8))*/
+          if (n1 != (r6502_pc >> 8))
+            CPU_CYCLES(4)
+          else
+            CPU_CYCLES(3)
+          #ifdef __DEVELOP__
+            /*if (beebit_trace)
+              fprintf(htrace,"&%X ", r6502_pc);*/
+          #endif
+        }
+        else
+        {
+          r6502_pc++;
+          CPU_CYCLES(2)
+        }
         break;
       case 0xF1:
         /*SBC*/
-        #ifdef __RISCOS__
-          r6502opcodeF1();
-        #else
-          VALUEOFPOSTINDEXEDY
-          sbc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"SBC");
-          #endif
-          CPU_CYCLES(5)
+        VALUEOFPOSTINDEXEDY
+        sbc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"SBC");
         #endif
+        CPU_CYCLES(5)
         break;
       case 0xF2:
         /*causes the 6502 to hang!*/
@@ -5155,44 +4073,31 @@ void r6502execute(void)
         break;
       case 0xF4:
         /*SKB*/
-        #ifdef __RISCOS__
-          r6502opcodeF4();
-        #else
-          r6502_pc++;
-          /*VALUEOFZEROPAGEX*/
-          #ifdef __DEBUG__
-            fprintf(htrace,"SKB");
-          #endif
-          CPU_CYCLES(3)
+        r6502_pc++;
+        /*VALUEOFZEROPAGEX*/
+        #ifdef __DEBUG__
+          fprintf(htrace,"SKB");
         #endif
+        CPU_CYCLES(3)
         break;
       case 0xF5:
         /*SBC*/
-        #ifdef __RISCOS__
-          r6502opcodeF5();
-        #else
-          VALUEOFZEROPAGEX
-          sbc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"SBC");
-          #endif
-          CPU_CYCLES(4)
+        VALUEOFZEROPAGEX
+        sbc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"SBC");
         #endif
+        CPU_CYCLES(4)
         break;
       case 0xF6:
         /*INC*/
-        #ifdef __RISCOS__
-          /*n1 = r6502inc(n1);*/
-          r6502opcodeF6();
-        #else
-          ADDRESSOFZEROPAGEX
-          n1 = memory[n];
-          n1++;
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          memory[n] = n1;
-          CPU_CYCLES(6)
-        #endif
+        ADDRESSOFZEROPAGEX
+        n1 = memory[n];
+        n1++;
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        memory[n] = n1;
+        CPU_CYCLES(6)
         #ifdef __DEBUG__
           fprintf(htrace,"INC &%X",n);
         #endif
@@ -5202,44 +4107,32 @@ void r6502execute(void)
         break;
       case 0xF8:
         /*SED*/
-        #ifdef __RISCOS__
-          r6502opcodeF8();
-        #else
-          SETFLAG(DFLAG)
-          #ifdef __DEBUG__
-            fprintf(htrace,"SED");
-          #endif
-          CPU_CYCLES(2)
+        SETFLAG(DFLAG)
+        #ifdef __DEBUG__
+          fprintf(htrace,"SED");
         #endif
+        CPU_CYCLES(2)
         break;
       case 0xF9:
         /*SBC*/
-        #ifdef __RISCOS__
-          r6502opcodeF9();
-        #else
-          VALUEOFABSOLUTEYPLUS
-          sbc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"SBC");
-          #endif
-          CPU_CYCLES(4)
+        VALUEOFABSOLUTEYPLUS
+        sbc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"SBC");
         #endif
+        CPU_CYCLES(4)
         break;
       case 0xFA:
         if (beebit_machinetype = MACHINE_MASTER128 OR beebit_machinetype = MACHINE_COMPACT)
         {
           /*PLX*/
-          #ifdef __RISCOS__
-            r6502opcodeFA();
-          #else
-            STACK_POP(r6502_x)
-            SETZFLAG(r6502_x)
-            SETNFLAG(r6502_x)
-            #ifdef __DEBUG__
-              fprintf(htrace,"PLX &%X (sp=&%X)",r6502_x,r6502_sp);
-            #endif
-            CPU_CYCLES(4)
+          STACK_POP(r6502_x)
+          SETZFLAG(r6502_x)
+          SETNFLAG(r6502_x)
+          #ifdef __DEBUG__
+            fprintf(htrace,"PLX &%X (sp=&%X)",r6502_x,r6502_sp);
           #endif
+          CPU_CYCLES(4)
         }
         else
         {
@@ -5256,41 +4149,28 @@ void r6502execute(void)
         break;
       case 0xFC:
         /*SKW*/
-        #ifdef __RISCOS__
-          r6502opcodeFC();
-        #else
-          r6502_pc += 2;
-          /*VALUEOFABSOLUTEXPLUS*/
-          CPU_CYCLES(4)
-        #endif
+        r6502_pc += 2;
+        /*VALUEOFABSOLUTEXPLUS*/
+        CPU_CYCLES(4)
         break;
       case 0xFD:
         /*SBC*/
-        #ifdef __RISCOS__
-          r6502opcodeFD();
-        #else
-          VALUEOFABSOLUTEXPLUS
-          sbc(n);
-          #ifdef __DEBUG__
-            fprintf(htrace,"SBC");
-          #endif
-          CPU_CYCLES(4)
+        VALUEOFABSOLUTEXPLUS
+        sbc(n);
+        #ifdef __DEBUG__
+          fprintf(htrace,"SBC");
         #endif
+        CPU_CYCLES(4)
         break;
       case 0xFE:
         /*INC*/
-        #ifdef __RISCOS__
-          /*n1 = r6502inc(n1);*/
-          r6502opcodeFE();
-        #else
-          ADDRESSOFABSOLUTEX
-          n1 = r6502read(n);
-          n1++;
-          SETZFLAG(n1)
-          SETNFLAG(n1)
-          r6502write(n,n1);
-          CPU_CYCLES(7)
-        #endif
+        ADDRESSOFABSOLUTEX
+        n1 = r6502read(n);
+        n1++;
+        SETZFLAG(n1)
+        SETNFLAG(n1)
+        r6502write(n,n1);
+        CPU_CYCLES(7)
         #ifdef __DEBUG__
           fprintf(htrace,"INC &%X",n);
         #endif
@@ -5299,31 +4179,27 @@ void r6502execute(void)
         /*ISB*/
         #ifdef __UNDOCUMENTED__
           fprintf(htrace," ISB FF &%X",r6502_pc);
-          #ifdef __RISCOS__
-            r6502opcodeFF();
-          #else
-            ADDRESSOFABSOLUTEX
-            #ifdef __DEVELOP__
-              fprintf(htrace," ISB &%X",n);
-            #endif
-            n1 = r6502read(n);
-            #ifdef __DEVELOP__
-              fprintf(htrace," &%X",n1);
-            #endif
-            /*INC*/
-            n1++;
-            #ifdef __DEVELOP__
-              fprintf(htrace," &%X\n",n1);
-            #endif
-            r6502write(n,n1);
-            /*SBC*/
-            /*n = n1;*/
-            sbc(n1);
-            /*#ifdef __DEVELOP__
-              fprintf(htrace,"ISB &%X",n);
-            #endif*/
-            CPU_CYCLES(7)
+          ADDRESSOFABSOLUTEX
+          #ifdef __DEVELOP__
+            fprintf(htrace," ISB &%X",n);
           #endif
+          n1 = r6502read(n);
+          #ifdef __DEVELOP__
+            fprintf(htrace," &%X",n1);
+          #endif
+          /*INC*/
+          n1++;
+          #ifdef __DEVELOP__
+            fprintf(htrace," &%X\n",n1);
+          #endif
+          r6502write(n,n1);
+          /*SBC*/
+          /*n = n1;*/
+          sbc(n1);
+          /*#ifdef __DEVELOP__
+            fprintf(htrace,"ISB &%X",n);
+          #endif*/
+          CPU_CYCLES(7)
         #else
           r6502badopcode();
         #endif

@@ -61,31 +61,7 @@
   EXPORT |beebit_romwritable|
   EXPORT |beebit_irq|
 
-  ;EXPORT |r6502addressofabsolute|
-  ;EXPORT |r6502addressofabsolutex|
-  ;EXPORT |r6502addressofabsolutey|
-  ;EXPORT |r6502addressofabsolutexplus|
-  ;EXPORT |r6502addressofabsoluteyplus|
-  ;EXPORT |r6502addressofzeropage|
-  ;EXPORT |r6502addressofzeropagex|
-  ;EXPORT |r6502addressofzeropagey|
-  ;EXPORT |r6502addressofindirect|
-  ;EXPORT |r6502addressofpreindexed|
-  ;EXPORT |r6502addressofpostindexedy|
-  ;EXPORT |r6502valueofabsolute|
-  ;EXPORT |r6502valueofabsolutexplus|
-  ;EXPORT |r6502valueofabsoluteyplus|
-  ;EXPORT |r6502valueofimmediate|
-  ;EXPORT |r6502valueofzeropage|
-  ;EXPORT |r6502valueofzeropagex|
-  ;EXPORT |r6502valueofzeropagey|
-  ;EXPORT |r6502valueofpreindexed|
-  ;EXPORT |r6502valueofpostindexedy|
-  EXPORT |r6502setnflag|
-  EXPORT |r6502setvflag|
-  EXPORT |r6502setbflag|
-  EXPORT |r6502setiflag|
-  EXPORT |r6502setzflag|
+  EXPORT |r6502busop|
   EXPORT |r6502readmem|
   EXPORT |r6502readb|
   EXPORT |r6502readbp|
@@ -94,8 +70,6 @@
   EXPORT |r6502writeb|
   EXPORT |r6502writebp|
   EXPORT |r6502writem|
-  EXPORT |r6502stackpush|
-  EXPORT |r6502stackpop|
 
   EXPORT |r6502readoffset|
   EXPORT |r6502writeoffset|
@@ -139,205 +113,10 @@
 ;
 ;rockwell 6502 cpu
 ;
-;|r6502addressofabsolute|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFABSOLUTE
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502addressofabsolutex|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFABSOLUTEX
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502addressofabsolutey|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFABSOLUTEY
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502addressofabsolutexplus|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFABSOLUTEXPLUS
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502addressofabsoluteyplus|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFABSOLUTEYPLUS
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502addressofzeropage|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFZEROPAGE
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502addressofzeropagex|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFZEROPAGEX
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502addressofzeropagey|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFZEROPAGEY
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502addressofindirect|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFINDIRECT
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502addressofpreindexed|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFPREINDEXED
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502addressofpostindexedy|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  ADDRESSOFPOSTINDEXEDY
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502valueofabsolute|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  VALUEOFABSOLUTE
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502valueofabsolutexplus|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  VALUEOFABSOLUTEXPLUS
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502valueofabsoluteyplus|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  VALUEOFABSOLUTEYPLUS
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502valueofimmediate|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  VALUEOFIMMEDIATE
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502valueofzeropage|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  VALUEOFZEROPAGE
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502valueofzeropagex|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  VALUEOFZEROPAGEX
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502valueofzeropagey|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  VALUEOFZEROPAGEY
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502valueofpreindexed|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  VALUEOFPREINDEXED
-;  LDMFD sp!,{r1-r12,pc}
-
-;|r6502valueofpostindexedy|
-;  ;OUT:r0 =address
-;  STMFD sp!,{r1-r12,lr}
-;  LDR r12,=r6502workspace
-;  VALUEOFPOSTINDEXEDY
-;  LDMFD sp!,{r1-r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502setnflag|
-  ;r0=register
-  STMFD sp!,{r1,rps,r12,lr}
-  LDR r12,=r6502_ps
-  LDRB rps,[r12]
-  SETNFLAG r0
-  STRB rps,[r12]
-  LDMFD sp!,{r1,rps,r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502setvflag|
-  ;r0=register
-  STMFD sp!,{r1,rps,r12,lr}
-  LDR r12,=r6502_ps
-  LDRB rps,[r12]
-  SETVFLAG r0
-  STRB rps,[r12]
-  LDMFD sp!,{r1,rps,r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502setbflag|
-  ;r0=register
-  STMFD sp!,{r1,rps,r12,lr}
-  LDR r12,=r6502_ps
-  LDRB rps,[r12]
-  SETBFLAG r0
-  STRB rps,[r12]
-  LDMFD sp!,{r1,rps,r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502setiflag|
-  ;r0=register
-  STMFD sp!,{r1,rps,r12,lr}
-  LDR r12,=r6502_ps
-  LDRB rps,[r12]
-  SETIFLAG r0
-  STRB rps,[r12]
-  LDMFD sp!,{r1,rps,r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502setzflag|
-  ;r0=register
-  STMFD sp!,{r1,rps,r12,lr}
-  LDR r12,=r6502_ps
-  LDRB rps,[r12]
-  SETZFLAG r0
-  STRB rps,[r12]
-  LDMFD sp!,{r1,rps,r12,pc}
+|r6502busop|
+  ASSERT :INDEX:R6502_BUSOPOFFSET:AND:&FFFFFCFF=0
+  AND r3,r1,#&F000000F
+  LDR pc,[r12,r3,ROR #26]
 
 ;
 ;rockwell 6502 cpu
@@ -345,9 +124,10 @@
 |r6502readmem|
   ;OUT:      r0=value
   ;PRESERVED:r1=address:LSL:16
-  AND r2,r1,#&F0000000
-  ASSERT :INDEX:R6502_READOFFSET=0 ; save 1 instruction
-  LDR pc,[r12,r2,LSR #26]
+  STMFD sp!,{r1,lr}
+  ORR r1,r1,#R6502_READCODE
+  BL r6502busop
+  LDMFD sp!,{r1,pc}
 
 |r6502readb|
 |r6502readbp|
@@ -357,7 +137,8 @@
   STMFD sp!,{r1-r9,r11-r12,lr}
   LDR r12,=r6502workspace
   MOV r1,r0,LSL #16
-  BL r6502readmem
+  ORR r1,r1,#R6502_READCODE
+  BL r6502busop
   LDMFD sp!,{r1-r9,r11-r12,pc}
 
 r6502read0000
@@ -688,9 +469,10 @@ r6502readmFF00
 |r6502writemem|
   ;PRESERVED:r0=value
   ;PRESERVED:r1=address:LSL:16
-  AND r2,r1,#&F0000000
-  ADD r11,r12,#:INDEX:R6502_WRITEOFFSET
-  LDR pc,[r11,r2,LSR #26]
+  STMFD sp!,{r1,lr}
+  ORR r1,r1,#R6502_WRITECODE
+  BL r6502busop
+  LDMFD sp!,{r1,pc}
 
 |r6502writeb|
 |r6502writebp|
@@ -699,10 +481,10 @@ r6502readmFF00
   ;r1=value
   STMFD sp!,{r0-r9,r11-r12,lr}
   LDR r12,=r6502workspace
-  MOV r2,r1
-  MOV r1,r0,LSL #16
-  MOV r0,r2
-  BL r6502writemem
+  MOV r2,r0,LSL #16
+  MOV r0,r1
+  ORR r1,r2,#(:INDEX:R6502_BUSOPOFFSET+64):SHR:6
+  BL r6502busop
   LDMFD sp!,{r0-r9,r11-r12,pc}
 
 r6502write0000
@@ -1031,36 +813,6 @@ r6502writemFD00
   SUB rcycles,rcycles,#2
   LDMFD sp!,{r0-r1,pc}
 
-;
-;rockwell 6502 cpu
-;
-|r6502stackpush|
-  ;pushes byte into decreasing stack memory (&100 - &1FF)
-  ;IN: r0 = byte to push
-  ;OUT: nothing
-  STMFD sp!,{r1,r2,rsp,r11,r12,lr}
-  LDR r12,=r6502workspace
-  LDR r11,=r6502_sp ;pointer to r6502_sp
-  LDRB rsp,[r11] ;load r6502_sp
-  STACKPUSH r0
-  STRB rsp,[r11] ;store r6502_sp
-  LDMFD sp!,{r1,r2,rsp,r11,r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502stackpop|
-  ;pops byte from decreasing stack memory (&100 - &1FF)
-  ;OUT:r0=byte from stack
-  STMFD sp!,{r1,r2,rsp,r11,r12,lr}
-  LDR r12,=r6502workspace ;pointer to memory
-  LDR r11,=r6502_sp ;pointer to r6502_sp
-  LDRB rsp,[r11] ;load r6502_sp
-  STACKPOP r0
-  ;AND rsp,rsp,#&FF
-  STRB rsp,[r11] ;store r6502_sp
-  LDMFD sp!,{r1,r2,rsp,r11,r12,pc}
-
 ;Data Area
 
   AREA    |C$$bss|, NOINIT
@@ -1068,8 +820,8 @@ r6502writemFD00
 |r6502workspace|
   % R6502_WorkSize
 
-|r6502readoffset| * r6502workspace+:INDEX:R6502_READOFFSET
-|r6502writeoffset| * r6502workspace+:INDEX:R6502_WRITEOFFSET
+|r6502readoffset| * r6502workspace+:INDEX:R6502_BUSOPOFFSET
+|r6502writeoffset| * r6502workspace+:INDEX:R6502_BUSOPOFFSET+64
 |r6502_cyclesoriginal| * r6502workspace+:INDEX:R6502_CYCLESORIGINAL
 |r6502_cyclestogo| * r6502workspace+:INDEX:R6502_CYCLESTOGO
 |beebit_irq| * r6502workspace+:INDEX:R6502_BEEBITIRQ

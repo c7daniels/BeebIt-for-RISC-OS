@@ -33,16 +33,35 @@
 
 ; Import global symbols
 
-  IMPORT |memory|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  IMPORT |r6502workspace|
-  IMPORT |r6502readmem|
-  IMPORT |r6502writemem|
+  IMPORT |r6502busop|
+  
+  IMPORT |r6502immediatedone|
+  IMPORT |r6502zeropagereadwrite|
+  IMPORT |r6502zeropageread|
+  IMPORT |r6502zeropagexreadwrite|
+  IMPORT |r6502zeropagexread|
+  IMPORT |r6502hiabsolutereadwrite|
+  IMPORT |r6502hiabsoluteread|
+  IMPORT |r6502hiabsolutexreadwrite|
+  IMPORT |r6502hiabsolutexread|
+  IMPORT |r6502hiabsoluteyreadwrite|
+  IMPORT |r6502hiabsoluteyread|
+  IMPORT |r6502zeropagexindirectreadwrite|
+  IMPORT |r6502zeropagexindirectread|
+  IMPORT |r6502zeropageindirectyreadwrite|
+  IMPORT |r6502zeropageindirectyread|
+
+  IMPORT |r6502bpl|
+  IMPORT |r6502clc|
+  IMPORT |r6502ora|
+  IMPORT |r6502asla|
+  IMPORT |r6502asl|
+  IMPORT |r6502anc|
+  IMPORT |r6502aso|
+  IMPORT |r6502php|
+  IMPORT |r6502nop|
+  IMPORT |r6502halt|
+  IMPORT |r6502opcode07_interface|
 
 ; Export global symbols
 
@@ -54,7 +73,6 @@
   EXPORT |r6502opcode05|
   EXPORT |r6502opcode06|
   EXPORT |r6502opcode07|
-  EXPORT |r6502opcode07_interface|
   EXPORT |r6502opcode08|
   EXPORT |r6502opcode09|
   EXPORT |r6502opcode0A|
@@ -108,483 +126,97 @@
   R6502NEXTOPCODE
 
 |r6502opcode01|
-  ADDRESSOFPREINDEXED ;4 cycles
-  READMEM ;1 cycle
-  R6502ORA ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  PREINDEXEDLOAD r6502ora
 
 |r6502opcode02|
-  ;HLT
-  R6502JAM
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502halt
 
 |r6502opcode03|
-  ;ASO
-  ADDRESSOFPREINDEXED ;4 cycles
-  READMEM ;1 cycle
-  R6502ASO ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  PREINDEXEDMODIFYN r6502aso
 
 |r6502opcode04|
-  ;SKB
-  R6502SKB
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502nop
 
 |r6502opcode05|
-  ;ORA
-  VALUEOFZEROPAGE
-  R6502ORA
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGELOAD r6502ora
 
 |r6502opcode06|
-  ;ASL
-  VALUEOFZEROPAGE
-  R6502ASL r0
-  STRB r0,[r11]
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEMODIFYN r6502asl
 
 |r6502opcode07|
   ;check if it's called from the ROM space
   TST rpc,#&80000000
   BNE r6502opcode07_interface
-  ;ASO
-  VALUEOFZEROPAGE
-  R6502ASO
-  STRB r0,[r11]
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-r6502opcode07_interface
-  ;Opcode 07 Interface
-  STMFD sp!,{r0-ry,r11-r12}
-  ;MOV r0,#31
-  ;SWI OS_WriteC
-  ;MOV r0,#0
-  ;SWI OS_WriteC
-  ;MOV r0,#0
-  ;SWI OS_WriteI+55
-  ;save the pc for later
-  LDR r11,=r6502_pc
-  MOV rpc,rpc,LSR #16
-  STR rpc,[r11]
-  ;save the ps for later
-  LDR r11,=r6502_ps
-  STRB rps,[r11]
-
-  ;swap in memory overlays
-  MOV lr,pc
-  LDR pc,[r12,#:INDEX:R6502_OPCODE07SWAPS]
-  LDR r12,[sp,#36]
-
-  ;pointer to bbc memory
-  ADD r12,r12,#:INDEX:R6502_MEMORY
-  ;pointer to control block
-  MOV r11,ry,LSL#8
-  ORR r11,r11,rx
-  ADD r11,r11,r12
-
-  ;bit set of registers to relocate
-  LDRB r10,[r11,#4]
-
-  ;set the registers r0-r7
-  LDR r0,[r11,#09]
-  ANDS r9,r10,#1
-  ADDNE r0,r0,r12
-  LDR r1,[r11,#13]
-  ANDS r9,r10,#2
-  ADDNE r1,r1,r12
-  LDR r2,[r11,#17]
-  ANDS r9,r10,#4
-  ADDNE r2,r2,r12
-  LDR r3,[r11,#21]
-  ANDS r9,r10,#8
-  ADDNE r3,r3,r12
-  LDR r4,[r11,#25]
-  ANDS r9,r10,#16
-  ADDNE r4,r4,r12
-  LDR r5,[r11,#29]
-  ANDS r9,r10,#32
-  ADDNE r5,r5,r12
-  LDR r6,[r11,#33]
-  ANDS r9,r10,#64
-  ADDNE r6,r6,r12
-  LDR r7,[r11,#37]
-  ANDS r9,r10,#128
-  ADDNE r7,r7,r12
-
-  ;load the swi number
-  LDRB r10,[r11,#0]
-  LDRB r9,[r11,#1]
-  ORR r10,r10,r9,LSL#8
-  LDRB r9,[r11,#2]
-  ORR r10,r10,r9,LSL#16
-  ;set the 'X' error flag
-  ORR r10,r10,#&20000
-  SWI OS_CallASWI
-
-  LDR r10,=r6502_ps
-  LDRB rps,[r10]
-  AND rps,rps,#&3C ;%00111100 ;clear NVubdiZC
-  ORRMI rps,rps,#NFLAG
-  ORREQ rps,rps,#ZFLAG
-  ORRCS rps,rps,#CFLAG
-  ORRVS rps,rps,#VFLAG
-  STRB rps,[r10]
-
-  BVS r6502opcode07_error
-
-  LDRB r8,[r11,#3] ;number of registers to return
-  LDRB r10,[r11,#5] ;bit set of registers to relocate
-
-  ;write the registers r0-r7
-  CMP r8,#0
-  BEQ r6502opcode07_2
-  ANDS r9,r10,#1
-  SUBNE r0,r0,r12
-  STR r0,[r11,#09]
-  CMP r8,#1
-  BEQ r6502opcode07_2
-  ANDS r9,r10,#2
-  SUBNE r1,r1,r12
-  STR r1,[r11,#13]
-  CMP r8,#2
-  BEQ r6502opcode07_2
-  ANDS r9,r10,#4
-  SUBNE r2,r2,r12
-  STR r2,[r11,#17]
-  CMP r8,#3
-  BEQ r6502opcode07_2
-  ANDS r9,r10,#8
-  SUBNE r3,r3,r12
-  STR r3,[r11,#21]
-  CMP r8,#4
-  BEQ r6502opcode07_2
-  ANDS r9,r10,#16
-  SUBNE r4,r4,r12
-  STR r4,[r11,#25]
-  CMP r8,#5
-  BEQ r6502opcode07_2
-  ANDS r9,r10,#32
-  SUBNE r5,r5,r12
-  STR r5,[r11,#29]
-  CMP r8,#6
-  BEQ r6502opcode07_2
-  ANDS r9,r10,#64
-  SUBNE r6,r6,r12
-  STR r6,[r11,#33]
-  CMP r8,#7
-  BEQ r6502opcode07_2
-  ANDS r9,r10,#128
-  SUBNE r7,r7,r12
-  STR r7,[r11,#37]
-
-r6502opcode07_2
-  ;swap out memory overlays
-  LDR r12,[sp,#36]
-  MOV lr,pc
-  LDR pc,[r12,#:INDEX:R6502_OPCODE07SWAPS+4]
-
-  LDR r11,=r6502_ps
-  LDRB rps,[r11]
-  LDR r11,=r6502_pc
-  LDR rpc,[r11]
-  MOV rpc,rpc,LSL #16
-  LDMFD sp!,{r0-ry,r11-r12}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-r6502opcode07_error
-  ;load the swi number
-  LDRB r10,[r11,#2]
-  ;test the 'X' error flag
-  ANDS r10,r10,#&02
-
-  BEQ r6502opcode07_errorXC
-
-  ;X set
-  ;if set, point to error buffer
-  LDRB r10,[r11,#6]
-  LDRB r9,[r11,#7]
-  ORR r10,r10,r9,LSL#8
-  ADD r10,r10,r12
-  ;length of error buffer
-  LDRB r9,[r11,#8]
-  CMP r9,#0
-  BEQ r6502opcode07_error5
-  B r6502opcode07_error2
-
-r6502opcode07_errorXC
-  ;if X not set, point pc to &100
-  LDR r10,=r6502_pc
-  MOV rpc,#&100
-  STR rpc,[r10]
-  ADD r10,r12,rpc
-  ;length of error buffer
-  MOV r9,#&40
-
-r6502opcode07_error2
-  ;set the BRK opcode
-  MOV r8,#0
-  ;write 00 opcode
-  STRB r8,[r10],#1
-  ;counter--
-  SUBS r9,r9,#1
-  BEQ r6502opcode07_error5
-  ;store the error code
-  LDRB r8,[r0],#4
-  STRB r8,[r10],#1
-  ;remove 1 for the error code
-  SUBS r9,r9,#1
-  BEQ r6502opcode07_error4
-
-  ;remove 1 for the terminator
-  SUBS r9,r9,#1
-  BEQ r6502opcode07_error4
-
-r6502opcode07_error3
-  LDRB r8,[r0],#1
-  STRB r8,[r10],#1
-  CMP r8,#0
-  BEQ r6502opcode07_error5
-  SUBS r9,r9,#1
-  BNE r6502opcode07_error3
-
-r6502opcode07_error4
-  ;set the terminator
-  MOV r8,#0
-  STRB r8,[r10]
-
-r6502opcode07_error5
-  ;swap out memory overlays
-  LDR r12,[sp,#36]
-  MOV lr,pc
-  LDR pc,[r12,#:INDEX:R6502_OPCODE07SWAPS+4]
-  
-  LDR r11,=r6502_ps
-  LDRB rps,[r11]
-  LDR r11,=r6502_pc
-  LDR rpc,[r11]
-  MOV rpc,rpc,LSL #16
-  LDMFD sp!,{r0-ry,r11-r12}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEMODIFYN r6502aso
 
 |r6502opcode08|
-  ;PHP
-  ORR r0,rps,#UFLAG+BFLAG
-  STACKPUSH r0
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r6502php
 
 |r6502opcode09|
-  VALUEOFIMMEDIATE
-  R6502ORA
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502ora
 
 |r6502opcode0A|
-  ;ASL
-  R6502ASL ra
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r6502asla
 
 |r6502opcode0B|
-  ;ANC
-  VALUEOFIMMEDIATE
-  R6502ANC
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502anc
 
 |r6502opcode0C|
-  ;SKW
-  R6502SKW
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTELOAD r6502nop
 
 |r6502opcode0D|
-  ;ORA
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502ORA ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTELOAD r6502ora
 
 |r6502opcode0E|
-  ;ASL
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502ASL r0 ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEMODIFYN r6502asl
 
 |r6502opcode0F|
-  ;ASO
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502ASO ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEMODIFYN r6502aso
 
 |r6502opcode10|
-  ;BPL
-  ;if condition succeeds
-  ;  if page boundary crossed
-  ;    4 cycles
-  ;  else
-  ;    3 cycles
-  ;else
-  ;  2 cycles
-  ANDS r0,rps,#NFLAG
-  ;if (!(r6502_ps & NFLAG))
-  BEQ r6502opcode10_2
-  ;else
-  ADD rpc,rpc,#&10000 ;r6502_pc++
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-r6502opcode10_2
-  VALUEOFIMMEDIATE
-  R6502BRA
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502bpl
 
 |r6502opcode11|
-  ;ORA
-  ADDRESSOFPOSTINDEXEDY ;3+ cycles
-  READMEM ;1 cycle
-  R6502ORA ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  POSTINDEXEDYLOAD r6502ora
 
 |r6502opcode12|
-  ;HLT
-  R6502JAM
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502halt
 
 |r6502opcode13|
-  ;ASO
-  ADDRESSOFPOSTINDEXEDY_STA ;4 cycles
-  READMEM ;1 cycle
-  R6502ASO ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  POSTINDEXEDYMODIFYN r6502aso
 
 |r6502opcode14|
-  ;SKB
-  R6502SKB
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXLOAD r6502nop
 
 |r6502opcode15|
-  VALUEOFZEROPAGEX
-  R6502ORA
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXLOAD r6502ora
 
 |r6502opcode16|
-  VALUEOFZEROPAGEX
-  R6502ASL r0
-  STRB r0,[r11]
-  CPU_CYCLES 6
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXMODIFYN r6502asl
 
 |r6502opcode17|
-  ;ASO
-  VALUEOFZEROPAGEX
-  R6502ASO
-  STRB r0,[r11]
-  CPU_CYCLES 6
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXMODIFYN r6502aso
 
 |r6502opcode18|
-  ;CLC
-  AND rps,rps,#NOTCFLAG
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r6502clc
 
 |r6502opcode19|
-  ;ORA
-  ADDRESSOFABSOLUTEYPLUS ;2+ cycles
-  READMEM ;1 cycle
-  R6502ORA ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEYLOAD r6502ora
 
 |r6502opcode1A|
-  ;NOP
-  R6502NOP
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502nop
 
 |r6502opcode1B|
-  ;ASO
-  ADDRESSOFABSOLUTEY ;3 cycles
-  READMEM ;1 cycle
-  R6502ASO ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEYMODIFYN r6502aso
 
 |r6502opcode1C|
-  ;SKW
-  R6502SKW
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXLOAD r6502nop
 
 |r6502opcode1D|
-  ;ORA
-  ADDRESSOFABSOLUTEXPLUS ;2+ cycles
-  READMEM ;1 cycle
-  R6502ORA ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXLOAD r6502ora
 
 |r6502opcode1E|
-  ;ASL
-  ADDRESSOFABSOLUTEX ;3 cycles
-  READMEM ;1 cycle
-  R6502ASL r0 ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXMODIFYN r6502asl
 
 ;Data Area
 

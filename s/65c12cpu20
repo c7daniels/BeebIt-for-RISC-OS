@@ -33,62 +33,45 @@
 
 ; Import global symbols
 
-  IMPORT |memory|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  ;IMPORT |r6502_n|
-  ;IMPORT |r6502_v|
-  ;IMPORT |r6502_b|
-  ;IMPORT |r6502_d|
-  ;IMPORT |r6502_i|
-  ;IMPORT |r6502_z|
-  ;IMPORT |r6502_c|
-  IMPORT |r6502workspace|
-  IMPORT |r6502readmem|
-  IMPORT |r6502writemem|
+  IMPORT |r6502busop|
+  
+  IMPORT |r6502immediatedone|
+  IMPORT |r6502zeropagereadreadforwrite|
+  IMPORT |r6502hiabsolutereadreadforwrite|
+
+  IMPORT |r6502rol|
+  IMPORT |r6502nop|
 
 ; Export global symbols
 
   EXPORT |r65c12opcode22|
   EXPORT |r65c12opcode23|
+  EXPORT |r65c12opcode26|
   EXPORT |r65c12opcode27|
   EXPORT |r65c12opcode2B|
+  EXPORT |r65c12opcode2E|
   EXPORT |r65c12opcode2F|
 
 |r65c12opcode22|
-  ;Reserved NOP
-  R6502SKB
-  SUB rcycles,rcycles,#2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502nop
 
 |r65c12opcode23|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
+
+|r65c12opcode26|
+  ZEROPAGEMODIFYC r6502rol
 
 |r65c12opcode27|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode2B|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
+
+|r65c12opcode2E|
+  ABSOLUTEMODIFYC r6502rol
 
 |r65c12opcode2F|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 ;Data Area
 

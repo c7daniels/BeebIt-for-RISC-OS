@@ -33,90 +33,62 @@
 
 ; Import global symbols
 
-  IMPORT |memory|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  IMPORT |r6502workspace|
-  IMPORT |r6502readmem|
-  IMPORT |r6502writemem|
+  IMPORT |r6502busop|
+  
+  IMPORT |r6502zeropagereadreadforwrite|
+  IMPORT |r6502zeropagexreadreadforwrite|
+  IMPORT |r6502hiabsolutereadreadforwrite|
+  IMPORT |r6502hiabsolutexreadreadforwrite|
+  IMPORT |r6502zeropageindirectread|
+
+  IMPORT |r6502ora|
+  IMPORT |r6502asl|
+  IMPORT |r65c12trb|
+  IMPORT |r65c12ina|
+  IMPORT |r6502nop|
 
 ; Export global symbols
 
   EXPORT |r65c12opcode12|
   EXPORT |r65c12opcode13|
   EXPORT |r65c12opcode14|
+  EXPORT |r65c12opcode16|
   EXPORT |r65c12opcode17|
   EXPORT |r65c12opcode1A|
   EXPORT |r65c12opcode1B|
   EXPORT |r65c12opcode1C|
+  EXPORT |r65c12opcode1E|
   EXPORT |r65c12opcode1F|
 
 |r65c12opcode12|
-  ;ORA
-  ADDRESSOFINDZEROPAGE
-  READMEM
-  R6502ORA
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  INDIRECTLOAD r6502ora
 
 |r65c12opcode13|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode14|
-  ;TRB
-  VALUEOFZEROPAGE
-  TST ra,r0 ;and it
-  SETZFLAG0
-  BIC r0,r0,ra ;r0 and not ra
-  STRB r0,[r11]
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEMODIFYC r65c12trb
+
+|r65c12opcode16|
+  ZEROPAGEXMODIFYC r6502asl
 
 |r65c12opcode17|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode1A|
-  ;INC
-  R6502INA
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r65c12ina
 
 |r65c12opcode1B|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode1C|
-  ;TRB
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  TST ra,r0 ;and it
-  SETZFLAG0
-  BIC r0,r0,ra ;r0 and not ra
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEMODIFYC r65c12trb
+
+|r65c12opcode1E|
+  ABSOLUTEXMODIFYC r6502asl
 
 |r65c12opcode1F|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 ;Data Area
 

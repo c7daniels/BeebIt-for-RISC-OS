@@ -1,0 +1,511 @@
+;>6502jumps.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; (C) Copyright Michael J Foot, 1998-1999
+;
+; Email: <mikef@voyager.co.nz>
+;
+; r12=pointer to variable
+; r11=pointer to variable
+; r10=cyclestogo
+; r9=PC
+; r8=PS
+; r7=Y
+; r6=X
+; r5=A
+
+  GET h.6502cpus
+
+  GET h.6502cpui
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET h.RegNames
+
+; Use the GET directive to include a list of SWI names as if typed here
+
+  GET h.SWInames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+  IMPORT |r6502_pc|
+  IMPORT |r6502_ps|
+  IMPORT |r6502busop|
+
+; Export global symbols
+
+  EXPORT |r6502bpl|
+  EXPORT |r6502bmi|
+  EXPORT |r6502bvc|
+  EXPORT |r6502bvs|
+  EXPORT |r6502bcc|
+  EXPORT |r6502bcs|
+  EXPORT |r6502bne|
+  EXPORT |r6502beq|
+  EXPORT |r65c12bra|
+
+  EXPORT |r6502jmp|
+  EXPORT |r6502jmpind|
+  EXPORT |r65c12jmpind|
+  EXPORT |r65c12jmpxind|
+  EXPORT |r6502jsr|
+  EXPORT |r6502rti|
+  EXPORT |r6502rts|
+
+  EXPORT |r6502opcode07_interface|
+
+|r6502bpl|
+  TST rps,#NFLAG
+  ADD r1,r1,#&10000
+  R6502ENDNEINSTRUCTION
+  R6502TAKEBRANCH
+
+|r6502bmi|
+  TST rps,#NFLAG
+  ADD r1,r1,#&10000
+  R6502ENDEQINSTRUCTION
+  R6502TAKEBRANCH
+
+|r6502bvc|
+  TST rps,#VFLAG
+  ADD r1,r1,#&10000
+  R6502ENDNEINSTRUCTION
+  R6502TAKEBRANCH
+
+|r6502bvs|
+  TST rps,#VFLAG
+  ADD r1,r1,#&10000
+  R6502ENDEQINSTRUCTION
+  R6502TAKEBRANCH
+
+|r6502bcc|
+  TST rps,#CFLAG
+  ADD r1,r1,#&10000
+  R6502ENDNEINSTRUCTION
+  R6502TAKEBRANCH
+
+|r6502bcs|
+  TST rps,#CFLAG
+  ADD r1,r1,#&10000
+  R6502ENDEQINSTRUCTION
+  R6502TAKEBRANCH
+
+|r6502bne|
+  TST rps,#ZFLAG
+  ADD r1,r1,#&10000
+  R6502ENDNEINSTRUCTION
+  R6502TAKEBRANCH
+
+|r6502beq|
+  TST rps,#ZFLAG
+  ADD r1,r1,#&10000
+  R6502ENDEQINSTRUCTION
+  R6502TAKEBRANCH
+
+|r65c12bra|
+  ADD r1,r1,#&10000
+  R6502TAKEBRANCH
+
+r6502branch
+  LDR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  BIC r1,r1,#&00FF0000
+  TST r0,#&80 ;if (n & 0x80)
+  SUBNE rpc,rpc,#&01000000
+  ADD rpc,rpc,r0,LSL #16
+  AND r3,rpc,#&00FF0000
+  ORR r1,r1,r3
+  EOR r3,r1,rpc
+  TST r3,#&FF000000
+  R6502ENDEQINSTRUCTION
+  R6502NEXTCYCLE r6502fixbranch
+
+r6502fixbranch
+  R6502ENDINSTRUCTION
+
+|r6502jmp|
+  MOV rpc,r0,LSL #16
+  ADD r1,r1,#&10000
+  R6502NEXTCYCLE r6502jmp2
+
+r6502jmp2
+  ORR rpc,rpc,r0,LSL #24
+  R6502ENDINSTRUCTION
+
+|r6502jmpind|
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r6502jmpind2
+
+r6502jmpind2
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r0,LSL #24
+  R6502NEXTCYCLE r6502jmpind3
+
+r6502jmpind3
+  MOV rpc,r0,LSL #16
+  MOV r1,r1,ROR #24
+  ADD r1,r1,#&01000000
+  MOV r1,r1,ROR #8
+  R6502NEXTCYCLE r6502jmp2
+
+|r65c12jmpind|
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r65c12jmpind2
+
+r65c12jmpind2
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r0,LSL #24
+  R6502NEXTCYCLE r65c12jmpind3
+
+r65c12jmpind3
+  MOV rpc,r0,LSL #16
+  MOV r1,r1,ROR #24
+  ADDS r1,r1,#&01000000
+  MOV r1,r1,ROR #8
+  R6502NEXTCYCLE_CCorCS r65c12jmpind4nocarry, r65c12jmpind4carry
+
+r65c12jmpind4carry
+  ADD r1,r1,#&01000000
+r65c12jmpind4nocarry
+  R6502NEXTCYCLE r6502jmp2
+
+|r65c12jmpxind|
+  ADD r1,r1,#&10000
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  R6502NEXTCYCLE r65c12jmpxind2
+
+r65c12jmpxind2
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r3,rx,LSL #24
+  ADDS r3,r3,r2,LSL #24
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,r3,LSR #8
+  ORR r1,r1,r0,LSL #24
+  R6502NEXTCYCLE_CCorCS r65c12jmpind3, r65c12jmpxind3carry
+
+r65c12jmpxind3carry
+  ADD r1,r1,#&01000000
+  R6502NEXTCYCLE r65c12jmpxind4carry
+
+r65c12jmpxind4carry
+  MOV rpc,r0,LSL #16
+  ADD r1,r1,#&10000
+  R6502NEXTCYCLE r6502jmp2
+
+|r6502jsr|
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,rsp,LSR #8
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r6502jsr2
+
+r6502jsr2
+  MOV r0,rpc,LSR #24
+  ORR r1,r1,#R6502_WRITECODE-R6502_READCODE
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502jsr3
+
+r6502jsr3
+  MOV r2,rpc,LSL #8
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  MOV r0,r2,LSR #24
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502jsr4
+
+r6502jsr4
+  LDR r0,[r12,#:INDEX:R6502_ADDRTEMP]
+  ORR r1,rpc,#R6502_READCODE
+  MOV rpc,r0,LSL #16
+  R6502NEXTCYCLE r6502jmp2
+
+|r6502rti|
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,rsp,LSR #8
+  ADD rsp,rsp,#&01000000
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r6502rti2
+
+r6502rti2
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  ADD rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502rti3
+
+r6502rti3
+  EOR r3,rps,r0
+  MOV rps,r0
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  ADD rsp,rsp,#&01000000
+  TST r3,#IFLAG
+  BNE r6502rti3check
+  R6502NEXTCYCLE r6502rti4
+r6502rti3check
+  R6502UPDATEIRQ
+  R6502NEXTCYCLE r6502rti4
+
+r6502rti4
+  MOV rpc,r0,LSL #16
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  R6502NEXTCYCLE r6502jmp2
+
+|r6502rts|
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,rsp,LSR #8
+  ADD rsp,rsp,#&01000000
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r6502rts2
+
+r6502rts2
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  ADD rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502rts3
+
+r6502rts3
+  MOV rpc,r0,LSL #16
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  R6502NEXTCYCLE r6502rts4
+
+r6502rts4
+  ORR rpc,rpc,r0,LSL #24
+  ORR r1,rpc,#R6502_READCODE
+  R6502NEXTCYCLE r6502rts5
+
+r6502rts5
+  ADD rpc,rpc,#&10000
+  R6502ENDINSTRUCTION
+
+r6502opcode07_interface
+  ;Opcode 07 Interface
+  STMFD sp!,{r0-ry,r11-r12}
+  ;MOV r0,#31
+  ;SWI OS_WriteC
+  ;MOV r0,#0
+  ;SWI OS_WriteC
+  ;MOV r0,#0
+  ;SWI OS_WriteI+55
+  ;save the pc for later
+  LDR r11,=r6502_pc
+  MOV rpc,rpc,LSR #16
+  STR rpc,[r11]
+  ;save the ps for later
+  LDR r11,=r6502_ps
+  STRB rps,[r11]
+
+  ;swap in memory overlays
+  MOV lr,pc
+  LDR pc,[r12,#:INDEX:R6502_OPCODE07SWAPS]
+  LDR r12,[sp,#36]
+
+  ;pointer to bbc memory
+  ADD r12,r12,#:INDEX:R6502_MEMORY
+  ;pointer to control block
+  MOV r11,ry,LSL#8
+  ORR r11,r11,rx
+  ADD r11,r11,r12
+
+  ;bit set of registers to relocate
+  LDRB r10,[r11,#4]
+
+  ;set the registers r0-r7
+  LDR r0,[r11,#09]
+  ANDS r9,r10,#1
+  ADDNE r0,r0,r12
+  LDR r1,[r11,#13]
+  ANDS r9,r10,#2
+  ADDNE r1,r1,r12
+  LDR r2,[r11,#17]
+  ANDS r9,r10,#4
+  ADDNE r2,r2,r12
+  LDR r3,[r11,#21]
+  ANDS r9,r10,#8
+  ADDNE r3,r3,r12
+  LDR r4,[r11,#25]
+  ANDS r9,r10,#16
+  ADDNE r4,r4,r12
+  LDR r5,[r11,#29]
+  ANDS r9,r10,#32
+  ADDNE r5,r5,r12
+  LDR r6,[r11,#33]
+  ANDS r9,r10,#64
+  ADDNE r6,r6,r12
+  LDR r7,[r11,#37]
+  ANDS r9,r10,#128
+  ADDNE r7,r7,r12
+
+  ;load the swi number
+  LDRB r10,[r11,#0]
+  LDRB r9,[r11,#1]
+  ORR r10,r10,r9,LSL#8
+  LDRB r9,[r11,#2]
+  ORR r10,r10,r9,LSL#16
+  ;set the 'X' error flag
+  ORR r10,r10,#&20000
+  SWI OS_CallASWI
+
+  LDR r10,=r6502_ps
+  LDRB rps,[r10]
+  AND rps,rps,#&3C ;%00111100 ;clear NVubdiZC
+  ORRMI rps,rps,#NFLAG
+  ORREQ rps,rps,#ZFLAG
+  ORRCS rps,rps,#CFLAG
+  ORRVS rps,rps,#VFLAG
+  STRB rps,[r10]
+
+  BVS r6502opcode07_error
+
+  LDRB r8,[r11,#3] ;number of registers to return
+  LDRB r10,[r11,#5] ;bit set of registers to relocate
+
+  ;write the registers r0-r7
+  CMP r8,#0
+  BEQ r6502opcode07_2
+  ANDS r9,r10,#1
+  SUBNE r0,r0,r12
+  STR r0,[r11,#09]
+  CMP r8,#1
+  BEQ r6502opcode07_2
+  ANDS r9,r10,#2
+  SUBNE r1,r1,r12
+  STR r1,[r11,#13]
+  CMP r8,#2
+  BEQ r6502opcode07_2
+  ANDS r9,r10,#4
+  SUBNE r2,r2,r12
+  STR r2,[r11,#17]
+  CMP r8,#3
+  BEQ r6502opcode07_2
+  ANDS r9,r10,#8
+  SUBNE r3,r3,r12
+  STR r3,[r11,#21]
+  CMP r8,#4
+  BEQ r6502opcode07_2
+  ANDS r9,r10,#16
+  SUBNE r4,r4,r12
+  STR r4,[r11,#25]
+  CMP r8,#5
+  BEQ r6502opcode07_2
+  ANDS r9,r10,#32
+  SUBNE r5,r5,r12
+  STR r5,[r11,#29]
+  CMP r8,#6
+  BEQ r6502opcode07_2
+  ANDS r9,r10,#64
+  SUBNE r6,r6,r12
+  STR r6,[r11,#33]
+  CMP r8,#7
+  BEQ r6502opcode07_2
+  ANDS r9,r10,#128
+  SUBNE r7,r7,r12
+  STR r7,[r11,#37]
+
+r6502opcode07_2
+  ;swap out memory overlays
+  LDR r12,[sp,#36]
+  MOV lr,pc
+  LDR pc,[r12,#:INDEX:R6502_OPCODE07SWAPS+4]
+
+  LDR r11,=r6502_ps
+  LDRB rps,[r11]
+  LDR r11,=r6502_pc
+  LDR rpc,[r11]
+  MOV rpc,rpc,LSL #16
+  LDMFD sp!,{r0-ry,r11-r12}
+  ;LDR pc,[sp],#4
+  R6502NEXTOPCODE
+
+r6502opcode07_error
+  ;load the swi number
+  LDRB r10,[r11,#2]
+  ;test the 'X' error flag
+  ANDS r10,r10,#&02
+
+  BEQ r6502opcode07_errorXC
+
+  ;X set
+  ;if set, point to error buffer
+  LDRB r10,[r11,#6]
+  LDRB r9,[r11,#7]
+  ORR r10,r10,r9,LSL#8
+  ADD r10,r10,r12
+  ;length of error buffer
+  LDRB r9,[r11,#8]
+  CMP r9,#0
+  BEQ r6502opcode07_error5
+  B r6502opcode07_error2
+
+r6502opcode07_errorXC
+  ;if X not set, point pc to &100
+  LDR r10,=r6502_pc
+  MOV rpc,#&100
+  STR rpc,[r10]
+  ADD r10,r12,rpc
+  ;length of error buffer
+  MOV r9,#&40
+
+r6502opcode07_error2
+  ;set the BRK opcode
+  MOV r8,#0
+  ;write 00 opcode
+  STRB r8,[r10],#1
+  ;counter--
+  SUBS r9,r9,#1
+  BEQ r6502opcode07_error5
+  ;store the error code
+  LDRB r8,[r0],#4
+  STRB r8,[r10],#1
+  ;remove 1 for the error code
+  SUBS r9,r9,#1
+  BEQ r6502opcode07_error4
+
+  ;remove 1 for the terminator
+  SUBS r9,r9,#1
+  BEQ r6502opcode07_error4
+
+r6502opcode07_error3
+  LDRB r8,[r0],#1
+  STRB r8,[r10],#1
+  CMP r8,#0
+  BEQ r6502opcode07_error5
+  SUBS r9,r9,#1
+  BNE r6502opcode07_error3
+
+r6502opcode07_error4
+  ;set the terminator
+  MOV r8,#0
+  STRB r8,[r10]
+
+r6502opcode07_error5
+  ;swap out memory overlays
+  LDR r12,[sp,#36]
+  MOV lr,pc
+  LDR pc,[r12,#:INDEX:R6502_OPCODE07SWAPS+4]
+  
+  LDR r11,=r6502_ps
+  LDRB rps,[r11]
+  LDR r11,=r6502_pc
+  LDR rpc,[r11]
+  MOV rpc,rpc,LSL #16
+  LDMFD sp!,{r0-ry,r11-r12}
+  ;LDR pc,[sp],#4
+  R6502NEXTOPCODE
+
+;Data Area
+
+;  AREA    |C$$data|, DATA
+
+  END

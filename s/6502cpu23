@@ -33,24 +33,37 @@
 
 ; Import global symbols
 
-  IMPORT |memory|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  ;IMPORT |r6502_n|
-  ;IMPORT |r6502_v|
-  ;IMPORT |r6502_b|
-  ;IMPORT |r6502_d|
-  ;IMPORT |r6502_i|
-  ;IMPORT |r6502_z|
-  ;IMPORT |r6502_c|
-  IMPORT |r6502_cyclesoriginal|
-  IMPORT |r6502workspace|
-  IMPORT |r6502readmem|
-  IMPORT |r6502writemem|
+  IMPORT |r6502busop|
+  
+  IMPORT |r6502immediatedone|
+  IMPORT |r6502zeropagereadwrite|
+  IMPORT |r6502zeropageread|
+  IMPORT |r6502zeropagexreadwrite|
+  IMPORT |r6502zeropagexread|
+  IMPORT |r6502hiabsolutereadwrite|
+  IMPORT |r6502hiabsoluteread|
+  IMPORT |r6502hiabsolutexreadwrite|
+  IMPORT |r6502hiabsolutexread|
+  IMPORT |r6502hiabsoluteyreadwrite|
+  IMPORT |r6502hiabsoluteyread|
+  IMPORT |r6502zeropagexindirectreadwrite|
+  IMPORT |r6502zeropagexindirectread|
+  IMPORT |r6502zeropageindirectyreadwrite|
+  IMPORT |r6502zeropageindirectyread|
+
+  IMPORT |r6502bmi|
+  IMPORT |r6502sec|
+  IMPORT |r6502plp|
+  IMPORT |r6502bit|
+  IMPORT |r6502and|
+  IMPORT |r6502rola|
+  IMPORT |r6502rol|
+  IMPORT |r6502anc|
+  IMPORT |r6502aso|
+  IMPORT |r6502rla|
+  IMPORT |r6502jsr|
+  IMPORT |r6502nop|
+  IMPORT |r6502halt|
 
 ; Export global symbols
 
@@ -86,281 +99,94 @@
   EXPORT |r6502opcode3C|
 
 |r6502opcode1F|
-  ;ASO
-  ADDRESSOFABSOLUTEX ;3 cycles
-  READMEM ;1 cycle
-  R6502ASO ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXMODIFYN r6502aso
 
 |r6502opcode20|
-  ;JSR
-  MOV r1,rpc
-  READMEM
-  STR r0,[r12,#:INDEX:R6502_ABSTEMP] ;lo
-
-  ADD r1,r1,#&10000 ;rpc + 1
-  READMEM ;hi
-  LDR r2,[r12,#:INDEX:R6502_ABSTEMP] ;lo
-  MOV r2,r2,LSL #16
-
-  ADD r3,rpc,#&10000 ;jsr bug
-  ADD rpc,r2,r0,LSL #24 ;rpc=lo+(hi<<8)
-
-  MOV r2,r3,LSR #24  ;hi
-  STACKPUSH r2
-  MOV r2,#&00FF
-  AND r2,r2,r3,LSR #16 ;lo
-  STACKPUSH r2
-  CPU_CYCLES 6
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502jsr
 
 |r6502opcode21|
-  ;AND
-  ADDRESSOFPREINDEXED ;4 cycles
-  READMEM ;1 cycle
-  R6502AND ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  PREINDEXEDLOAD r6502and
 
 |r6502opcode22|
-  ;HLT
-  R6502JAM
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502halt
 
 |r6502opcode23|
-  ;RLA
-  ADDRESSOFPREINDEXED ;4 cycles
-  READMEM ;1 cycle
-  R6502RLA ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  PREINDEXEDMODIFYN r6502rla
 
 |r6502opcode24|
-  VALUEOFZEROPAGE
-  R6502BIT
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGELOAD r6502bit
 
 |r6502opcode25|
-  VALUEOFZEROPAGE
-  R6502AND
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGELOAD r6502and
 
 |r6502opcode26|
-  VALUEOFZEROPAGE
-  R6502ROL r0
-  STRB r0,[r11]
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEMODIFYN r6502rol
 
 |r6502opcode27|
-  ;RLA
-  VALUEOFZEROPAGE
-  R6502RLA
-  STRB r0,[r11]
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEMODIFYN r6502rla
 
 |r6502opcode28|
-  ;PLP
-  STACKPOP rps
-  CPU_CYCLES 4
-
-  ANDS r0,rps,#IFLAG
-  BNE r6502opcode28end
-
-  R6502IRQCHECK1
-
-r6502opcode28end
-  R6502NEXTOPCODE
+  IMPLIED r6502plp
 
 |r6502opcode29|
-  VALUEOFIMMEDIATE
-  R6502AND
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502and
 
 |r6502opcode2A|
-  ;ROL
-  R6502ROL ra
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r6502rola
 
 |r6502opcode2B|
-  ;ANC
-  VALUEOFIMMEDIATE
-  R6502ANC
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502anc
 
 |r6502opcode2C|
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502BIT ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTELOAD r6502bit
 
 |r6502opcode2D|
-  ;AND
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502AND ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTELOAD r6502and
 
 |r6502opcode2E|
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502ROL r0 ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEMODIFYN r6502rol
 
 |r6502opcode2F|
-  ;RLA
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  R6502RLA ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEMODIFYN r6502rla
 
 |r6502opcode30|
-  ;BMI
-  ;if condition succeeds
-  ;  if page boundary crossed
-  ;    4 cycles
-  ;  else
-  ;    3 cycles
-  ;else
-  ;  2 cycles
-  ANDS r0,rps,#NFLAG
-  ;if (r6502_ps & NFLAG)
-  BNE r6502opcode30_2
-  ;else
-  ADD rpc,rpc,#&10000 ;r6502_pc++
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-
-r6502opcode30_2
-  VALUEOFIMMEDIATE
-  R6502BRA
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502bmi
 
 |r6502opcode31|
-  ;AND
-  ADDRESSOFPOSTINDEXEDY ;3+ cycles
-  READMEM ;1 cycle
-  R6502AND ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  POSTINDEXEDYLOAD r6502and
 
 |r6502opcode32|
-  ;HLT
-  R6502JAM
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502halt
 
 |r6502opcode33|
-  ;RLA
-  ADDRESSOFPOSTINDEXEDY_STA ;4 cycles
-  READMEM ;1 cycle
-  R6502RLA ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  POSTINDEXEDYMODIFYN r6502rla
 
 |r6502opcode34|
-  ;SKB
-  R6502SKB
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXLOAD r6502nop
 
 |r6502opcode35|
-  VALUEOFZEROPAGEX
-  R6502AND
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXLOAD r6502and
 
 |r6502opcode36|
-  VALUEOFZEROPAGEX
-  R6502ROL r0
-  STRB r0,[r11]
-  CPU_CYCLES 6
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXMODIFYN r6502rol
 
 |r6502opcode37|
-  ;RLA
-  VALUEOFZEROPAGEX
-  R6502RLA
-  STRB r0,[r11]
-  CPU_CYCLES 6
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXMODIFYN r6502rla
 
 |r6502opcode38|
-  ;SEC
-  ORR rps,rps,#CFLAG
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r6502sec
 
 |r6502opcode39|
-  ADDRESSOFABSOLUTEYPLUS ;2+ cycles
-  READMEM ;1 cycle
-  R6502AND ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEYLOAD r6502and
 
 |r6502opcode3A|
-  ;NOP
-  R6502NOP
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r6502nop
 
 |r6502opcode3B|
-  ;RLA
-  ADDRESSOFABSOLUTEY ;3 cycles
-  READMEM ;1 cycle
-  R6502RLA ;2 cycles
-  WRITEMEM ;1 cycle
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEYMODIFYN r6502rla
 
 |r6502opcode3C|
-  ;SKW
-  R6502SKW
-  CPU_CYCLES 4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTEXLOAD r6502nop
 
 ;Data Area
 

@@ -1,0 +1,199 @@
+;>6502loads.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; (C) Copyright Michael J Foot, 1998-1999
+;
+; Email: <mikef@voyager.co.nz>
+;
+; r12=pointer to variable
+; r11=pointer to variable
+; r10=cyclestogo
+; r9=PC
+; r8=PS
+; r7=Y
+; r6=X
+; r5=A
+
+  GET h.6502cpus
+
+  GET h.6502cpui
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET h.RegNames
+
+; Use the GET directive to include a list of SWI names as if typed here
+
+  GET h.SWInames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+  IMPORT |r6502busop|
+
+; Export global symbols
+
+  EXPORT |r6502lda|
+  EXPORT |r6502ldx|
+  EXPORT |r6502ldy|
+  EXPORT |r6502lax|
+  EXPORT |r6502las|
+
+  EXPORT |r6502tax|
+  EXPORT |r6502tay|
+  EXPORT |r6502txa|
+  EXPORT |r6502tya|
+  EXPORT |r6502tsx|
+  EXPORT |r6502txs|
+
+  EXPORT |r6502pla|
+  EXPORT |r6502plp|
+  EXPORT |r65c12plx|
+  EXPORT |r65c12ply|
+
+  EXPORT |r6502xaa|
+  EXPORT |r6502oal|
+
+|r6502lda|
+  MOVS ra,r0
+  SETZFLAG0 ;ra
+  SETNFLAG ra
+  R6502ENDINSTRUCTION
+
+|r6502ldx|
+  MOVS rx,r0
+  SETZFLAG0 ;rx
+  SETNFLAG rx
+  R6502ENDINSTRUCTION
+
+|r6502lax|
+  MOVS ra,r0
+  MOV rx,r0
+  SETZFLAG0 ;rx
+  SETNFLAG rx
+  R6502ENDINSTRUCTION
+
+|r6502las|
+  ANDS ra,r0,rsp,LSR #24 ;r0 = r0 and sp
+  SETZFLAG0 ;ra
+  SETNFLAG ra
+  MOV rx,ra
+  MOV rsp,ra,LSL #24
+  R6502ENDINSTRUCTION
+
+|r6502ldy|
+  MOVS ry,r0
+  SETZFLAG0 ;ry
+  SETNFLAG ry
+  R6502ENDINSTRUCTION
+
+|r6502tax|
+  MOVS rx,ra
+  SETZFLAG0 ;rx
+  SETNFLAG rx
+  R6502ENDINSTRUCTION
+
+|r6502tay|
+  MOVS ry,ra
+  SETZFLAG0 ;ry
+  SETNFLAG ry
+  R6502ENDINSTRUCTION
+
+|r6502txa|
+  MOVS ra,rx
+  SETZFLAG0 ;ra
+  SETNFLAG ra
+  R6502ENDINSTRUCTION
+
+|r6502tya|
+  MOVS ra,ry
+  SETZFLAG0 ;ra
+  SETNFLAG ra
+  R6502ENDINSTRUCTION
+
+|r6502tsx|
+  MOVS rx,rsp,LSR #24
+  SETZFLAG0 ;rx
+  SETNFLAG rx
+  R6502ENDINSTRUCTION
+
+|r6502txs|
+  MOV rsp,rx,LSL #24
+  R6502ENDINSTRUCTION
+
+|r6502pla|
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,rsp,LSR #8
+  ADD rsp,rsp,#&01000000
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r6502pla2
+
+r6502pla2
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  R6502NEXTCYCLE r6502lda
+
+|r6502plp|
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,rsp,LSR #8
+  ADD rsp,rsp,#&01000000
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r6502plp2
+
+r6502plp2
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  R6502NEXTCYCLE r6502plp3
+
+r6502plp3
+  EOR r3,rps,r0
+  MOV rps,r0
+  TST r3,#IFLAG
+  R6502ENDEQINSTRUCTION
+  R6502UPDATEIRQ
+  R6502ENDINSTRUCTION
+
+|r65c12plx|
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,rsp,LSR #8
+  ADD rsp,rsp,#&01000000
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r65c12plx2
+
+r65c12plx2
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  R6502NEXTCYCLE r6502ldx
+
+|r65c12ply|
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,rsp,LSR #8
+  ADD rsp,rsp,#&01000000
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r65c12ply2
+
+r65c12ply2
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  R6502NEXTCYCLE r6502ldy
+
+|r6502xaa|
+  MOV ra,rx
+  AND ra,ra,r0
+  R6502ENDINSTRUCTION
+
+|r6502oal|
+  ORR r1,ra,#&EE
+  AND ra,r1,r0
+  MOV rx,ra
+  R6502ENDINSTRUCTION
+
+;Data Area
+
+;  AREA    |C$$data|, DATA
+
+  END

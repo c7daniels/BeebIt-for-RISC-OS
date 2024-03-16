@@ -33,132 +33,98 @@
 
 ; Import global symbols
 
-  IMPORT |memory|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  ;IMPORT |r6502_n|
-  ;IMPORT |r6502_v|
-  ;IMPORT |r6502_b|
-  ;IMPORT |r6502_d|
-  ;IMPORT |r6502_i|
-  ;IMPORT |r6502_z|
-  ;IMPORT |r6502_c|
-  IMPORT |r6502workspace|
-  IMPORT |r6502readmem|
-  IMPORT |r6502writemem|
+  IMPORT |r6502busop|
+  
+  IMPORT |r6502immediatedone|
+  IMPORT |r6502zeropagereadreadforwrite|
+  IMPORT |r6502zeropageread|
+  IMPORT |r6502zeropagexreadreadforwrite|
+  IMPORT |r6502zeropagexread|
+  IMPORT |r6502hiabsolutereadreadforwrite|
+  IMPORT |r6502hiabsoluteread|
+  IMPORT |r6502hiabsolutexreadreadforwrite|
+  IMPORT |r6502zeropageindirectread|
+
+  IMPORT |r6502eor|
+  IMPORT |r6502lsr|
+  IMPORT |r65c12phy|
+  IMPORT |r6502fivenop|
+  IMPORT |r6502nop|
 
 ; Export global symbols
 
   EXPORT |r65c12opcode42|
   EXPORT |r65c12opcode43|
   EXPORT |r65c12opcode44|
+  EXPORT |r65c12opcode46|
   EXPORT |r65c12opcode47|
   EXPORT |r65c12opcode4B|
+  EXPORT |r65c12opcode4E|
   EXPORT |r65c12opcode4F|
   EXPORT |r65c12opcode52|
   EXPORT |r65c12opcode53|
   EXPORT |r65c12opcode54|
+  EXPORT |r65c12opcode56|
   EXPORT |r65c12opcode57|
   EXPORT |r65c12opcode5A|
   EXPORT |r65c12opcode5B|
   EXPORT |r65c12opcode5C|
+  EXPORT |r65c12opcode5E|
   EXPORT |r65c12opcode5F|
 
 |r65c12opcode42|
-  ;Reserved NOP
-  R6502SKB
-  SUB rcycles,rcycles,#2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502nop
 
 |r65c12opcode43|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode44|
-  ;Reserved NOP
-  R6502SKB
-  SUB rcycles,rcycles,#3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGELOAD r6502nop
+
+|r65c12opcode46|
+  ZEROPAGEMODIFYC r6502lsr
 
 |r65c12opcode47|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode4B|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
+
+|r65c12opcode4E|
+  ABSOLUTEMODIFYC r6502lsr
 
 |r65c12opcode4F|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode52|
-  ;EOR
-  ADDRESSOFINDZEROPAGE
-  READMEM
-  R6502EOR
-  CPU_CYCLES 5
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  INDIRECTLOAD r6502eor
 
 |r65c12opcode53|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode54|
-  ;Reserved NOP
-  R6502SKB
-  SUB rcycles,rcycles,#4
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGEXLOAD r6502nop
+
+|r65c12opcode56|
+  ZEROPAGEXMODIFYC r6502lsr
 
 |r65c12opcode57|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode5A|
-  ;PHY
-  STACKPUSH ry
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMPLIED r65c12phy
 
 |r65c12opcode5B|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcode5C|
-  ;Reserved NOP
-  R6502SKW
-  SUB rcycles,rcycles,#8
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTELOAD r6502fivenop
+
+|r65c12opcode5E|
+  ABSOLUTEXMODIFYC r6502lsr
 
 |r65c12opcode5F|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 ;Data Area
 

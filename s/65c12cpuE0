@@ -33,129 +33,66 @@
 
 ; Import global symbols
 
-  IMPORT |memory|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  IMPORT |r6502workspace|
-  IMPORT |r6502readmem|
-  IMPORT |r6502writemem|
+  IMPORT |r6502busop|
+  
+  IMPORT |r6502immediatedone|
+  IMPORT |r6502zeropagereadreadforwrite|
+  IMPORT |r6502zeropageread|
+  IMPORT |r6502hiabsolutereadreadforwrite|
+  IMPORT |r6502hiabsoluteread|
+  IMPORT |r6502zeropagexindirectread|
+
+  IMPORT |r6502inc|
+  IMPORT |r6502sbc|
+  IMPORT |r65c12sbcd|
+  IMPORT |r6502nop|
 
 ; Export global symbols
 
   EXPORT |r65c12opcodeE1|
   EXPORT |r65c12opcodeE2|
   EXPORT |r65c12opcodeE3|
+  EXPORT |r65c12opcodeE6|
   EXPORT |r65c12opcodeE5|
   EXPORT |r65c12opcodeE7|
   EXPORT |r65c12opcodeE9|
   EXPORT |r65c12opcodeEB|
   EXPORT |r65c12opcodeED|
+  EXPORT |r65c12opcodeEE|
   EXPORT |r65c12opcodeEF|
 
 |r65c12opcodeE1|
-  ;SBC
-  ADDRESSOFPREINDEXED ;4 cycles
-  READMEM ;1 cycle
-  TST rps,#DFLAG
-  BNE r65c12opcodeE1_2
-  ;binary
-  R6502SBC ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-r65c12opcodeE1_2
-  ;BCD
-  R6502SBCD_M ;2 cycles
-  CPU_CYCLES 3 ;+1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  PREINDEXEDLOAD_DECIMALFORK r6502sbc,r65c12sbcd
 
 |r65c12opcodeE2|
-  ;Reserved NOP
-  R6502SKB
-  SUB rcycles,rcycles,#2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502nop
 
 |r65c12opcodeE3|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcodeE5|
-  ;SBC
-  VALUEOFZEROPAGE
-  TST rps,#DFLAG
-  BNE r65c12opcodeE5_2
-  ;binary
-  R6502SBC
-  CPU_CYCLES 3
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-r65c12opcodeE5_2
-  ;BCD
-  R6502SBCD_M
-  CPU_CYCLES 4 ;+1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ZEROPAGELOAD_DECIMALFORK r6502sbc,r65c12sbcd
+
+|r65c12opcodeE6|
+  ZEROPAGEMODIFYC r6502inc
 
 |r65c12opcodeE7|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcodeE9|
-  ;SBC
-  VALUEOFIMMEDIATE
-  TST rps,#DFLAG
-  BNE r65c12opcodeE9_2
-  ;binary
-  R6502SBC
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-r65c12opcodeE9_2
-  ;BCD
-  R6502SBCD_M
-  CPU_CYCLES 3 ;+1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD_DECIMALFORK r6502sbc,r65c12sbcd
 
 |r65c12opcodeEB|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 |r65c12opcodeED|
-  ;SBC
-  ADDRESSOFABSOLUTE ;2 cycles
-  READMEM ;1 cycle
-  TST rps,#DFLAG
-  BNE r65c12opcodeED_2
-  ;binary
-  R6502SBC ;1 cycle
-  CPU_CYCLES 2
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
-r65c12opcodeED_2
-  ;BCD
-  R6502SBCD_M ;2 cycles
-  CPU_CYCLES 3 ;+1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  ABSOLUTELOAD_DECIMALFORK r6502sbc,r65c12sbcd
+
+|r65c12opcodeEE|
+  ABSOLUTEMODIFYC r6502inc
 
 |r65c12opcodeEF|
-  ;Reserved NOP
-  SUB rcycles,rcycles,#1
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  B r6502nop
 
 ;Data Area
 

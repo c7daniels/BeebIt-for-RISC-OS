@@ -40,16 +40,19 @@
 ;  CPU_CYCLES 4
 
                       ^ 0
-R6502_READOFFSET      # &40
-R6502_WRITEOFFSET     # &40
+R6502_DATA            # &4
+R6502_ADDRESS         # &4 ;address in top half, read/write selector in bottom half
+R6502_CONTINUATION    # &4
+R6502_CONTINUATION2   # &4
 R6502_CYCLESORIGINAL  # &4
 R6502_CYCLESTOGO      # &4
 R6502_BEEBITIRQ       # &4
-R6502_ABSTEMP         # &4
+R6502_ADDRTEMP        # &4
 R6502_OPCODE07SWAPS   # &8
-                      # &8
+                      # &D8
+R6502_BUSOPOFFSET     # &80 ;placed at index 256 for simple read/write selection
 R6502_ROMWRITABLE     # &40
-                      # &320
+                      # &240
 R6502_OPCODES         # &400
 R6502_SHEILAREADS     # &400
 R6502_SHEILAWRITES    # &400
@@ -60,6 +63,9 @@ R6502_HAZEL           # &2000   ;  8192 bytes
 R6502_LYNNE           # &5000   ; 20480 bytes
 R6502_ROMS            # &40000  ;262144 bytes
 R6502_WorkSize        * @
+
+R6502_READCODE EQU :INDEX:R6502_BUSOPOFFSET:SHR:6
+R6502_WRITECODE EQU (:INDEX:R6502_BUSOPOFFSET+64):SHR:6
 
 NFLAG EQU &80
 VFLAG EQU &40
@@ -182,23 +188,20 @@ WRITEMEM_LEN EQU 1*4
   STACKPUSH $n
   ;IN: $n=value
   ;    r12=pointer to r6502workspace
-  ;    r11=pointer to r6502_sp
-  ;    rsp=r6502_sp
-  ADD r1,rsp,#:INDEX:R6502_MEMORY+&100 ;r6502_sp += &100 (STACK_START)
-  STRB $n,[r12,r1] ;memory[r1] = $n
-  SUB rsp,rsp,#1 ;r6502_sp--
-  AND rsp,rsp,#&FF
+  ;    rsp=r6502_sp:SHL:24
+  ADD r11,r12,#:INDEX:R6502_MEMORY+&100
+  STRB $n,[r11,rsp,LSR #24] ;memory[0x100+r6502_sp] = $n
+  SUB rsp,rsp,#&01000000 ;r6502_sp--
   MEND
 
   MACRO
   STACKPOP $n
   ;IN: r12=pointer to r6502workspace
-  ;    rsp=r6502_sp
+  ;    rsp=r6502_sp:SHL:24
   ;OUT:$n=value
-  ADD rsp,rsp,#1 ;r6502_sp++
-  AND rsp,rsp,#&FF
-  ADD r0,rsp,#:INDEX:R6502_MEMORY+&100 ;r6502_sp += &100 (STACK_START)
-  LDRB $n,[r12,r0] ;$n=memory[r0]
+  ADD r11,r12,#:INDEX:R6502_MEMORY+&100
+  ADD rsp,rsp,#&01000000 ;r6502_sp++
+  LDRB $n,[r11,rsp,LSR #24] ;$n = memory[0x100+r6502_sp]
   MEND
 
   MACRO
@@ -208,11 +211,11 @@ WRITEMEM_LEN EQU 1*4
 
   MOV r1,rpc
   READMEM
-  STR r0,[r12,#:INDEX:R6502_ABSTEMP] ;lo
+  STR r0,[r12,#:INDEX:R6502_ADDRTEMP] ;lo
 
   ADD r1,r1,#&10000 ;rpc + 1
   READMEM ;hi
-  LDR r2,[r12,#:INDEX:R6502_ABSTEMP] ;lo
+  LDR r2,[r12,#:INDEX:R6502_ADDRTEMP] ;lo
   MOV r2,r2,LSL #16
 
   ADD rpc,rpc,#&20000 ;pc+=2
@@ -423,5 +426,337 @@ WRITEMEM_LEN EQU 1*4
   ;ADDRESSOFPOSTINDEXEDY
   ;READMEM
   ;MEND
+
+  MACRO
+  IMPLIED $n
+  ADD r1,r1,#&10000
+  R6502NEXTCYCLE $n
+  MEND
+
+  MACRO
+  ADDRESSING_BASE $n
+  ADD r1,r1,#&10000
+  STR r2,[r12,#:INDEX:R6502_CONTINUATION2]
+  R6502NEXTCYCLE $n
+  MEND
+
+  MACRO
+  ADDRESSING_NOFORK $n, $o
+  LDR r2,=$o
+  ADDRESSING_BASE $n
+  MEND
+  
+  MACRO
+  ADDRESSING_DECIMALFORK $n, $o, $p
+  TST rps,#DFLAG
+  LDREQ r2,=$o
+  LDRNE r2,=$p
+  ADDRESSING_BASE $n
+  MEND
+
+  MACRO
+  IMMEDIATELOAD $o
+  ADDRESSING_NOFORK r6502immediatedone, $o
+  MEND
+
+  MACRO
+  IMMEDIATELOAD_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502immediatedone, $o, $p
+  MEND
+
+  MACRO
+  ZEROPAGEMODIFYC $o
+  ADDRESSING_NOFORK r6502zeropagereadreadforwrite, $o
+  MEND
+
+  MACRO
+  ZEROPAGEMODIFYC_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropagereadreadforwrite, $o, $p
+  MEND
+
+  MACRO
+  ZEROPAGEMODIFYN $o
+  ADDRESSING_NOFORK r6502zeropagereadwrite, $o
+  MEND
+
+  MACRO
+  ZEROPAGEMODIFYN_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropagereadwrite, $o, $p
+  MEND
+
+  MACRO
+  ZEROPAGESTORE $o
+  ADDRESSING_NOFORK r6502zeropageforwrite, $o
+  MEND
+
+  MACRO
+  ZEROPAGELOAD $o
+  ADDRESSING_NOFORK r6502zeropageread, $o
+  MEND
+
+  MACRO
+  ZEROPAGELOAD_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropageread, $o, $p
+  MEND
+
+  MACRO
+  ZEROPAGEXMODIFYC $o
+  ADDRESSING_NOFORK r6502zeropagexreadreadforwrite, $o
+  MEND
+
+  MACRO
+  ZEROPAGEXMODIFYC_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropagexreadreadforwrite, $o, $p
+  MEND
+
+  MACRO
+  ZEROPAGEXMODIFYN $o
+  ADDRESSING_NOFORK r6502zeropagexreadwrite, $o
+  MEND
+
+  MACRO
+  ZEROPAGEXMODIFYN_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropagexreadwrite, $o, $p
+  MEND
+
+  MACRO
+  ZEROPAGEXSTORE $o
+  ADDRESSING_NOFORK r6502zeropagexforwrite, $o
+  MEND
+
+  MACRO
+  ZEROPAGEXLOAD $o
+  ADDRESSING_NOFORK r6502zeropagexread, $o
+  MEND
+
+  MACRO
+  ZEROPAGEXLOAD_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropagexread, $o, $p
+  MEND
+
+  MACRO
+  ZEROPAGEYMODIFYC $o
+  ADDRESSING_NOFORK r6502zeropageyreadreadforwrite, $o
+  MEND
+
+  MACRO
+  ZEROPAGEYMODIFYC_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropageyreadreadforwrite, $o, $p
+  MEND
+
+  MACRO
+  ZEROPAGEYMODIFYN $o
+  ADDRESSING_NOFORK r6502zeropageyreadwrite, $o
+  MEND
+
+  MACRO
+  ZEROPAGEYMODIFYN_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropageyreadwrite, $o, $p
+  MEND
+
+  MACRO
+  ZEROPAGEYSTORE $o
+  ADDRESSING_NOFORK r6502zeropageyforwrite, $o
+  MEND
+
+  MACRO
+  ZEROPAGEYLOAD $o
+  ADDRESSING_NOFORK r6502zeropageyread, $o
+  MEND
+
+  MACRO
+  ZEROPAGEYLOAD_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropageyread, $o, $p
+  MEND
+
+  MACRO
+  ABSOLUTEMODIFYC $o
+  ADDRESSING_NOFORK r6502hiabsolutereadreadforwrite, $o
+  MEND
+
+  MACRO
+  ABSOLUTEMODIFYC_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502hiabsolutereadreadforwrite, $o, $p
+  MEND
+
+  MACRO
+  ABSOLUTEMODIFYN $o
+  ADDRESSING_NOFORK r6502hiabsolutereadwrite, $o
+  MEND
+
+  MACRO
+  ABSOLUTEMODIFYN_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502hiabsolutereadwrite, $o, $p
+  MEND
+
+  MACRO
+  ABSOLUTESTORE $o
+  ADDRESSING_NOFORK r6502hiabsoluteforwrite, $o
+  MEND
+
+  MACRO
+  ABSOLUTELOAD $o
+  ADDRESSING_NOFORK r6502hiabsoluteread, $o
+  MEND
+
+  MACRO
+  ABSOLUTELOAD_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502hiabsoluteread, $o, $p
+  MEND
+
+  MACRO
+  ABSOLUTEXMODIFYC $o
+  ADDRESSING_NOFORK r6502hiabsolutexreadreadforwrite, $o
+  MEND
+
+  MACRO
+  ABSOLUTEXMODIFYC_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502hiabsolutexreadreadforwrite, $o, $p
+  MEND
+
+  MACRO
+  ABSOLUTEXMODIFYN $o
+  ADDRESSING_NOFORK r6502hiabsolutexreadwrite, $o
+  MEND
+
+  MACRO
+  ABSOLUTEXMODIFYN_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502hiabsolutexreadwrite, $o, $p
+  MEND
+
+  MACRO
+  ABSOLUTEXSTORE $o
+  ADDRESSING_NOFORK r6502hiabsolutexforwrite, $o
+  MEND
+
+  MACRO
+  ABSOLUTEXLOAD $o
+  ADDRESSING_NOFORK r6502hiabsolutexread, $o
+  MEND
+
+  MACRO
+  ABSOLUTEXLOAD_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502hiabsolutexread, $o, $p
+  MEND
+
+  MACRO
+  ABSOLUTEYMODIFYC $o
+  ADDRESSING_NOFORK r6502hiabsoluteyreadreadforwrite, $o
+  MEND
+
+  MACRO
+  ABSOLUTEYMODIFYC_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502hiabsoluteyreadreadforwrite, $o, $p
+  MEND
+
+  MACRO
+  ABSOLUTEYMODIFYN $o
+  ADDRESSING_NOFORK r6502hiabsoluteyreadwrite, $o
+  MEND
+
+  MACRO
+  ABSOLUTEYMODIFYN_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502hiabsoluteyreadwrite, $o, $p
+  MEND
+
+  MACRO
+  ABSOLUTEYSTORE $o
+  ADDRESSING_NOFORK r6502hiabsoluteyforwrite, $o
+  MEND
+
+  MACRO
+  ABSOLUTEYLOAD $o
+  ADDRESSING_NOFORK r6502hiabsoluteyread, $o
+  MEND
+
+  MACRO
+  ABSOLUTEYLOAD_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502hiabsoluteyread, $o, $p
+  MEND
+
+  MACRO
+  INDIRECTSTORE $o
+  ADDRESSING_NOFORK r6502zeropageindirectforwrite, $o
+  MEND
+
+  MACRO
+  INDIRECTLOAD $o
+  ADDRESSING_NOFORK r6502zeropageindirectread, $o
+  MEND
+
+  MACRO
+  INDIRECTLOAD_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropageindirectread, $o, $p
+  MEND
+
+  MACRO
+  PREINDEXEDMODIFYC $o
+  ADDRESSING_NOFORK r6502zeropagexindirectreadreadforwrite, $o
+  MEND
+
+  MACRO
+  PREINDEXEDMODIFYC_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropagexindirectreadreadforwrite, $o, $p
+  MEND
+
+  MACRO
+  PREINDEXEDMODIFYN $o
+  ADDRESSING_NOFORK r6502zeropagexindirectreadwrite, $o
+  MEND
+
+  MACRO
+  PREINDEXEDMODIFYN_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropagexindirectreadwrite, $o, $p
+  MEND
+
+  MACRO
+  PREINDEXEDSTORE $o
+  ADDRESSING_NOFORK r6502zeropagexindirectforwrite, $o
+  MEND
+
+  MACRO
+  PREINDEXEDLOAD $o
+  ADDRESSING_NOFORK r6502zeropagexindirectread, $o
+  MEND
+
+  MACRO
+  PREINDEXEDLOAD_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropagexindirectread, $o, $p
+  MEND
+
+  MACRO
+  POSTINDEXEDYMODIFYC $o
+  ADDRESSING_NOFORK r6502zeropageindirectyreadreadforwrite, $o
+  MEND
+
+  MACRO
+  POSTINDEXEDYMODIFYC_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropageindirectyreadreadforwrite, $o, $p
+  MEND
+
+  MACRO
+  POSTINDEXEDYMODIFYN $o
+  ADDRESSING_NOFORK r6502zeropageindirectyreadwrite, $o
+  MEND
+
+  MACRO
+  POSTINDEXEDYMODIFYN_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropageindirectyreadwrite, $o, $p
+  MEND
+
+  MACRO
+  POSTINDEXEDYSTORE $o
+  ADDRESSING_NOFORK r6502zeropageindirectyforwrite, $o
+  MEND
+
+  MACRO
+  POSTINDEXEDYLOAD $o
+  ADDRESSING_NOFORK r6502zeropageindirectyread, $o
+  MEND
+
+  MACRO
+  POSTINDEXEDYLOAD_DECIMALFORK $o, $p
+  ADDRESSING_DECIMALFORK r6502zeropageindirectyread, $o, $p
+  MEND
 
   END

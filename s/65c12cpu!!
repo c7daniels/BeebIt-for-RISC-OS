@@ -39,7 +39,7 @@
   IMPORT r65c12opcode03
   IMPORT r65c12opcode04
   IMPORT r6502opcode05
-  IMPORT r6502opcode06
+  IMPORT r65c12opcode06
   IMPORT r65c12opcode07
   IMPORT r6502opcode08
   IMPORT r6502opcode09
@@ -47,7 +47,7 @@
   IMPORT r65c12opcode0B
   IMPORT r65c12opcode0C
   IMPORT r6502opcode0D
-  IMPORT r6502opcode0E
+  IMPORT r65c12opcode0E
   IMPORT r65c12opcode0F
   IMPORT r6502opcode10
   IMPORT r6502opcode11
@@ -55,7 +55,7 @@
   IMPORT r65c12opcode13
   IMPORT r65c12opcode14
   IMPORT r6502opcode15
-  IMPORT r6502opcode16
+  IMPORT r65c12opcode16
   IMPORT r65c12opcode17
   IMPORT r6502opcode18
   IMPORT r6502opcode19
@@ -63,7 +63,7 @@
   IMPORT r65c12opcode1B
   IMPORT r65c12opcode1C
   IMPORT r6502opcode1D
-  IMPORT r6502opcode1E
+  IMPORT r65c12opcode1E
   IMPORT r65c12opcode1F
   IMPORT r6502opcode20
   IMPORT r6502opcode21
@@ -71,7 +71,7 @@
   IMPORT r65c12opcode23
   IMPORT r6502opcode24
   IMPORT r6502opcode25
-  IMPORT r6502opcode26
+  IMPORT r65c12opcode26
   IMPORT r65c12opcode27
   IMPORT r6502opcode28
   IMPORT r6502opcode29
@@ -79,7 +79,7 @@
   IMPORT r65c12opcode2B
   IMPORT r6502opcode2C
   IMPORT r6502opcode2D
-  IMPORT r6502opcode2E
+  IMPORT r65c12opcode2E
   IMPORT r65c12opcode2F
   IMPORT r6502opcode30
   IMPORT r6502opcode31
@@ -87,7 +87,7 @@
   IMPORT r65c12opcode33
   IMPORT r65c12opcode34
   IMPORT r6502opcode35
-  IMPORT r6502opcode36
+  IMPORT r65c12opcode36
   IMPORT r65c12opcode37
   IMPORT r6502opcode38
   IMPORT r6502opcode39
@@ -95,7 +95,7 @@
   IMPORT r65c12opcode3B
   IMPORT r65c12opcode3C
   IMPORT r6502opcode3D
-  IMPORT r6502opcode3E
+  IMPORT r65c12opcode3E
   IMPORT r65c12opcode3F
   IMPORT r6502opcode40
   IMPORT r6502opcode41
@@ -103,7 +103,7 @@
   IMPORT r65c12opcode43
   IMPORT r65c12opcode44
   IMPORT r6502opcode45
-  IMPORT r6502opcode46
+  IMPORT r65c12opcode46
   IMPORT r65c12opcode47
   IMPORT r6502opcode48
   IMPORT r6502opcode49
@@ -111,7 +111,7 @@
   IMPORT r65c12opcode4B
   IMPORT r6502opcode4C
   IMPORT r6502opcode4D
-  IMPORT r6502opcode4E
+  IMPORT r65c12opcode4E
   IMPORT r65c12opcode4F
   IMPORT r6502opcode50
   IMPORT r6502opcode51
@@ -119,7 +119,7 @@
   IMPORT r65c12opcode53
   IMPORT r65c12opcode54
   IMPORT r6502opcode55
-  IMPORT r6502opcode56
+  IMPORT r65c12opcode56
   IMPORT r65c12opcode57
   IMPORT r6502opcode58
   IMPORT r6502opcode59
@@ -127,7 +127,7 @@
   IMPORT r65c12opcode5B
   IMPORT r65c12opcode5C
   IMPORT r6502opcode5D
-  IMPORT r6502opcode5E
+  IMPORT r65c12opcode5E
   IMPORT r65c12opcode5F
   IMPORT r6502opcode60
   IMPORT r65c12opcode61
@@ -135,7 +135,7 @@
   IMPORT r65c12opcode63
   IMPORT r65c12opcode64
   IMPORT r65c12opcode65
-  IMPORT r6502opcode66
+  IMPORT r65c12opcode66
   IMPORT r65c12opcode67
   IMPORT r6502opcode68
   IMPORT r65c12opcode69
@@ -143,7 +143,7 @@
   IMPORT r65c12opcode6B
   IMPORT r65c12opcode6C
   IMPORT r65c12opcode6D
-  IMPORT r6502opcode6E
+  IMPORT r65c12opcode6E
   IMPORT r65c12opcode6F
   IMPORT r6502opcode70
   IMPORT r65c12opcode71
@@ -151,7 +151,7 @@
   IMPORT r65c12opcode73
   IMPORT r65c12opcode74
   IMPORT r65c12opcode75
-  IMPORT r6502opcode76
+  IMPORT r65c12opcode76
   IMPORT r65c12opcode77
   IMPORT r6502opcode78
   IMPORT r65c12opcode79
@@ -159,7 +159,7 @@
   IMPORT r65c12opcode7B
   IMPORT r65c12opcode7C
   IMPORT r65c12opcode7D
-  IMPORT r6502opcode7E
+  IMPORT r65c12opcode7E
   IMPORT r65c12opcode7F
   IMPORT r65c12opcode80
   IMPORT r6502opcode81
@@ -231,7 +231,7 @@
   IMPORT r65c12opcodeC3
   IMPORT r6502opcodeC4
   IMPORT r6502opcodeC5
-  IMPORT r6502opcodeC6
+  IMPORT r65c12opcodeC6
   IMPORT r65c12opcodeC7
   IMPORT r6502opcodeC8
   IMPORT r6502opcodeC9
@@ -239,7 +239,7 @@
   IMPORT r65c12opcodeCB
   IMPORT r6502opcodeCC
   IMPORT r6502opcodeCD
-  IMPORT r6502opcodeCE
+  IMPORT r65c12opcodeCE
   IMPORT r65c12opcodeCF
   IMPORT r6502opcodeD0
   IMPORT r6502opcodeD1
@@ -247,7 +247,7 @@
   IMPORT r65c12opcodeD3
   IMPORT r65c12opcodeD4
   IMPORT r6502opcodeD5
-  IMPORT r6502opcodeD6
+  IMPORT r65c12opcodeD6
   IMPORT r65c12opcodeD7
   IMPORT r6502opcodeD8
   IMPORT r6502opcodeD9
@@ -255,7 +255,7 @@
   IMPORT r65c12opcodeDB
   IMPORT r65c12opcodeDC
   IMPORT r6502opcodeDD
-  IMPORT r6502opcodeDE
+  IMPORT r65c12opcodeDE
   IMPORT r65c12opcodeDF
   IMPORT r6502opcodeE0
   IMPORT r65c12opcodeE1
@@ -263,7 +263,7 @@
   IMPORT r65c12opcodeE3
   IMPORT r6502opcodeE4
   IMPORT r65c12opcodeE5
-  IMPORT r6502opcodeE6
+  IMPORT r65c12opcodeE6
   IMPORT r65c12opcodeE7
   IMPORT r6502opcodeE8
   IMPORT r65c12opcodeE9
@@ -271,7 +271,7 @@
   IMPORT r65c12opcodeEB
   IMPORT r6502opcodeEC
   IMPORT r65c12opcodeED
-  IMPORT r6502opcodeEE
+  IMPORT r65c12opcodeEE
   IMPORT r65c12opcodeEF
   IMPORT r6502opcodeF0
   IMPORT r65c12opcodeF1
@@ -279,7 +279,7 @@
   IMPORT r65c12opcodeF3
   IMPORT r65c12opcodeF4
   IMPORT r65c12opcodeF5
-  IMPORT r6502opcodeF6
+  IMPORT r65c12opcodeF6
   IMPORT r65c12opcodeF7
   IMPORT r6502opcodeF8
   IMPORT r65c12opcodeF9
@@ -287,7 +287,7 @@
   IMPORT r65c12opcodeFB
   IMPORT r65c12opcodeFC
   IMPORT r65c12opcodeFD
-  IMPORT r6502opcodeFE
+  IMPORT r65c12opcodeFE
   IMPORT r65c12opcodeFF
 
 ; Export global symbols
@@ -301,7 +301,7 @@
   DCD r65c12opcode03
   DCD r65c12opcode04
   DCD r6502opcode05
-  DCD r6502opcode06
+  DCD r65c12opcode06
   DCD r65c12opcode07
   DCD r6502opcode08
   DCD r6502opcode09
@@ -309,7 +309,7 @@
   DCD r65c12opcode0B
   DCD r65c12opcode0C
   DCD r6502opcode0D
-  DCD r6502opcode0E
+  DCD r65c12opcode0E
   DCD r65c12opcode0F
   DCD r6502opcode10
   DCD r6502opcode11
@@ -317,7 +317,7 @@
   DCD r65c12opcode13
   DCD r65c12opcode14
   DCD r6502opcode15
-  DCD r6502opcode16
+  DCD r65c12opcode16
   DCD r65c12opcode17
   DCD r6502opcode18
   DCD r6502opcode19
@@ -325,7 +325,7 @@
   DCD r65c12opcode1B
   DCD r65c12opcode1C
   DCD r6502opcode1D
-  DCD r6502opcode1E
+  DCD r65c12opcode1E
   DCD r65c12opcode1F
   DCD r6502opcode20
   DCD r6502opcode21
@@ -333,7 +333,7 @@
   DCD r65c12opcode23
   DCD r6502opcode24
   DCD r6502opcode25
-  DCD r6502opcode26
+  DCD r65c12opcode26
   DCD r65c12opcode27
   DCD r6502opcode28
   DCD r6502opcode29
@@ -341,7 +341,7 @@
   DCD r65c12opcode2B
   DCD r6502opcode2C
   DCD r6502opcode2D
-  DCD r6502opcode2E
+  DCD r65c12opcode2E
   DCD r65c12opcode2F
   DCD r6502opcode30
   DCD r6502opcode31
@@ -349,7 +349,7 @@
   DCD r65c12opcode33
   DCD r65c12opcode34
   DCD r6502opcode35
-  DCD r6502opcode36
+  DCD r65c12opcode36
   DCD r65c12opcode37
   DCD r6502opcode38
   DCD r6502opcode39
@@ -357,7 +357,7 @@
   DCD r65c12opcode3B
   DCD r65c12opcode3C
   DCD r6502opcode3D
-  DCD r6502opcode3E
+  DCD r65c12opcode3E
   DCD r65c12opcode3F
   DCD r6502opcode40
   DCD r6502opcode41
@@ -365,7 +365,7 @@
   DCD r65c12opcode43
   DCD r65c12opcode44
   DCD r6502opcode45
-  DCD r6502opcode46
+  DCD r65c12opcode46
   DCD r65c12opcode47
   DCD r6502opcode48
   DCD r6502opcode49
@@ -373,7 +373,7 @@
   DCD r65c12opcode4B
   DCD r6502opcode4C
   DCD r6502opcode4D
-  DCD r6502opcode4E
+  DCD r65c12opcode4E
   DCD r65c12opcode4F
   DCD r6502opcode50
   DCD r6502opcode51
@@ -381,7 +381,7 @@
   DCD r65c12opcode53
   DCD r65c12opcode54
   DCD r6502opcode55
-  DCD r6502opcode56
+  DCD r65c12opcode56
   DCD r65c12opcode57
   DCD r6502opcode58
   DCD r6502opcode59
@@ -389,7 +389,7 @@
   DCD r65c12opcode5B
   DCD r65c12opcode5C
   DCD r6502opcode5D
-  DCD r6502opcode5E
+  DCD r65c12opcode5E
   DCD r65c12opcode5F
   DCD r6502opcode60
   DCD r65c12opcode61
@@ -397,7 +397,7 @@
   DCD r65c12opcode63
   DCD r65c12opcode64
   DCD r65c12opcode65
-  DCD r6502opcode66
+  DCD r65c12opcode66
   DCD r65c12opcode67
   DCD r6502opcode68
   DCD r65c12opcode69
@@ -405,7 +405,7 @@
   DCD r65c12opcode6B
   DCD r65c12opcode6C
   DCD r65c12opcode6D
-  DCD r6502opcode6E
+  DCD r65c12opcode6E
   DCD r65c12opcode6F
   DCD r6502opcode70
   DCD r65c12opcode71
@@ -413,7 +413,7 @@
   DCD r65c12opcode73
   DCD r65c12opcode74
   DCD r65c12opcode75
-  DCD r6502opcode76
+  DCD r65c12opcode76
   DCD r65c12opcode77
   DCD r6502opcode78
   DCD r65c12opcode79
@@ -421,7 +421,7 @@
   DCD r65c12opcode7B
   DCD r65c12opcode7C
   DCD r65c12opcode7D
-  DCD r6502opcode7E
+  DCD r65c12opcode7E
   DCD r65c12opcode7F
   DCD r65c12opcode80
   DCD r6502opcode81
@@ -493,7 +493,7 @@
   DCD r65c12opcodeC3
   DCD r6502opcodeC4
   DCD r6502opcodeC5
-  DCD r6502opcodeC6
+  DCD r65c12opcodeC6
   DCD r65c12opcodeC7
   DCD r6502opcodeC8
   DCD r6502opcodeC9
@@ -501,7 +501,7 @@
   DCD r65c12opcodeCB
   DCD r6502opcodeCC
   DCD r6502opcodeCD
-  DCD r6502opcodeCE
+  DCD r65c12opcodeCE
   DCD r65c12opcodeCF
   DCD r6502opcodeD0
   DCD r6502opcodeD1
@@ -509,7 +509,7 @@
   DCD r65c12opcodeD3
   DCD r65c12opcodeD4
   DCD r6502opcodeD5
-  DCD r6502opcodeD6
+  DCD r65c12opcodeD6
   DCD r65c12opcodeD7
   DCD r6502opcodeD8
   DCD r6502opcodeD9
@@ -517,7 +517,7 @@
   DCD r65c12opcodeDB
   DCD r65c12opcodeDC
   DCD r6502opcodeDD
-  DCD r6502opcodeDE
+  DCD r65c12opcodeDE
   DCD r65c12opcodeDF
   DCD r6502opcodeE0
   DCD r65c12opcodeE1
@@ -525,7 +525,7 @@
   DCD r65c12opcodeE3
   DCD r6502opcodeE4
   DCD r65c12opcodeE5
-  DCD r6502opcodeE6
+  DCD r65c12opcodeE6
   DCD r65c12opcodeE7
   DCD r6502opcodeE8
   DCD r65c12opcodeE9
@@ -533,7 +533,7 @@
   DCD r65c12opcodeEB
   DCD r6502opcodeEC
   DCD r65c12opcodeED
-  DCD r6502opcodeEE
+  DCD r65c12opcodeEE
   DCD r65c12opcodeEF
   DCD r6502opcodeF0
   DCD r65c12opcodeF1
@@ -541,7 +541,7 @@
   DCD r65c12opcodeF3
   DCD r65c12opcodeF4
   DCD r65c12opcodeF5
-  DCD r6502opcodeF6
+  DCD r65c12opcodeF6
   DCD r65c12opcodeF7
   DCD r6502opcodeF8
   DCD r65c12opcodeF9
@@ -549,7 +549,7 @@
   DCD r65c12opcodeFB
   DCD r65c12opcodeFC
   DCD r65c12opcodeFD
-  DCD r6502opcodeFE
+  DCD r65c12opcodeFE
   DCD r65c12opcodeFF
 
 ;Data Area

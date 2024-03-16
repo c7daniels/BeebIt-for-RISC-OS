@@ -1,0 +1,149 @@
+;>6502stores.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; (C) Copyright Michael J Foot, 1998-1999
+;
+; Email: <mikef@voyager.co.nz>
+;
+; r12=pointer to variable
+; r11=pointer to variable
+; r10=cyclestogo
+; r9=PC
+; r8=PS
+; r7=Y
+; r6=X
+; r5=A
+
+  GET h.6502cpus
+
+  GET h.6502cpui
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET h.RegNames
+
+; Use the GET directive to include a list of SWI names as if typed here
+
+  GET h.SWInames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+  IMPORT |r6502busop|
+
+; Export global symbols
+
+  EXPORT |r6502sta|
+  EXPORT |r6502stx|
+  EXPORT |r6502sty|
+  EXPORT |r65c12stz|
+  EXPORT |r6502sax|
+  EXPORT |r6502sha|
+  EXPORT |r6502shx|
+  EXPORT |r6502shy|
+  EXPORT |r6502shs|
+  EXPORT |r6502pha|
+  EXPORT |r6502php|
+  EXPORT |r65c12phx|
+  EXPORT |r65c12phy|
+  EXPORT |r6502storedone|
+
+|r6502sta|
+  MOV r0,ra
+  R6502NEXTCYCLE r6502storedone
+
+|r6502stx|
+  MOV r0,rx
+  R6502NEXTCYCLE r6502storedone
+
+|r6502sty|
+  MOV r0,ry
+  R6502NEXTCYCLE r6502storedone
+
+|r65c12stz|
+  MOV r0,#0
+  R6502NEXTCYCLE r6502storedone
+
+|r6502sax|
+  AND r0,ra,rx
+  R6502NEXTCYCLE r6502storedone
+
+|r6502sha|
+  AND r3,r1,#&00FF0000
+  CMP r3,ry,LSL #16
+  ADD r2,r1,#&01000000
+  AND r0,ra,rx
+  AND r0,r0,r2,LSR #24
+  ORRMI r1,r3,r0,LSL #24
+  R6502NEXTCYCLE r6502storedone
+
+|r6502shx|
+  AND r3,r1,#&00FF0000
+  CMP r3,ry,LSL #16
+  ADD r2,r1,#&01000000
+  AND r0,rx,r2,LSR #24
+  ORRMI r1,r3,r0,LSL #24
+  R6502NEXTCYCLE r6502storedone
+
+|r6502shy|
+  AND r3,r1,#&00FF0000
+  CMP r3,ry,LSL #16
+  ADD r2,r1,#&01000000
+  AND r0,ry,r2,LSR #24
+  ORRMI r1,r3,r0,LSL #24
+  R6502NEXTCYCLE r6502storedone
+
+|r6502shs|
+  AND r3,r1,#&00FF0000
+  CMP r3,ry,LSL #16
+  ADD r2,r1,#&01000000
+  AND r0,ra,rx
+  AND r0,r0,r2,LSR #24
+  MOV rsp,r0,LSL #24
+  ORRMI r1,r3,r0,LSL #24
+  R6502NEXTCYCLE r6502storedone
+
+|r6502pha|
+  MOV r0,ra
+  MOV r1,#R6502_WRITECODE
+  ORR r1,r1,rsp,LSR #8
+  SUB rsp,rsp,#&01000000
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r6502storedone
+
+|r6502php|
+  ORR r0,rps,#UFLAG
+  MOV r1,#R6502_WRITECODE
+  ORR r1,r1,rsp,LSR #8
+  SUB rsp,rsp,#&01000000
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r6502storedone
+
+|r65c12phx|
+  MOV r0,rx
+  MOV r1,#R6502_WRITECODE
+  ORR r1,r1,rsp,LSR #8
+  SUB rsp,rsp,#&01000000
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r6502storedone
+
+|r65c12phy|
+  MOV r0,ry
+  MOV r1,#R6502_WRITECODE
+  ORR r1,r1,rsp,LSR #8
+  SUB rsp,rsp,#&01000000
+  ORR r1,r1,#&01000000
+  R6502NEXTCYCLE r6502storedone
+
+|r6502storedone|
+  R6502ENDINSTRUCTION
+
+;Data Area
+
+;  AREA    |C$$data|, DATA
+
+  END
