@@ -995,21 +995,6 @@ void beebitpoll(void)
 
       r6502_cyclesoriginal = r6502_cyclestogo;
 
-      cpu_execute();
-
-      updatetimers();
-
-      if (i8271_timer < 0)
-      {
-        i8271_timer = 0;
-        i8271poll();
-      }
-      else if (w1770_timer < 0)
-      {
-        w1770_timer = 0;
-        w1770poll();
-      }
-
       /*NMI interrupts are only generated on the 6502 when*/
       /*the signal goes from low to high*/
       if (beebit_nmi AND !beebit_oldnmi)
@@ -1041,6 +1026,22 @@ void beebitpoll(void)
           #endif
         }
       }
+
+      cpu_execute();
+
+      updatetimers();
+
+      if (i8271_timer < 0)
+      {
+        i8271_timer = 0;
+        i8271poll();
+      }
+      else if (w1770_timer < 0)
+      {
+        w1770_timer = 0;
+        w1770poll();
+      }
+
       if (adc_timer < 0)
       {
         adc_timer = 0;

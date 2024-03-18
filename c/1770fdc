@@ -650,8 +650,8 @@ void w1770commandreadsector(char nvalue)
   w1770_statusreg &= STATUS_NOTDATAREQUEST;
   w1770_byteinsector = 0;
 
-  if (w1770_timer <= 0)
-    w1770poll();
+  /*an underestimate of the time to recognise and read the first byte in the sector*/
+  w1770_timer += 320;
 }
 
 void w1770commandwritesector(char nvalue)
@@ -665,8 +665,8 @@ void w1770commandwritesector(char nvalue)
 
   w1770_writegate = FALSE;
 
-  if (w1770_timer <= 0)
-    w1770poll();
+  /*an underestimate of the time to recognise the first byte in the sector*/
+  w1770_timer += 256;
 }
 
 void w1770type3flags(char nvalue)
