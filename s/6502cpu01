@@ -108,11 +108,7 @@
   AND r0,r1,rpc,LSR #16 ;lo
   STACKPUSH r0 ;(r6502_pc & 0x00FF)
 
-  ORR rps,rps,#BFLAG
-
-  MOV r0,rps
-  ORR r0,r0,#UFLAG
-  STACKPUSH r0
+  STACKPUSH rps
 
   ORR rps,rps,#IFLAG
 

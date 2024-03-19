@@ -23,7 +23,7 @@ void r65c12reset(int lfull)
     r6502_x = 0;
     r6502_y = 0;*/
     r6502_sp = 0xFF;
-    r6502_ps = 0x00;
+    r6502_ps = UFLAG | BFLAG;
     beebit_irq = 0x00;
     beebit_nmi = beebit_oldnmi = 0x00;
   }

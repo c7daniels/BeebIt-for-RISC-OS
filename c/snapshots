@@ -86,7 +86,7 @@ void snapshotload(FILE *hfile)
       r6502_z = (cbuffer[0] & 0x02);
       r6502_c = (cbuffer[0] & 0x01);*/
 //      r6502_ps = cbuffer[0];
-  r6502_ps =readhdr.P;
+  r6502_ps =readhdr.P | UFLAG | BFLAG;
 
 //      fread(cbuffer,1,4,hfile); /*16*/
 //      r6502_sp = cbuffer[3] ;

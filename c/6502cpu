@@ -79,12 +79,6 @@
   /*set bit*/ \
   r6502_ps = (r6502_ps & ~nflag);
 
-/*#define PROCESSORSTATUS \
-  fn | fv | 32 | fb | fd | fi | ((fz & 1)<<1) | fc*/
-
-#define PROCESSORSTATUS(nflag) \
-  (r6502_ps | UFLAG | nflag);
-
 #ifndef __RISCOS__
   #define STACK_PUSH(n) \
     memory[STACK_START+(r6502_sp--)] = n;
@@ -710,7 +704,7 @@ void r6502reset(int lfull)
     r6502_x = 0;
     r6502_y = 0;*/
     r6502_sp = 0xFF;
-    r6502_ps = 0x00;
+    r6502_ps = UFLAG | BFLAG;
     beebit_irq = 0;
     beebit_nmi = beebit_oldnmi = 0;
     /*nvideosync = 40000;*/
@@ -733,9 +727,7 @@ void r6502doirq(void)
   /*systemviaset();*/
   STACK_PUSH((r6502_pc & 0xFF00)>>8);
   STACK_PUSH(r6502_pc & 0x00FF);
-  CLEARFLAG(BFLAG);
-  n = PROCESSORSTATUS(0);
-  STACK_PUSH(n)
+  STACK_PUSH(r6502_ps & NOTBFLAG)
   SETFLAG(IFLAG)
   /*#ifdef __DEBUG__
     fprintf(htrace," ps = %X",n);
@@ -752,9 +744,7 @@ void r6502donmi(void)
 {
   STACK_PUSH((r6502_pc & 0xFF00)>>8);
   STACK_PUSH(r6502_pc & 0x00FF);
-  CLEARFLAG(BFLAG);
-  n = PROCESSORSTATUS(0);
-  STACK_PUSH(n)
+  STACK_PUSH(r6502_ps & NOTBFLAG)
   SETFLAG(IFLAG)
   r6502_pc = (memory[0xFFFB]<<8) + memory[0xFFFA];
   CPU_CYCLES(7)
@@ -1063,9 +1053,7 @@ void r6502execute(void)
         r6502_pc++;
         STACK_PUSH((r6502_pc & 0xFF00)>>8);
         STACK_PUSH(r6502_pc & 0x00FF);
-        SETFLAG(BFLAG)
-        n = PROCESSORSTATUS(BFLAG)
-        STACK_PUSH(n)
+        STACK_PUSH(r6502_ps)
         SETFLAG(IFLAG)
         r6502_pc = (memory[0xFFFF]<<8) + memory[0xFFFE];
         fprintf(htrace,"PC=&%X\n",r6502_pc);
@@ -1167,8 +1155,7 @@ void r6502execute(void)
         break;
       case 0x08:
         /*PHP*/
-        n = PROCESSORSTATUS(BFLAG)
-        STACK_PUSH(n)
+        STACK_PUSH(r6502_ps)
         CPU_CYCLES(3)
         #ifdef __DEBUG__
           fprintf(htrace,"PHP &%X (sp=&%X)",n, r6502_sp);
@@ -1582,6 +1569,7 @@ void r6502execute(void)
       case 0x28:
         /*PLP*/
         STACK_POP(r6502_ps);
+        SETFLAG(UFLAG | BFLAG)
         CPU_CYCLES(4)
         /*if (beebit_irq AND !(r6502_ps & IFLAG))*/
         if (!(r6502_ps & IFLAG))
@@ -1938,6 +1926,7 @@ void r6502execute(void)
           fprintf(htrace,"RTI");
         #endif
         STACK_POP(r6502_ps)
+        SETFLAG(UFLAG | BFLAG)
         STACK_POP(nlo);
         STACK_POP(nhi);
         r6502_pc = (nhi<<8)+nlo;

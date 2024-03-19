@@ -244,7 +244,7 @@ r6502rti2
 
 r6502rti3
   EOR r3,rps,r0
-  MOV rps,r0
+  ORR rps,r0,#UFLAG+BFLAG
   BIC r1,r1,#&00FF0000
   ORR r1,r1,rsp,LSR #8
   ADD rsp,rsp,#&01000000

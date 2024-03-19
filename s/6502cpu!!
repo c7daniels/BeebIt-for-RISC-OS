@@ -418,11 +418,9 @@
   STACKPUSH r0
   AND r0,rpc,#&FF
   STACKPUSH r0
-  ;PROCESSORSTATUS(0)
   LDR r2,=r6502_ps
   LDRB rps,[r2] ;load ps
-  AND rps,rps,#NOTBFLAG ;clear b flag
-  ORR r0,rps,#UFLAG ;set u flag
+  BIC r0,rps,#BFLAG ;without b flag
   STACKPUSH r0
   ORR rps,rps,#IFLAG ;set i flag
   STRB rps,[r2]
@@ -457,11 +455,9 @@
   STACKPUSH r0
   AND r0,rpc,#&FF
   STACKPUSH r0
-  ;PROCESSORSTATUS(0)
   LDR r2,=r6502_ps
   LDRB rps,[r2] ;load ps
-  AND rps,rps,#NOTBFLAG ;clear b flag
-  ORR r0,rps,#UFLAG ;set u flag
+  BIC r0,rps,#BFLAG ;without b flag
   STACKPUSH r0
   ORR rps,rps,#IFLAG ;set i flag
   STRB rps,[r2]
