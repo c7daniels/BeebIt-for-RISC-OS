@@ -116,10 +116,9 @@ extern void vsync(void);
   extern void r6502writeb(int naddress, char nvalue);
   extern void r6502writebp(int naddress, char nvalue);
   extern void r6502writem(int naddress, char nvalue);
-  extern int r6502processorstatus(int lbreak);
 
-  extern void r6502irq(void);
-  extern void r6502nmi(void);
+  extern void r6502startinterrupt(void);
+  extern void r6502startreset(void);
 
   extern void (*r6502opcode07swaps[2])(void);
 

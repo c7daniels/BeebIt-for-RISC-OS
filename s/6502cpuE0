@@ -34,6 +34,7 @@
 ; Import global symbols
 
   IMPORT |r6502busop|
+  IMPORT |r6502intoyield|
   
   IMPORT |r6502immediatedone|
   IMPORT |r6502zeropagereadwrite|
@@ -51,7 +52,6 @@
   IMPORT |r6502isb|
   IMPORT |r6502isbd|
   IMPORT |r6502nop|
-  IMPORT |r6502halt|
 
 ; Export global symbols
 

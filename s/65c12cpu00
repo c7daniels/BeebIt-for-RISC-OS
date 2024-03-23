@@ -34,11 +34,13 @@
 ; Import global symbols
 
   IMPORT |r6502busop|
+  IMPORT |r6502intoyield|
   
   IMPORT |r6502immediatedone|
   IMPORT |r6502zeropagereadreadforwrite|
   IMPORT |r6502hiabsolutereadreadforwrite|
 
+  IMPORT |r65c12brk|
   IMPORT |r6502asl|
   IMPORT |r65c12tsb|
   IMPORT |r6502nop|
@@ -46,6 +48,7 @@
 
 ; Export global symbols
 
+  EXPORT |r65c12opcode00|
   EXPORT |r65c12opcode02|
   EXPORT |r65c12opcode03|
   EXPORT |r65c12opcode04|
@@ -55,6 +58,9 @@
   EXPORT |r65c12opcode0C|
   EXPORT |r65c12opcode0E|
   EXPORT |r65c12opcode0F|
+
+|r65c12opcode00|
+  IMMEDIATELOAD r65c12brk
 
 |r65c12opcode02|
   IMMEDIATELOAD r6502nop

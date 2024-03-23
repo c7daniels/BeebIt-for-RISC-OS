@@ -34,6 +34,7 @@
 ; Import global symbols
 
   IMPORT |r6502busop|
+  IMPORT |r6502intoyield|
   
   IMPORT |r6502zeropageindirectread|
 

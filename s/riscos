@@ -26,6 +26,8 @@
   IMPORT |beebit_trace|
   IMPORT |memory|
   IMPORT |shadow|
+  IMPORT |r6502_resetaction|
+  IMPORT |r6502_instructionlink|
   IMPORT |r6502_cyclesmonotonic|
 
   IMPORT |systemviasetca2|
@@ -247,6 +249,12 @@ inttohexb
   CMP r9,#&80
   BNE keyupdownF12
 
+  LDR r11,=lbreak
+  MOV r9,#&00
+  STR r9,[r11]
+  CMP r1,#&00 ;if key is down
+  MOVNE r9,#&FF
+
   ;STR lr,[sp, #-4]!  ;STMFD sp!,{lr}
   MOV r0,#129 ;scan kbd for single key
   MOV r1,#&F7 ;(8 EOR &FF) right alt
@@ -267,9 +275,15 @@ inttohexb
   TEQ r1,#&FF ;pressed?
   LDMEQFD sp!,{r0-r3,r8-r12,pc} ;yes pass event on for watchdog.
 
-  MOV r9,#&FF
-  LDR r11,=lbreak
+  TST r9,r9 ;key is up?
+  LDMEQFD sp!,{r0-r3,r8-r12,pc} ;yes exit
+
   STR r9,[r11]
+  LDR r11,=r6502_resetaction
+  LDR r2,[r11]
+  LDR r11,=r6502_instructionlink
+  STR r2,[r11]
+
   LDMFD sp!,{r0-r3,r8-r12,pc} ;exit
 
 keyupdownF12

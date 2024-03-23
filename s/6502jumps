@@ -35,7 +35,16 @@
 
   IMPORT |r6502_pc|
   IMPORT |r6502_ps|
+  IMPORT |lbreak|
+  IMPORT |beebit_oldreset|
+  IMPORT |beebit_nmi|
+  IMPORT |beebit_oldnmi|
+
   IMPORT |r6502busop|
+  IMPORT |r6502intoyield|
+  IMPORT |r6502intointerrupt|
+  IMPORT |r6502cancelinterrupt|
+  IMPORT |r6502resetother|
 
 ; Export global symbols
 
@@ -56,6 +65,13 @@
   EXPORT |r6502jsr|
   EXPORT |r6502rti|
   EXPORT |r6502rts|
+
+  EXPORT |r6502interrupt|
+  EXPORT |r6502brk|
+  EXPORT |r65c12interrupt|
+  EXPORT |r65c12brk|
+  EXPORT |r6502reset|
+  EXPORT |r65c12reset|
 
   EXPORT |r6502opcode07_interface|
 
@@ -249,10 +265,12 @@ r6502rti3
   ORR r1,r1,rsp,LSR #8
   ADD rsp,rsp,#&01000000
   TST r3,#IFLAG
-  BNE r6502rti3check
-  R6502NEXTCYCLE r6502rti4
-r6502rti3check
-  R6502UPDATEIRQ
+  BEQ r6502rti3done
+  LDR r2,[r12,#:INDEX:R6502_BEEBITIRQ]
+  TST r2,r2
+  BEQ r6502rti3done
+  R6502IRQUNMASKEDORMASKED
+r6502rti3done
   R6502NEXTCYCLE r6502rti4
 
 r6502rti4
@@ -288,6 +306,226 @@ r6502rts4
 r6502rts5
   ADD rpc,rpc,#&10000
   R6502ENDINSTRUCTION
+
+|r6502interrupt|
+  BIC rps,rps,#BFLAG ;clear b flag
+  ORR r1,rpc,#R6502_READCODE
+  R6502NEXTCYCLE r6502interrupt2
+
+r6502interrupt2
+  R6502NEXTCYCLE r6502interrupt3
+
+r6502interrupt3
+|r6502brk|
+  MOV r0,rpc,LSR #24
+  MOV r1,#R6502_WRITECODE
+  ORR r1,r1,rsp,LSR #8
+  ORR r1,r1,#&01000000
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502interrupt4
+
+r6502interrupt4
+  MOV r2,rpc,LSL #8
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  MOV r0,r2,LSR #24
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502interrupt5
+
+r6502interrupt5
+  MOV r0,rps
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  ORR rps,rps,#BFLAG+IFLAG
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502interrupt6
+
+r6502interrupt6
+  MOV r1,#R6502_READCODE
+  LDR r11,=beebit_nmi
+  LDR r2,[r11]
+  TST r2,r2
+  BEQ r6502interrupt6irq
+  LDR r11,=beebit_oldnmi
+  LDR r3,[r11]
+  TST r3,r3
+  BNE r6502interrupt6irq
+  STR r2,[r11]
+  SUB r1,r1,#&60000
+  R6502NEXTCYCLE r6502vectorjmp
+r6502interrupt6irq
+  SUB r1,r1,#&20000
+  R6502NEXTCYCLE r6502vectorjmp
+
+r6502vectorjmp
+  MOV rpc,r0,LSL #16
+  ADD r1,r1,#&10000
+  R6502NEXTCYCLE r6502vectorjmp2
+
+r6502vectorjmp2
+  ORR rpc,rpc,r0,LSL #24
+  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  R6502CHECKBREAK
+  R6502ENDINSTRUCTION
+
+|r65c12interrupt|
+  BIC rps,rps,#BFLAG ;clear b flag
+  ORR r1,rpc,#R6502_READCODE
+  R6502NEXTCYCLE r65c12interrupt2
+
+r65c12interrupt2
+  R6502NEXTCYCLE r65c12interrupt3
+
+r65c12interrupt3
+  MOV r0,rpc,LSR #24
+  MOV r1,#R6502_WRITECODE
+  ORR r1,r1,rsp,LSR #8
+  ORR r1,r1,#&01000000
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r65c12interrupt4
+
+r65c12interrupt4
+  MOV r2,rpc,LSL #8
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  MOV r0,r2,LSR #24
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r65c12interrupt5
+
+r65c12interrupt5
+  MOV r0,rps
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  ORR rps,rps,#BFLAG+IFLAG
+  BIC rps,rps,#DFLAG
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502interrupt6
+
+|r65c12brk|
+  MOV r0,rpc,LSR #24
+  MOV r1,#R6502_WRITECODE
+  ORR r1,r1,rsp,LSR #8
+  ORR r1,r1,#&01000000
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r65c12brk4
+  
+r65c12brk4
+  MOV r2,rpc,LSL #8
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  MOV r0,r2,LSR #24
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r65c12brk5
+
+r65c12brk5
+  MOV r0,rps
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  ORR rps,rps,#BFLAG+IFLAG
+  BIC rps,rps,#DFLAG
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r65c12brk6
+
+r65c12brk6
+  MOV r1,#R6502_READCODE
+  SUB r1,r1,#&20000
+  R6502NEXTCYCLE r6502jmp
+
+|r6502reset|
+  LDR r11,=lbreak
+  LDR r2,[r11]
+  TST r2,r2
+  BEQ r6502resetnobreak
+  LDR r11,=beebit_oldreset
+  LDR r3,[r11]
+  TST r3,r3
+  BLEQ r6502resetother
+  ORR r1,rpc,#R6502_READCODE
+  R6502NEXTCYCLE r6502reset
+r6502resetnobreak
+  LDR r11,=beebit_oldreset
+  MOV r2,#0
+  STR r2,[r11]
+  ORR r1,rpc,#R6502_READCODE
+  R6502NEXTCYCLE r6502reset2
+
+r6502reset2
+  R6502NEXTCYCLE r6502reset3
+
+r6502reset3
+  MOV r1,#R6502_READCODE
+  ORR r1,r1,rsp,LSR #8
+  ORR r1,r1,#&01000000
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502reset4
+
+r6502reset4
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502reset5
+
+r6502reset5
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  ORR rps,rps,#UFLAG+BFLAG+IFLAG
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502reset6
+
+r6502reset6
+  MOV r1,#R6502_READCODE
+  SUB r1,r1,#&40000
+  R6502NEXTCYCLE r6502vectorjmp
+
+|r65c12reset|
+  LDR r11,=lbreak
+  LDR r2,[r11]
+  TST r2,r2
+  BEQ r65c12resethold
+  LDR r11,=beebit_oldreset
+  LDR r3,[r11]
+  TST r3,r3
+  BNE r65c12resethold
+  STR r2,[r11]
+  BL r6502resetother
+r65c12resethold
+  ORR r1,rpc,#R6502_READCODE
+  LDR r11,=lbreak
+  LDR r2,[r11]
+  TST r2,r2
+  R6502NEXTCYCLE_NEorEQ r65c12resethold, r65c12reset2
+
+r65c12reset2
+  MOV r2,#0
+  LDR r11,=beebit_oldreset
+  STR r2,[r11]
+  R6502NEXTCYCLE r65c12reset3
+
+r65c12reset3
+  MOV r0,rpc,LSR #24
+  MOV r1,#R6502_WRITECODE
+  ORR r1,r1,rsp,LSR #8
+  ORR r1,r1,#&01000000
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r65c12reset4
+
+r65c12reset4
+  MOV r2,rpc,LSL #8
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  MOV r0,r2,LSR #24
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r65c12reset5
+
+r65c12reset5
+  MOV r0,rps
+  BIC r1,r1,#&00FF0000
+  ORR r1,r1,rsp,LSR #8
+  ORR rps,rps,#UFLAG+BFLAG+IFLAG
+  BIC rps,rps,#DFLAG
+  SUB rsp,rsp,#&01000000
+  R6502NEXTCYCLE r6502reset6
 
 r6502opcode07_interface
   ;Opcode 07 Interface
@@ -425,8 +663,7 @@ r6502opcode07_2
   LDR rpc,[r11]
   MOV rpc,rpc,LSL #16
   LDMFD sp!,{r0-ry,r11-r12}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  R6502ENDINSTRUCTION
 
 r6502opcode07_error
   ;load the swi number
@@ -501,8 +738,7 @@ r6502opcode07_error5
   LDR rpc,[r11]
   MOV rpc,rpc,LSL #16
   LDMFD sp!,{r0-ry,r11-r12}
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  R6502ENDINSTRUCTION
 
 ;Data Area
 

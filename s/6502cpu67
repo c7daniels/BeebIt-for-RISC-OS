@@ -34,6 +34,8 @@
 ; Import global symbols
 
   IMPORT |r6502busop|
+  IMPORT |r6502intoyield|
+  IMPORT |r6502intohalt|
   
   IMPORT |r6502immediatedone|
   IMPORT |r6502zeropagereadwrite|
@@ -60,7 +62,6 @@
   IMPORT |r6502rrad|
   IMPORT |r6502jmpind|
   IMPORT |r6502nop|
-  IMPORT |r6502halt|
 
 ; Export global symbols
 
@@ -95,7 +96,7 @@
   PREINDEXEDLOAD_DECIMALFORK r6502adc,r6502adcd
 
 |r6502opcode62|
-  B r6502halt
+  B r6502intohalt
 
 |r6502opcode63|
   PREINDEXEDMODIFYN_DECIMALFORK r6502rra,r6502rrad
@@ -144,7 +145,7 @@
   POSTINDEXEDYLOAD_DECIMALFORK r6502adc,r6502adcd
 
 |r6502opcode72|
-  B r6502halt
+  B r6502intohalt
 
 |r6502opcode73|
   POSTINDEXEDYMODIFYN_DECIMALFORK r6502rra,r6502rrad

@@ -39,30 +39,37 @@
 ;  ADDRESSOFPOSTINDEXEDY_STA
 ;  CPU_CYCLES 4
 
-                      ^ 0
-R6502_DATA            # &4
-R6502_ADDRESS         # &4 ;address in top half, read/write selector in bottom half
-R6502_CONTINUATION    # &4
-R6502_CONTINUATION2   # &4
-R6502_CYCLESORIGINAL  # &4
-R6502_CYCLESTOGO      # &4
-R6502_BEEBITIRQ       # &4
-R6502_ADDRTEMP        # &4
-R6502_OPCODE07SWAPS   # &8
-                      # &D8
-R6502_BUSOPOFFSET     # &80 ;placed at index 256 for simple read/write selection
-R6502_ROMWRITABLE     # &40
-                      # &240
-R6502_OPCODES         # &400
-R6502_SHEILAREADS     # &400
-R6502_SHEILAWRITES    # &400
-R6502_MEMORY          # &10000  ; 65536 bytes
-R6502_SHADOW          # 0
-R6502_ANDY            # &1000   ;  4096 bytes
-R6502_HAZEL           # &2000   ;  8192 bytes
-R6502_LYNNE           # &5000   ; 20480 bytes
-R6502_ROMS            # &40000  ;262144 bytes
-R6502_WorkSize        * @
+                       ^ 0
+R6502_DATA             # &4
+R6502_ADDRESS          # &4 ;address in top half, read/write selector in bottom half
+R6502_CONTINUATION     # &4
+R6502_CONTINUATION2    # &4
+R6502_INSTRUCTIONLINK  # &4
+R6502_INSTRUCTIONLINK2 # &4
+R6502_CYCLESORIGINAL   # &4
+R6502_CYCLESTOGO       # &4
+R6502_YIELDACTION      # &4
+R6502_FETCHACTION      # &4
+R6502_HALTACTION       # &4
+R6502_INTERRUPTACTION  # &4
+R6502_RESETACTION      # &4
+R6502_BEEBITIRQ        # &4
+R6502_ADDRTEMP         # &4
+R6502_OPCODE07SWAPS    # &8
+                       # &BC
+R6502_BUSOPOFFSET      # &80 ;placed at index 256 for simple read/write selection
+R6502_ROMWRITABLE      # &40
+                       # &240
+R6502_OPCODES          # &400
+R6502_SHEILAREADS      # &400
+R6502_SHEILAWRITES     # &400
+R6502_MEMORY           # &10000  ; 65536 bytes
+R6502_SHADOW           # 0
+R6502_ANDY             # &1000   ;  4096 bytes
+R6502_HAZEL            # &2000   ;  8192 bytes
+R6502_LYNNE            # &5000   ; 20480 bytes
+R6502_ROMS             # &40000  ;262144 bytes
+R6502_WorkSize         * @
 
 R6502_READCODE EQU :INDEX:R6502_BUSOPOFFSET:SHR:6
 R6502_WRITECODE EQU (:INDEX:R6502_BUSOPOFFSET+64):SHR:6

@@ -300,20 +300,25 @@
   IMPORT |r6502_cyclestogo|
   IMPORT |r6502workspace|
   IMPORT |r6502busop|
-  IMPORT |r6502readmem|
   IMPORT |beebit_trace|
   IMPORT |beebit_romsel|
   IMPORT |beebit_acccon|
+  IMPORT |lbreak|
+  IMPORT |beebitbreak|
 
 ; Export global symbols
 
+  EXPORT |r6502startinterrupt|
   EXPORT |r6502execute|
-  EXPORT |r6502instruction|
+  EXPORT |r6502intoyield|
+  EXPORT |r6502intohalt|
+  EXPORT |r6502intointerrupt|
+  EXPORT |r6502cancelinterrupt|
+  EXPORT |r6502resetother|
+  EXPORT |r6502fetch|
   EXPORT |r6502fivenop|
   EXPORT |r6502nop|
   EXPORT |r6502halt|
-  EXPORT |r6502irq|
-  EXPORT |r6502nmi|
   EXPORT |r6502immediatedone|
   EXPORT |r6502zeropagereadreadforwrite|
   EXPORT |r6502zeropagereadwrite|
@@ -405,76 +410,12 @@
 ;
 ;rockwell 6502 cpu
 ;
-|r6502irq|
-  STMFD sp!,{r0-r12,lr}
+
+|r6502startinterrupt|
+  STMFD sp!,{r11-r12,lr}
   LDR r12,=r6502workspace
-  LDR r11,=r6502_pc ;pointer to r6502_pc
-  LDR rpc,[r11]
-  LDR r10,=r6502_sp ;pointer to r6502_sp
-  LDRB rsp,[r10] ;load r6502_sp
-  MOV rsp,rsp,LSL #24
-  AND r0,rpc,#&FF00
-  MOV r0,r0,LSR#8
-  STACKPUSH r0
-  AND r0,rpc,#&FF
-  STACKPUSH r0
-  LDR r2,=r6502_ps
-  LDRB rps,[r2] ;load ps
-  BIC r0,rps,#BFLAG ;without b flag
-  STACKPUSH r0
-  ORR rps,rps,#IFLAG ;set i flag
-  STRB rps,[r2]
-  ADD r2,r12,#:INDEX:R6502_MEMORY+&10000 ;memory+&10000
-  LDRB r0,[r2,#-2] ;&FFFE
-  LDRB r1,[r2,#-1] ;&FFFF
-  ADD rpc,r0,r1,LSL#8
-  MOV rsp,rsp,LSR #24
-  STRB rsp,[r10]
-  LDR r11,=r6502_pc ;pointer to r6502_pc
-  STR rpc,[r11]
-
-  LDR r11,=r6502_cyclestogo
-  LDR rcycles,[r11] ;r6502_cyclestogo
-  CPU_CYCLES 7
-  STR rcycles,[r11] ;r6502_cyclestogo
-  LDMFD sp!,{r0-r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502nmi|
-  STMFD sp!,{r0-r12,lr}
-  LDR r12,=r6502workspace
-  LDR r11,=r6502_pc ;pointer to r6502_pc
-  LDR rpc,[r11]
-  LDR r10,=r6502_sp ;pointer to r6502_sp
-  LDRB rsp,[r10] ;load r6502_sp
-  MOV rsp,rsp,LSL #24
-  AND r0,rpc,#&FF00
-  MOV r0,r0,LSR#8
-  STACKPUSH r0
-  AND r0,rpc,#&FF
-  STACKPUSH r0
-  LDR r2,=r6502_ps
-  LDRB rps,[r2] ;load ps
-  BIC r0,rps,#BFLAG ;without b flag
-  STACKPUSH r0
-  ORR rps,rps,#IFLAG ;set i flag
-  STRB rps,[r2]
-  ADD r2,r12,#:INDEX:R6502_MEMORY+&10000 ;memory+&10000
-  LDRB r0,[r2,#-6] ;&FFFA
-  LDRB r1,[r2,#-5] ;&FFFB
-  ADD rpc,r0,r1,LSL#8
-  MOV rsp,rsp,LSR #24
-  STRB rsp,[r10]
-  LDR r11,=r6502_pc ;pointer to r6502_pc
-  STR rpc,[r11]
-
-  LDR r11,=r6502_cyclestogo
-  LDR rcycles,[r11] ;r6502_cyclestogo
-  CPU_CYCLES 7
-  STR rcycles,[r11] ;r6502_cyclestogo
-  LDMFD sp!,{r0-r12,pc}
+  BL r6502intointerrupt
+  LDMFD sp!,{r11-r12,pc}
 
 ;
 ;rockwell 6502 cpu
@@ -483,172 +424,87 @@
   STMFD sp!,{r0-r12,lr}
   BL r6502loadregs
 
-r6502execute_loop
-  ;-------------------
-  ;LDR r11,=beebit_trace ;trace
-  ;LDR r0,[r11]
-  ;CMP r0,#00
-  ;BEQ r6502execute_loop2
-
-  ;MOV r0, rpc, LSL #16 ;get RPC
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex4 ;BinaryToDecimal
-  ;SWI OS_Write0
-  ;SWI OS_WriteI+32
-
-  ;MOV r1,rpc
-  ;BL r6502readmem ;=r0
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, ra ;a
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, rx ;x
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, ry ;y
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, rps ;program status
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, rsp ;sp
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;LDR r0,=beebit_romsel
-  ;LDR r0,[r0]
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;LDR r0,=beebit_acccon
-  ;LDR r0,[r0]
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_NewLine
-  ;-------------------
-
-r6502execute_loop2
-  ORR r1,rpc,#R6502_READCODE
-  BL r6502busop
-
   ADD lr,pc,#4
-  STR lr,[sp, #-4]!
-  B r6502instruction
+  STR lr,[r12,#:INDEX:R6502_YIELDACTION]
+  LDR pc,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
 
-  ;-------------------
-  ;LDR r11,=beebit_trace ;trace
-  ;LDR r0,[r11]
-  ;CMP r0,#00
-  ;BEQ r6502execute_loop3
+;continue
+  LDR r2,[r12,#:INDEX:R6502_YIELDACTION]
+  LDR r3,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  CMP r2,r3
+  LDR r2,[r12,#:INDEX:R6502_FETCHACTION]
+  STREQ r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
 
-  ;LDR r1,=flag
-  ;LDR r0,[r1]
-  ;CMP r0,#&00
-  ;BEQ skip2
-  ;B skip2
+  R6502CHECKBREAK
 
-  ;SWI OS_WriteI+32
-  ;MOV r0, ra ;a
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, rx ;x
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, ry ;y
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, rps ;program status
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, rsp ;sp
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;LDR r0,=beebit_romsel
-  ;LDR r0,[r0]
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;LDR r0,=beebit_acccon
-  ;LDR r0,[r0]
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_NewLine
-
-  ;LDR r11,=r6502_cyclestogo
-  ;LDR r0,[r11]
-  ;CMP r0,#0
-  ;-------------------
-;skip2
-
-r6502execute_loop3
-  ;SWI OS_WriteI+87
-  CMP rcycles,#0
-  ;SWI OS_WriteI+88
-  BGT r6502execute_loop
-
-;r6502execute_end
   BL r6502saveregs
-  ;SWI OS_WriteI+90
   LDMFD sp!,{r0-r12,pc}
 
-|r6502instruction|
+|r6502intoyield|
+  LDR r2,[r12,#:INDEX:R6502_FETCHACTION]
+  LDR r3,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  CMP r2,r3
+  LDR r2,[r12,#:INDEX:R6502_YIELDACTION]
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  BNE r6502busop
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  R6502CHECKBREAK
+  B r6502busop
+
+|r6502intohalt|
+  SUB rpc,rpc,#&10000
+  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  LDR r3,[r12,#:INDEX:R6502_FETCHACTION]
+  CMP r2,r3
+  LDRNE r3,[r12,#:INDEX:R6502_YIELDACTION]
+  CMPNE r2,r3
+  BNE r6502intohalt2
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  LDR r2,[r12,#:INDEX:R6502_HALTACTION]
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  R6502CHECKBREAK
+  R6502ENDINSTRUCTION
+r6502intohalt2
+  LDR r3,[r12,#:INDEX:R6502_INTERRUPTACTION]
+  CMP r2,r3
+  R6502ENDNEINSTRUCTION
+  LDR r2,[r12,#:INDEX:R6502_HALTACTION]
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  R6502CHECKBREAK
+  R6502ENDINSTRUCTION
+
+|r6502intointerrupt|
+  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  LDR r3,[r12,#:INDEX:R6502_FETCHACTION]
+  CMP r2,r3
+  LDRNE r3,[r12,#:INDEX:R6502_YIELDACTION]
+  CMPNE r2,r3
+  MOVNE pc,lr
+  LDR r3,[r12,#:INDEX:R6502_INTERRUPTACTION]
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  STR r3,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  R6502CHECKBREAK
+  MOV pc,lr
+
+|r6502cancelinterrupt|
+  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  R6502CHECKBREAK
+  MOV pc,lr
+
+|r6502resetother|
+  STR lr,[sp,#-4]!
+  BL r6502saveregs
+  BL beebitbreak
+  BL r6502loadregs
+  LDR pc, [sp], #4
+
+|r6502fetch|
+  ORR r1,rpc,#R6502_READCODE
+  R6502NEXTCYCLE r6502instruction
+
+r6502instruction
   ADD r2,r12,#:INDEX:R6502_OPCODES
   ADD rpc,rpc,#&10000
   LDR pc,[r2,r0,LSL#2]
@@ -669,8 +525,25 @@ r6502twonop
   R6502ENDINSTRUCTION
 
 |r6502halt|
-  SUB rpc,rpc,#&10000
-  R6502ENDINSTRUCTION
+  ORR r1,rpc,#R6502_READCODE
+  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  LDR r3,[r12,#:INDEX:R6502_HALTACTION]
+  CMP r2,r3
+  BNE r6502halt3
+r6502halt2
+  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  LDR r3,[r12,#:INDEX:R6502_YIELDACTION]
+  CMP r2,r3
+  MOVEQ pc,r2
+  R6502NEXTCYCLE r6502halt
+r6502halt3
+  LDR r3,[r12,#:INDEX:R6502_INTERRUPTACTION]
+  CMP r2,r3
+  R6502ENDNEINSTRUCTION
+  LDR r2,[r12,#:INDEX:R6502_HALTACTION]
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  R6502CHECKBREAK
+  B r6502halt2
 
 |r6502immediatedone|
   ADD rpc,rpc,#&10000

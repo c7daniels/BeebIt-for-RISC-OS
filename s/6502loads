@@ -33,7 +33,12 @@
 
 ; Import global symbols
 
+  IMPORT |beebit_nmi|
+  IMPORT |beebit_oldnmi|
   IMPORT |r6502busop|
+  IMPORT |r6502intoyield|
+  IMPORT |r6502intointerrupt|
+  IMPORT |r6502cancelinterrupt|
 
 ; Export global symbols
 
@@ -154,7 +159,10 @@ r6502plp3
   ORR rps,r0,#UFLAG+BFLAG
   TST r3,#IFLAG
   R6502ENDEQINSTRUCTION
-  R6502UPDATEIRQ
+  LDR r2,[r12,#:INDEX:R6502_BEEBITIRQ]
+  TST r2,r2
+  R6502ENDEQINSTRUCTION
+  R6502IRQUNMASKEDORMASKED
   R6502ENDINSTRUCTION
 
 |r65c12plx|

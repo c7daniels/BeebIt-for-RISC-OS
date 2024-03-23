@@ -34,6 +34,8 @@
 ; Import global symbols
 
   IMPORT |r6502busop|
+  IMPORT |r6502intoyield|
+  IMPORT |r6502intohalt|
   
   IMPORT |r6502immediatedone|
   IMPORT |r6502zeropagereadwrite|
@@ -51,6 +53,7 @@
   IMPORT |r6502zeropageindirectyreadwrite|
   IMPORT |r6502zeropageindirectyread|
 
+  IMPORT |r6502brk|
   IMPORT |r6502bpl|
   IMPORT |r6502clc|
   IMPORT |r6502ora|
@@ -60,7 +63,6 @@
   IMPORT |r6502aso|
   IMPORT |r6502php|
   IMPORT |r6502nop|
-  IMPORT |r6502halt|
   IMPORT |r6502opcode07_interface|
 
 ; Export global symbols
@@ -98,34 +100,13 @@
   EXPORT |r6502opcode1E|
 
 |r6502opcode00|
-  ;BRK
-  ADD rpc,rpc,#&10000
-
-  MOV r0,rpc,LSR #24 ;hi
-  STACKPUSH r0 ;(r6502_pc & 0xFF00)
-
-  MOV r1,#&00FF
-  AND r0,r1,rpc,LSR #16 ;lo
-  STACKPUSH r0 ;(r6502_pc & 0x00FF)
-
-  STACKPUSH rps
-
-  ORR rps,rps,#IFLAG
-
-  ADD r2,r12,#:INDEX:R6502_MEMORY+&10000 ;memory+&10000
-  LDRB r0,[r2,#-1] ;&FFFF
-  LDRB r1,[r2,#-2] ;&FFFE
-  MOV r1,r1,LSL #16
-  ADD rpc,r1,r0,LSL #24
-  CPU_CYCLES 7
-  ;LDR pc,[sp],#4
-  R6502NEXTOPCODE
+  IMMEDIATELOAD r6502brk
 
 |r6502opcode01|
   PREINDEXEDLOAD r6502ora
 
 |r6502opcode02|
-  B r6502halt
+  B r6502intohalt
 
 |r6502opcode03|
   PREINDEXEDMODIFYN r6502aso
@@ -176,7 +157,7 @@
   POSTINDEXEDYLOAD r6502ora
 
 |r6502opcode12|
-  B r6502halt
+  B r6502intohalt
 
 |r6502opcode13|
   POSTINDEXEDYMODIFYN r6502aso

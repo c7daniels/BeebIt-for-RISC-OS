@@ -33,7 +33,13 @@
 
 ; Import global symbols
 
+
+  IMPORT |beebit_nmi|
+  IMPORT |beebit_oldnmi|
   IMPORT |r6502busop|
+  IMPORT |r6502intoyield|
+  IMPORT |r6502intointerrupt|
+  IMPORT |r6502cancelinterrupt|
   IMPORT |r6502storedone|
 
 ; Export global symbols
@@ -106,14 +112,20 @@
   TST rps,#IFLAG
   BIC rps,rps,#IFLAG
   R6502ENDEQINSTRUCTION
-  R6502UPDATEIRQ
+  LDR r2,[r12,#:INDEX:R6502_BEEBITIRQ]
+  TST r2,r2
+  R6502ENDEQINSTRUCTION
+  R6502IRQUNMASKED
   R6502ENDINSTRUCTION
 
 |r6502sei|
   TST rps,#IFLAG
   ORR rps,rps,#IFLAG
   R6502ENDNEINSTRUCTION
-  R6502UPDATEIRQ
+  LDR r2,[r12,#:INDEX:R6502_BEEBITIRQ]
+  TST r2,r2
+  R6502ENDEQINSTRUCTION
+  R6502IRQMASKED
   R6502ENDINSTRUCTION
 
 |r6502clv|

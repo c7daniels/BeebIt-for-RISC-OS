@@ -284,6 +284,8 @@ void snapshotload(FILE *hfile)
   fseek(hfile,0x210 ,SEEK_SET);
   fread(memory,1,0x8000,hfile);
   fclose(hfile);
+
+  r6502_instructionlink = r6502_fetchaction;
 }
 
 void snapheadersave(SNAPHDR *phdr)
@@ -351,7 +353,6 @@ void snapheadersave(SNAPHDR *phdr)
   phdr ->Y =r6502_y;
 
 //  cbuffer[3] = 0;
-//  /*cbuffer[0] = r6502processorstatus(TRUE);*/
 //  cbuffer[0] = r6502_ps; /*12*/
 //  wimpwrite(cbuffer,1,4);
   phdr ->P =r6502_ps;

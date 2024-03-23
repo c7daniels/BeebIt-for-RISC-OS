@@ -695,28 +695,6 @@ void r6502writem(int naddress, char nvalue)
 }
 #endif
 
-void r6502reset(int lfull)
-{
-  /*noldloc = memory[0x10CE];*/
-  if (lfull)
-  {
-    /*r6502_a = 0;
-    r6502_x = 0;
-    r6502_y = 0;*/
-    r6502_sp = 0xFF;
-    r6502_ps = UFLAG | BFLAG;
-    beebit_irq = 0;
-    beebit_nmi = beebit_oldnmi = 0;
-    /*nvideosync = 40000;*/
-    r6502_cyclestogo = 5000;
-    r6502_cyclesoriginal = 0;
-    r6502_cyclesexpired = 0;
-    r6502_cycle = 0;
-    /*r6502_cyclecount = 0;*/
-  }
-  r6502_pc = (memory[0xFFFD]<<8) + memory[0xFFFC];
-}
-
 #ifndef __RISCOS__
 void r6502doirq(void)
 {

@@ -33,7 +33,7 @@
 
 ; Import global symbols
 
-  IMPORT r6502opcode00
+  IMPORT r65c12opcode00
   IMPORT r6502opcode01
   IMPORT r65c12opcode02
   IMPORT r65c12opcode03
@@ -295,7 +295,7 @@
   EXPORT |r65c12opcodeset|
 
 |r65c12opcodeset|
-  DCD r6502opcode00
+  DCD r65c12opcode00
   DCD r6502opcode01
   DCD r65c12opcode02
   DCD r65c12opcode03

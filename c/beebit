@@ -107,6 +107,7 @@ int beebit_exit; /*exit the emulation F12 or close window*/
 /*int beebit_irq;*/
 int beebit_nmi, beebit_oldnmi;
 int lexit, lbreak, lprintscreen;
+int beebit_oldreset;
 /*int irqinterrupt, nmiinterrupt, noldnmi;*/
 /*int ncounterstart;*/
 /*clock_t nclock;*/
@@ -436,6 +437,7 @@ void beebitreset(void)
     beebit_imagetype[3] = DFS_NONE;
 
     beebit_nmi = beebit_oldnmi = FALSE;
+    beebit_oldreset = TRUE;
     aciareset();
     adcreset();
     videoulareset(TRUE);
@@ -452,13 +454,19 @@ void beebitreset(void)
     {
       case MACHINE_MODELB:
       case MACHINE_MODELBPLUS:
-        r6502reset(TRUE);
+        r6502_interruptaction = r6502interrupt;
+        r6502_resetaction = r6502reset;
         break;
       case MACHINE_MASTER128:
       case MACHINE_COMPACT:
-        r65c12reset(TRUE);
+        r6502_interruptaction = r65c12interrupt;
+        r6502_resetaction = r65c12reset;
         break;
     }
+    r6502_fetchaction = r6502fetch;
+    r6502_haltaction = r6502halt;
+    r6502_instructionlink = r6502_resetaction;
+    r6502_instructionlink2 = r6502_fetchaction;
 
     /*if (lteletextmode)
     {
@@ -999,12 +1007,11 @@ void beebitpoll(void)
       /*the signal goes from low to high*/
       if (beebit_nmi AND !beebit_oldnmi)
       {
-        beebit_oldnmi = beebit_nmi;
         /*beebit_nmi = FALSE;*/
         /*if (beebit_trace)
           printf("NMI PC=%X, SP=%X\n", r6502_pc, r6502_sp);*/
         #ifdef __RISCOS__
-          r6502nmi();
+          r6502startinterrupt();
         #else
           r6502donmi();
         #endif
@@ -1020,7 +1027,7 @@ void beebitpoll(void)
           /*if (beebit_trace)
             printf("IRQ PC=%X, SP=%X\n", r6502_pc, r6502_sp);*/
           #ifdef __RISCOS__
-            r6502irq();
+            r6502startinterrupt();
           #else
             r6502doirq();
           #endif
@@ -1059,65 +1066,6 @@ void beebitpoll(void)
     */
       if (video_timer <= 0)
         videoscanline();
-
-      if (lbreak)
-      {
-        lbreak = FALSE;
-        /*remove low bit*/
-        /*if (r6502_cyclestotal & 1)
-          r6502_cyclestotal--;*/
-        switch (beebit_machinetype)
-        {
-          case MACHINE_MODELB:
-          case MACHINE_MODELBPLUS:
-            r6502reset(FALSE);
-            break;
-          case MACHINE_MASTER128:
-          case MACHINE_COMPACT:
-            r65c12reset(FALSE);
-            break;
-        }
-        systemviareset(FALSE);
-        userviareset(FALSE);
-        w1770_initialised = FALSE; /*for the B+*/
-        sheilareset();
-        /*videoulareset(FALSE);*/
-        i8271reset();
-        w1770reset();
-        /*set keyboard status*/
-        /*regs.r[0] = 202;
-        regs.r[1] = 0xA0;*/ /*A9;*/
-        /*regs.r[2] = 0;
-        _kernel_swi(OS_Byte,&regs,&regs);
-        regs.r[0] = 118;
-        _kernel_swi(OS_Byte,&regs,&regs);*/
-      }
-      /*else
-      {*/
-        /*if (irqinterrupt AND !fi)
-          doirq();
-        if (beebit_nmi AND !beebit_oldnmi)
-          donmi();
-        beebit_oldnmi = beebit_nmi;*/
-        /*if (clock() >= nclock)
-        {
-          nclock = clock()+NEXT_TIME;
-          videoupdate();
-        }*/
-        /*if (counter <= 0)
-        {*/
-          /*while (clock() < nclock)
-          {
-          }
-          nclock = clock()+NEXT_TIME;*/
-          /*if (nvideoframe <= 0)
-            videoupdate();*/
-          /*#ifdef __DEVELOP__
-            fprintf(htrace,"%u\n",clock());
-          #endif*/
-          /*counter += 80;
-        }*/
-      /*}*/
   }
   while (NOT beebit_yield); /*!lexit);*/
 
@@ -1150,6 +1098,27 @@ void beebitpoll(void)
   }*/
 }
 
+void beebitbreak(void)
+{
+  beebit_oldreset = TRUE;
+
+  updatetimers();
+
+  systemviareset(FALSE);
+  userviareset(FALSE);
+  w1770_initialised = FALSE; /*for the B+*/
+  sheilareset();
+  /*videoulareset(FALSE);*/
+  i8271reset();
+  w1770reset();
+  /*set keyboard status*/
+  /*regs.r[0] = 202;
+  regs.r[1] = 0xA0;*/ /*A9;*/
+  /*regs.r[2] = 0;
+  _kernel_swi(OS_Byte,&regs,&regs);
+  regs.r[0] = 118;
+  _kernel_swi(OS_Byte,&regs,&regs);*/
+}
 
 void beebitexit(void)
 {

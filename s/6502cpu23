@@ -34,6 +34,8 @@
 ; Import global symbols
 
   IMPORT |r6502busop|
+  IMPORT |r6502intoyield|
+  IMPORT |r6502intohalt|
   
   IMPORT |r6502immediatedone|
   IMPORT |r6502zeropagereadwrite|
@@ -63,7 +65,6 @@
   IMPORT |r6502rla|
   IMPORT |r6502jsr|
   IMPORT |r6502nop|
-  IMPORT |r6502halt|
 
 ; Export global symbols
 
@@ -108,7 +109,7 @@
   PREINDEXEDLOAD r6502and
 
 |r6502opcode22|
-  B r6502halt
+  B r6502intohalt
 
 |r6502opcode23|
   PREINDEXEDMODIFYN r6502rla
@@ -156,7 +157,7 @@
   POSTINDEXEDYLOAD r6502and
 
 |r6502opcode32|
-  B r6502halt
+  B r6502intohalt
 
 |r6502opcode33|
   POSTINDEXEDYMODIFYN r6502rla

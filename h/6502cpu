@@ -42,6 +42,12 @@ extern char (*r6502read)(int naddress);
 /*extern void r6502write(int naddress, char nvalue);*/
 extern void (*r6502write)(int naddress, char nvalue);
 extern void (*cpu_execute)(void);
+extern void (*r6502_instructionlink)(void);
+extern void (*r6502_instructionlink2)(void);
+extern void (*r6502_fetchaction)(void);
+extern void (*r6502_haltaction)(void);
+extern void (*r6502_interruptaction)(void);
+extern void (*r6502_resetaction)(void);
 
 /*extern int r6502_cyclestotal;*/
 extern int r6502_cyclestogo;
@@ -54,10 +60,12 @@ extern void r6502badopcode(void);
 #ifndef __RISCOS__
   /*extern char r6502read(int naddress);
   extern void r6502write(int naddress, char nvalue);*/
-  extern int r6502processorstatus(int lbreak);
 #endif
-extern void r6502reset(int lfull);
-extern void r65c12reset(int lfull);
+extern void r6502interrupt(void);
+extern void r65c12interrupt(void);
+extern void r6502reset(void);
+extern void r65c12reset(void);
+extern void r6502fetch(void);
 extern void r6502doirq(void);
 extern void r6502donmi(void);
 /*extern void r6502execute(int ncycles);*/

@@ -73,8 +73,14 @@
 
   EXPORT |r6502readoffset|
   EXPORT |r6502writeoffset|
+  EXPORT |r6502_instructionlink|
+  EXPORT |r6502_instructionlink2|
   EXPORT |r6502_cyclesoriginal|
   EXPORT |r6502_cyclestogo|
+  EXPORT |r6502_fetchaction|
+  EXPORT |r6502_haltaction|
+  EXPORT |r6502_interruptaction|
+  EXPORT |r6502_resetaction|
   EXPORT |r6502opcodes|
   EXPORT |r6502opcode07swaps|
   EXPORT |r6502sheilareads|
@@ -822,8 +828,14 @@ r6502writemFD00
 
 |r6502readoffset| * r6502workspace+:INDEX:R6502_BUSOPOFFSET
 |r6502writeoffset| * r6502workspace+:INDEX:R6502_BUSOPOFFSET+64
+|r6502_instructionlink| * r6502workspace+:INDEX:R6502_INSTRUCTIONLINK
+|r6502_instructionlink2| * r6502workspace+:INDEX:R6502_INSTRUCTIONLINK2
 |r6502_cyclesoriginal| * r6502workspace+:INDEX:R6502_CYCLESORIGINAL
 |r6502_cyclestogo| * r6502workspace+:INDEX:R6502_CYCLESTOGO
+|r6502_fetchaction| * r6502workspace+:INDEX:R6502_FETCHACTION
+|r6502_haltaction| * r6502workspace+:INDEX:R6502_HALTACTION
+|r6502_interruptaction| * r6502workspace+:INDEX:R6502_INTERRUPTACTION
+|r6502_resetaction| * r6502workspace+:INDEX:R6502_RESETACTION
 |beebit_irq| * r6502workspace+:INDEX:R6502_BEEBITIRQ
 |beebit_romwritable| * r6502workspace+:INDEX:R6502_ROMWRITABLE
 |r6502opcodes| * r6502workspace+:INDEX:R6502_OPCODES
