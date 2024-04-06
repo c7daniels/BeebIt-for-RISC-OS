@@ -297,28 +297,8 @@ void snapheadersave(SNAPHDR *phdr)
   strncpy(phdr ->tag,"BBC Snapshot101",0xf);
   phdr ->tag[0x0f] =0xa;
 
-      switch (beebit_machinetype)
-      {
-        case MACHINE_MODELB:
-        {
-          for (s =0; s <0x100; s++)
-            phdr ->sheila[s] =sheilaread_b(s);
-        }
-        break;
-        case MACHINE_MODELBPLUS:
-        {
-          for (s =0; s <0x100; s++)
-            phdr ->sheila[s] =sheilaread_bp(s);
-        }
-        break;
-        case MACHINE_MASTER128:
-        case MACHINE_COMPACT:
-        {
-          for (s =0; s <0x100; s++)
-            phdr ->sheila[s] =sheilaread_m(s);
-        }
-        break;
-      }
+    for (s =0; s <0x100; s++)
+      phdr ->sheila[s] =sheilareadforsnap(s);
 
 //  strncpy(phdr ->sheila,memory+0xFE00,0x100);
 

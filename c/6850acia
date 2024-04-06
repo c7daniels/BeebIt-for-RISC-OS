@@ -261,16 +261,6 @@ void aciacontrolwrite(void)
 
 char aciaread(int naddress)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
   /*if ((naddress & 0x0F) != 0x08)
   {
   bbcvdu(82);*/
@@ -318,16 +308,6 @@ char aciaread(int naddress)
 
 void aciawrite(int naddress,int nvalue)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
   switch (naddress & 0x0F)
   {
     case 0x08:
@@ -349,31 +329,11 @@ void aciawrite(int naddress,int nvalue)
 
 char serialularead(int naddress)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
   return (serialula_reg);
 }
 
 void serialulawrite(int naddress,int nvalue)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
   serialula_reg = nvalue;
 
   serialula_txbaud = (serialula_reg & 0x07);

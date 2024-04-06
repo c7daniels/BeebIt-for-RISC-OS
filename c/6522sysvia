@@ -454,7 +454,6 @@ void systemviasett1t2(int ncycles)
       if (r6522sysvia_t2 < 0)
       {
         r6522sysvia_t2 &= 0xFFFF;
-        /*r6502_cyclestogo -= 2;*/
         /*while (r6522sysvia_t2 < 0)
           r6522sysvia_t2 += ((r6522sysvia_t2lh<<8) | r6522sysvia_t2ll) + 2;*/
         if (r6522sysvia_t2setint)
@@ -509,16 +508,7 @@ void systemviareset(int lfull)
 
 char systemviaread(int naddress)
 {
-  int ntotal;
   char nresult;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
 
   switch (naddress & 0x0F)
   {
@@ -752,16 +742,7 @@ char systemviaread(int naddress)
 
 void systemviawrite(int naddress, char nvalue)
 {
-  int ntotal;
   int nlatch,lenabled;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
 
   switch (naddress & 0x0F)
   {

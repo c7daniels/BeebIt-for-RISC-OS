@@ -17,11 +17,13 @@
 
                        ^ 0
 R6502_DATA             # &4
-R6502_ADDRESS          # &4 ;address in top half, read/write selector in bottom half
+R6502_ADDRESS          # &4 ;address in top half, read/write & stretch selector in bottom half
 R6502_CONTINUATION     # &4
 R6502_CONTINUATION2    # &4
 R6502_INSTRUCTIONLINK  # &4
 R6502_INSTRUCTIONLINK2 # &4
+R6502_STRETCHLINK      # &4
+R6502_CYCLE            # &4
 R6502_CYCLESORIGINAL   # &4
 R6502_CYCLESTOGO       # &4
 R6502_YIELDACTION      # &4
@@ -32,13 +34,16 @@ R6502_RESETACTION      # &4
 R6502_BEEBITIRQ        # &4
 R6502_ADDRTEMP         # &4
 R6502_OPCODE07SWAPS    # &8
-                       # &BC
-R6502_BUSOPOFFSET      # &80 ;placed at index 256 for simple read/write selection
+                       # &B4
+R6502_BUSOPOFFSET      # &100 ;placed at index 256 for simple read/write & stretch selection
 R6502_ROMWRITABLE      # &40
-                       # &240
+                       # &1C0
 R6502_OPCODES          # &400
 R6502_SHEILAREADS      # &400
 R6502_SHEILAWRITES     # &400
+R6502_SHEILAINSTANTRDS # &400
+R6502_SHEILAINSTANTWRS # &400
+                       # &800
 R6502_MEMORY           # &10000  ; 65536 bytes
 R6502_SHADOW           # 0
 R6502_ANDY             # &1000   ;  4096 bytes
@@ -49,6 +54,7 @@ R6502_WorkSize         * @
 
 R6502_READCODE EQU :INDEX:R6502_BUSOPOFFSET:SHR:6
 R6502_WRITECODE EQU (:INDEX:R6502_BUSOPOFFSET+64):SHR:6
+R6502_STRETCHCODE EQU (:INDEX:R6502_BUSOPOFFSET+128):SHR:6
 
 NFLAG EQU &80
 VFLAG EQU &40
@@ -143,6 +149,24 @@ rsp RN 4
   SETFLAG $n
   ;IN :$n=flag
   ORR rps,rps,$n
+  MEND
+
+  MACRO
+  R6502NEXTCYCLE_BASE
+  SUBS rcycles,rcycles,#1
+  BGT r6502busop
+  B r6502intoyield
+  MEND
+
+  MACRO
+  R6502STRETCHCYCLE $o
+  LDR r2,=$o
+  ADD r1,r1,#R6502_STRETCHCODE-R6502_READCODE
+  STR r2,[r12,#:INDEX:R6502_STRETCHLINK]
+  LDR r2,=r6502cyclestretch
+  AND r3,r1,#&F000000F
+  STR r2,[r12,r3,ROR #26]
+  R6502NEXTCYCLE_BASE
   MEND
 
   MACRO

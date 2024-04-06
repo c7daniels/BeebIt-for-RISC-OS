@@ -316,6 +316,7 @@
   EXPORT |r6502cancelinterrupt|
   EXPORT |r6502resetother|
   EXPORT |r6502fetch|
+  EXPORT |r6502cyclestretch|
   EXPORT |r6502fivenop|
   EXPORT |r6502nop|
   EXPORT |r6502halt|
@@ -508,6 +509,28 @@ r6502instruction
   ADD r2,r12,#:INDEX:R6502_OPCODES
   ADD rpc,rpc,#&10000
   LDR pc,[r2,r0,LSL#2]
+
+|r6502cyclestretch|
+  LDR r2,[r12,#:INDEX:R6502_CYCLE]
+  LDR r3,[r12,#:INDEX:R6502_CYCLESORIGINAL]
+  EOR r2,r2,rcycles
+  EOR r2,r2,r3
+  TST r2,#1
+  LDRNE r2,=r6502cyclestretchdone
+  LDREQ r2,=r6502cyclestretch2
+  AND r3,r1,#&F000000F
+  STR r2,[r12,r3,ROR #26]
+  R6502NEXTCYCLE_BASE
+
+r6502cyclestretch2
+  LDR r2,=r6502cyclestretchdone
+  AND r3,r1,#&F000000F
+  STR r2,[r12,r3,ROR #26]
+  R6502NEXTCYCLE_BASE
+
+r6502cyclestretchdone
+  SUB r1,r1,#R6502_STRETCHCODE-R6502_READCODE
+  LDR pc,[r12,#:INDEX:R6502_STRETCHLINK]
 
 |r6502fivenop|
   R6502NEXTCYCLE r6502fournop

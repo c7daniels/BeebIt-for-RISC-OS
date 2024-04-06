@@ -11,16 +11,6 @@
 ;rockwell 6502 cpu
 ;
   MACRO
-  R6502NEXTCYCLE_BASE
-  SUBS rcycles,rcycles,#1
-  BGT r6502busop
-  B r6502intoyield
-  MEND
-
-;
-;rockwell 6502 cpu
-;
-  MACRO
   R6502CONTINUECYCLE
   LDR pc,[r12,#:INDEX:R6502_CONTINUATION2]
   MEND
@@ -69,7 +59,7 @@
 ;
   MACRO
   R6502ENDINSTRUCTION
-  LDR pc,[r12, #:INDEX:R6502_INSTRUCTIONLINK]
+  LDR pc,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
   MEND
 
 ;

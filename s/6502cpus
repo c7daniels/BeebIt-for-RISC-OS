@@ -47,6 +47,8 @@
   ;IMPORT |r6502_i|
   ;IMPORT |r6502_z|
   ;IMPORT |r6502_c|
+  IMPORT |r6502intoyield|
+  IMPORT |r6502cyclestretch|
 
   ;IMPORT |r6522sysvia_porta|
   ;IMPORT |r6522sysvia_rtcreadwrite|
@@ -61,6 +63,7 @@
   EXPORT |beebit_romwritable|
   EXPORT |beebit_irq|
 
+  EXPORT |sheilareadforsnap|
   EXPORT |r6502busop|
   EXPORT |r6502readb|
   EXPORT |r6502readbp|
@@ -73,6 +76,7 @@
   EXPORT |r6502writeoffset|
   EXPORT |r6502_instructionlink|
   EXPORT |r6502_instructionlink2|
+  EXPORT |r6502_cycle|
   EXPORT |r6502_cyclesoriginal|
   EXPORT |r6502_cyclestogo|
   EXPORT |r6502_fetchaction|
@@ -83,6 +87,10 @@
   EXPORT |r6502opcode07swaps|
   EXPORT |r6502sheilareads|
   EXPORT |r6502sheilawrites|
+  EXPORT |r6502sheilainstantreads|
+  EXPORT |r6502sheilainstantwrites|
+  EXPORT |r6502sheilastretchread|
+  EXPORT |r6502sheilastretchwrite|
 
   EXPORT |r6502read0000|
   EXPORT |r6502read3000|
@@ -136,6 +144,17 @@
   ORR r1,r1,#R6502_READCODE
   BL r6502busop
   LDMFD sp!,{r1-r9,r11-r12,pc}
+
+|sheilareadforsnap|
+  ;IN: r0=address
+  ;OUT:r0=value
+  STMFD sp!,{r1-r12,lr}
+  LDR r12,=r6502workspace
+  LDR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
+  MOV r1,r0,LSL #16
+  ORR r1,r1,#R6502_READCODE
+  BL r6502sheilainstantread
+  LDMFD sp!,{r1-r12,pc}
 
 r6502read0000
 r6502read3000
@@ -269,8 +288,16 @@ r6502readbpF000
   BPL r6502readbFF00
 ;r6502readbFE00
   ;&FE00 - &FEFF (SHEILA)
-  AND r2,r2,#&00FF0000
+  AND r2,r1,#&00FF0000
   ADD r11,r12,#:INDEX:R6502_SHEILAREADS
+  LDR pc,[r11,r2,LSR #14]
+
+|r6502sheilastretchread|
+  R6502STRETCHCYCLE r6502sheilainstantread
+
+r6502sheilainstantread
+  AND r2,r1,#&00FF0000
+  ADD r11,r12,#:INDEX:R6502_SHEILAINSTANTRDS
   LDR pc,[r11,r2,LSR #14]
 
 r6502readbF000_low
@@ -282,6 +309,9 @@ r6502readbF000_low
   BPL r6502readbFD00
 ;r6502readbFC00
   ;&FC00 - &FCFF (FRED)
+  R6502STRETCHCYCLE r6502read1MhzFC00
+
+r6502read1MhzFC00
   STMFD sp!,{r1,lr}
   MOV r1,r1,LSR #16
   AND r1,r1,#255 ; low 8 bits in R1
@@ -289,11 +319,13 @@ r6502readbF000_low
   MOV r0,#&92 ; (146) read FRED
   SWI XOS_Byte ; may return V
   MOVS r0,r2 ; result in R0 (clearing V!)
-  SUB rcycles,rcycles,#2
   LDMFD sp!,{r1,pc}
 
 r6502readbFD00
   ;&FD00 - &FDFF (JIM)
+  R6502STRETCHCYCLE r6502read1MhzFD00
+
+r6502read1MhzFD00
   STMFD sp!,{r1,lr}
   MOV r1,r1,LSR #16
   AND r1,r1,#255 ; low 8 bits in R1
@@ -301,7 +333,6 @@ r6502readbFD00
   MOV r0,#&94 ; (148) read JIM
   SWI XOS_Byte ; may return V
   MOVS r0,r2 ; result in R0 (clearing V!)
-  SUB rcycles,rcycles,#2
   LDMFD sp!,{r1,pc}
 
 r6502readbFF00
@@ -414,15 +445,7 @@ r6502readmF000_low
   MOVNE pc,lr
 
   ;1MHz bus
-  STMFD sp!,{r1,lr}
-  MOV r1,r1,LSR #16
-  AND r1,r1,#255 ; low 8 bits in R1
-  MOV r2,#&00 ; unimplemented
-  MOV r0,#&92 ; (146) read FRED
-  SWI XOS_Byte ; may return V
-  MOVS r0,r2 ; result in R0 (clearing V!)
-  SUB rcycles,rcycles,#2
-  LDMFD sp!,{r1,pc}
+  R6502STRETCHCYCLE r6502read1MhzFC00
 
 r6502readmFD00
   ;&FD00 - &FDFF (JIM)
@@ -438,15 +461,7 @@ r6502readmFD00
   MOVNE pc,lr
 
   ;1MHz bus
-  STMFD sp!,{r1,lr}
-  MOV r1,r1,LSR #16
-  AND r1,r1,#255 ; low 8 bits in R1
-  MOV r2,#&00 ; unimplemented
-  MOV r0,#&94 ; (148) read JIM
-  SWI XOS_Byte ; may return V
-  MOVS r0,r2 ; result in R0 (clearing V!)
-  SUB rcycles,rcycles,#2
-  LDMFD sp!,{r1,pc}
+  R6502STRETCHCYCLE r6502read1MhzFD00
 
 r6502readmFF00
   ADD r11,r12,#:INDEX:R6502_MEMORY
@@ -647,8 +662,16 @@ r6502writebpF000
   MOVPL pc,lr ;&FF00 - &FFFF (OS - should not be allowed!)
 ;r6502writebFE00
   ;&FE00 - &FEFF (SHEILA)
-  AND r2,r2,#&00FF0000
+  AND r2,r1,#&00FF0000
   ADD r11,r12,#:INDEX:R6502_SHEILAWRITES
+  LDR pc,[r11,r2,LSR #14]
+
+|r6502sheilastretchwrite|
+  R6502STRETCHCYCLE r6502sheilainstantwrite
+
+r6502sheilainstantwrite
+  AND r2,r1,#&00FF0000
+  ADD r11,r12,#:INDEX:R6502_SHEILAINSTANTWRS
   LDR pc,[r11,r2,LSR #14]
 
 r6502writebF000_low
@@ -658,24 +681,28 @@ r6502writebF000_low
   BPL r6502writebFD00
 ;r6502writebFC00
   ;&FC00 - &FCFF (FRED)
+  R6502STRETCHCYCLE r6502write1MhzFC00
+
+r6502write1MhzFC00
   STMFD sp!,{r0-r1,lr}
   AND r2,r0,#255
   MOV r1,r1,LSR #16
   AND r1,r1,#255 ; low 8 bits in R1
   MOV r0,#&93 ; (147) write FRED
   SWI XOS_Byte ; may return V
-  SUB rcycles,rcycles,#2
   LDMFD sp!,{r0-r1,pc}
 
 r6502writebFD00
   ;&FD00 - &FDFF (JIM)
+  R6502STRETCHCYCLE r6502write1MhzFD00
+
+r6502write1MhzFD00
   STMFD sp!,{r0-r1,lr}
   AND r2,r0,#255
   MOV r1,r1,LSR #16
   AND r1,r1,#255 ; low 8 bits in R1
   MOV r0,#&95 ; (149) write JIM
   SWI XOS_Byte ; may return V
-  SUB rcycles,rcycles,#2
   LDMFD sp!,{r0-r1,pc}
 
 ;
@@ -775,14 +802,7 @@ r6502writemF000_low
   MOVNE pc,lr ;cartridge
 
   ;1MHz bus
-  STMFD sp!,{r0-r1,lr}
-  AND r2,r0,#255
-  MOV r1,r1,LSR #16
-  AND r1,r1,#255 ; low 8 bits in R1
-  MOV r0,#&93 ; (147) write FRED
-  SWI XOS_Byte ; may return V
-  SUB rcycles,rcycles,#2
-  LDMFD sp!,{r0-r1,pc}
+  R6502STRETCHCYCLE r6502write1MhzFC00
 
 r6502writemFD00
   ;&FD00 - &FDFF (JIM)
@@ -792,14 +812,7 @@ r6502writemFD00
   MOVNE pc,lr ;cartridge
 
   ;1MHz bus
-  STMFD sp!,{r0-r1,lr}
-  AND r2,r0,#255
-  MOV r1,r1,LSR #16
-  AND r1,r1,#255 ; low 8 bits in R1
-  MOV r0,#&95 ; (149) write JIM
-  SWI XOS_Byte ; may return V
-  SUB rcycles,rcycles,#2
-  LDMFD sp!,{r0-r1,pc}
+  R6502STRETCHCYCLE r6502write1MhzFD00
 
 ;Data Area
 
@@ -812,6 +825,7 @@ r6502writemFD00
 |r6502writeoffset| * r6502workspace+:INDEX:R6502_BUSOPOFFSET+64
 |r6502_instructionlink| * r6502workspace+:INDEX:R6502_INSTRUCTIONLINK
 |r6502_instructionlink2| * r6502workspace+:INDEX:R6502_INSTRUCTIONLINK2
+|r6502_cycle| * r6502workspace+:INDEX:R6502_CYCLE
 |r6502_cyclesoriginal| * r6502workspace+:INDEX:R6502_CYCLESORIGINAL
 |r6502_cyclestogo| * r6502workspace+:INDEX:R6502_CYCLESTOGO
 |r6502_fetchaction| * r6502workspace+:INDEX:R6502_FETCHACTION
@@ -824,6 +838,8 @@ r6502writemFD00
 |r6502opcode07swaps| * r6502workspace+:INDEX:R6502_OPCODE07SWAPS
 |r6502sheilareads| * r6502workspace+:INDEX:R6502_SHEILAREADS
 |r6502sheilawrites| * r6502workspace+:INDEX:R6502_SHEILAWRITES
+|r6502sheilainstantreads| * r6502workspace+:INDEX:R6502_SHEILAINSTANTRDS
+|r6502sheilainstantwrites| * r6502workspace+:INDEX:R6502_SHEILAINSTANTWRS
 |memory| * r6502workspace+:INDEX:R6502_MEMORY
 |shadow| * r6502workspace+:INDEX:R6502_SHADOW
 |roms| * r6502workspace+:INDEX:R6502_ROMS

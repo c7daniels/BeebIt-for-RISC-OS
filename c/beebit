@@ -356,15 +356,6 @@ void updatetimers(void)
   r6502_cyclesoriginal = 0;
 }
 
-/*void updatekeyboard(void)
-{*/
-  /*if (r6502_cyclestogo>0)
-  {
-    r6502_cyclesoriginal -= r6502_cyclestogo;
-    r6502_cyclestogo = 0;
-  }*/
-/*}*/
-
 void beebitreset(void)
 {
   /*char cname[128];*/

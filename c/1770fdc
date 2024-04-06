@@ -894,17 +894,6 @@ char w1770read(int naddress)
     Archimedes                ?          WD1772               ?
   */
 
-  /*read/write to slow 1Mhz device takes 2 cycles instead of one*/
-  /*but an extra cycle may be needed to synchronise the two to start with*/
-  /*(they may be out of phase - won't both change at the next clock pulse)*/
-  /*ntotal = (r6502_cyclesoriginal-r6502_cyclestogo);
-  if (ntotal & 1)
-    r6502_cyclestogo--;*/
-  /*if (ntotal & 1)
-    r6502_cyclestogo -= 1;
-  else
-    r6502_cyclestogo -= 2;*/
-
   /*fprintf(htrace,"WDR=&%X\n",naddress);*/
   /*printf("WDR=&%X\n",naddress);
   regs.r[0] = 0x81;
@@ -988,18 +977,6 @@ void w1770write(int naddress, char nvalue)
     BBC Master          &FE28 - &FE2B    WD1770             &FE24
     Archimedes                ?          WD1772               ?
   */
-
-  /*read/write to slow 1Mhz device takes 2 cycles instead of one*/
-  /*but an extra cycle may be needed to synchronise the two to start with*/
-  /*(they may be out of phase - won't both change at the next clock pulse)*/
-  /*ntotal = (r6502_cyclesoriginal-r6502_cyclestogo);
-  if (ntotal & 1)
-    r6502_cyclestogo--;*/
-
-  /*if (ntotal & 1)
-    r6502_cyclestogo -= 1;
-  else
-    r6502_cyclestogo -= 2;*/
 
   /*fprintf(htrace,"WDW=&%X, &%X\n",(naddress & 0x0F), nvalue);*/
   /*printf("WDW=&%X &%X  \n",naddress, nvalue);

@@ -124,7 +124,7 @@ static inline void pageinromm(int nrom, int shadowram)
 
 void sheilareset(void)
 {
-  int i;
+  int i,j;
   /*for (i=0;i<=0x100;i++)
     sheila_b[i] = 0xFE;*/
   int read0000,write0000;
@@ -147,8 +147,8 @@ void sheilareset(void)
 
         for (i=0; i<256; i++)
         {
-          setword(r6502sheilareads+(i<<2), (int)r6502sheilaread_b);
-          setword(r6502sheilawrites+(i<<2), (int)r6502sheilawrite_b);
+          setword(r6502sheilainstantreads+(i<<2), (int)r6502sheilaread_b);
+          setword(r6502sheilainstantwrites+(i<<2), (int)r6502sheilawrite_b);
         }
         break;
       case MACHINE_MODELBPLUS:
@@ -164,8 +164,8 @@ void sheilareset(void)
 
         for (i=0; i<256; i++)
         {
-          setword(r6502sheilareads+(i<<2), (int)r6502sheilaread_bp);
-          setword(r6502sheilawrites+(i<<2), (int)r6502sheilawrite_bp);
+          setword(r6502sheilainstantreads+(i<<2), (int)r6502sheilaread_bp);
+          setword(r6502sheilainstantwrites+(i<<2), (int)r6502sheilawrite_bp);
         }
         break;
       case MACHINE_MASTER128:
@@ -199,8 +199,8 @@ void sheilareset(void)
 
         for (i=0; i<256; i++)
         {
-          setword(r6502sheilareads+(i<<2), (int)r6502sheilaread_m);
-          setword(r6502sheilawrites+(i<<2), (int)r6502sheilawrite_m);
+          setword(r6502sheilainstantreads+(i<<2), (int)r6502sheilaread_m);
+          setword(r6502sheilainstantwrites+(i<<2), (int)r6502sheilawrite_m);
         }
         break;
   }
@@ -230,6 +230,28 @@ void sheilareset(void)
   setword(r6502writeoffset+52, writeC000);
   setword(r6502writeoffset+56, writeE000);
   setword(r6502writeoffset+60, writeF000);
+
+  for (j=0; j<256; j+=32)
+  {
+    switch (j>>5)
+    {
+      case 0:
+      case 2:
+      case 3:
+      case 6:
+        for (i=j; i<j+32; i++)
+        {
+          setword(r6502sheilareads+(i<<2), (int)r6502sheilastretchread);
+          setword(r6502sheilawrites+(i<<2), (int)r6502sheilastretchwrite);
+        }
+        break;
+
+      default:
+        memcpy(r6502sheilareads+(j<<2), r6502sheilainstantreads+(j<<2), 128);
+        memcpy(r6502sheilawrites+(j<<2), r6502sheilainstantwrites+(j<<2), 128);
+        break;
+    }
+  }
 }
 
 char sheilaread_b(int naddress)

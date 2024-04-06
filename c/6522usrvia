@@ -335,16 +335,7 @@ void userviareset(int lfull)
 
 char userviaread(int naddress)
 {
-  int ntotal;
   char nresult;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 2;
-  else
-    r6502_cyclestogo -= 3;
 
   switch (naddress & 0x0F)
   {
@@ -578,16 +569,6 @@ char userviaread(int naddress)
 
 void userviawrite(int naddress, char nvalue)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
   switch (naddress & 0x0F)
   {
     case 0x00:

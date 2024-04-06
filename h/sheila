@@ -11,6 +11,7 @@
 extern char sheila_b[0x100];
 
 void sheilareset(void);
+int sheilareadforsnap(int);
 int sheilaread_b(int);
 int sheilaread_bp(int);
 int sheilaread_m(int);

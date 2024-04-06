@@ -96,16 +96,6 @@ void crtcreset(void)
 
 char crtcread(int naddress)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
   naddress &= 1;
   if (naddress == 0)
     return (0); /*m6845_addressreg;*/
@@ -121,16 +111,6 @@ char crtcread(int naddress)
 
 void crtcwrite(int naddress,int nvalue)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
   #ifdef __DEVELOPxx__
     int i;
   #endif

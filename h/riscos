@@ -127,8 +127,13 @@ extern void vsync(void);
   extern char r6512opcodeset[0x400];
   extern char r65c12opcodeset[0x400];
 
+  extern char r6502sheilainstantreads[0x400];
+  extern char r6502sheilainstantwrites[0x400];
   extern char r6502sheilareads[0x400];
   extern char r6502sheilawrites[0x400];
+
+  extern void r6502sheilastretchread(void);
+  extern void r6502sheilastretchwrite(void);
 
   extern void r6502sheilaread_b(void);
   extern void r6502sheilaread_bp(void);

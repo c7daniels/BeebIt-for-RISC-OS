@@ -3524,8 +3524,6 @@ void videoscanline(void)
 
   if (video_synchold == 0)
   {
-    /*r6502_cyclestogo += 4;*/
-
     /*vertical sync width*/
     if (m6845_vc == m6845_vsp && m6845_sc <= m6845_vsw)
     {
