@@ -62,11 +62,9 @@
   EXPORT |beebit_irq|
 
   EXPORT |r6502busop|
-  EXPORT |r6502readmem|
   EXPORT |r6502readb|
   EXPORT |r6502readbp|
   EXPORT |r6502readm|
-  EXPORT |r6502writemem|
   EXPORT |r6502writeb|
   EXPORT |r6502writebp|
   EXPORT |r6502writem|
@@ -127,14 +125,6 @@
 ;
 ;rockwell 6502 cpu
 ;
-|r6502readmem|
-  ;OUT:      r0=value
-  ;PRESERVED:r1=address:LSL:16
-  STMFD sp!,{r1,lr}
-  ORR r1,r1,#R6502_READCODE
-  BL r6502busop
-  LDMFD sp!,{r1,pc}
-
 |r6502readb|
 |r6502readbp|
 |r6502readm|
@@ -472,14 +462,6 @@ r6502readmFF00
 ;
 ;rockwell 6502 cpu
 ;
-|r6502writemem|
-  ;PRESERVED:r0=value
-  ;PRESERVED:r1=address:LSL:16
-  STMFD sp!,{r1,lr}
-  ORR r1,r1,#R6502_WRITECODE
-  BL r6502busop
-  LDMFD sp!,{r1,pc}
-
 |r6502writeb|
 |r6502writebp|
 |r6502writem|
