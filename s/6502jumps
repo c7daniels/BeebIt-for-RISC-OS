@@ -36,7 +36,6 @@
   IMPORT |r6502_pc|
   IMPORT |r6502_ps|
   IMPORT |lbreak|
-  IMPORT |beebit_oldreset|
   IMPORT |beebit_nmi|
   IMPORT |beebit_oldnmi|
 
@@ -437,16 +436,14 @@ r65c12brk6
   LDR r2,[r11]
   TST r2,r2
   BEQ r6502resetnobreak
-  LDR r11,=beebit_oldreset
-  LDR r3,[r11]
-  TST r3,r3
-  BLEQ r6502resetother
+  LDR r2,[r12,#:INDEX:R6502_YIELDACTION]
+  LDR r3,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  CMP r2,r3
+  MOVEQ pc,r2
+  BL r6502resetother
   ORR r1,rpc,#R6502_READCODE
   R6502NEXTCYCLE r6502reset
 r6502resetnobreak
-  LDR r11,=beebit_oldreset
-  MOV r2,#0
-  STR r2,[r11]
   ORR r1,rpc,#R6502_READCODE
   R6502NEXTCYCLE r6502reset2
 
@@ -482,24 +479,19 @@ r6502reset6
   LDR r11,=lbreak
   LDR r2,[r11]
   TST r2,r2
-  BEQ r65c12resethold
-  LDR r11,=beebit_oldreset
-  LDR r3,[r11]
-  TST r3,r3
-  BNE r65c12resethold
-  STR r2,[r11]
+  BEQ r65c12resetnobreak
+  LDR r2,[r12,#:INDEX:R6502_YIELDACTION]
+  LDR r3,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  CMP r2,r3
+  MOVEQ pc,r2
   BL r6502resetother
-r65c12resethold
   ORR r1,rpc,#R6502_READCODE
-  LDR r11,=lbreak
-  LDR r2,[r11]
-  TST r2,r2
-  R6502NEXTCYCLE_NEorEQ r65c12resethold, r65c12reset2
+  R6502NEXTCYCLE r65c12reset
+r65c12resetnobreak
+  ORR r1,rpc,#R6502_READCODE
+  R6502NEXTCYCLE r65c12reset2
 
 r65c12reset2
-  MOV r2,#0
-  LDR r11,=beebit_oldreset
-  STR r2,[r11]
   R6502NEXTCYCLE r65c12reset3
 
 r65c12reset3

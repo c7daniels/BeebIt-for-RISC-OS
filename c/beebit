@@ -107,7 +107,6 @@ int beebit_exit; /*exit the emulation F12 or close window*/
 /*int beebit_irq;*/
 int beebit_nmi, beebit_oldnmi;
 int lexit, lbreak, lprintscreen;
-int beebit_oldreset;
 /*int irqinterrupt, nmiinterrupt, noldnmi;*/
 /*int ncounterstart;*/
 /*clock_t nclock;*/
@@ -428,7 +427,6 @@ void beebitreset(void)
     beebit_imagetype[3] = DFS_NONE;
 
     beebit_nmi = beebit_oldnmi = FALSE;
-    beebit_oldreset = TRUE;
     aciareset();
     adcreset();
     videoulareset(TRUE);
@@ -1091,8 +1089,6 @@ void beebitpoll(void)
 
 void beebitbreak(void)
 {
-  beebit_oldreset = TRUE;
-
   updatetimers();
 
   systemviareset(FALSE);
