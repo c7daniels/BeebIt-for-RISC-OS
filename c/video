@@ -28,6 +28,7 @@
 #include "video.h"
 #include "videoscale.h"
 #include "videoula.h"
+#include "adc.h"
 
 #ifndef ColourTrans_ReturnColourNumber
 #define ColourTrans_ReturnColourNumber 0x040744
@@ -3616,6 +3617,7 @@ void videoscanline(void)
               bbcvdu(7);
             }
             videohostmodevars();
+            adcmodevars();
             cursordisable();
           }
           else if (ncurrentmode == 7 OR ncurrentmode == -1)
@@ -3633,6 +3635,7 @@ void videoscanline(void)
               bbcvdu(beebit_graphicsmodespecifier);
             }
             videohostmodevars();
+            adcmodevars();
             cursordisable();
           }
         }
