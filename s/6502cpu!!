@@ -359,54 +359,48 @@
   EXPORT |r6512opcodeset|
 
 |r6502loadregs|
-  ;STMFD sp!,{lr}
-  STR lr,[sp, #-4]!
-  LDR r12,=r6502_a
-  LDRB ra,[r12] ;load a
-  LDR r12,=r6502_x
-  LDRB rx,[r12] ;load x
-  LDR r12,=r6502_y
-  LDRB ry,[r12] ;load y
+  LDR r11,=r6502_a
+  LDRB ra,[r11] ;load a
+  LDR r11,=r6502_x
+  LDRB rx,[r11] ;load x
+  LDR r11,=r6502_y
+  LDRB ry,[r11] ;load y
 
-  LDR r12,=r6502_pc
-  LDR rpc,[r12] ;load pc
+  LDR r11,=r6502_pc
+  LDR rpc,[r11] ;load pc
   MOV rpc,rpc,LSL #16
-  LDR r12,=r6502_ps
-  LDRB rps,[r12] ;load ps
-  LDR r12,=r6502_sp
-  LDRB rsp,[r12] ;load sp
+  LDR r11,=r6502_ps
+  LDRB rps,[r11] ;load ps
+  LDR r11,=r6502_sp
+  LDRB rsp,[r11] ;load sp
   MOV rsp,rsp,LSL #24
 
-  LDR r12,=r6502_cyclestogo
-  LDR rcycles,[r12] ;load cycles
+  LDR r11,=r6502_cyclestogo
+  LDR rcycles,[r11] ;load cycles
 
-  LDR r12,=r6502workspace
-  ;LDMFD sp!,{pc}
-  LDR pc, [sp], #4
-  ;MOV pc,lr
+  MOV pc,lr
 
 |r6502saveregs|
-  STMFD sp!,{r12,lr}
-  LDR r12,=r6502_a
-  STRB ra,[r12] ;save a
-  LDR r12,=r6502_x
-  STRB rx,[r12] ;save x
-  LDR r12,=r6502_y
-  STRB ry,[r12] ;save y
+  LDR r11,=r6502_a
+  STRB ra,[r11] ;save a
+  LDR r11,=r6502_x
+  STRB rx,[r11] ;save x
+  LDR r11,=r6502_y
+  STRB ry,[r11] ;save y
 
-  LDR r12,=r6502_pc
+  LDR r11,=r6502_pc
   MOV rpc,rpc,LSR #16
-  STR rpc,[r12] ;save pc
-  LDR r12,=r6502_ps
-  STRB rps,[r12] ;save ps
-  LDR r12,=r6502_sp
+  STR rpc,[r11] ;save pc
+  LDR r11,=r6502_ps
+  STRB rps,[r11] ;save ps
+  LDR r11,=r6502_sp
   MOV rsp,rsp,LSR #24
-  STRB rsp,[r12] ;save sp
+  STRB rsp,[r11] ;save sp
 
-  LDR r12,=r6502_cyclestogo
-  STR rcycles,[r12] ;save cycles
+  LDR r11,=r6502_cyclestogo
+  STR rcycles,[r11] ;save cycles
 
-  LDMFD sp!,{r12,pc}
+  MOV pc,lr
 
 ;
 ;rockwell 6502 cpu
@@ -422,7 +416,10 @@
 ;rockwell 6502 cpu
 ;
 |r6502execute|
-  STMFD sp!,{r0-r12,lr}
+  LDR r12,=r6502workspace
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS
+  STMIA r3,{r4-r9,sl,fp,lr}
+
   BL r6502loadregs
 
   ADD lr,pc,#4
@@ -440,7 +437,9 @@
   R6502CHECKBREAK
 
   BL r6502saveregs
-  LDMFD sp!,{r0-r12,pc}
+
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS
+  LDMIA r3,{r4-r9,sl,fp,pc}
 
 |r6502intoyield|
   LDR r2,[r12,#:INDEX:R6502_FETCHACTION]
@@ -495,11 +494,14 @@ r6502intohalt2
   MOV pc,lr
 
 |r6502resetother|
-  STR lr,[sp,#-4]!
+  STR lr,[r12,#:INDEX:R6502_CALLTEMP]
   BL r6502saveregs
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS+24
+  LDMIA r3,{sl,fp}
   BL beebitbreak
+  LDR r12,=r6502workspace
   BL r6502loadregs
-  LDR pc, [sp], #4
+  LDR pc,[r12,#:INDEX:R6502_CALLTEMP]
 
 |r6502fetch|
   ORR r1,rpc,#R6502_READCODE

@@ -33,8 +33,10 @@ R6502_INTERRUPTACTION  # &4
 R6502_RESETACTION      # &4
 R6502_BEEBITIRQ        # &4
 R6502_ADDRTEMP         # &4
+R6502_CALLTEMP         # &10
+R6502_SAVEDREGISTERS   # &24
 R6502_OPCODE07SWAPS    # &8
-                       # &B4
+                       # &80
 R6502_BUSOPOFFSET      # &100 ;placed at index 256 for simple read/write & stretch selection
 R6502_ROMWRITABLE      # &40
                        # &1C0

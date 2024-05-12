@@ -138,23 +138,31 @@
 |r6502readm|
   ;IN: r0=address
   ;OUT:r0=value
-  STMFD sp!,{r1-r9,r11-r12,lr}
   LDR r12,=r6502workspace
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS
+  STMIA r3,{r4-r9,sl,fp,lr}
+
   MOV r1,r0,LSL #16
   ORR r1,r1,#R6502_READCODE
   BL r6502busop
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS
+  LDMIA r3,{r4-r9,sl,fp,pc}
 
 |sheilareadforsnap|
   ;IN: r0=address
   ;OUT:r0=value
-  STMFD sp!,{r1-r12,lr}
   LDR r12,=r6502workspace
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS
+  STMIA r3,{r4-r9,sl,fp,lr}
+
   LDR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
   MOV r1,r0,LSL #16
   ORR r1,r1,#R6502_READCODE
   BL r6502sheilainstantread
-  LDMFD sp!,{r1-r12,pc}
+
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS
+  LDMIA r3,{r4-r9,sl,fp,pc}
 
 r6502read0000
 r6502read3000

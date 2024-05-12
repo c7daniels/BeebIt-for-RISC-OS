@@ -1,4 +1,4 @@
-;>6502shis.s
+;>6502sheils.s
 ;
 ; BeebIt - BBC Micro Model B Emulator
 ;
@@ -31,6 +31,8 @@
 
 ; Import global symbols
 
+  IMPORT |r6502workspace|
+
   IMPORT |sheilaread_b|
   IMPORT |sheilaread_bp|
   IMPORT |sheilaread_m|
@@ -47,63 +49,87 @@
 
 |r6502sheilaread_b|
   STR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  STMFD sp!,{r1,r12,lr}
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  STMIA r3,{r1,lr}
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS+24
+  LDMIA r3,{sl,fp}
   MOV r0,r1,LSR #16
   BL sheilaread_b
-  LDMFD sp!,{r1,r12}
+  LDR r12,=r6502workspace
   LDR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  LDR pc, [sp], #4
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  LDMIA r3,{r1,pc}
 
 |r6502sheilaread_bp|
   STR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  STMFD sp!,{r1,r12,lr}
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  STMIA r3,{r1,lr}
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS+24
+  LDMIA r3,{sl,fp}
   MOV r0,r1,LSR #16
   BL sheilaread_bp
-  LDMFD sp!,{r1,r12}
+  LDR r12,=r6502workspace
   LDR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  LDR pc, [sp], #4
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  LDMIA r3,{r1,pc}
 
 |r6502sheilaread_m|
   STR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  STMFD sp!,{r1,r12,lr}
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  STMIA r3,{r1,lr}
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS+24
+  LDMIA r3,{sl,fp}
   MOV r0,r1,LSR #16
   BL sheilaread_m
-  LDMFD sp!,{r1,r12}
+  LDR r12,=r6502workspace
   LDR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  LDR pc, [sp], #4
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  LDMIA r3,{r1,pc}
 
 |r6502sheilawrite_b|
   STR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  STMFD sp!,{r0-r1,r12,lr}
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  STMIA r3,{r0-r1,lr}
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS+24
+  LDMIA r3,{sl,fp}
   MOV r2,r0
   MOV r0,r1,LSR #16
   MOV r1,r2
   BL sheilawrite_b
-  LDMFD sp!,{r0-r1,r12}
+  LDR r12,=r6502workspace
   LDR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  LDR pc, [sp], #4
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  LDMIA r3,{r0-r1,pc}
 
 |r6502sheilawrite_bp|
   STR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  STMFD sp!,{r0-r1,r12,lr}
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  STMIA r3,{r0-r1,lr}
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS+24
+  LDMIA r3,{sl,fp}
   MOV r2,r0
   MOV r0,r1,LSR #16
   MOV r1,r2
   BL sheilawrite_bp
-  LDMFD sp!,{r0-r1,r12}
+  LDR r12,=r6502workspace
   LDR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  LDR pc, [sp], #4
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  LDMIA r3,{r0-r1,pc}
 
 |r6502sheilawrite_m|
   STR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  STMFD sp!,{r0-r1,r12,lr}
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  STMIA r3,{r0-r1,lr}
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS+24
+  LDMIA r3,{sl,fp}
   MOV r2,r0
   MOV r0,r1,LSR #16
   MOV r1,r2
   BL sheilawrite_m
-  LDMFD sp!,{r0-r1,r12}
+  LDR r12,=r6502workspace
   LDR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
-  LDR pc, [sp], #4
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  LDMIA r3,{r0-r1,pc}
 
 ;Data Area
 
