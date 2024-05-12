@@ -47,7 +47,6 @@ int m6850_transmittingRTS;
 int m6850_transmittingIRQ;
 int m6850_cleardcd;
 int m6850_firstreset;
-int m6850_timer;
 int m6850_timerreset;
 
 /*int serialula_baudrate[8] = {19200,1200,4800,150,9600,300,2400,75};*/
@@ -84,7 +83,7 @@ void aciareset(void)
 
   m6850_cleardcd = 0;
   m6850_timerreset = m6850_pollspeed64[9]; /*300 baud*/
-  m6850_timer = 0;
+  m6850_cyclestogo = 0;
 
   m6850_firstreset = TRUE;
 
@@ -94,6 +93,13 @@ void aciareset(void)
 
   uef_filepointer = 12;
   uef_bufferpointer = 0;
+}
+
+int aciaatzerocycles(void)
+{
+  aciapoll();
+
+  return m6850_timerreset<<1;
 }
 
 void aciasetirq(void)
@@ -355,12 +361,16 @@ void serialulawrite(int naddress,int nvalue)
   if (serialula_reg & 0x80)
   {
     /*TAPE*/
-    if (m6850_timer == 0)
-      m6850_timer = m6850_timerreset;
+    if (m6850_cyclestogo == 0 && m6850_timerreset > 0)
+    {
+      m6850_cyclestogo = m6850_timerreset<<1;
+      m6850_cyclestogo += r6502_cyclesoriginal - r6502_cyclestogo;
+      limitcyclestogo(m6850_cyclestogo);
+    }
   }
   else
     /*RS423*/
-    m6850_timer = 0;
+    m6850_cyclestogo = 0;
 }
 
 /*-- UEF --*/

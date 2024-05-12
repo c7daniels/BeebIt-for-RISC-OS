@@ -19,6 +19,18 @@
 ;rockwell 6502 cpu
 ;
   MACRO
+  R6502NEXTCYCLE_BASE
+  STR lr,[r12,#:INDEX:R6502_CONTINUATION]
+  BL r6502busop
+  SUBS rcycles,rcycles,#1
+  LDRGT pc,[r12,#:INDEX:R6502_CYCLELINK]
+  B r6502atzerocycles
+  MEND
+
+;
+;rockwell 6502 cpu
+;
+  MACRO
   R6502NEXTCYCLE $o
   LDR lr,=$o
   R6502NEXTCYCLE_BASE

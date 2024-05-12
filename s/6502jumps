@@ -36,14 +36,16 @@
   IMPORT |r6502_pc|
   IMPORT |r6502_ps|
   IMPORT |lbreak|
+  IMPORT |beebit_oldreset|
   IMPORT |beebit_nmi|
   IMPORT |beebit_oldnmi|
 
   IMPORT |r6502busop|
-  IMPORT |r6502intoyield|
+  IMPORT |r6502atzerocycles|
   IMPORT |r6502intointerrupt|
   IMPORT |r6502cancelinterrupt|
-  IMPORT |r6502resetother|
+  IMPORT |r6502startperipheralreset|
+  IMPORT |r6502endperipheralreset|
 
 ; Export global symbols
 
@@ -340,6 +342,12 @@ r6502interrupt5
   R6502NEXTCYCLE r6502interrupt6
 
 r6502interrupt6
+  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  LDR r3,[r12,#:INDEX:R6502_INTERRUPTACTION]
+  CMP r2,r3
+  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  STREQ r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  R6502CHECKBREAK
   MOV r1,#R6502_READCODE
   LDR r11,=beebit_nmi
   LDR r2,[r11]
@@ -363,9 +371,6 @@ r6502vectorjmp
 
 r6502vectorjmp2
   ORR rpc,rpc,r0,LSL #24
-  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
-  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
-  R6502CHECKBREAK
   R6502ENDINSTRUCTION
 
 |r65c12interrupt|
@@ -432,6 +437,10 @@ r65c12brk6
   R6502NEXTCYCLE r6502jmp
 
 |r6502reset|
+  LDR r11,=beebit_oldreset
+  LDR r3,[r11]
+  TST r3,r3
+  BLEQ r6502startperipheralreset
   LDR r11,=lbreak
   LDR r2,[r11]
   TST r2,r2
@@ -440,10 +449,13 @@ r65c12brk6
   LDR r3,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
   CMP r2,r3
   MOVEQ pc,r2
-  BL r6502resetother
   ORR r1,rpc,#R6502_READCODE
   R6502NEXTCYCLE r6502reset
 r6502resetnobreak
+  LDR r11,=beebit_oldreset
+  MOV r2,#0
+  STR r2,[r11]
+  BL r6502endperipheralreset
   ORR r1,rpc,#R6502_READCODE
   R6502NEXTCYCLE r6502reset2
 
@@ -471,11 +483,18 @@ r6502reset5
   R6502NEXTCYCLE r6502reset6
 
 r6502reset6
+  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  R6502CHECKBREAK
   MOV r1,#R6502_READCODE
   SUB r1,r1,#&40000
   R6502NEXTCYCLE r6502vectorjmp
 
 |r65c12reset|
+  LDR r11,=beebit_oldreset
+  LDR r3,[r11]
+  TST r3,r3
+  BLEQ r6502startperipheralreset
   LDR r11,=lbreak
   LDR r2,[r11]
   TST r2,r2
@@ -484,10 +503,13 @@ r6502reset6
   LDR r3,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
   CMP r2,r3
   MOVEQ pc,r2
-  BL r6502resetother
   ORR r1,rpc,#R6502_READCODE
   R6502NEXTCYCLE r65c12reset
 r65c12resetnobreak
+  LDR r11,=beebit_oldreset
+  MOV r2,#0
+  STR r2,[r11]
+  BL r6502endperipheralreset
   ORR r1,rpc,#R6502_READCODE
   R6502NEXTCYCLE r65c12reset2
 

@@ -41,6 +41,7 @@ The Type IV command is Force Interrupt.
 #include "1770fdc.h"
 #include "6502cpu.h"
 #include "beebit.h"
+#include "riscos.h"
 #include "kernel.h"
 #include "keyboard.h"
 #include "swis.h"
@@ -76,9 +77,9 @@ The Type IV command is Force Interrupt.
 /*single density = 125 Kbits/sec = 1000000*/
 #define WD1770_ONEREVOLUTION 200000 /*1000000/5*/
 
-#define SETNMI if (!beebit_nmi) {beebit_oldnmi = beebit_nmi; beebit_nmi = TRUE; } updatetimers();
+#define SETNMI beebit_nmi = TRUE;
 
-#define UNSETNMI if (beebit_nmi) {beebit_oldnmi = beebit_nmi; beebit_nmi = FALSE; }
+#define UNSETNMI beebit_nmi = beebit_oldnmi = FALSE;
 
 extern _kernel_swi_regs regs;
 
@@ -97,7 +98,6 @@ int w1770_steptime;
 int w1770_drive;
 int w1770_side;
 int w1770_density;
-int w1770_timer;
 int w1770_byteinsector;
 int w1770_initialised; /*for the B+*/
 int w1770_writegate;
@@ -113,18 +113,28 @@ void w1770reset(void)
   w1770_commandreg = 0;
   w1770_stepdir = WD1770_STEPIN;
   w1770_steptime = 0;
-  w1770_timer = 0;
+  w1770_cyclestogo = 0;
   w1770_lastbyte = FALSE;
   w1770_writegate = FALSE;
   w1770_initialised = FALSE;
 }
 
-/*void w1770setnmi(char nvalue)
+int w1770atzerocycles(void)
 {
-  nmiinterrupt = nvalue;*/
-  /*updatetimers();*/
-  /*fprintf(htrace,"NMI=&%X\n",nmiinterrupt);*/
-/*}*/
+  w1770_cyclestogo = 0;
+  w1770poll();
+
+  if (beebit_nmi AND !beebit_oldnmi)
+  {
+    #ifdef __RISCOS__
+      r6502startinterrupt();
+    #else
+      r6502donmi();
+    #endif
+  }
+
+  return w1770_cyclestogo;
+}
 
 void w1770readimage(FILE *hfile, int nlocation, int nlength)
 {
@@ -353,12 +363,11 @@ void w1770poll(void)
             /*end of sector*/
             w1770_byteinsector = 0;
             /*w1770_statusreg &= STATUS_NOTBUSY;*/
-            w1770_timer += 16;
-            /*updatetimers();*/
+            w1770_cyclestogo += (16<<1);
           }
           else
-            w1770_timer += 64;
-          /*w1770_timer += 62+(w1770_byteinsector & 1);*/
+            w1770_cyclestogo += (64<<1);
+          /*w1770_cyclestogo += (62+(w1770_byteinsector & 1))<<1;*/
           /*SETNMI;*/
         }
         else
@@ -377,7 +386,7 @@ void w1770poll(void)
       }
       else if (!w1770_writegate)
       {
-        w1770_timer += 64;
+        w1770_cyclestogo += (64<<1);
         SETNMI
       }
       else
@@ -417,8 +426,7 @@ void w1770poll(void)
               /*end of sector*/
               w1770_byteinsector = 0;
               /*w1770_statusreg &= STATUS_NOTBUSY;*/
-              w1770_timer += 16;
-              /*updatetimers();*/
+              w1770_cyclestogo += (16<<1);
 
               if (w1770_commandreg & 0x10)
               {
@@ -442,8 +450,8 @@ void w1770poll(void)
               SETNMI
             }
             else
-              w1770_timer += 64;
-            /*w1770_timer += 62+(w1770_byteinsector & 1);*/
+              w1770_cyclestogo += (64<<1);
+            /*w1770_cyclestogo += (62+(w1770_byteinsector & 1))<<1;*/
             /*SETNMI;*/
           }
           else
@@ -507,7 +515,7 @@ void w1770type1flags(char nvalue)
 
   /*verify flag*/
   if (nvalue & 0x04)
-    w1770_timer += 30000; /*30ms*/
+    w1770_cyclestogo += (30000<<1); /*30ms*/
 
   w1770_statusreg |= STATUS_BUSY;
   w1770_statusreg &= STATUS_NOTDATAREQUEST;
@@ -520,7 +528,7 @@ void w1770type1flags(char nvalue)
   {
     /*disable the motor spin up sequence*/
     w1770_statusreg |= STATUS_NOTSPINUP;
-    w1770_timer += WD1770_ONEREVOLUTION;
+    w1770_cyclestogo += (WD1770_ONEREVOLUTION<<1);
   }
   else
   {
@@ -531,7 +539,7 @@ void w1770type1flags(char nvalue)
       w1770_statusreg |= STATUS_MOTORON;
       w1770_statusreg &= STATUS_SPINUP;
       /*wait 6 revolutions*/
-      w1770_timer += WD1770_ONEREVOLUTION*6;
+      w1770_cyclestogo += ((WD1770_ONEREVOLUTION<<1)*6);
     }
   }
 }
@@ -555,16 +563,16 @@ void w1770commandrestore(char nvalue)
         w1770_statusreg |= STATUS_NOTTRACKZERO;
     }
   }
-  if (w1770_timer <= 0)
-    w1770poll();
+  if (w1770_cyclestogo <= 0)
+    w1770_cyclestogo = 1;
 }
 
 void w1770commandseek(char nvalue)
 {
   w1770type1flags(nvalue);
   w1770_trackreg = w1770_track = w1770_datareg;
-  if (w1770_timer <= 0)
-    w1770poll();
+  if (w1770_cyclestogo <= 0)
+    w1770_cyclestogo = 1;
 }
 
 void w1770commandstep(char nvalue)
@@ -583,7 +591,7 @@ void w1770commandstep(char nvalue)
   if (w1770_commandreg & 0x10)
     w1770_trackreg = w1770_track = w1770_track;
 
-  w1770_timer += w1770_steptime;
+  w1770_cyclestogo += (w1770_steptime<<1);
 }
 
 void w1770commandstepin(char nvalue)
@@ -595,7 +603,7 @@ void w1770commandstepin(char nvalue)
   if (w1770_commandreg & 0x10)
     w1770_trackreg = w1770_track = w1770_track;
 
-  w1770_timer += w1770_steptime;
+  w1770_cyclestogo += (w1770_steptime<<1);
 }
 
 void w1770commandstepout(char nvalue)
@@ -607,7 +615,7 @@ void w1770commandstepout(char nvalue)
   if (w1770_commandreg & 0x10)
     w1770_trackreg = w1770_track;
 
-  w1770_timer += w1770_steptime;
+  w1770_cyclestogo += (w1770_steptime<<1);
 }
 
 void w1770type2flags(char nvalue)
@@ -624,7 +632,7 @@ void w1770type2flags(char nvalue)
   {
     /*disable the motor spin up sequence*/
     w1770_statusreg |= STATUS_NOTSPINUP;
-    w1770_timer += WD1770_ONEREVOLUTION;
+    w1770_cyclestogo += (WD1770_ONEREVOLUTION<<1);
   }
   else
   {
@@ -635,13 +643,13 @@ void w1770type2flags(char nvalue)
       w1770_statusreg |= STATUS_MOTORON;
       w1770_statusreg &= STATUS_SPINUP;
       /*wait 6 revolutions*/
-      w1770_timer += WD1770_ONEREVOLUTION*6;
+      w1770_cyclestogo += ((WD1770_ONEREVOLUTION<<1)*6);
     }
   }
 
   if (nvalue & 0x04)
     /*settling delay 30ms*/
-    w1770_timer += 30000;
+    w1770_cyclestogo += (30000<<1);
 }
 
 void w1770commandreadsector(char nvalue)
@@ -651,7 +659,7 @@ void w1770commandreadsector(char nvalue)
   w1770_byteinsector = 0;
 
   /*an underestimate of the time to recognise and read the first byte in the sector*/
-  w1770_timer += 320;
+  w1770_cyclestogo += (320<<1);
 }
 
 void w1770commandwritesector(char nvalue)
@@ -666,7 +674,7 @@ void w1770commandwritesector(char nvalue)
   w1770_writegate = FALSE;
 
   /*an underestimate of the time to recognise the first byte in the sector*/
-  w1770_timer += 256;
+  w1770_cyclestogo += (256<<1);
 }
 
 void w1770type3flags(char nvalue)
@@ -683,7 +691,7 @@ void w1770type3flags(char nvalue)
   {
     /*disable the motor spin up sequence*/
     w1770_statusreg |= STATUS_NOTSPINUP;
-    w1770_timer += WD1770_ONEREVOLUTION;
+    w1770_cyclestogo += (WD1770_ONEREVOLUTION<<1);
   }
   else
   {
@@ -694,21 +702,21 @@ void w1770type3flags(char nvalue)
       w1770_statusreg |= STATUS_MOTORON;
       w1770_statusreg &= STATUS_SPINUP;
       /*wait 6 revolutions*/
-      w1770_timer += WD1770_ONEREVOLUTION*6;
+      w1770_cyclestogo += ((WD1770_ONEREVOLUTION<<1)*6);
     }
   }
 
   if (nvalue & 0x04)
     /*settling delay 30ms*/
-    w1770_timer += 30000;
+    w1770_cyclestogo += (30000<<1);
 }
 
 void w1770commandreadaddress(char nvalue)
 {
   w1770type3flags(nvalue);
   w1770_byteinsector = 0;
-  if (w1770_timer <= 0)
-    w1770poll();
+  if (w1770_cyclestogo <= 0)
+    w1770_cyclestogo = 1;
 }
 
 void w1770commandreadtrack(char nvalue)
@@ -743,6 +751,15 @@ void w1770forceinterruptcommand(char nvalue)
       break;
   }
   w1770_datareg = 0;
+
+  if (beebit_nmi AND !beebit_oldnmi)
+  {
+    #ifdef __RISCOS__
+      r6502startinterrupt();
+    #else
+      r6502donmi();
+    #endif
+  }
 }
 
 void w1770command(char nvalue)
@@ -754,8 +771,7 @@ void w1770command(char nvalue)
   inttohex(w1770_statusreg);
   bbcvdu(32);*/
   /*if a command is issued, it is executed immediately*/
-  updatetimers();
-  w1770_timer = 0;
+  w1770_cyclestogo = 0;
 
   switch (nvalue & 0xF0)
   {
@@ -822,6 +838,12 @@ void w1770command(char nvalue)
   bbcvdu(32);
   inttohex(w1770_statusreg);
   bbcvdu(32);*/
+
+  if (w1770_cyclestogo > 0)
+  {
+    w1770_cyclestogo += r6502_cyclesoriginal - r6502_cyclestogo;
+    limitcyclestogo(w1770_cyclestogo);
+  }
 }
 
 char w1770controlread(void)

@@ -14,11 +14,12 @@ extern int adc_resolution;
 extern int adc_status;
 extern int adc_highbyte;
 extern int adc_lowbyte;
-extern int adc_timer; /*adc timer*/
+extern int adc_cyclestogo;
 
 extern void adcreset(void);
 extern void adcenter(void);
 extern void adcmodevars(void);
+extern int adcatzerocycles(void);
 extern void adcpoll(void);
 extern char adcread(int naddress);
 extern void adcwrite(int naddress,int nvalue);

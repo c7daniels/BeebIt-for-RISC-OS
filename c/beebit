@@ -40,8 +40,6 @@
 
 #define __DEVELOP__
 
-/*extern int r6502_cyclecount;*/
-
 /*#define NEXT_TIME CLK_TCK/25;*/ /*25 times per second*/
 
 /*extern char (*r6502read)(int naddress);*/
@@ -101,12 +99,12 @@ int beebit_acccon; /*ACCCON*/
 int beebit_vdusel; /*VDUSEL (0x80) for B+, D (0x01) for Master 128*/
 int beebit_leds,host_leds;
 int beebit_rommask;
-int beebit_yield; /*yield control on a vsync*/
 int beebit_exit; /*exit the emulation F12 or close window*/
 
 /*int beebit_irq;*/
 int beebit_nmi, beebit_oldnmi;
 int lexit, lbreak, lprintscreen;
+int beebit_oldreset;
 /*int irqinterrupt, nmiinterrupt, noldnmi;*/
 /*int ncounterstart;*/
 /*clock_t nclock;*/
@@ -292,67 +290,46 @@ int loadrom(char *cfilename,int nslot)
   return (lreturn);
 }
 
-void updatetimers(void)
+void limitcyclestogo(int limit)
 {
-  int n1mhzcycles;
-  /*fprintf(htrace,"UPDATE TIMERS &%X &%X\n",r6502_cyclesoriginal,r6502_cyclestogo);*/
-  r6502_cyclesexpired = (r6502_cyclesoriginal-r6502_cyclestogo); /*+r6502_cycle;*/
-  /*r6502_cyclesexpired -= r6502_cycle;*/ /*even cycles only*/
-  /*fprintf(htrace,"expired=&%X\n",r6502_cyclesexpired);*/
-  /*r6502_cyclecount += r6502_cyclesexpired;*/
-  if (r6502_cyclesexpired > 0)
+  int cyclesover = r6502_cyclesoriginal - limit;
+
+  if (cyclesover > 0)
   {
-    r6502_cyclesmonotonic += r6502_cyclesexpired;
-    /*convert to 1MHz cycles*/
-    n1mhzcycles = (r6502_cyclesexpired >> 1);
-    if (r6502_cyclesexpired & 1)
-    {
-      /*add in the extra tick because r6502_cycle = 1 2MHz cycle*/
-      /*n1mhzcycles += r6502_cycle;
-      r6502_cycle |= 1;*/
-
-      if (r6502_cycle == 0)
-        /*store the extra tick*/
-        r6502_cycle = 1;
-      else
-      {
-        /*add in the extra tick because r6502_cycle+1 = 1 2MHz cycle*/
-        n1mhzcycles++;
-        r6502_cycle = 0;
-      }
-    }
-    systemviasett1t2(n1mhzcycles);
-    userviasett1t2(n1mhzcycles); /*also amx_timer*/
-
-    video_timer -= r6502_cyclesexpired;
-  /*fprintf(htrace,"video_timer=&%X ncycles=&%X\n",video_timer,ncycles);*/
-    if (i8271_timer > 0)
-    {
-      i8271_timer -= n1mhzcycles; /*r6502_cyclesexpired;*/
-      if (i8271_timer == 0)
-        i8271_timer = -1;
-    }
-    if (w1770_timer > 0)
-    {
-      w1770_timer -= n1mhzcycles;
-      if (w1770_timer == 0)
-        w1770_timer = -1;
-    }
-    if (adc_timer > 0)
-    {
-      adc_timer -= n1mhzcycles; /*r6502_cyclesexpired;*/
-      if (adc_timer == 0)
-        adc_timer = -1;
-    }
-    if (m6850_timer > 0)
-    {
-      m6850_timer -= n1mhzcycles;
-      if (m6850_timer == 0)
-        m6850_timer = -1;
-    }
+    r6502_cyclesoriginal -= cyclesover;
+    r6502_cyclestogo -= cyclesover;
   }
-  r6502_cyclestogo = 0;
-  r6502_cyclesoriginal = 0;
+}
+
+void startperipheralreset(int lfull)
+{
+  beebit_oldreset = TRUE;
+
+  if (lfull)
+  {
+    aciareset();
+    adcreset();
+    videoulareset();
+    crtcreset();
+    keyboardreset();
+    systemviareset();
+    videoreset();
+    soundreset();
+  }
+  userviastartreset(lfull);
+
+  sheilareset();
+  i8271reset();
+  w1770reset();
+}
+
+void endperipheralreset(void)
+{
+  userviafinishreset();
+
+  sheilareset();
+  i8271reset();
+  w1770reset();
 }
 
 void beebitreset(void)
@@ -413,7 +390,6 @@ void beebitreset(void)
     /*this is used when updating the via timers*/
     /*ncounterstart = 0;*/
     /*r6502_cyclestotal = 0;*/
-    r6502_cycle = 0;
     beebit_button1 = 0;
     beebit_button2 = 0;
 
@@ -427,18 +403,6 @@ void beebitreset(void)
     beebit_imagetype[3] = DFS_NONE;
 
     beebit_nmi = beebit_oldnmi = FALSE;
-    aciareset();
-    adcreset();
-    videoulareset(TRUE);
-    crtcreset();
-    keyboardreset();
-    sheilareset();
-    systemviareset(TRUE);
-    userviareset(TRUE);
-    videoreset(TRUE);
-    soundreset();
-    i8271reset();
-    w1770reset();
     switch (beebit_machinetype)
     {
       case MACHINE_MODELB:
@@ -454,8 +418,15 @@ void beebitreset(void)
     }
     r6502_fetchaction = r6502fetch;
     r6502_haltaction = r6502halt;
+    r6502_cyclelink = r6502cyclenotask;
     r6502_instructionlink = r6502_resetaction;
     r6502_instructionlink2 = r6502_fetchaction;
+
+    r6502_cycle = 0;
+    r6502_cyclestogo = 0x10000;
+    r6502_cyclesoriginal = r6502_cyclestogo;
+
+    startperipheralreset(TRUE);
 
     /*if (lteletextmode)
     {
@@ -932,133 +903,7 @@ void beebitpoll(void)
   int count, i;
   int keycode, keydown;*/
 
-  beebit_yield = FALSE;
-  do
-  {
-      /*find how many cycles are needed until something happens*/
-      /*if (beebit_trace)
-      {
-      fprintf(htrace,"r6522sysvia_t1=&%X\n",(r6522sysvia_t1<<1));
-      fprintf(htrace,"r6522sysvia_t2=&%X\n",(r6522sysvia_t1<<1));
-      fprintf(htrace,"r6522usrvia_t1=&%X\n",(r6522sysvia_t1<<1));
-      fprintf(htrace,"r6522usrvia_t2=&%X\n",(r6522sysvia_t1<<1));
-      fprintf(htrace,"video_timer=&%X\n",video_timer);
-      fprintf(htrace,"m6845_horizontaltotal=&%X\n",m6845_horizontaltotal);*/
-      /*fprintf(htrace,"i8271_timer=&%X\n",i8271_timer);
-      fprintf(htrace,"adc_timer=&%X\n",adc_timer);*/
-      /*}*/
-      if (r6522sysvia_t1 < r6522sysvia_t2)
-        r6502_cyclestogo = (r6522sysvia_t1 << 1);
-      else
-        r6502_cyclestogo = (r6522sysvia_t2 << 1);
-
-      if (r6522usrvia_t1 < r6522usrvia_t2)
-      {
-        if ((r6522usrvia_t1 << 1) < r6502_cyclestogo)
-          r6502_cyclestogo = (r6522usrvia_t1 << 1);
-      }
-      else
-      {
-        if ((r6522usrvia_t2 << 1) < r6502_cyclestogo)
-          r6502_cyclestogo = (r6522usrvia_t2 << 1);
-      }
-      if (video_timer < r6502_cyclestogo)
-        r6502_cyclestogo = video_timer;
-      if (i8271_timer > 0 AND (i8271_timer << 1) < r6502_cyclestogo)
-        r6502_cyclestogo = (i8271_timer << 1);
-      if (w1770_timer > 0 AND (w1770_timer << 1) < r6502_cyclestogo)
-        r6502_cyclestogo = (w1770_timer << 1);
-      if (adc_timer > 0 AND adc_timer < r6502_cyclestogo)
-        r6502_cyclestogo = adc_timer;
-      if (m6850_timer > 0 AND (m6850_timer << 1) < r6502_cyclestogo)
-        r6502_cyclestogo = m6850_timer;
-      if (beebit_mouseemulation == MOUSE_AMXMOUSE)
-      {
-        if (amx_timer > 0 AND (amx_timer << 1) < r6502_cyclestogo)
-          r6502_cyclestogo = amx_timer;
-      }
-
-      if (r6502_cyclestogo > 0x40)
-      {
-        /*if (beebit_trace)
-        {
-          fprintf(htrace,"r6502_cyclestogo=&%X\n",r6502_cyclestogo);
-          fprintf(htrace,"> & 0x40\n");
-        }*/
-        /*maximum wait before update.
-          this enables ELITE screen split to look good*/
-        r6502_cyclestogo = 0x40;
-      }
-      /*if (beebit_trace)
-        fprintf(htrace,"r6502_cyclestogo=&%X\n",r6502_cyclestogo);*/
-
-      r6502_cyclesoriginal = r6502_cyclestogo;
-
-      /*NMI interrupts are only generated on the 6502 when*/
-      /*the signal goes from low to high*/
-      if (beebit_nmi AND !beebit_oldnmi)
-      {
-        /*beebit_nmi = FALSE;*/
-        /*if (beebit_trace)
-          printf("NMI PC=%X, SP=%X\n", r6502_pc, r6502_sp);*/
-        #ifdef __RISCOS__
-          r6502startinterrupt();
-        #else
-          r6502donmi();
-        #endif
-      }
-      else if (!(r6502_ps & 0x04)) /*FLAGI))*/
-      {
-        /*irqinterrupt = (r6522sysvia_irq | r6522usrvia_irq);*/
-        /*if (irqinterrupt AND !r6502_i)*/
-        /*if (r6522sysvia_irq | r6522usrvia_irq)*/
-        /*if (irqinterrupt)*/
-        if (beebit_irq)
-        {
-          /*if (beebit_trace)
-            printf("IRQ PC=%X, SP=%X\n", r6502_pc, r6502_sp);*/
-          #ifdef __RISCOS__
-            r6502startinterrupt();
-          #else
-            r6502doirq();
-          #endif
-        }
-      }
-
-      cpu_execute();
-
-      updatetimers();
-
-      if (i8271_timer < 0)
-      {
-        i8271_timer = 0;
-        i8271poll();
-      }
-      else if (w1770_timer < 0)
-      {
-        w1770_timer = 0;
-        w1770poll();
-      }
-
-      if (adc_timer < 0)
-      {
-        adc_timer = 0;
-        adcpoll();
-      }
-
-      if (m6850_timer < 0)
-      {
-        aciapoll();
-        m6850_timer += m6850_timerreset;
-      }
-
-    /*
-    videoscanline needs to return when a vsync is done and returns to the Wimp_Poll. Only exit when a vsync in detected, including when F12 is pressed
-    */
-      if (video_timer <= 0)
-        videoscanline();
-  }
-  while (NOT beebit_yield); /*!lexit);*/
+  cpu_execute();
 
   /*if (NOT beebit_singletask)
   {*/
@@ -1087,26 +932,6 @@ void beebitpoll(void)
         systemviasetca2();
     }
   }*/
-}
-
-void beebitbreak(void)
-{
-  updatetimers();
-
-  systemviareset(FALSE);
-  userviareset(FALSE);
-  w1770_initialised = FALSE; /*for the B+*/
-  sheilareset();
-  /*videoulareset(FALSE);*/
-  i8271reset();
-  w1770reset();
-  /*set keyboard status*/
-  /*regs.r[0] = 202;
-  regs.r[1] = 0xA0;*/ /*A9;*/
-  /*regs.r[2] = 0;
-  _kernel_swi(OS_Byte,&regs,&regs);
-  regs.r[0] = 118;
-  _kernel_swi(OS_Byte,&regs,&regs);*/
 }
 
 void beebitexit(void)

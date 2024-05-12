@@ -105,7 +105,7 @@ void snapshotload(FILE *hfile)
   r6522sysvia_t1setint =readhdr.Tim1mode;
   r6522sysvia_t2setint =readhdr.Tim2mode;
   r6522usrvia_t1setint =readhdr.Tim3mode;
-  r6522usrvia_t1setint =readhdr.Tim4mode;
+  r6522usrvia_t2setint =readhdr.Tim4mode;
    //in snapshots 1 =interupt, but beebit set them as TRUE(0xFF) however as
    // beebit never compares with TRUE it seems to work
       /*system via timer 1 counter*/
@@ -113,7 +113,7 @@ void snapshotload(FILE *hfile)
 //     r6522sysvia_t1ch = cbuffer[3];
 //     r6522sysvia_t1cl = cbuffer[2];
 //     r6522sysvia_t1 = (r6522sysvia_t1ch<<9)+(r6522sysvia_t1cl<<1);
-  r6522sysvia_t1 =(readhdr.Tim1)<<1;
+  r6522sysvia_2t1 =(readhdr.Tim1)<<1;
       /*system via timer 1 latches*/
 //      fread(cbuffer,1,4,hfile); /*32*/
 //      r6522sysvia_t1lh = cbuffer[3];
@@ -125,7 +125,7 @@ void snapshotload(FILE *hfile)
 //      r6522sysvia_t2ch = cbuffer[3];
 //      r6522sysvia_t2cl = cbuffer[2];
 //      r6522sysvia_t2 = (r6522sysvia_t2ch<<9)+(r6522sysvia_t2cl<<1);
-  r6522sysvia_t2 =(readhdr.Tim2)<<1;
+  r6522sysvia_2t2 =(readhdr.Tim2)<<1;
       /*system via timer 2 latches*/
 //      fread(cbuffer,1,4,hfile); /*40*/
 //      r6522sysvia_t2ll = cbuffer[3];
@@ -136,7 +136,7 @@ void snapshotload(FILE *hfile)
 //      r6522usrvia_t1ch = cbuffer[3];
 //      r6522usrvia_t1cl = cbuffer[2];
 //      r6522usrvia_t1 = (r6522usrvia_t1ch<<9)+(r6522usrvia_t1cl<<1);
-  r6522usrvia_t1 =(readhdr.Tim3)<<1;
+  r6522usrvia_2t1 =(readhdr.Tim3)<<1;
       /*user via timer 1 latches*/
 //      fread(cbuffer,1,4,hfile); /*48*/
 //      r6522usrvia_t1lh = cbuffer[3];
@@ -148,7 +148,7 @@ void snapshotload(FILE *hfile)
 //      r6522usrvia_t2ch = cbuffer[3];
 //      r6522usrvia_t2cl = cbuffer[2];
 //      r6522usrvia_t2 = (r6522usrvia_t2ch<<9)+(r6522usrvia_t2cl<<1);
-  r6522usrvia_t2 =(readhdr.Tim4)<<1;
+  r6522usrvia_2t2 =(readhdr.Tim4)<<1;
       /*user via timer 2 latches*/
 //      fread(cbuffer,1,4,hfile); /*56*/
 //      r6522usrvia_t2ll = cbuffer[3];
@@ -157,7 +157,7 @@ void snapshotload(FILE *hfile)
       /*timer to vertical sync*/
 //      fread(cbuffer,1,4,hfile); /*60*/
 //      video_timer = getword(cbuffer);
-  video_timer =readhdr.Cvsync;
+  video_cyclestogo =readhdr.Cvsync;
 
       /*unused*/
 //      fread(cbuffer,1,4,hfile); /*64*/
@@ -285,6 +285,8 @@ void snapshotload(FILE *hfile)
   fread(memory,1,0x8000,hfile);
   fclose(hfile);
 
+  systemviaaftersnapshot();
+  userviaaftersnapshot();
   r6502_instructionlink = r6502_fetchaction;
 }
 
@@ -292,6 +294,9 @@ void snapheadersave(SNAPHDR *phdr)
 {
 //  void *clear =&phdr;
   int s,r,p;
+
+  systemviabeforesnapshot();
+  userviabeforesnapshot();
 
   memset(phdr,0,sizeof(SNAPHDR));
   strncpy(phdr ->tag,"BBC Snapshot101",0xf);
@@ -362,7 +367,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[3] = r6522sysvia_t1ch;
 //  cbuffer[2] = r6522sysvia_t1cl;
 //  wimpwrite(cbuffer,1,4); /*28*/
-  phdr ->Tim1 =r6522sysvia_t1 >>1;
+  phdr ->Tim1 =r6522sysvia_2t1 >>1;
 //  /*system via timer 1 latches*/
 //  cbuffer[3] = r6522sysvia_t1lh;
 //  cbuffer[2] = r6522sysvia_t1ll;
@@ -374,7 +379,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[3] = r6522sysvia_t2ch;
 //  cbuffer[2] = r6522sysvia_t2cl;
 //  wimpwrite(cbuffer,1,4); /*36*/
-  phdr ->Tim2 =r6522sysvia_t2 >>1;
+  phdr ->Tim2 =r6522sysvia_2t2 >>1;
 //  /*system via timer 2 latches*/
 //  cbuffer[3] = r6522sysvia_t2ll;
 //  cbuffer[2] = 0;
@@ -387,7 +392,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[3] = r6522usrvia_t1ch;
 //  cbuffer[2] = r6522usrvia_t1cl;
 //  wimpwrite(cbuffer,1,4); /*44*/
-  phdr ->Tim3 =r6522usrvia_t1 >>1;
+  phdr ->Tim3 =r6522usrvia_2t1 >>1;
 
 //  /*user via timer 1 latches*/
 //  cbuffer[3] = r6522usrvia_t1lh;
@@ -400,7 +405,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[3] = r6522usrvia_t2ch;
 //  cbuffer[2] = r6522usrvia_t2cl;
 //  wimpwrite(cbuffer,1,4); /*52*/
-  phdr ->Tim4 =r6522usrvia_t2 >>1;
+  phdr ->Tim4 =r6522usrvia_2t2 >>1;
 //  /*user via timer 2 latches*/
 //  cbuffer[3] = r6522usrvia_t2ll;
 //  cbuffer[2] = 0;
@@ -409,7 +414,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  /*timer to vertical sync*/
 //  setword(cbuffer,video_timer);
 //  wimpwrite(cbuffer,1,4); /*60*/
-  phdr ->Cvsync =video_timer;
+  phdr ->Cvsync =video_cyclestogo;
 //  /*unused*/
 //  setword(cbuffer,0);
 //  wimpwrite(cbuffer,1,4); /*64*/
@@ -532,4 +537,7 @@ void snapheadersave(SNAPHDR *phdr)
 //
 //
 //}
+
+  systemviaaftersnapshot();
+  userviaaftersnapshot();
 }

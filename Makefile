@@ -40,8 +40,8 @@ RunImage = @.o.main @.o.beebit \
   @.o.65c12cpu20 @.o.65c12cpu30 @.o.65c12cpu45 @.o.65c12cpu60 \
   @.o.65c12cpu70 @.o.65c12cpu89 @.o.65c12cpuAB @.o.65c12cpuC0 \
   @.o.65c12cpuD0 @.o.65c12cpuE0 @.o.65c12cpuF0 @.o.6502bits \
-	@.o.6502jumps @.o.6502loads @.o.6502stores @.o.6502shifts \
-	@.o.6502sums @.o.6502sheils \
+  @.o.6502jumps @.o.6502loads @.o.6502stores @.o.6502shifts \
+  @.o.6502sums @.o.6502sheils \
   @.o.6522sysvia @.o.6522usrvia @.o.6845crtc @.o.6850acia \
   @.o.76489sound @.o.tube \
   @.o.8271fdc @.o.1770fdc @.o.adc @.o.keyboard @.o.sheila  \
@@ -75,6 +75,7 @@ RipRoms = @.o.RipROMs
 # Static dependencies:
 
 # Dynamic dependencies:
+
 o.main:	c.main
 o.main:	h.6502cpu
 o.main:	h.6522sysvia
@@ -93,6 +94,27 @@ o.main:	h.snapshots
 o.main:	h.video
 o.main:	h.videoscale
 o.main:	h.videoula
+o.beebit:	c.beebit
+o.beebit:	h.1770fdc
+o.beebit:	h.6502cpu
+o.beebit:	h.6522sysvia
+o.beebit:	h.6522usrvia
+o.beebit:	h.6845crtc
+o.beebit:	h.6850acia
+o.beebit:	h.76489sound
+o.beebit:	h.8271fdc
+o.beebit:	h.adc
+o.beebit:	h.beebit
+o.beebit:	C:h.kernel
+o.beebit:	h.keyboard
+o.beebit:	h.main
+o.beebit:	h.riscos
+o.beebit:	h.scrmode
+o.beebit:	h.scrsave
+o.beebit:	h.sheila
+o.beebit:	h.swis
+o.beebit:	h.video
+o.beebit:	h.videoula
 o.6502cpu:	c.6502cpu
 o.6502cpu:	h.6502cpu
 o.6502cpu:	h.6522sysvia
@@ -310,20 +332,43 @@ o.8271fdc:	c.8271fdc
 o.8271fdc:	h.6502cpu
 o.8271fdc:	h.8271fdc
 o.8271fdc:	h.beebit
+o.8271fdc:	h.riscos
 o.8271fdc:	h.keyboard
 o.1770fdc:	c.1770fdc
 o.1770fdc:	h.1770fdc
 o.1770fdc:	h.6502cpu
 o.1770fdc:	h.beebit
+o.1770fdc:	h.riscos
 o.1770fdc:	C:h.kernel
 o.1770fdc:	h.keyboard
 o.1770fdc:	h.swis
+o.adc:	c.adc
+o.adc:	h.6502cpu
+o.adc:	h.6522sysvia
+o.adc:	h.adc
+o.adc:	h.beebit
+o.adc:	C:h.kernel
+o.adc:	h.swis
 o.keyboard:	c.keyboard
 o.keyboard:	h.6522sysvia
 o.keyboard:	h.beebit
 o.keyboard:	C:h.kernel
 o.keyboard:	h.riscos
 o.keyboard:	h.swis
+o.sheila:	c.sheila
+o.sheila:	h.6502cpu
+o.sheila:	h.6522sysvia
+o.sheila:	h.6522usrvia
+o.sheila:	h.6845crtc
+o.sheila:	h.6850acia
+o.sheila:	h.8271fdc
+o.sheila:	h.adc
+o.sheila:	h.beebit
+o.sheila:	h.main
+o.sheila:	h.riscos
+o.sheila:	h.tube
+o.sheila:	h.videoula
+o.sheila:	h.1770fdc
 o.scrmode:	c.scrmode
 o.scrmode:	h.6502cpu
 o.scrmode:	h.main
@@ -331,6 +376,20 @@ o.scrmode:	C:h.kernel
 o.scrmode:	h.swis
 o.scrmode:	h.scrmode
 o.scrmode:	h.videoscale
+o.video:	c.video
+o.video:	h.6502cpu
+o.video:	h.6522sysvia
+o.video:	h.6845crtc
+o.video:	h.beebit
+o.video:	C:h.kernel
+o.video:	h.main
+o.video:	h.riscos
+o.video:	h.scrmode
+o.video:	h.swis
+o.video:	h.video
+o.video:	h.videoscale
+o.video:	h.videoula
+o.video:	h.adc
 o.videoscale:	c.videoscale
 o.videoscale:	h.beebit
 o.videoscale:	C:h.kernel
@@ -339,6 +398,18 @@ o.videoscale:	h.swis
 o.videoscale:	h.video
 o.videoscale:	h.videoscale
 o.videoscale:	h.videoula
+o.videoula:	c.videoula
+o.videoula:	h.6502cpu
+o.videoula:	h.6522sysvia
+o.videoula:	h.6845crtc
+o.videoula:	h.beebit
+o.videoula:	C:h.kernel
+o.videoula:	h.main
+o.videoula:	h.riscos
+o.videoula:	h.scrmode
+o.videoula:	h.swis
+o.videoula:	h.adc
+o.videoula:	h.video
 o.riscos: s.riscos
 o.riscos: h.RegNames
 o.riscos: h.SWInames
@@ -373,70 +444,3 @@ o.snapshots:	h.sheila
 o.RipROMs:	c.RipROMs
 o.RipROMs:	C:h.kernel
 o.RipROMs:	h.swis
-o.beebit:	c.beebit
-o.beebit:	h.1770fdc
-o.beebit:	h.6502cpu
-o.beebit:	h.6522sysvia
-o.beebit:	h.6522usrvia
-o.beebit:	h.6845crtc
-o.beebit:	h.6850acia
-o.beebit:	h.76489sound
-o.beebit:	h.8271fdc
-o.beebit:	h.adc
-o.beebit:	h.beebit
-o.beebit:	C:h.kernel
-o.beebit:	h.keyboard
-o.beebit:	h.main
-o.beebit:	h.riscos
-o.beebit:	h.scrmode
-o.beebit:	h.scrsave
-o.beebit:	h.sheila
-o.beebit:	h.swis
-o.beebit:	h.video
-o.beebit:	h.videoula
-o.adc:	c.adc
-o.adc:	h.6502cpu
-o.adc:	h.6522sysvia
-o.adc:	h.beebit
-o.adc:	C:h.kernel
-o.adc:	h.swis
-o.sheila:	c.sheila
-o.sheila:	h.6502cpu
-o.sheila:	h.6522sysvia
-o.sheila:	h.6522usrvia
-o.sheila:	h.6845crtc
-o.sheila:	h.6850acia
-o.sheila:	h.8271fdc
-o.sheila:	h.adc
-o.sheila:	h.beebit
-o.sheila:	h.main
-o.sheila:	h.riscos
-o.sheila:	h.tube
-o.sheila:	h.videoula
-o.sheila:	h.1770fdc
-o.video:	c.video
-o.video:	h.6502cpu
-o.video:	h.6522sysvia
-o.video:	h.6845crtc
-o.video:	h.beebit
-o.video:	C:h.kernel
-o.video:	h.main
-o.video:	h.riscos
-o.video:	h.scrmode
-o.video:	h.swis
-o.video:	h.video
-o.video:	h.videoscale
-o.video:	h.videoula
-o.video:	h.adc
-o.videoula:	c.videoula
-o.videoula:	h.6502cpu
-o.videoula:	h.6522sysvia
-o.videoula:	h.6845crtc
-o.videoula:	h.beebit
-o.videoula:	C:h.kernel
-o.videoula:	h.main
-o.videoula:	h.riscos
-o.videoula:	h.scrmode
-o.videoula:	h.swis
-o.videoula:	h.adc
-o.videoula:	h.video

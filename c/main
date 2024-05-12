@@ -1603,7 +1603,6 @@ void gobeebit(void)
   if (lredraw)
   {
     /*rename lexit to beebit_exit- set by F12*/
-    /*have a beebit_yield var -set by poll needed*/
     /*loop until lexit*/
     beebit_exit = FALSE;
     do

@@ -29,6 +29,8 @@
   IMPORT |r6502_resetaction|
   IMPORT |r6502_instructionlink|
   IMPORT |r6502_cyclesmonotonic|
+  IMPORT |r6502_cyclesoriginal|
+  IMPORT |r6502_cyclestogo|
 
   IMPORT |systemviasetca2|
 
@@ -198,8 +200,14 @@ inttohexb
   CMP r2,#0
   LDMEQFD sp!,{r1,r2,r12,pc} ;error
 
-  LDR r1,=r6502_cyclesmonotonic
-  LDR r1,[r1]
+  LDR r12,=r6502_cyclesoriginal
+  LDR r1,[r12]
+  LDR r12,=r6502_cyclestogo
+  LDR r12,[r12]
+  SUB r1,r1,r12
+  LDR r12,=r6502_cyclesmonotonic
+  LDR r12,[r12]
+  ADD r1,r1,r12
   LDR r12,=zeribeep_workspace
   LDR r12,[r12]
   ;STMFD sp!,{lr}

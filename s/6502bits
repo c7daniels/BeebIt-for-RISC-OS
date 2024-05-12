@@ -37,7 +37,7 @@
   IMPORT |beebit_nmi|
   IMPORT |beebit_oldnmi|
   IMPORT |r6502busop|
-  IMPORT |r6502intoyield|
+  IMPORT |r6502atzerocycles|
   IMPORT |r6502intointerrupt|
   IMPORT |r6502cancelinterrupt|
   IMPORT |r6502storedone|

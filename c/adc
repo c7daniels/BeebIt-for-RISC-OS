@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include "6502cpu.h"
 #include "6522sysvia.h"
+#include "adc.h"
 #include "beebit.h"
 #include "kernel.h"
 #include "swis.h"
@@ -25,7 +26,6 @@ int adc_resolution;
 int adc_status;
 int adc_highbyte;
 int adc_lowbyte;
-int adc_timer; /*adc timer*/
 static int adc_suppressfirst;
 static int adc_x_osunits;
 static int adc_y_osunits;
@@ -39,7 +39,7 @@ void adcreset(void)
   adc_resolution = 0;
   adc_highbyte = 0;
   adc_lowbyte = 0;
-  adc_timer = 0;
+  adc_cyclestogo = 0;
 }
 
 void adcenter(void)
@@ -78,6 +78,13 @@ void adcmodevars(void)
     adc_y_osunits = (yres<<yeig);
     adc_input_y_low = (adc_y_osunits>>1)-255;
   }
+}
+
+int adcatzerocycles(void)
+{
+  adcpoll();
+
+  return 0;
 }
 
 void adcpoll(void)
@@ -209,7 +216,9 @@ void adcwrite(int naddress,int nvalue)
   /*not complete*/
   adc_status |= 0x80;
   if (adc_resolution)
-    adc_timer +=  10000;
+    adc_cyclestogo =  10000<<1;
   else
-    adc_timer +=  4000;
+    adc_cyclestogo =   4000<<1;
+  adc_cyclestogo += r6502_cyclesoriginal - r6502_cyclestogo;
+  limitcyclestogo(adc_cyclestogo);
 }

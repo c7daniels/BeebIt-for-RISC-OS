@@ -21,9 +21,10 @@
 #define ADFS_INTERLEAVED 0x11 /*interleaved*/
 
 extern int w1770_initialised;
-extern int w1770_timer;
+extern int w1770_cyclestogo;
 
 extern void w1770reset(void);
+extern int w1770atzerocycles(void);
 extern int w1770getsectorcount(FILE *hfile);
 extern int w1770getimagetype(FILE *hfile, int nsectorcount);
 extern void w1770poll(void);

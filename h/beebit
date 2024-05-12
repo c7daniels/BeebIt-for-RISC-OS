@@ -127,7 +127,6 @@ extern int beebit_memorymap; /*flags for memory/shadow swapping*/
 extern int beebit_vdusel; /*VDUSEL (0x80) for B+, D (0x01) for Master 128*/
 extern int beebit_leds,host_leds;
 extern int beebit_rommask;
-extern int beebit_yield;
 extern int beebit_exit;
 
 extern int beebit_irq;
@@ -136,10 +135,10 @@ extern int beebit_oldnmi;
 
 extern void copyselectedromintomemory(void);
 extern int loadrom(char *cfilename,int nslot);
-extern void updateviatimers(int ncycles);
-extern void updateothertimers(int ncycles);
-extern void updatetimers(void);
 extern void updatekeyboard(void);
+extern void startperipheralreset(int full);
+extern void endperipheralreset(void);
+extern void limitcyclestogo(int limit);
 extern int beebitsectorcount(FILE *hfile);
 extern int beebitimagedsd(int nimagetype);
 extern int beebitimagetype(FILE *hfile, int nsectorcount);
@@ -149,5 +148,4 @@ extern int beebitmain(void);
 extern void beebitclosedown(void);
 extern int beebitenter(void);
 extern void beebitpoll(void);
-extern void beebitbreak(void);
 extern void beebitexit(void);

@@ -66,20 +66,12 @@ int llargecursor,lteletextmode;
 int ncurrentmode;
 /*char npalettevalue;*/
 
-void videoulareset(int lfull)
+void videoulareset(void)
 {
   videoula_palettevalue = 0;
   lteletextmode = TRUE;
-  if (lfull)
-  {
-    video_mode = -1;
-    ncurrentmode = -1;
-  }
-  /*else
-  {
-    video_mode = 7;
-    ncurrentmode = -1;
-  }*/
+  video_mode = -1;
+  ncurrentmode = -1;
   cursor_width = 0;
 }
 

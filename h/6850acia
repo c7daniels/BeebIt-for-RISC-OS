@@ -14,12 +14,13 @@
 #define PARITY_EVEN 2
 
 extern int m6850_bits, m6850_parity, m6850_stop;
-extern int m6850_timer;
 extern int m6850_timerreset;
+extern int m6850_cyclestogo;
 
 extern char uef_buffer[0xFF];
 
 extern void aciareset(void);
+extern int aciaatzerocycles(void);
 extern void aciapoll(void);
 extern void aciaresettimer(void);
 extern char aciaread(int naddress);

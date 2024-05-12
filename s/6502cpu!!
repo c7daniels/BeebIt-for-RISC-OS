@@ -300,22 +300,34 @@
   IMPORT |r6502_cyclestogo|
   IMPORT |r6502workspace|
   IMPORT |r6502busop|
+  IMPORT |r6502wait|
   IMPORT |beebit_trace|
   IMPORT |beebit_romsel|
   IMPORT |beebit_acccon|
   IMPORT |lbreak|
-  IMPORT |beebitbreak|
+  IMPORT |startperipheralreset|
+  IMPORT |endperipheralreset|
+  IMPORT |systemviaatzerocycles|
+  IMPORT |userviaatzerocycles|
+  IMPORT |i8271atzerocycles|
+  IMPORT |w1770atzerocycles|
+  IMPORT |adcatzerocycles|
+  IMPORT |aciaatzerocycles|
+  IMPORT |videoatzerocycles|
 
 ; Export global symbols
 
+  EXPORT |r6502startyield|
   EXPORT |r6502startinterrupt|
   EXPORT |r6502execute|
-  EXPORT |r6502intoyield|
   EXPORT |r6502intohalt|
   EXPORT |r6502intointerrupt|
   EXPORT |r6502cancelinterrupt|
-  EXPORT |r6502resetother|
+  EXPORT |r6502startperipheralreset|
+  EXPORT |r6502endperipheralreset|
   EXPORT |r6502fetch|
+  EXPORT |r6502atzerocycles|
+  EXPORT |r6502cyclenotask|
   EXPORT |r6502cyclestretch|
   EXPORT |r6502fivenop|
   EXPORT |r6502nop|
@@ -406,6 +418,12 @@
 ;rockwell 6502 cpu
 ;
 
+|r6502startyield|
+  STMFD sp!,{r11-r12,lr}
+  LDR r12,=r6502workspace
+  BL r6502intoyield
+  LDMFD sp!,{r11-r12,pc}
+
 |r6502startinterrupt|
   STMFD sp!,{r11-r12,lr}
   LDR r12,=r6502workspace
@@ -441,17 +459,6 @@
   ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS
   LDMIA r3,{r4-r9,sl,fp,pc}
 
-|r6502intoyield|
-  LDR r2,[r12,#:INDEX:R6502_FETCHACTION]
-  LDR r3,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
-  CMP r2,r3
-  LDR r2,[r12,#:INDEX:R6502_YIELDACTION]
-  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
-  BNE r6502busop
-  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
-  R6502CHECKBREAK
-  B r6502busop
-
 |r6502intohalt|
   SUB rpc,rpc,#&10000
   LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
@@ -474,6 +481,18 @@ r6502intohalt2
   R6502CHECKBREAK
   R6502ENDINSTRUCTION
 
+|r6502intoyield|
+  LDR r12,=r6502workspace
+  LDR r2,[r12,#:INDEX:R6502_FETCHACTION]
+  LDR r3,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  CMP r2,r3
+  LDR r2,[r12,#:INDEX:R6502_YIELDACTION]
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK2]
+  MOVNE pc,lr
+  STR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  R6502CHECKBREAK
+  MOV pc,lr
+
 |r6502intointerrupt|
   LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
   LDR r3,[r12,#:INDEX:R6502_FETCHACTION]
@@ -493,12 +512,23 @@ r6502intohalt2
   R6502CHECKBREAK
   MOV pc,lr
 
-|r6502resetother|
+|r6502startperipheralreset|
   STR lr,[r12,#:INDEX:R6502_CALLTEMP]
   BL r6502saveregs
   ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS+24
   LDMIA r3,{sl,fp}
-  BL beebitbreak
+  MOV r0,#0
+  BL startperipheralreset
+  LDR r12,=r6502workspace
+  BL r6502loadregs
+  LDR pc,[r12,#:INDEX:R6502_CALLTEMP]
+
+|r6502endperipheralreset|
+  STR lr,[r12,#:INDEX:R6502_CALLTEMP]
+  BL r6502saveregs
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS+24
+  LDMIA r3,{sl,fp}
+  BL endperipheralreset
   LDR r12,=r6502workspace
   BL r6502loadregs
   LDR pc,[r12,#:INDEX:R6502_CALLTEMP]
@@ -512,27 +542,142 @@ r6502instruction
   ADD rpc,rpc,#&10000
   LDR pc,[r2,r0,LSL#2]
 
+|r6502cyclenotask|
+  LDR pc,[r12,#:INDEX:R6502_CONTINUATION]
+
+|r6502atzerocycles|
+  STR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  STMIA r3,{r0-r1,r4-r5}
+  ADD r3,r12,#:INDEX:R6502_SAVEDREGISTERS+24
+  LDMIA r3,{sl,fp}
+
+  LDR r4,[r12,#:INDEX:R6502_CYCLESORIGINAL]
+  MOV r5,#&10000
+
+  TST r4,#1
+  LDR r0,[r12,#:INDEX:R6502_CYCLESMONOTONIC]
+  LDRNE r1,[r12,#:INDEX:R6502_CYCLE]
+  ADD r0,r0,r4
+  EORNE r1,r1,#1
+  STR r0,[r12,#:INDEX:R6502_CYCLESMONOTONIC]
+  MOV r0,#0
+  STRNE r1,[r12,#:INDEX:R6502_CYCLE]
+  STR r0,[r12,#:INDEX:R6502_CYCLESORIGINAL]
+
+  LDR r0,[r12,#:INDEX:SYSVIA_CYCLESTOGO]
+  SUBS r2,r0,r4
+  MOVPL r0,r2
+  ADDNE pc,pc,#8-4
+  BL systemviaatzerocycles
+  LDR r12,=r6502workspace
+  SUB r2,r0,#1
+  STR r0,[r12,#:INDEX:SYSVIA_CYCLESTOGO]
+  CMP r2,r5
+  MOVLO r5,r0
+
+  LDR r0,[r12,#:INDEX:USRVIA_CYCLESTOGO]
+  SUBS r2,r0,r4
+  MOVPL r0,r2
+  ADDNE pc,pc,#8-4
+  BL userviaatzerocycles
+  LDR r12,=r6502workspace
+  SUB r2,r0,#1
+  STR r0,[r12,#:INDEX:USRVIA_CYCLESTOGO]
+  CMP r2,r5
+  MOVLO r5,r0
+
+  LDR r0,[r12,#:INDEX:I8271_CYCLESTOGO]
+  SUBS r2,r0,r4
+  MOVPL r0,r2
+  ADDNE pc,pc,#8-4
+  BL i8271atzerocycles
+  LDR r12,=r6502workspace
+  SUB r2,r0,#1
+  STR r0,[r12,#:INDEX:I8271_CYCLESTOGO]
+  CMP r2,r5
+  MOVLO r5,r0
+
+  LDR r0,[r12,#:INDEX:W1770_CYCLESTOGO]
+  SUBS r2,r0,r4
+  MOVPL r0,r2
+  ADDNE pc,pc,#8-4
+  BL w1770atzerocycles
+  LDR r12,=r6502workspace
+  SUB r2,r0,#1
+  STR r0,[r12,#:INDEX:W1770_CYCLESTOGO]
+  CMP r2,r5
+  MOVLO r5,r0
+
+  LDR r0,[r12,#:INDEX:ADC_CYCLESTOGO]
+  SUBS r2,r0,r4
+  MOVPL r0,r2
+  ADDNE pc,pc,#8-4
+  BL adcatzerocycles
+  LDR r12,=r6502workspace
+  SUB r2,r0,#1
+  STR r0,[r12,#:INDEX:ADC_CYCLESTOGO]
+  CMP r2,r5
+  MOVLO r5,r0
+
+  LDR r0,[r12,#:INDEX:M6850_CYCLESTOGO]
+  SUBS r2,r0,r4
+  MOVPL r0,r2
+  ADDNE pc,pc,#8-4
+  BL aciaatzerocycles
+  LDR r12,=r6502workspace
+  SUB r2,r0,#1
+  STR r0,[r12,#:INDEX:M6850_CYCLESTOGO]
+  CMP r2,r5
+  MOVLO r5,r0
+
+  LDR r0,[r12,#:INDEX:VIDEO_CYCLESTOGO]
+  SUBS r2,r0,r4
+  MOVPL r0,r2
+  ADDNE pc,pc,#8-4
+  BL videoatzerocycles
+  LDR r12,=r6502workspace
+  SUB r2,r0,#1
+  STR r0,[r12,#:INDEX:VIDEO_CYCLESTOGO]
+  CMP r2,r5
+  MOVLO r5,r0
+  
+  MOV rcycles,r5
+  STR r5,[r12,#:INDEX:R6502_CYCLESORIGINAL]
+
+  ADD r3,r12,#:INDEX:R6502_CALLTEMP
+  LDMIA r3,{r0-r1,r4-r5}
+  
+  STR rcycles,[r12,#:INDEX:R6502_CYCLESTOGO]
+  TST rps,#IFLAG
+  LDRNE pc,[r12,#:INDEX:R6502_CYCLELINK]
+  LDR r2,[r12,#:INDEX:R6502_BEEBITIRQ]
+  TST r2,r2
+  LDREQ pc,[r12,#:INDEX:R6502_CYCLELINK]
+  LDR r2,[r12,#:INDEX:R6502_INSTRUCTIONLINK]
+  LDR r3,[r12,#:INDEX:R6502_INTERRUPTACTION]
+  CMP r2,r3
+  BLNE r6502intointerrupt
+  LDR pc,[r12,#:INDEX:R6502_CYCLELINK]
+
 |r6502cyclestretch|
-  LDR r2,[r12,#:INDEX:R6502_CYCLE]
-  LDR r3,[r12,#:INDEX:R6502_CYCLESORIGINAL]
-  EOR r2,r2,rcycles
-  EOR r2,r2,r3
+  LDR r2,[r12,#:INDEX:R6502_CYCLESORIGINAL]
+  SUB r2,r2,rcycles
+  LDR r3,[r12,#:INDEX:R6502_CYCLE]
+  ADD r2,r2,r3
+  ADD r1,r1,#R6502_STRETCHCODE-R6502_READCODE
   TST r2,#1
-  LDRNE r2,=r6502cyclestretch2
-  LDREQ r2,=r6502cyclestretchdone
+  LDRNE r2,[r12,#:INDEX:R6502_STRETCHLINK]
+  LDREQ r2,=r6502wait
   AND r3,r1,#&F000000F
   STR r2,[r12,r3,ROR #26]
-  R6502NEXTCYCLE_BASE
+  R6502NEXTCYCLE r6502cyclestretch2
 
 r6502cyclestretch2
-  LDR r2,=r6502cyclestretchdone
+  LDR r2,[r12,#:INDEX:R6502_STRETCHLINK]
   AND r3,r1,#&F000000F
   STR r2,[r12,r3,ROR #26]
-  R6502NEXTCYCLE_BASE
-
-r6502cyclestretchdone
-  SUB r1,r1,#R6502_STRETCHCODE-R6502_READCODE
-  LDR pc,[r12,#:INDEX:R6502_STRETCHLINK]
+  R6502NEXTCYCLE r6502cyclestretch2
 
 |r6502fivenop|
   R6502NEXTCYCLE r6502fournop

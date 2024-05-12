@@ -354,7 +354,7 @@ char sheilaread_b(int naddress)
       /*&FE60-&FE7F*/
       #ifdef __DEBUG__
         if (beebit_trace)
-          fprintf(htrace,"readuservia(&%X)",(naddress & 0x0F));
+          fprintf(htrace,"userviaread(&%X)",(naddress & 0x0F));
       #endif
       nresult = userviaread(naddress);
       break;
@@ -377,7 +377,6 @@ char sheilaread_b(int naddress)
           r6502donmi();
         #endif
       }
-      beebit_oldnmi = beebit_nmi;
       #ifdef __DEBUG__
         fprintf(htrace,"read8271(&%X)=&%X\n",(naddress & 0x0F),nresult);
       #endif
@@ -537,7 +536,7 @@ char sheilaread_bp(int naddress)
       /*&FE60-&FE7F*/
       #ifdef __DEBUG__
         if (beebit_trace)
-          fprintf(htrace,"readuservia(&%X)",(naddress & 0x0F));
+          fprintf(htrace,"userviaread(&%X)",(naddress & 0x0F));
       #endif
       nresult = userviaread(naddress);
       break;
@@ -715,7 +714,7 @@ char sheilaread_m(int naddress)
       /*&FE60-&FE7F*/
       #ifdef __DEBUG__
         if (beebit_trace)
-          fprintf(htrace,"readuservia(&%X)",(naddress & 0x0F));
+          fprintf(htrace,"userviaread(&%X)",(naddress & 0x0F));
       #endif
       nresult = userviaread(naddress);
       break;
@@ -737,7 +736,6 @@ char sheilaread_m(int naddress)
           r6502donmi();
         #endif
       }
-      beebit_oldnmi = beebit_nmi;
       break;
     case 0xA0:
     case 0xA4:
@@ -893,7 +891,7 @@ void sheilawrite_b(int naddress, char nvalue)
       /*&FE60 - &FE7F (USERVIA)*/
       #ifdef __DEBUG__
         if (beebit_trace)
-          fprintf(htrace,"writeuservia(&%X,&%X)",(naddress & 0x0F),nvalue);
+          fprintf(htrace,"userviawrite(&%X,&%X)",(naddress & 0x0F),nvalue);
       #endif
       userviawrite(naddress, nvalue);
       break;
@@ -919,7 +917,6 @@ void sheilawrite_b(int naddress, char nvalue)
           r6502donmi();
         #endif
       }
-      beebit_oldnmi = beebit_nmi;
       break;
     case 0xC0:
     case 0xC4:
@@ -1082,7 +1079,7 @@ void sheilawrite_bp(int naddress, char nvalue)
       /*&FE60 - &FE7F (USERVIA)*/
       #ifdef __DEBUG__
         if (beebit_trace)
-          fprintf(htrace,"writeuservia(&%X,&%X)",(naddress & 0x0F),nvalue);
+          fprintf(htrace,"userviawrite(&%X,&%X)",(naddress & 0x0F),nvalue);
       #endif
       userviawrite(naddress, nvalue);
       break;
@@ -1307,7 +1304,7 @@ void sheilawrite_m(int naddress, char nvalue)
       /*&FE60 - &FE7F (USERVIA)*/
       #ifdef __DEBUG__
         if (beebit_trace)
-          fprintf(htrace,"writeuservia(&%X,&%X)",(naddress & 0x0F),nvalue);
+          fprintf(htrace,"userviawrite(&%X,&%X)",(naddress & 0x0F),nvalue);
       #endif
       userviawrite(naddress, nvalue);
       break;
@@ -1329,7 +1326,6 @@ void sheilawrite_m(int naddress, char nvalue)
           r6502donmi();
         #endif
       }
-      beebit_oldnmi = beebit_nmi;
       break;
     case 0xC0:
     case 0xC4:
