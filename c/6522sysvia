@@ -33,8 +33,6 @@
 /*extern char keymap[0x100];*/
 extern _kernel_swi_regs regs;
 
-/*extern int r6502_cyclecount;*/
-
 /*System VIA*/
 char r6522sysvia_orb; /*output register B*/
 char r6522sysvia_irb; /*input register B*/
@@ -42,14 +40,9 @@ char r6522sysvia_ora; /*output register A*/
 char r6522sysvia_ira; /*input register A*/
 char r6522sysvia_ddrb; /*0 bit means input, 1 means output*/
 char r6522sysvia_ddra; /*0 bit means input, 1 means output*/
-char r6522sysvia_t1cl; /*T1 low order counter*/
-char r6522sysvia_t1ch; /*T1 high order counter*/
 char r6522sysvia_t1ll; /*T1 low order latch*/
 char r6522sysvia_t1lh; /*T1 high order latch*/
-char r6522sysvia_t2cl; /*T2 low order counter*/
-char r6522sysvia_t2ch; /*T2 high order counter*/
 char r6522sysvia_t2ll; /*T2 low order latch*/
-char r6522sysvia_t2lh; /*T2 high order latch*/
 char r6522sysvia_sr; /*status register*/
 char r6522sysvia_acr;
 char r6522sysvia_pcr;
@@ -58,12 +51,12 @@ char r6522sysvia_ier;
 /*these variables contain the actual values on the lines...*/
 char r6522sysvia_porta;
 char r6522sysvia_portb;
-int r6522sysvia_t1; /*timer 1 (used for speed)*/
-int r6522sysvia_t2; /*timer 2 (used for speed)*/
+int r6522sysvia_2t1; /*left-shifted timer 1 (used for speed)*/
+int r6522sysvia_2t2; /*left-shifted timer 2 (used for speed)*/
 int r6522sysvia_t1setint; /*set interrupt when timer1 reaches 0*/
 int r6522sysvia_t2setint; /*set interrupt when timer2 reaches 0*/
 /*int r6522sysvia_irq;*/ /*irq interrupt status*/
-int r6522sysvia_tick;
+int r6522sysvia_aftert1 = 0;
 
 int video_baseaddress;
 char video_startindex; /*screen start index (system via)*/
@@ -243,13 +236,13 @@ void systemviasetirq(void)
       fprintf(htrace,"SV IRQ=&FF\n");*/
     r6522sysvia_ifr |= 0x80;
     /*r6522sysvia_irq = TRUE;*/
-    beebit_irq |= IRQ_6522SYSVIA;
+    r6502.irq |= IRQ_6522SYSVIA;
   }
   else
   {
     r6522sysvia_ifr &= 0x7F;
     /*r6522sysvia_irq = FALSE;*/
-    beebit_irq &= IRQ_NOT6522SYSVIA;
+    r6502.irq &= IRQ_NOT6522SYSVIA;
   }
 }
 
@@ -319,14 +312,110 @@ void systemviakeyca2(void)
   /*systemviasetirq();
 }*/
 
-void systemviasett1t2(int ncycles)
+static int systemviapickcyclestogo(void)
+{
+  int cyclestogo;
+
+  if (!(r6522sysvia_acr & 0x20))
+  {
+    if (r6522sysvia_2t1 < r6522sysvia_2t2)
+    {
+      cyclestogo = r6522sysvia_2t1 + 2;
+    }
+    else
+    {
+      cyclestogo = r6522sysvia_2t2 + 2;
+    }
+  }
+  else
+  {
+    cyclestogo = r6522sysvia_2t1 + 2;
+  }
+
+  if (r6522sysvia_aftert1)
+  {
+    cyclestogo = 1;
+  }
+
+  return cyclestogo;
+}
+
+void systemviareset(void)
+{
+  int expiryoffset;
+  TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &r6502, r6522sysvia)
+
+  r6522sysvia_2t1 = expiryoffset;
+  r6522sysvia_2t2 = expiryoffset;
+  r6522sysvia_sr = 0;
+
+  /*if ier is set to none, a hard reset will be done*/
+  r6522sysvia_ier = 0x80;
+
+  r6522sysvia_ifr = 0x00;
+  r6522sysvia_ddra = 0; /*input*/
+  r6522sysvia_ddrb = 0; /*input*/
+  r6522sysvia_t1ll = 0xFF;
+  r6522sysvia_t1lh = 0xFF;
+  r6522sysvia_t2ll = 0xFF;
+  r6522sysvia_acr = 0;
+  r6522sysvia_pcr = 0;
+  r6522sysvia_ora = 0xFF;
+  r6522sysvia_ira = 0xFF;
+  r6522sysvia_orb = 0xFF;
+  r6522sysvia_irb = 0xFF;
+  r6522sysvia_porta = 0xFF;
+  r6522sysvia_portb = 0xFF;
+
+  r6522sysvia_aftert1 = FALSE;
+  r6522sysvia_t1setint = FALSE;
+  r6522sysvia_t2setint = FALSE;
+
+  lsoundlatch = FALSE;
+  systemviasetirq();
+  video_baseaddress = 0;
+  video_startindex = 0;
+
+  r6502.timers.r6522sysvia_togo = systemviapickcyclestogo();
+  r6502.timers.r6522sysvia_original = r6502.timers.r6522sysvia_togo;
+
+  TIMER_LIMIT_CYCLES_TO_GO(&r6502, r6502.timers.r6522sysvia_togo)
+}
+
+void systemviabeforesnapshot(void)
+{
+  int expiryoffset;
+  TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &r6502, r6522sysvia)
+
+  r6522sysvia_2t1 -= expiryoffset;
+  if (!(r6522sysvia_acr & 0x20))
+  {
+    /*one-shot mode*/
+    r6522sysvia_2t2 -= expiryoffset;
+  }
+}
+
+void systemviaaftersnapshot(void)
+{
+  int expiryoffset;
+  TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &r6502, r6522sysvia)
+
+  r6522sysvia_2t1 += expiryoffset;
+  TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&r6502, r6522sysvia, r6522sysvia_2t1 + 2)
+  if (!(r6522sysvia_acr & 0x20))
+  {
+    /*one-shot mode*/
+    r6522sysvia_2t2 = expiryoffset;
+    TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&r6502, r6522sysvia, r6522sysvia_2t2 + 2)
+  }
+}
+
+R6502WORKSPACE* systemviaatzerocycles(R6502WORKSPACE* w)
 {
   /*we are dealing with a 1MHz device here*/
-  int lflag = FALSE;
+  r6522sysvia_2t1 -= w->timers.r6522sysvia_original;
 
-  r6522sysvia_t1 -= ncycles;
-
-  if (r6522sysvia_t1 < 0)
+  if (r6522sysvia_2t1 == -2)
   {
     switch (r6522sysvia_acr & 0xC0)
     {
@@ -335,8 +424,6 @@ void systemviasett1t2(int ncycles)
         /*timed interrupt each time T1 is loaded*/
         if (r6522sysvia_t1setint)
         {
-          /*r6522sysvia_orb ^= 0x80;
-          r6522sysvia_irb ^= 0x80;*/
           /*T1 interrupt flag set*/
           r6522sysvia_ifr |= 0x40;
           r6522sysvia_t1setint = FALSE;
@@ -345,6 +432,7 @@ void systemviasett1t2(int ncycles)
       case 0x40:
         /*output disabled and free-run mode*/
         /*continuous interrupts*/
+        /*ELITE uses this one*/
          if (r6522sysvia_t1setint)
           /*T1 interrupt flag set*/
           r6522sysvia_ifr |= 0x40;
@@ -355,8 +443,7 @@ void systemviasett1t2(int ncycles)
         if (r6522sysvia_t1setint)
         {
           /*PB7 goes high*/
-          /*r6522sysvia_orb ^= 0x80;
-          r6522sysvia_irb ^= 0x80;*/
+          r6522sysvia_portb |= 0x80;
           /*T1 interrupt flag set*/
           r6522sysvia_ifr |= 0x40;
           r6522sysvia_t1setint = FALSE;
@@ -365,76 +452,31 @@ void systemviasett1t2(int ncycles)
       case 0xC0:
         /*output enabled and free-run mode*/
         /*continuous interrupts*/
+        r6522sysvia_portb ^= 0x80;
         if (r6522sysvia_t1setint)
           /*T1 interrupt flag set*/
           r6522sysvia_ifr |= 0x40;
         break;
     }
-  }
 
-  if (r6522sysvia_t1 < -1)
+    r6522sysvia_2t1 += 0x20000;
+    r6522sysvia_aftert1 = TRUE;
+  }
+  else if (r6522sysvia_aftert1)
   {
-    /*it takes 1 1MHz cycle when the timer crosses the boundary*/
-    /*it takes 1 1MHz cycle to transfer the latches to the counter*/
-    switch (r6522sysvia_acr & 0xC0)
+    if (r6522sysvia_acr & 0x40)
     {
-      case 0x00:
-        /*output disabled and one-shot mode*/
-        /*timed interrupt each time T1 is loaded*/
-        /*roll the timers over*/
-        /*r6522sysvia_t1 &= 0xFFFF;*/
-        while (r6522sysvia_t1 < 0)
-          r6522sysvia_t1 += ((r6522sysvia_t1lh<<8) | r6522sysvia_t1ll) + 2;
-        break;
-      case 0x40:
-        /*output disabled and free-run mode*/
-        /*continuous interrupts*/
-        /*ELITE uses this one*/
-        while (r6522sysvia_t1 < 0)
-          r6522sysvia_t1 += ((r6522sysvia_t1lh<<8) | r6522sysvia_t1ll) + 2;
-        break;
-      case 0x80:
-        /*output enabled and one-shot mode*/
-        /*timed interrupt each time T1 is loaded*/
-        /*if (r6522sysvia_ddrb & 0x80)*/
-          r6522sysvia_portb |= 0x80;
-        /*roll the timers over*/
-        /*r6522sysvia_t1 &= 0xFFFF;*/
-        while (r6522sysvia_t1 < 0)
-          r6522sysvia_t1 += ((r6522sysvia_t1lh<<8) | r6522sysvia_t1ll) + 2;
-        break;
-      case 0xC0:
-        /*output enabled and free-run mode*/
-        /*continuous interrupts*/
-        /*squarewave output on PB7*/
-        /*if (r6522sysvia_ddrb & 0x80)*/
-          r6522sysvia_portb ^= 0x80;
-        /*r6522sysvia_t1 &= 0xFFFF;*/
-        /*r6522sysvia_t1 = ((r6522sysvia_t1lh<<8) | r6522sysvia_t1ll) + 2;*/
-        while (r6522sysvia_t1 < 0)
-          r6522sysvia_t1 += ((r6522sysvia_t1lh<<8) | r6522sysvia_t1ll) + 2;
-        break;
+      r6522sysvia_2t1 = (r6522sysvia_t1lh<<9) | (r6522sysvia_t1ll<<1) + 1;
     }
-    #ifdef __DEBUG__
-      fprintf(htrace,"T1=&%X IFR=&%X IER=&%X",r6522sysvia_t1,r6522sysvia_ifr,r6522sysvia_ier);
-    #endif
-    lflag = TRUE;
-    /*envelopes processed on timer1*/
-    /*soundprocess();*/
+    r6522sysvia_aftert1 = 0;
   }
 
   if (!(r6522sysvia_acr & 0x20))
   {
-    /*one shot mode only*/
-    /*decrement counter by 6502 system clock cycles*/
-    r6522sysvia_t2 -= ncycles;
-    if (r6522sysvia_t2 < -1)
-    {
-      r6522sysvia_t2 &= 0xFFFF;
-      #ifdef __DEBUG__
-        fprintf(htrace,"T2=&%X ",r6522sysvia_t2);
-      #endif
+    r6522sysvia_2t2 -= w->timers.r6522sysvia_original;
 
+    if (r6522sysvia_2t2 == -2)
+    {
       if (r6522sysvia_t2setint)
       {
         /*on completion of the timing interval,
@@ -442,83 +484,21 @@ void systemviasett1t2(int ncycles)
         r6522sysvia_ifr |= 0x20;
         r6522sysvia_t2setint=FALSE;
       }
-      lflag = TRUE;
+
+      r6522sysvia_2t2 += 0x20000;
     }
   }
- else
-  {
-    if (r6522sysvia_portb & 0x40)
-    {
-      /*decrement counter by 1MHz clock cycles*/
-      r6522sysvia_t2 -= ncycles;
-      if (r6522sysvia_t2 < 0)
-      {
-        r6522sysvia_t2 &= 0xFFFF;
-        /*r6502_cyclestogo -= 2;*/
-        /*while (r6522sysvia_t2 < 0)
-          r6522sysvia_t2 += ((r6522sysvia_t2lh<<8) | r6522sysvia_t2ll) + 2;*/
-        if (r6522sysvia_t2setint)
-        {
-          /*on completion of the timing interval,
-            T2 interrupt flag is set (IFR b5)*/
-          r6522sysvia_ifr |= 0x20;
-          r6522sysvia_t2setint = FALSE;
-        }
-        lflag = TRUE;
-      }
-    }
-  }
-  if (lflag)
-    systemviasetirq();
-}
 
-void systemviareset(int lfull)
-{
-  if (lfull)
-  {
-    /*if ier is set, a hard reset will be done*/
-    r6522sysvia_ier = 0x80;
-  }
-  r6522sysvia_ifr = 0x00;
-  r6522sysvia_ddra = 0; /*input*/
-  r6522sysvia_ddrb = 0; /*input*/
-  r6522sysvia_t1ll = 0xFF;
-  r6522sysvia_t1lh = 0xFF;
-  r6522sysvia_t2ll = 0xFF;
-  r6522sysvia_t2lh = 0xFF;
-  r6522sysvia_acr = 0;
-  r6522sysvia_pcr = 0;
-  r6522sysvia_ora = 0xFF;
-  r6522sysvia_ira = 0xFF;
-  r6522sysvia_orb = 0xFF;
-  r6522sysvia_irb = 0xFF;
-  r6522sysvia_porta = 0xFF;
-  r6522sysvia_portb = 0xFF;
+  w->timers.r6522sysvia_togo = w->timers.r6522sysvia_original = systemviapickcyclestogo();
 
-  r6522sysvia_t1 = 0x10000; /*1FFFF;*/
-  r6522sysvia_t2 = 0x10000; /*1FFFF*/
-
-  r6522sysvia_t1setint = FALSE;
-  r6522sysvia_t2setint = FALSE;
-  lsoundlatch = FALSE;
   systemviasetirq();
-  video_baseaddress = 0;
-  video_startindex = 0;
-  r6522sysvia_tick = 0;
+  return w;
 }
 
 char systemviaread(int naddress)
 {
-  int ntotal;
   char nresult;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
+  int cyclecount;
 
   switch (naddress & 0x0F)
   {
@@ -526,9 +506,8 @@ char systemviaread(int naddress)
       /*input/output reg b*/
       /*r6522sysvia_pcr & 0x20 = CB2 input*/
       /*r6522sysvia_pcr & 0x40 = CB2 active edge input*/
-      /*updatetimers();*/
       /*independant mode*/
-      if ((r6522sysvia_pcr & 0xE0 == 0x20) OR (r6522sysvia_pcr & 0xE0 == 0x60))
+      if (((r6522sysvia_pcr & 0xE0) == 0x20) OR ((r6522sysvia_pcr & 0xE0) == 0x60))
       {
         /*clear b4 (CB1)*/
         r6522sysvia_ifr &= 0xEF;
@@ -568,8 +547,7 @@ char systemviaread(int naddress)
       /*input/output reg a*/
       /*r6522sysvia_pcr & 0x02 = CA2 input*/
       /*r6522sysvia_pcr & 0x04 = CA2 active edge input*/
-      updatetimers();
-      if ((r6522sysvia_pcr & 0x0E == 0x02) OR (r6522sysvia_pcr & 0x0E == 0x06))
+      if (((r6522sysvia_pcr & 0x0E) == 0x02) OR ((r6522sysvia_pcr & 0x0E) == 0x06))
       {
         /*independant interrupt*/
         /*clear b2 (CA1)*/
@@ -614,24 +592,16 @@ char systemviaread(int naddress)
       break;
     case 0x04:
       /*T1 low order counter*/
-      updatetimers();
-      /*if (r6522sysvia_t1 < 0)
-        r6522sysvia_t1cl = 0x00;
-      else*/
-        r6522sysvia_t1cl = (r6522sysvia_t1 & 0xFF);
       /*T1 interrupt flag is reset (IFR b6)*/
       r6522sysvia_ifr &= 0xBF;
       systemviasetirq();
-      nresult = r6522sysvia_t1cl;
+      TIMER_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, &r6502, r6522sysvia)
+      nresult = ((r6522sysvia_2t1 - cyclecount)>>1)&0xFF;
       break;
     case 0x05:
       /*T1 high order counter*/
-      updatetimers();
-      /*if (r6522sysvia_t1 < 0)
-        r6522sysvia_t1ch = 0xFF;
-      else*/
-        r6522sysvia_t1ch = ((r6522sysvia_t1 >> 8) & 0xFF);
-      nresult = r6522sysvia_t1ch;
+      TIMER_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, &r6502, r6522sysvia)
+      nresult = ((r6522sysvia_2t1 - cyclecount)>>9)&0xFF;
       break;
     case 0x06:
       /*T1 low order latch*/
@@ -643,29 +613,34 @@ char systemviaread(int naddress)
       break;
     case 0x08:
       /*T2 low order counter*/
-      updatetimers();
-      /*if (r6522sysvia_t2 < 0)
-        r6522sysvia_t2cl = 0xFF;
-      else*/
-        r6522sysvia_t2cl = (r6522sysvia_t2 & 0xFF);
       /*T2 interrupt flag is cleared (IFR b5)*/
       r6522sysvia_ifr &= 0xDF;
       systemviasetirq();
-      nresult = r6522sysvia_t2cl;
+      if (!(r6522sysvia_acr & 0x20))
+      {
+        TIMER_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, &r6502, r6522sysvia)
+        nresult = ((r6522sysvia_2t2 - cyclecount)>>1)&0xFF;
+      }
+      else
+      {
+        nresult = (r6522sysvia_2t2>>1)&0xFF;
+      }
       break;
     case 0x09:
       /*T2 high order counter*/
-      updatetimers();
-      /*if (r6522sysvia_t2 < 0)
-        r6522sysvia_t2ch = 0xFF;
-      else*/
-        r6522sysvia_t2ch = ((r6522sysvia_t2 >> 8) & 0xFF);
-      nresult = r6522sysvia_t2ch;
+      if (!(r6522sysvia_acr & 0x20))
+      {
+        TIMER_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, &r6502, r6522sysvia)
+        nresult = ((r6522sysvia_2t2 - cyclecount)>>9)&0xFF;
+      }
+      else
+      {
+        nresult = (r6522sysvia_2t2>>9)&0xFF;
+      }
       break;
     case 0x0A:
       /*shift register*/
       /*SR interrupt flag is cleared (IFR b2)*/
-      updatetimers();
       r6522sysvia_ifr &= 0xFB;
       systemviasetirq();
       nresult = r6522sysvia_sr;
@@ -682,7 +657,6 @@ char systemviaread(int naddress)
       /*interrupt flag reg*/
       /*b7 of this register will be read as a logic 1*/
       /*when an interrupt exists within the chip*/
-      updatetimers();
       systemviasetirq();
       nresult = r6522sysvia_ifr;
       break;
@@ -692,7 +666,6 @@ char systemviaread(int naddress)
       break;
     case 0x0F:
       /*input output reg a*/
-      updatetimers();
       if (r6522sysvia_acr & 0x01)
       {
         /*input latching enabled*/
@@ -752,28 +725,19 @@ char systemviaread(int naddress)
 
 void systemviawrite(int naddress, char nvalue)
 {
-  int ntotal;
   int nlatch,lenabled;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
+  int expiryoffset;
 
   switch (naddress & 0x0F)
   {
     case 0x00:
       /*input/output reg b*/
-      updatetimers();
       r6522sysvia_orb = nvalue;
       r6522sysvia_portb = (r6522sysvia_orb & r6522sysvia_ddrb) | (r6522sysvia_portb & ~r6522sysvia_ddrb);
       /*PCR & 0x20 = CB2 input*/
       /*PCR & 0x40 = CB2 active edge input*/
       /*independant mode*/
-      if ((r6522sysvia_pcr & 0xE0 == 0x20) OR (r6522sysvia_pcr & 0xE0 == 0x60))
+      if (((r6522sysvia_pcr & 0xE0) == 0x20) OR ((r6522sysvia_pcr & 0xE0) == 0x60))
       {
         /*clear b4 (CB1)*/
         r6522sysvia_ifr &= 0xEF;
@@ -793,8 +757,10 @@ void systemviawrite(int naddress, char nvalue)
           /*sound write enable*/
           if (lenabled AND !lsoundlatch)
           {
+#ifdef __RISCOS__
             if (beebit_sound)
-              zeribeepwrite(r6522sysvia_ora);
+              zeribeepwrite(&r6502, r6522sysvia_ora);
+#endif
           }
           lsoundlatch = lenabled;
           break;
@@ -916,13 +882,12 @@ void systemviawrite(int naddress, char nvalue)
     case 0x01:
       /*input/output reg a*/
       /*zeribeep_value = nvalue;*/
-      updatetimers();
       r6522sysvia_ora = nvalue;
       r6522sysvia_porta = (r6522sysvia_ora & r6522sysvia_ddra) | (r6522sysvia_porta & ~r6522sysvia_ddra);
       /*PCR & 0x02 = CA2 input*/
       /*PCR & 0x04 = CA2 active edge input*/
       /*indepandant mode*/
-      if ((r6522sysvia_pcr & 0x0E == 0x02) OR (r6522sysvia_pcr & 0x0E == 0x06))
+      if (((r6522sysvia_pcr & 0x0E) == 0x02) OR ((r6522sysvia_pcr & 0x0E) == 0x06))
       {
         /*clear b2 (CA1)*/
         r6522sysvia_ifr &= 0xFD;
@@ -941,8 +906,10 @@ void systemviawrite(int naddress, char nvalue)
           /*sound write enable*/
           if (lenabled AND !lsoundlatch)
           {
+#ifdef __RISCOS__
             if (beebit_sound)
-              zeribeepwrite(r6522sysvia_ora);
+              zeribeepwrite(&r6502, r6522sysvia_ora);
+#endif
           }
           lsoundlatch = lenabled;
           break;
@@ -996,11 +963,7 @@ void systemviawrite(int naddress, char nvalue)
       break;
     case 0x05:
       /*T1 high order counter*/
-      updatetimers();
-      /*no effect in one-shot mode?*/
-      r6522sysvia_t1lh = r6522sysvia_t1ch = nvalue;
-      /*copy latch to counter*/
-      r6522sysvia_t1cl = r6522sysvia_t1ll;
+      r6522sysvia_t1lh = nvalue;
       /*clear T1 interrupt flag (b6)*/
       r6522sysvia_ifr &= 0xBF;
       systemviasetirq();
@@ -1015,7 +978,11 @@ void systemviawrite(int naddress, char nvalue)
       }
       r6522sysvia_t1setint = TRUE;
       /*it takes 1 1MHz cycle to transfer the latches to the counter*/
-      r6522sysvia_t1 = ((r6522sysvia_t1ch<<8) | r6522sysvia_t1cl) + 1;
+      r6522sysvia_2t1 = (r6522sysvia_t1lh<<9) | (r6522sysvia_t1ll<<1) + 2;
+      TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &r6502, r6522sysvia)
+      r6522sysvia_2t1 += expiryoffset;
+      TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&r6502, r6522sysvia, r6522sysvia_2t1 + 2)
+      r6522sysvia_aftert1 = 0;
       break;
     case 0x06:
       /*T1 low order latch*/
@@ -1023,32 +990,34 @@ void systemviawrite(int naddress, char nvalue)
       break;
     case 0x07:
       /*T1 high order latch*/
-      /*if ((r6522sysvia_acr & 0xC0) != 0x80)
-      {*/
-        /*no effect in one-shot mode?*/
-        r6522sysvia_t1lh = nvalue;
-        /*clear t1 interrupt flag (bit 6) ??*/
-        r6522sysvia_ifr &= 0xBF;
-        systemviasetirq();
-      /*}*/
+      r6522sysvia_t1lh = nvalue;
       break;
     case 0x08:
-      /*t2 low order latch*/
+      /*T2 low order latch*/
       r6522sysvia_t2ll = nvalue;
       break;
     case 0x09:
       /*T2 high order counter*/
-      updatetimers();
-      r6522sysvia_t2lh = r6522sysvia_t2ch = nvalue;
-      r6522sysvia_t2cl = r6522sysvia_t2ll;
       /*clear T2 interrupt flag (bit 5)*/
       r6522sysvia_ifr &= 0xDF;
       systemviasetirq();
-      /*start the timer*/
-      /*it takes 1 1MHz cycle to transfer the latches to the counter*/
-      r6522sysvia_t2 = ((r6522sysvia_t2ch<<8) | r6522sysvia_t2cl) + 1;
       /*provide a single interrupt*/
       r6522sysvia_t2setint=TRUE;
+      if (!(r6522sysvia_acr & 0x20))
+      {
+        /*one-shot mode*/
+        /*it takes 1 1MHz cycle to transfer the latches to the counter*/
+        r6522sysvia_2t2 = (nvalue<<9) | (r6522sysvia_t2ll<<1) + 2;
+        TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &r6502, r6522sysvia)
+        r6522sysvia_2t2 += expiryoffset;
+        TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&r6502, r6522sysvia, r6522sysvia_2t2 + 2)
+      }
+      else
+      {
+        /*pulse counting mode*/
+        r6522sysvia_2t2 = (nvalue<<9) | (r6522sysvia_t2ll<<1);
+        /*speech system not available*/
+      }
       break;
     case 0x0A:
       /*shift reg*/
@@ -1058,6 +1027,21 @@ void systemviawrite(int naddress, char nvalue)
       break;
     case 0x0B:
       /*auxiliary control reg*/
+      if ((r6522sysvia_acr ^ nvalue) & 0x20)
+      {
+        TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &r6502, r6522sysvia)
+        if (!(nvalue & 0x20))
+        {
+          /*one-shot mode*/
+          r6522sysvia_2t2 += expiryoffset;
+          TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&r6502, r6522sysvia, r6522sysvia_2t2 + 2)
+        }
+        else
+        {
+          /*pulse counting mode*/
+          r6522sysvia_2t2 -= expiryoffset;
+        }
+      }
       r6522sysvia_acr = nvalue;
       break;
     case 0x0C:
@@ -1105,7 +1089,6 @@ void systemviawrite(int naddress, char nvalue)
       break;
     case 0x0F:
       /*output reg a*/
-      updatetimers();
       r6522sysvia_ora = nvalue;
       r6522sysvia_porta = (r6522sysvia_ora & r6522sysvia_ddra) | (r6522sysvia_porta & ~r6522sysvia_ddra);
       nlatch = (r6522sysvia_portb & 0x07);
@@ -1116,18 +1099,12 @@ void systemviawrite(int naddress, char nvalue)
           /*sound write enable*/
           if (lenabled AND !lsoundlatch)
           {
+#ifdef __RISCOS__
             if (beebit_sound)
             {
-              /*bbcvdu(48);
-              bbcvdu(120);
-              inttohex8(r6502_cyclecount);
-              bbcvdu(44);
-              bbcvdu(48);
-              bbcvdu(120);
-              inttohex4(r6522sysvia_ora);
-              bbcvdu(44);*/
-              zeribeepwrite(r6522sysvia_ora);
+              zeribeepwrite(&r6502, r6522sysvia_ora);
             }
+#endif
           }
           lsoundlatch = lenabled;
           break;

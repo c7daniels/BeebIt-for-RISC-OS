@@ -81,6 +81,7 @@ void gobeebit(void);
 #include "6845crtc.h"
 #include "6850acia.h"
 #include "8271fdc.h"
+#include "main.h"
 #include "beebit.h"
 #include "sheila.h"
 #include "swis.h"
@@ -131,7 +132,17 @@ char cbintohex[0x10] = {48,49,50,51,52,53,54,55,56,57,65,66,67,68,69,70};
 /*INTERNAL FUNCTIONS*/
 
 #ifndef __RISCOS__
-void setword(char *cblock,int nvalue)
+unsigned int getword(char *cblock)
+{
+  unsigned int nreturn;
+  nreturn = cblock[0];
+  nreturn += (cblock[1] << 8);
+  nreturn += (cblock[2] << 16);
+  nreturn += (cblock[3] << 24);
+  return nreturn;
+}
+
+void setword(char *cblock, unsigned int nvalue)
 {
   cblock[0] = (nvalue & 0xFF);
   cblock[1] = (nvalue & 0xFF00) >> 8;
@@ -139,14 +150,17 @@ void setword(char *cblock,int nvalue)
   cblock[3] = (nvalue & 0xFF000000) >> 24;
 }
 
-int getword(char *cblock)
+void swappages(char *cblock1, char *cblock2, int npagecount)
 {
-  int nreturn;
-  nreturn = cblock[0];
-  nreturn += (cblock[1] << 8);
-  nreturn += (cblock[2] << 16);
-  nreturn += (cblock[3] << 24);
-  return nreturn;
+  char swap[256];
+  for (; npagecount > 0; npagecount--)
+  {
+    memcpy(swap,cblock1,256);
+    memcpy(cblock1,cblock2,256);
+    memcpy(cblock2,swap,256);
+    cblock1 += 256;
+    cblock2 += 256;
+  }
 }
 #endif
 
@@ -1603,7 +1617,6 @@ void gobeebit(void)
   if (lredraw)
   {
     /*rename lexit to beebit_exit- set by F12*/
-    /*have a beebit_yield var -set by poll needed*/
     /*loop until lexit*/
     beebit_exit = FALSE;
     do

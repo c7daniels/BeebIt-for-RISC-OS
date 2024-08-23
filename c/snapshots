@@ -44,7 +44,7 @@ void snapshotload(FILE *hfile)
   /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
   /*&FE30 - &FE33 (ROMSEL)*/
   /*&FE34 - &FE37 (ACCCON)*/
-  //    beebit_acccon = cbuffer[0x34];
+  //    r6502.acccon = cbuffer[0x34];
   /*&FE38 - &FE3B (INTOFF)*/
   /*&FE3C - &FE3F (INTON)*/
   /*&FE40 - &FE5F (SYSTEMVIA)*/
@@ -68,14 +68,14 @@ void snapshotload(FILE *hfile)
 
 
 
-  r6502_a =readhdr.A;
+  r6502.a =readhdr.A;
 //      fread(cbuffer,1,4,hfile); /*4*/
 //      r6502_x = cbuffer[3];
-  r6502_x =readhdr.X;
+  r6502.x =readhdr.X;
 
 //      fread(cbuffer,1,4,hfile); /*8*/
 //      r6502_y = cbuffer[3];
-  r6502_y =readhdr.Y;
+  r6502.y =readhdr.Y;
 
 //      fread(cbuffer,1,4,hfile); /*12*/
       /*r6502_n = (cbuffer[0] & 0x80);
@@ -86,15 +86,15 @@ void snapshotload(FILE *hfile)
       r6502_z = (cbuffer[0] & 0x02);
       r6502_c = (cbuffer[0] & 0x01);*/
 //      r6502_ps = cbuffer[0];
-  r6502_ps =readhdr.P;
+  r6502.ps =readhdr.P | UFLAG | BFLAG;
 
 //      fread(cbuffer,1,4,hfile); /*16*/
 //      r6502_sp = cbuffer[3] ;
-  r6502_sp =readhdr.S;
+  r6502.sp_code =((readhdr.S<<24)&0xFF000000) | (BUS_BASEFLAG<<8) | 0x01;
       /*program counter*/
 //      fread(cbuffer,1,4,hfile); /*20*/
 //      r6502_pc = (cbuffer[1]<<8)+cbuffer[0];
-  r6502_pc =readhdr.PC;
+  r6502.pc_code =((readhdr.PC<<16)&0xFFFF0000) | BUS_BASEFLAG;
 
       /*timers*/
 //      fread(cbuffer,1,4,hfile); /*24*/
@@ -105,7 +105,7 @@ void snapshotload(FILE *hfile)
   r6522sysvia_t1setint =readhdr.Tim1mode;
   r6522sysvia_t2setint =readhdr.Tim2mode;
   r6522usrvia_t1setint =readhdr.Tim3mode;
-  r6522usrvia_t1setint =readhdr.Tim4mode;
+  r6522usrvia_t2setint =readhdr.Tim4mode;
    //in snapshots 1 =interupt, but beebit set them as TRUE(0xFF) however as
    // beebit never compares with TRUE it seems to work
       /*system via timer 1 counter*/
@@ -113,7 +113,7 @@ void snapshotload(FILE *hfile)
 //     r6522sysvia_t1ch = cbuffer[3];
 //     r6522sysvia_t1cl = cbuffer[2];
 //     r6522sysvia_t1 = (r6522sysvia_t1ch<<9)+(r6522sysvia_t1cl<<1);
-  r6522sysvia_t1 =(readhdr.Tim1)<<1;
+  r6522sysvia_2t1 =(readhdr.Tim1)<<1;
       /*system via timer 1 latches*/
 //      fread(cbuffer,1,4,hfile); /*32*/
 //      r6522sysvia_t1lh = cbuffer[3];
@@ -125,7 +125,7 @@ void snapshotload(FILE *hfile)
 //      r6522sysvia_t2ch = cbuffer[3];
 //      r6522sysvia_t2cl = cbuffer[2];
 //      r6522sysvia_t2 = (r6522sysvia_t2ch<<9)+(r6522sysvia_t2cl<<1);
-  r6522sysvia_t2 =(readhdr.Tim2)<<1;
+  r6522sysvia_2t2 =(readhdr.Tim2)<<1;
       /*system via timer 2 latches*/
 //      fread(cbuffer,1,4,hfile); /*40*/
 //      r6522sysvia_t2ll = cbuffer[3];
@@ -136,7 +136,7 @@ void snapshotload(FILE *hfile)
 //      r6522usrvia_t1ch = cbuffer[3];
 //      r6522usrvia_t1cl = cbuffer[2];
 //      r6522usrvia_t1 = (r6522usrvia_t1ch<<9)+(r6522usrvia_t1cl<<1);
-  r6522usrvia_t1 =(readhdr.Tim3)<<1;
+  r6522usrvia_2t1 =(readhdr.Tim3)<<1;
       /*user via timer 1 latches*/
 //      fread(cbuffer,1,4,hfile); /*48*/
 //      r6522usrvia_t1lh = cbuffer[3];
@@ -148,7 +148,7 @@ void snapshotload(FILE *hfile)
 //      r6522usrvia_t2ch = cbuffer[3];
 //      r6522usrvia_t2cl = cbuffer[2];
 //      r6522usrvia_t2 = (r6522usrvia_t2ch<<9)+(r6522usrvia_t2cl<<1);
-  r6522usrvia_t2 =(readhdr.Tim4)<<1;
+  r6522usrvia_2t2 =(readhdr.Tim4)<<1;
       /*user via timer 2 latches*/
 //      fread(cbuffer,1,4,hfile); /*56*/
 //      r6522usrvia_t2ll = cbuffer[3];
@@ -157,7 +157,7 @@ void snapshotload(FILE *hfile)
       /*timer to vertical sync*/
 //      fread(cbuffer,1,4,hfile); /*60*/
 //      video_timer = getword(cbuffer);
-  video_timer =readhdr.Cvsync;
+  r6502.timers.video_togo =readhdr.Cvsync;
 
       /*unused*/
 //      fread(cbuffer,1,4,hfile); /*64*/
@@ -182,26 +182,26 @@ void snapshotload(FILE *hfile)
 //      fread(cbuffer,1,4,hfile); /*92*/
       /*roms*/
 //      fread(cbuffer,1,4,hfile); /*96*/
-//      beebit_romsel = cbuffer[0];
-  beebit_romsel =readhdr.ROMSEL;
+//      r6502.romsel = cbuffer[0];
+  r6502.romsel =readhdr.ROMSEL;
 //      j = 0;
 //      for (i=0;i<=0x03;i++)
 //      {
 //        fread(cbuffer,1,4,hfile); /*100,104,108,112*/
-//        beebit_romwritable[j++] = cbuffer[0];
-//        beebit_romwritable[j++] = cbuffer[1];
-//        beebit_romwritable[j++] = cbuffer[2];
-//        beebit_romwritable[j++] = cbuffer[3];
+//        r6502.romwritable[j++] = cbuffer[0];
+//        r6502.romwritable[j++] = cbuffer[1];
+//        r6502.romwritable[j++] = cbuffer[2];
+//        r6502.romwritable[j++] = cbuffer[3];
 //      }
-  for (r=0;r<=0xf;r++) //beebit_romwritable[r] =readhdr.rom[r];
+  for (r=0;r<=0xf;r++) //r6502.romwritable[r] =readhdr.rom[r];
   {
-    int transrom[] ={1,0,0}; //translate from RAM/ROM/empty to RAM/ROM
+    char transrom[] ={1,0,0}; //translate from RAM/ROM/empty to RAM/ROM
     int read;
 
     read =readhdr.rom[r];
     if (read >2) read =2;
 
-    beebit_romwritable[r] =transrom[read];
+    r6502.romwritable[r] =transrom[read];
   }
       /*&FE20 - ignore for now*/
   videoulawrite(0,readhdr.Sheila20); //video control register
@@ -264,7 +264,7 @@ void snapshotload(FILE *hfile)
 //      fread(cbuffer,1,4,hfile); /*168*/
       /*acccon*/
 //      fread(cbuffer,1,4,hfile); /*172*/
-  beebit_acccon =readhdr.ACCCON;
+  r6502.acccon =readhdr.ACCCON;
       /*&FE10 - ignore*/
 //      fread(cbuffer,1,4,hfile); /*176*/
       /*unused*/
@@ -284,39 +284,24 @@ void snapshotload(FILE *hfile)
   fseek(hfile,0x210 ,SEEK_SET);
   fread(memory,1,0x8000,hfile);
   fclose(hfile);
+
+  systemviaaftersnapshot();
+  userviaaftersnapshot();
 }
 
 void snapheadersave(SNAPHDR *phdr)
 {
 //  void *clear =&phdr;
-  int s,r,p;
+  int r,p;
+
+  systemviabeforesnapshot();
+  userviabeforesnapshot();
 
   memset(phdr,0,sizeof(SNAPHDR));
   strncpy(phdr ->tag,"BBC Snapshot101",0xf);
   phdr ->tag[0x0f] =0xa;
 
-      switch (beebit_machinetype)
-      {
-        case MACHINE_MODELB:
-        {
-          for (s =0; s <0x100; s++)
-            phdr ->sheila[s] =sheilaread_b(s);
-        }
-        break;
-        case MACHINE_MODELBPLUS:
-        {
-          for (s =0; s <0x100; s++)
-            phdr ->sheila[s] =sheilaread_bp(s);
-        }
-        break;
-        case MACHINE_MASTER128:
-        case MACHINE_COMPACT:
-        {
-          for (s =0; s <0x100; s++)
-            phdr ->sheila[s] =sheilaread_m(s);
-        }
-        break;
-      }
+  r6502readmemory(&r6502, phdr->sheila, 0xFE00, 0x100);
 
 //  strncpy(phdr ->sheila,memory+0xFE00,0x100);
 
@@ -341,29 +326,28 @@ void snapheadersave(SNAPHDR *phdr)
 //  /*6502 a register*/
 //  cbuffer[3] = r6502_a;
 //  wimpwrite(cbuffer,1,4); /*0*/
-  phdr ->A =r6502_a;
+  phdr ->A =r6502.a;
 
 //  cbuffer[3] = r6502_x;
 //  wimpwrite(cbuffer,1,4); /*4*/
-  phdr ->X =r6502_x;
+  phdr ->X =r6502.x;
 //  cbuffer[3] = r6502_y;
 //  wimpwrite(cbuffer,1,4); /*8*/
-  phdr ->Y =r6502_y;
+  phdr ->Y =r6502.y;
 
 //  cbuffer[3] = 0;
-//  /*cbuffer[0] = r6502processorstatus(TRUE);*/
 //  cbuffer[0] = r6502_ps; /*12*/
 //  wimpwrite(cbuffer,1,4);
-  phdr ->P =r6502_ps;
+  phdr ->P =r6502.ps;
 //  cbuffer[3] = r6502_sp;
 //  /*cbuffer[0] = 1;*/
 //  wimpwrite(cbuffer,1,4); /*16*/
-  phdr ->S =r6502_sp;
+  phdr ->S =(r6502.sp_code>>24)&0xFF;
 
 //  /*program counter*/
 //  setword(cbuffer,r6502_pc);
 //  wimpwrite(cbuffer,1,4); /*20*/
-  phdr ->PC =r6502_pc;
+  phdr ->PC =(r6502.pc_code>>16);
 //  /*timers*/
 //  cbuffer[0] = r6522sysvia_t1setint;
 //  cbuffer[1] = r6522sysvia_t2setint;
@@ -381,7 +365,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[3] = r6522sysvia_t1ch;
 //  cbuffer[2] = r6522sysvia_t1cl;
 //  wimpwrite(cbuffer,1,4); /*28*/
-  phdr ->Tim1 =r6522sysvia_t1 >>1;
+  phdr ->Tim1 =r6522sysvia_2t1 >>1;
 //  /*system via timer 1 latches*/
 //  cbuffer[3] = r6522sysvia_t1lh;
 //  cbuffer[2] = r6522sysvia_t1ll;
@@ -393,7 +377,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[3] = r6522sysvia_t2ch;
 //  cbuffer[2] = r6522sysvia_t2cl;
 //  wimpwrite(cbuffer,1,4); /*36*/
-  phdr ->Tim2 =r6522sysvia_t2 >>1;
+  phdr ->Tim2 =r6522sysvia_2t2 >>1;
 //  /*system via timer 2 latches*/
 //  cbuffer[3] = r6522sysvia_t2ll;
 //  cbuffer[2] = 0;
@@ -406,7 +390,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[3] = r6522usrvia_t1ch;
 //  cbuffer[2] = r6522usrvia_t1cl;
 //  wimpwrite(cbuffer,1,4); /*44*/
-  phdr ->Tim3 =r6522usrvia_t1 >>1;
+  phdr ->Tim3 =r6522usrvia_2t1 >>1;
 
 //  /*user via timer 1 latches*/
 //  cbuffer[3] = r6522usrvia_t1lh;
@@ -419,7 +403,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[3] = r6522usrvia_t2ch;
 //  cbuffer[2] = r6522usrvia_t2cl;
 //  wimpwrite(cbuffer,1,4); /*52*/
-  phdr ->Tim4 =r6522usrvia_t2 >>1;
+  phdr ->Tim4 =r6522usrvia_2t2 >>1;
 //  /*user via timer 2 latches*/
 //  cbuffer[3] = r6522usrvia_t2ll;
 //  cbuffer[2] = 0;
@@ -428,7 +412,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  /*timer to vertical sync*/
 //  setword(cbuffer,video_timer);
 //  wimpwrite(cbuffer,1,4); /*60*/
-  phdr ->Cvsync =video_timer;
+  phdr ->Cvsync =r6502.timers.video_togo;
 //  /*unused*/
 //  setword(cbuffer,0);
 //  wimpwrite(cbuffer,1,4); /*64*/
@@ -451,13 +435,13 @@ void snapheadersave(SNAPHDR *phdr)
 //  wimpwrite(cbuffer,1,4);
 //  wimpwrite(cbuffer,1,4); /*92*/
 //  /*roms*/
-//  cbuffer[0] = beebit_romsel;
+//  cbuffer[0] = r6502.romsel;
 //  wimpwrite(cbuffer,1,4); /*96*/
-  phdr ->ROMSEL =beebit_romsel;
+  phdr ->ROMSEL =r6502.romsel;
 //  j = 0;
 //  for (i=0;i<=0x0F;i++)
 //  {
-//    if (beebit_romwritable[i])
+//    if (r6502.romwritable[i])
 //      cbuffer[j] = 0;    //wrong should be 0 for RAM!
 //    else
 //      cbuffer[j] = 1;
@@ -471,7 +455,7 @@ void snapheadersave(SNAPHDR *phdr)
   for (r =0; r<=0xf; r++)
   {
     phdr ->rom[r] =1;
-    if (beebit_romwritable[r]) phdr ->rom[r] =0;
+    if (r6502.romwritable[r]) phdr ->rom[r] =0;
   }
 //  setword(cbuffer,0);
 //  /*&FE20*/
@@ -551,4 +535,7 @@ void snapheadersave(SNAPHDR *phdr)
 //
 //
 //}
+
+  systemviaaftersnapshot();
+  userviaaftersnapshot();
 }

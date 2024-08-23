@@ -66,20 +66,12 @@ int llargecursor,lteletextmode;
 int ncurrentmode;
 /*char npalettevalue;*/
 
-void videoulareset(int lfull)
+void videoulareset(void)
 {
   videoula_palettevalue = 0;
   lteletextmode = TRUE;
-  if (lfull)
-  {
-    video_mode = -1;
-    ncurrentmode = -1;
-  }
-  /*else
-  {
-    video_mode = 7;
-    ncurrentmode = -1;
-  }*/
+  video_mode = -1;
+  ncurrentmode = -1;
   cursor_width = 0;
 }
 
@@ -298,16 +290,7 @@ void videoulasetcursor(void)
 
 void videoulawrite(int naddress, char nvalue)
 {
-  int ntotal;
   char n1,n2;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
 
   #ifdef __DEBUG__
     fprintf(htrace,"write videoula %X %X\n",naddress,nvalue);

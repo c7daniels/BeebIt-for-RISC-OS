@@ -7,13 +7,20 @@
  * Email: <mjfoot@paradise.net.nz>
  */
 
-/*sheila*/
-extern char sheila_b[0x100];
+struct R6502WORKSPACE;
 
-void sheilareset(void);
-int sheilaread_b(int);
-int sheilaread_bp(int);
-int sheilaread_m(int);
-void sheilawrite_b(unsigned int, int);
-void sheilawrite_bp(unsigned int, int);
-void sheilawrite_m(unsigned int, int);
+typedef struct R6502WORKSPACE* (*SHEILAOP)(struct R6502WORKSPACE* w);
+
+extern SHEILAOP sheilareadsb[256];
+extern SHEILAOP sheilareadsbp[256];
+extern SHEILAOP sheilawritesb[256];
+extern SHEILAOP sheilawritesbp[256];
+extern SHEILAOP sheilareadsm[256];
+extern SHEILAOP sheilawritesm[256];
+
+R6502WORKSPACE* sheilaread_b(struct R6502WORKSPACE* w);
+R6502WORKSPACE* sheilaread_bp(struct R6502WORKSPACE* w);
+R6502WORKSPACE* sheilaread_m(struct R6502WORKSPACE* w);
+R6502WORKSPACE* sheilawrite_b(struct R6502WORKSPACE* w);
+R6502WORKSPACE* sheilawrite_bp(struct R6502WORKSPACE* w);
+R6502WORKSPACE* sheilawrite_m(struct R6502WORKSPACE* w);

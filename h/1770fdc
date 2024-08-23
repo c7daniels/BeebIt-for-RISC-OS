@@ -21,7 +21,6 @@
 #define ADFS_INTERLEAVED 0x11 /*interleaved*/
 
 extern int w1770_initialised;
-extern int w1770_timer;
 
 extern void w1770reset(void);
 extern int w1770getsectorcount(FILE *hfile);

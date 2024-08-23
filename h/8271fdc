@@ -37,7 +37,6 @@ extern char i8271_inputport;
 extern char i8271_badtrack[2][2]; /*drive,track*/
 extern char i8271_parameter[16]; /*heaps more than we need*/
 extern char i8271_data[0x1000]; /*hope we don't get any sectors > 4096 bytes*/
-extern int i8271_timer;
 extern int i8271_writestart; /*indicates when writing starts*/
 
 extern void i8271readimage(FILE *hfile, int nlocation, int nlength);

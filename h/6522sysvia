@@ -19,12 +19,8 @@ extern char r6522sysvia_ora; /*output register A*/
 extern char r6522sysvia_ira; /*input register A*/
 extern char r6522sysvia_ddrb;
 extern char r6522sysvia_ddra;
-extern char r6522sysvia_t1cl;
-extern char r6522sysvia_t1ch;
 extern char r6522sysvia_t1ll;
 extern char r6522sysvia_t1lh;
-extern char r6522sysvia_t2cl;
-extern char r6522sysvia_t2ch;
 extern char r6522sysvia_t2ll;
 extern char r6522sysvia_sr; /*status register*/
 extern char r6522sysvia_acr;
@@ -33,12 +29,11 @@ extern char r6522sysvia_ifr;
 extern char r6522sysvia_ier;
 extern char r6522sysvia_porta;
 extern char r6522sysvia_portb;
-extern int r6522sysvia_t1; /*timer 1 (used for speed)*/
-extern int r6522sysvia_t2; /*timer 2 (used for speed)*/
+extern int r6522sysvia_2t1; /*left-shifted timer 1 (used for speed)*/
+extern int r6522sysvia_2t2; /*left-shifted timer 2 (used for speed)*/
 extern int r6522sysvia_t1setint; /*set interrupt when timer1 reaches 0*/
 extern int r6522sysvia_t2setint; /*set interrupt when timer2 reaches 0*/
 /*extern int r6522sysvia_irq;*/ /*irq interrupt status*/
-extern int r6522sysvia_tick;
 
 /*extern int nkeyboardrow, nkeyboardcol;
 extern int ScreenStart;
@@ -54,9 +49,9 @@ extern void systemviavidirq(void);
 extern void systemviaunsetca1(void);
 extern void systemviasetca2(void);
 extern void systemviakeyca2(void);
-extern void systemviasett1t2(int);
 extern void keyboardcheck(int);
-extern void systemviareset(int lfull);
+extern void systemviareset(void);
+extern void systemviabeforesnapshot(void);
+extern void systemviaaftersnapshot(void);
 extern char systemviaread(int);
 extern void systemviawrite(int, char);
-extern int systemviamintimer(void);

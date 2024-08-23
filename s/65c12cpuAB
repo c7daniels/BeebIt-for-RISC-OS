@@ -1,4 +1,4 @@
-;>65c12cpu45.s
+;>65c12cpuAB.s
 ;
 ; BeebIt - BBC Micro Model B Emulator
 ;
@@ -27,19 +27,6 @@
 
 ; Export global symbols
 
-  EXPORT |r65c12topushystep|
-
-|r65c12topushystep|
-  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
-  MOV r1,r1,ROR #8
-  ORR r1,r1,#BUS_WRITEFLAG
-  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
-  LDRB r2,[r0,#:INDEX:R6502_Y]
-  STRB r2,[r0,#:INDEX:R6502_M]
-  LDR r3,[r0,#:INDEX:R6502_CPU_STATE]
-  ADD r3,r3,#1
-  STR r3,[r0,#:INDEX:R6502_CPU_STATE]
-  MOV pc,lr
 
 ;Data Area
 
