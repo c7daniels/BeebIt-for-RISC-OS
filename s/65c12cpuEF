@@ -29,6 +29,8 @@
 
   EXPORT |r65c12sbcfromimmediatestep|
   EXPORT |r65c12sbcfromaddressstep|
+  EXPORT |r65c12decimalflagsfromimmediatestep|
+  EXPORT |r65c12decimalflagsfromaddressstep|
 
 |r65c12sbcfromimmediatestep|
   LDRB r1,[r0,#:INDEX:R6502_A]
@@ -63,12 +65,14 @@ r65c12sbcfromaddressstepD
   BIC r3,r3,#NFLAG|VFLAG|ZFLAG|CFLAG
   ADCS r1,r1,r2
   ORRCS r3,r3,#CFLAG
+  ORRMI r3,r3,#NFLAG
   ORRVS r3,r3,#VFLAG
+  MOV r2,r1
   SUBCC r1,r1,#&60000000
   TST r1,#&80
   ADDNE r1,r1,#&F000000A
-  ANDS r1,r1,#&F000000F
-  ORRMI r3,r3,#NFLAG
+  TST r2,#&F000000F
+  AND r1,r1,#&F000000F
   ORREQ r3,r3,#ZFLAG
   ORR r1,r1,r1,LSR #24
   AND r1,r1,#&FF
@@ -95,6 +99,32 @@ r65c12sbcfromaddressstepD
   MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
   ORREQ r3,r3,#ZFLAG
   STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r2,[r0,#:INDEX:R6502_PC_CODE]
+  STRB r3,[r0,#:INDEX:R6502_PS]
+  STR r2,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
+	
+|r65c12decimalflagsfromimmediatestep|
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDRB r3,[r0,#:INDEX:R6502_PS]
+	MOVS r1,r1,LSL #24
+  LDR r2,[r0,#:INDEX:R6502_PC_CODE]
+  BIC r3,r3,#NFLAG|ZFLAG
+  ORRMI r3,r3,#NFLAG
+  ORREQ r3,r3,#ZFLAG
+  ADD r2,r2,#1:SHL:16
+  STR r2,[r0,#:INDEX:R6502_PC_CODE]
+  STRB r3,[r0,#:INDEX:R6502_PS]
+  STR r2,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
+
+|r65c12decimalflagsfromaddressstep|
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDRB r3,[r0,#:INDEX:R6502_PS]
+	MOVS r1,r1,LSL #24
+  BIC r3,r3,#NFLAG|ZFLAG
+  ORRMI r3,r3,#NFLAG
+  ORREQ r3,r3,#ZFLAG
   LDR r2,[r0,#:INDEX:R6502_PC_CODE]
   STRB r3,[r0,#:INDEX:R6502_PS]
   STR r2,[r0,#:INDEX:R6502_ADDRESS_CODE]

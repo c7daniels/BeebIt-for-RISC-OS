@@ -1877,8 +1877,8 @@ R6502WORKSPACE* r6502sbcfromimmediatestep(R6502WORKSPACE* w)
     if (!(w->ps & CFLAG))
       sum -= 0x600;
   }
-  w->a = ((sum>>4)&0xF0) | (sum&0xF);
   R6502_IMMEDIATE_FINISHED(w)
+  w->a = ((sum>>4)&0xF0) | (sum&0xF);
   return w;
 }
 
@@ -1900,8 +1900,8 @@ R6502WORKSPACE* r6502sbcfromaddressstep(R6502WORKSPACE* w)
     if (!(w->ps & CFLAG))
       sum -= 0x600;
   }
-  w->a = ((sum>>4)&0xF0) | (sum&0xF);
   R6502_ADDRESSING_FINISHED(w)
+  w->a = ((sum>>4)&0xF0) | (sum&0xF);
   return w;
 }
 
@@ -3009,118 +3009,6 @@ int r6502reset(R6502WORKSPACE* w)
   w->cpu_state = R6502_FIRST_STEP_IN(R6502_RESET_SEQUENCE);
   w->address_code = (w->address_code & 0xFFFF0000) | BUS_BASEFLAG;
 
-//#define TEST_NMOS_RRAD
-#ifdef TEST_NMOS_RRAD
-  char buffer[256];
-#ifdef __RISCOS__
-  FILE *rralog = fopen("<BeebIt$Dir>.rralog", "w");
-#endif
-  int i,j;
-  w->ps |= DFLAG;
-  for (j=0; j<255; j+=51)
-  {
-    for (i=0; i<255; i+=47)
-    {
-      w->m = j;
-      w->a = i;
-      w->ps &= NOTCFLAG;
-
-      r6502rrastep(w);
-
-      snprintf(buffer, sizeof(buffer), "M %02X A %02X .......%c -> M %02X A %02X %c%c....%c%c\n",
-             j, i, 'c', w->m, w->a,
-             (w->ps & NFLAG) ? 'N' : 'n',
-             (w->ps & VFLAG) ? 'V' : 'v',
-             (w->ps & ZFLAG) ? 'Z' : 'z',
-             (w->ps & CFLAG) ? 'C' : 'c');
-
-#ifdef __RISCOS__
-      fprintf(rralog, "%s", buffer);
-#else
-      printf("%s", buffer);
-#endif
-
-      w->m = j;
-      w->a = i;
-      w->ps |= CFLAG;
-
-      r6502rrastep(w);
-
-      snprintf(buffer, sizeof(buffer), "M %02X A %02X .......%c -> M %02X A %02X %c%c....%c%c\n",
-             j, i, 'C', w->m, w->a,
-             (w->ps & NFLAG) ? 'N' : 'n',
-             (w->ps & VFLAG) ? 'V' : 'v',
-             (w->ps & ZFLAG) ? 'Z' : 'z',
-             (w->ps & CFLAG) ? 'C' : 'c');
-
-#ifdef __RISCOS__
-      fprintf(rralog, "%s", buffer);
-#else
-      printf("%s", buffer);
-#endif
-    }
-  }
-#ifdef __RISCOS__
-  fclose(rralog);
-#endif
-  lreturn = FALSE;
-#endif
-//#define TEST_NMOS_ADCD
-#ifdef TEST_NMOS_ADCD
-  char buffer[256];
-#ifdef __RISCOS__
-  FILE *adclog = fopen("<BeebIt$Dir>.adclog", "w");
-#endif
-  int i,j;
-  w->ps |= DFLAG;
-  for (j=0; j<255; j+=51)
-  {
-    for (i=0; i<255; i+=47)
-    {
-      w->m = j;
-      w->a = i;
-      w->ps &= NOTCFLAG;
-
-      r6502adcfromimmediatestep(w);
-
-      snprintf(buffer, sizeof(buffer), "M %02X A %02X .......%c -> M %02X A %02X %c%c....%c%c\n",
-             j, i, 'c', w->m, w->a,
-             (w->ps & NFLAG) ? 'N' : 'n',
-             (w->ps & VFLAG) ? 'V' : 'v',
-             (w->ps & ZFLAG) ? 'Z' : 'z',
-             (w->ps & CFLAG) ? 'C' : 'c');
-
-#ifdef __RISCOS__
-      fprintf(adclog, "%s", buffer);
-#else
-      printf("%s", buffer);
-#endif
-
-      w->m = j;
-      w->a = i;
-      w->ps |= CFLAG;
-
-      r6502adcfromimmediatestep(w);
-
-      snprintf(buffer, sizeof(buffer), "M %02X A %02X .......%c -> M %02X A %02X %c%c....%c%c\n",
-             j, i, 'C', w->m, w->a,
-             (w->ps & NFLAG) ? 'N' : 'n',
-             (w->ps & VFLAG) ? 'V' : 'v',
-             (w->ps & ZFLAG) ? 'Z' : 'z',
-             (w->ps & CFLAG) ? 'C' : 'c');
-
-#ifdef __RISCOS__
-      fprintf(adclog, "%s", buffer);
-#else
-      printf("%s", buffer);
-#endif
-    }
-  }
-#ifdef __RISCOS__
-  fclose(adclog);
-#endif
-  lreturn = FALSE;
-#endif
   return lreturn;
 }
 

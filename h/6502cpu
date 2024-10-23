@@ -827,6 +827,8 @@ extern R6502WORKSPACE* r6502sbcfromimmediatestep(R6502WORKSPACE* w);
 extern R6502WORKSPACE* r65c12sbcfromimmediatestep(R6502WORKSPACE* w);
 extern R6502WORKSPACE* r6502sbcfromaddressstep(R6502WORKSPACE* w);
 extern R6502WORKSPACE* r65c12sbcfromaddressstep(R6502WORKSPACE* w);
+extern R6502WORKSPACE* r65c12decimalflagsfromimmediatestep(R6502WORKSPACE* w);
+extern R6502WORKSPACE* r65c12decimalflagsfromaddressstep(R6502WORKSPACE* w);
 extern R6502WORKSPACE* r6502nopfromimmediatestep(R6502WORKSPACE* w);
 extern R6502WORKSPACE* r6502nopfromaddressstep(R6502WORKSPACE* w);
 extern R6502WORKSPACE* r6502laxfromaddressstep(R6502WORKSPACE* w);

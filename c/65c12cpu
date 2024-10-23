@@ -38,15 +38,15 @@ const R6502OP r65c12_eorzpgindsequence[] = R65C12_LOAD_zpgind_SEQUENCE(r6502eorf
 const R6502OP r65c12_eorabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502eorfromaddressstep);
 const R6502OP r65c12_eorabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r6502eorfromaddressstep);
 const R6502OP r65c12_eorpostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r6502eorfromaddressstep);
-const R6502OP r65c12_adcimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r65c12adcfromimmediatestep, r6502nopfromimmediatestep);
-const R6502OP r65c12_adczpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r65c12adcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_adcabssequence[] = R6502_LOAD_ABS_SEQUENCE(r65c12adcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_adczpgindsequence[] = R65C12_LOAD_zpgind_SEQUENCE(r65c12adcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_adcpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r65c12adcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_adczpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r65c12adcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_adcabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r65c12adcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_adcabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r65c12adcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_adcpostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r65c12adcfromaddressstep, r6502nopfromaddressstep);
+const R6502OP r65c12_adcimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r65c12adcfromimmediatestep, r65c12decimalflagsfromimmediatestep);
+const R6502OP r65c12_adczpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r65c12adcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_adcabssequence[] = R6502_LOAD_ABS_SEQUENCE(r65c12adcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_adczpgindsequence[] = R65C12_LOAD_zpgind_SEQUENCE(r65c12adcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_adcpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r65c12adcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_adczpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r65c12adcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_adcabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r65c12adcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_adcabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r65c12adcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_adcpostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r65c12adcfromaddressstep, r65c12decimalflagsfromaddressstep);
 const R6502OP r65c12_ldazpgindsequence[] = R65C12_LOAD_zpgind_SEQUENCE(r6502ldafromaddressstep);
 const R6502OP r65c12_ldaabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502ldafromaddressstep);
 const R6502OP r65c12_ldaabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r6502ldafromaddressstep);
@@ -57,15 +57,15 @@ const R6502OP r65c12_cmpzpgindsequence[] = R65C12_LOAD_zpgind_SEQUENCE(r6502cmpf
 const R6502OP r65c12_cmpabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502cmpfromaddressstep);
 const R6502OP r65c12_cmpabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r6502cmpfromaddressstep);
 const R6502OP r65c12_cmppostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r6502cmpfromaddressstep);
-const R6502OP r65c12_sbcimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r65c12sbcfromimmediatestep, r6502nopfromimmediatestep);
-const R6502OP r65c12_sbczpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r65c12sbcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_sbcabssequence[] = R6502_LOAD_ABS_SEQUENCE(r65c12sbcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_sbczpgindsequence[] = R65C12_LOAD_zpgind_SEQUENCE(r65c12sbcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_sbcpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r65c12sbcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_sbczpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r65c12sbcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_sbcabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r65c12sbcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_sbcabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r65c12sbcfromaddressstep, r6502nopfromaddressstep);
-const R6502OP r65c12_sbcpostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r65c12sbcfromaddressstep, r6502nopfromaddressstep);
+const R6502OP r65c12_sbcimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r65c12sbcfromimmediatestep, r65c12decimalflagsfromimmediatestep);
+const R6502OP r65c12_sbczpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r65c12sbcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_sbcabssequence[] = R6502_LOAD_ABS_SEQUENCE(r65c12sbcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_sbczpgindsequence[] = R65C12_LOAD_zpgind_SEQUENCE(r65c12sbcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_sbcpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r65c12sbcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_sbczpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r65c12sbcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_sbcabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r65c12sbcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_sbcabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r65c12sbcfromaddressstep, r65c12decimalflagsfromaddressstep);
+const R6502OP r65c12_sbcpostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r65c12sbcfromaddressstep, r65c12decimalflagsfromaddressstep);
 const R6502OP r65c12_skwwait4absxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502nopstep, r6502nopstep, r6502nopstep, r6502nopstep, r6502nopfromaddressstep);
 const R6502OP r65c12_aslzpgsequence[] = R65C12_MODIFY_ZPG_SEQUENCE(r65c12aslstep);
 const R6502OP r65c12_aslabssequence[] = R65C12_MODIFY_ABS_SEQUENCE(r65c12aslstep);
@@ -720,9 +720,10 @@ R6502WORKSPACE* r65c12adcfromimmediatestep(R6502WORKSPACE* w)
   a = ((a<<4)&0xF00) | (a&0xF);
   sum = a + 0x0F0 + m + (w->ps & CFLAG);
   w->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  w->ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
   if (w->ps & DFLAG)
     sum += 6;
-  w->ps |= ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
+  w->ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
   if (w->ps & DFLAG)
   {
     if (sum & 0x80)
@@ -735,8 +736,7 @@ R6502WORKSPACE* r65c12adcfromimmediatestep(R6502WORKSPACE* w)
     R6502_IMMEDIATE_FINISHED(w)
   if (sum >= 0x1000)
     w->ps |= CFLAG;
-  w->a = a = ((sum>>4)&0xF0) | (sum&0xF);
-  w->ps |= (a & NFLAG) | (a == 0 ? ZFLAG : 0);
+  w->a = ((sum>>4)&0xF0) | (sum&0xF);
   return w;
 }
 
@@ -749,9 +749,10 @@ R6502WORKSPACE* r65c12adcfromaddressstep(R6502WORKSPACE* w)
   a = ((a<<4)&0xF00) | (a&0xF);
   sum = a + 0x0F0 + m + (w->ps & CFLAG);
   w->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  w->ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
   if (w->ps & DFLAG)
     sum += 6;
-  w->ps |= ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
+  w->ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
   if (w->ps & DFLAG)
   {
     if (sum & 0x80)
@@ -764,8 +765,7 @@ R6502WORKSPACE* r65c12adcfromaddressstep(R6502WORKSPACE* w)
     R6502_ADDRESSING_FINISHED(w)
   if (sum >= 0x1000)
     w->ps |= CFLAG;
-  w->a = a = ((sum>>4)&0xF0) | (sum&0xF);
-  w->ps |= (a & NFLAG) | (a == 0 ? ZFLAG : 0);
+  w->a = ((sum>>4)&0xF0) | (sum&0xF);
   return w;
 }
 
@@ -778,7 +778,8 @@ R6502WORKSPACE* r65c12sbcfromimmediatestep(R6502WORKSPACE* w)
   a = ((a<<4)&0xF00) | (a&0xF);
   sum = a + 0x0F0 + im + (w->ps & CFLAG);
   w->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
-  w->ps |= ((((sum ^ a) & (sum ^ im))>>5) & VFLAG) | ((sum>>12) & CFLAG);
+  w->ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
+  w->ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
   if (w->ps & DFLAG)
   {
     if (sum & 0x80)
@@ -789,8 +790,7 @@ R6502WORKSPACE* r65c12sbcfromimmediatestep(R6502WORKSPACE* w)
   }
   else
     R6502_IMMEDIATE_FINISHED(w)
-  w->a = a = ((sum>>4)&0xF0) | (sum&0xF);
-  w->ps |= (a & NFLAG) | (a == 0 ? ZFLAG : 0);
+  w->a = ((sum>>4)&0xF0) | (sum&0xF);
   return w;
 }
 
@@ -803,7 +803,8 @@ R6502WORKSPACE* r65c12sbcfromaddressstep(R6502WORKSPACE* w)
   a = ((a<<4)&0xF00) | (a&0xF);
   sum = a + 0x0F0 + im + (w->ps & CFLAG);
   w->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
-  w->ps |= ((((sum ^ a) & (sum ^ im))>>5) & VFLAG) | ((sum>>12) & CFLAG);
+  w->ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
+  w->ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
   if (w->ps & DFLAG)
   {
     if (sum & 0x80)
@@ -814,8 +815,25 @@ R6502WORKSPACE* r65c12sbcfromaddressstep(R6502WORKSPACE* w)
   }
   else
     R6502_ADDRESSING_FINISHED(w)
-  w->a = a = ((sum>>4)&0xF0) | (sum&0xF);
+  w->a = ((sum>>4)&0xF0) | (sum&0xF);
+  return w;
+}
+
+R6502WORKSPACE* r65c12decimalflagsfromimmediatestep(R6502WORKSPACE* w)
+{
+  unsigned int a = w->a;
+  w->ps &= (NOTNFLAG & NOTZFLAG);	
   w->ps |= (a & NFLAG) | (a == 0 ? ZFLAG : 0);
+  R6502_IMMEDIATE_FINISHED(w)
+  return w;
+}
+
+R6502WORKSPACE* r65c12decimalflagsfromaddressstep(R6502WORKSPACE* w)
+{
+  unsigned int a = w->a;
+  w->ps &= (NOTNFLAG & NOTZFLAG);	
+  w->ps |= (a & NFLAG) | (a == 0 ? ZFLAG : 0);
+  R6502_ADDRESSING_FINISHED(w)
   return w;
 }
 // MODIFY_STEP 6502 / 65C12
@@ -1103,57 +1121,6 @@ int r65c12reset(R6502WORKSPACE* w)
 
   w->cpu_state = R6502_FIRST_STEP_IN(R6502_RESET_SEQUENCE);
   w->address_code = (w->address_code & 0xFFFF0000) | BUS_BASEFLAG;
-
-//#define TEST_CMOS_JMPABSXINDSEQUENCE
-#ifdef TEST_CMOS_JMPABSXINDSEQUENCE
-#ifdef __RISCOS__
-  FILE *jfile = fopen("<BeebIt$Dir>.jabsxlog", "w");
-#endif
-  char buffer[256];
-  w->a = 0xB2;
-  w->x = 0xB2;
-  w->y = 0x00;
-  memory[0x074D + w->x] = 0xAE;
-  memory[0x074D + w->x + 1] = 0xBE;
-  memory[0x101B] = 0x7C;
-  memory[0x101C] = 0x4D;
-  memory[0x101D] = 0x07;
-  w->pc_code = (0x101B << 16) | BUS_BASEFLAG;
-  w->address_code = (0x101B << 16) | BUS_BASEFLAG;
-  w->cpu_state = R6502_FIRST_STEP_IN(R6502_DECODE_SEQUENCE);
-  w->transition1action = w->yieldaction;
-  w->transition2action = w->yieldaction;
-
-  w->nmis &= NMIS_NOTYIELD;
-  do
-  {
-    snprintf(buffer, sizeof(buffer), "%08x: %08x  %02X %08x %08x",
-             w->pc_code, w->cpu_state, w->m, w->address_code, w->latch);
-
-#ifdef __RISCOS__
-    fprintf(jfile, "%s\n", buffer);
-#else
-    printf("%s\n", buffer);
-#endif
-
-    w->bus_fork[((w->address_code>>28)|(w->address_code<<4))&0x7F](w);
-  }
-  while (!(w->nmis & NMIS_YIELD));
-
-  snprintf(buffer, sizeof(buffer), "%08x: %08x  %02X %08x %08x",
-           w->pc_code, w->cpu_state, w->m, w->address_code, w->latch);
-
-#ifdef __RISCOS__
-  fprintf(jfile, "%s\n", buffer);
-#else
-  printf("%s\n", buffer);
-#endif
-
-#ifdef __RISCOS__
-  fclose(jfile);
-#endif
-  lreturn = FALSE;
-#endif
 
   return lreturn;
 }
