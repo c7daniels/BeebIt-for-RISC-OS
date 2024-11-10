@@ -37,9 +37,9 @@ char r6522usrvia_ora; /*output register A*/
 char r6522usrvia_ira; /*input register A*/
 char r6522usrvia_ddrb; /*0 bit means input, 1 means output*/
 char r6522usrvia_ddra; /*0 bit means input, 1 means output*/
-char unsigned r6522usrvia_t1ll; /*T1 low order latch*/
-char unsigned r6522usrvia_t1lh; /*T1 high order latch*/
-char unsigned r6522usrvia_t2ll; /*T2 low order latch*/
+unsigned char r6522usrvia_t1ll; /*T1 low order latch*/
+unsigned char r6522usrvia_t1lh; /*T1 high order latch*/
+unsigned char r6522usrvia_t2ll; /*T2 low order latch*/
 char r6522usrvia_sr; /*status register*/
 char r6522usrvia_acr;
 char r6522usrvia_pcr;
@@ -128,6 +128,7 @@ static int userviapickcyclestogo(void)
 {
   int cyclestogo;
 
+  // the interrupt flag is set after the counter has passed through zero
   if (!(r6522usrvia_acr & 0x20))
   {
     if (r6522usrvia_2t1 < r6522usrvia_2t2)
@@ -305,7 +306,7 @@ R6502HOSTMAP* userviaatzerocycles(R6502HOSTMAP* map)
   {
     if (r6522usrvia_acr & 0x40)
     {
-      r6522usrvia_2t1 = (r6522usrvia_t1lh<<9) | (r6522usrvia_t1ll<<1) + 1;
+      r6522usrvia_2t1 = ((r6522usrvia_t1lh<<9) | (r6522usrvia_t1ll<<1)) + 1;
     }
     r6522usrvia_aftert1 = 0;
   }
@@ -638,10 +639,10 @@ void userviawrite(int naddress, char nvalue)
         r6522usrvia_portb &= 0x7F;
       }
       r6522usrvia_t1setint = TRUE;
-      /*it takes 1 1MHz cycle to transfer the latches to the counter*/
-      r6522usrvia_2t1 = (r6522usrvia_t1lh<<9) | (r6522usrvia_t1ll<<1) + 2;
+      r6522usrvia_2t1 = (r6522usrvia_t1lh<<9) | (r6522usrvia_t1ll<<1);
       TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &hostmap, r6522usrvia)
       r6522usrvia_2t1 += expiryoffset;
+      // the interrupt flag is set after the counter has passed through zero
       TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&hostmap, r6522usrvia, r6522usrvia_2t1 + 2)
       r6522usrvia_aftert1 = 0;
       break;
@@ -667,10 +668,10 @@ void userviawrite(int naddress, char nvalue)
       if (!(r6522usrvia_acr & 0x20))
       {
         /*one-shot mode*/
-        /*it takes 1 1MHz cycle to transfer the latches to the counter*/
-        r6522usrvia_2t2 = (nvalue<<9) | (r6522usrvia_t2ll<<1) + 2;
+        r6522usrvia_2t2 = (nvalue<<9) | (r6522usrvia_t2ll<<1);
         TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &hostmap, r6522usrvia)
         r6522usrvia_2t2 += expiryoffset;
+        // the interrupt flag is set after the counter has passed through zero
         TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&hostmap, r6522usrvia, r6522usrvia_2t2 + 2)
       }
       else

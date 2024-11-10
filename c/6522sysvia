@@ -318,6 +318,7 @@ static int systemviapickcyclestogo(void)
 {
   int cyclestogo;
 
+  // the interrupt flag is set after the counter has passed through zero
   if (!(r6522sysvia_acr & 0x20))
   {
     if (r6522sysvia_2t1 < r6522sysvia_2t2)
@@ -468,7 +469,7 @@ R6502HOSTMAP* systemviaatzerocycles(R6502HOSTMAP* map)
   {
     if (r6522sysvia_acr & 0x40)
     {
-      r6522sysvia_2t1 = (r6522sysvia_t1lh<<9) | (r6522sysvia_t1ll<<1) + 1;
+      r6522sysvia_2t1 = ((r6522sysvia_t1lh<<9) | (r6522sysvia_t1ll<<1)) + 1;
     }
     r6522sysvia_aftert1 = 0;
   }
@@ -981,10 +982,10 @@ void systemviawrite(int naddress, char nvalue)
         r6522sysvia_portb &= 0x7F;
       }
       r6522sysvia_t1setint = TRUE;
-      /*it takes 1 1MHz cycle to transfer the latches to the counter*/
-      r6522sysvia_2t1 = (r6522sysvia_t1lh<<9) | (r6522sysvia_t1ll<<1) + 2;
+      r6522sysvia_2t1 = (r6522sysvia_t1lh<<9) | (r6522sysvia_t1ll<<1);
       TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &hostmap, r6522sysvia)
       r6522sysvia_2t1 += expiryoffset;
+      // the interrupt flag is set after the counter has passed through zero
       TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&hostmap, r6522sysvia, r6522sysvia_2t1 + 2)
       r6522sysvia_aftert1 = 0;
       break;
@@ -1010,10 +1011,10 @@ void systemviawrite(int naddress, char nvalue)
       if (!(r6522sysvia_acr & 0x20))
       {
         /*one-shot mode*/
-        /*it takes 1 1MHz cycle to transfer the latches to the counter*/
-        r6522sysvia_2t2 = (nvalue<<9) | (r6522sysvia_t2ll<<1) + 2;
+        r6522sysvia_2t2 = (nvalue<<9) | (r6522sysvia_t2ll<<1);
         TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &hostmap, r6522sysvia)
         r6522sysvia_2t2 += expiryoffset;
+        // the interrupt flag is set after the counter has passed through zero
         TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&hostmap, r6522sysvia, r6522sysvia_2t2 + 2)
       }
       else
@@ -1049,7 +1050,6 @@ void systemviawrite(int naddress, char nvalue)
       r6522sysvia_acr = nvalue;
       break;
     case 0x0C:
-      /*peripheral control reg*/
       r6522sysvia_pcr = nvalue;
       /*CA1 active edge*/
       if (r6522sysvia_pcr & 0x01)
