@@ -25,4 +25,4 @@ extern char *readicon(int nwindow,int nicon);
 extern void writeicon(int nwindow,int nicon,char *ctext,int neor,int nclear);
 extern int wimpwrite(const void *ptr,size_t size,size_t num);
 extern int wimpputc(char achar);
-extern void itoa(int nvalue,char *cbuffer);
+extern int itoa(int nvalue,char *cbuffer, int maximumLength);

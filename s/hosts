@@ -105,6 +105,8 @@
   IMPORT |accconwrite_m|
   IMPORT |host_r6502opcode07routine|
 
+  IMPORT |beebit_exit| ;
+
 ; Export global symbols
 
   EXPORT |hostmap|
@@ -159,6 +161,7 @@
   EXPORT |hostadvancetimers|
   EXPORT |assemblyhostadvancetimers|
   EXPORT |hostexecute|
+  EXPORT |exex|
 
   ASSERT :INDEX:HOST_M_SHIFT == :INDEX:R6502ZONE_M_SHIFT
   ASSERT :INDEX:HOST_M == :INDEX:R6502ZONE_M
@@ -1227,6 +1230,15 @@ hostexecute1
   ]
 hostexecute2
   HOST_EXECUTE_POP
+
+exex
+  LDR r1,%F1
+  MOV r2,#1
+  STR r2,[r1]
+  MOV pc,lr
+1
+  DCD beebit_exit
+
 
 ;Data Area
 

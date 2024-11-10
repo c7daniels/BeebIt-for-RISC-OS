@@ -68,6 +68,7 @@ static unsigned int arSprFileHdr[46] ={1, /* number of sprites in area*/
 
 void screentobuffer(void)
 {
+#ifdef __RISCOS__
   int vduvars[8];
   int xeig, yeig;
   int rdbits,rdwords,wrwords;
@@ -194,8 +195,10 @@ void screentobuffer(void)
     rdp += naddradd;
   }
   _kernel_swi(OS_RestoreCursors,&regs,&regs);
+#endif
 }
 
+#ifdef __RISCOS__
 void spritecommon(void)
 {
   int i;
@@ -220,9 +223,11 @@ int file_exists(char *obj_name)
   _kernel_swi(OS_File,&regs,&regs);
   return (regs.r[0]>0);
 }
+#endif
 
 void sprite_printscreen(void)
 {
+#ifdef __RISCOS__
   FILE *prtscr_file;
   static int count =0;
   static char scrn_name[] ="<BeebIt$Dir>.^.BBC01234";
@@ -245,20 +250,24 @@ void sprite_printscreen(void)
   regs.r[1] =(int)scrn_name;
   regs.r[2] =0xFF9;
   _kernel_swi(OS_File,&regs,&regs);
+#endif
 }
 
 int spritesave(void)
 {
+#ifdef __RISCOS__
   spritecommon();
 
   wimpwrite(arSprFileHdr,46,4);
   wimpwrite(sprite,wrspr_size,1);
+#endif
 
   return TRUE;
 }
 
 void spritealloc(void)
 {
+#ifdef __RISCOS__
   int xwindlimit,ywindlimit;
   int wrwords,nsize;
 
@@ -284,13 +293,16 @@ void spritealloc(void)
   {
     sprite = realloc(sprite, nsize);
   }
+#endif
 }
 
 void spritefree(void)
 {
+#ifdef __RISCOS__
   if (sprite != NULL)
   {
     free(sprite);
     sprite = NULL;
   }
+#endif
 }

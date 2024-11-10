@@ -56,8 +56,12 @@
 #define PALETTE_GREY 2
 #define PALETTE_GREEN 3
 
+#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
+#define BEEBIT_NO_ASM
+#else
 /*define this for RISC OS machines*/
 #define __RISCOS__
+#endif
 
 /*#define __DEVELOP__*/
 /*#define __DEBUG__*/
@@ -126,3 +130,25 @@ extern void beebitclosedown(void);
 extern int beebitenter(void);
 extern void beebitpoll(void);
 extern void beebitexit(void);
+
+#ifdef __RISCOS__
+#define BEEBIT_FOPEN(FNAME, MODE) \
+  fopen(FNAME, MODE)
+#define BEEBIT_REMOVE(FNAME) \
+  remove(FNAME)
+#else
+extern void environmentsetinternalrompath(const char* filename);
+extern FILE* environmentfopen(const char* filename, const char* mode);
+extern void environmentcreatedirectory(const char* filename);
+extern int environmentremove(const char* filename);
+extern int environmentgobeebit(int argc,char *argv[]);
+extern int environmentreadmodevariable(intptr_t mode, int variable);
+extern int environmentcheckmodevalid(intptr_t mode);
+extern void environmentscreenmode(intptr_t mode);
+extern int environmentgetcolournumber(unsigned int value);
+extern void environmentpresentvideoframe(void);
+#define BEEBIT_FOPEN(FNAME, MODE) \
+  environmentfopen(FNAME, MODE)
+#define BEEBIT_REMOVE(FNAME) \
+  environmentremove(FNAME)
+#endif
