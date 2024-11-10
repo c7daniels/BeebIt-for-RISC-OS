@@ -9,6 +9,7 @@
  * Email: <mjfoot@paradise.net.nz>
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include "6502map.h"
 #include "6522sysvia.h"
@@ -55,6 +56,7 @@ void adcmodevars(void)
   int xres,yres;
   int xeig,yeig;
 
+#ifdef __RISCOS__
   regs.r[0] = -1;
   regs.r[1] = 4;
   _kernel_swi(OS_ReadModeVariable,&regs,&regs);
@@ -68,6 +70,12 @@ void adcmodevars(void)
   regs.r[1] = 12;
   _kernel_swi(OS_ReadModeVariable,&regs,&regs);
   yres = regs.r[2] + 1;
+#else
+  xeig = environmentreadmodevariable(-1, 4);
+  yeig = environmentreadmodevariable(-1, 5);
+  xres = environmentreadmodevariable(-1, 11) + 1;
+  yres = environmentreadmodevariable(-1, 12) + 1;
+#endif
 
   if (adc_x_osunits != (xres<<xeig))
   {
@@ -93,6 +101,7 @@ void adcpoll(void)
   int nvalue;
   adc_status &= 0x0F;
 
+#ifdef __RISCOS__
   if (beebit_mouseemulation == MOUSE_JOYSTICK)
   {
     /*mouse position in OS units*/
@@ -143,6 +152,7 @@ void adcpoll(void)
     }
   }
   else
+#endif
     nvalue = adc_floating_value;
 
   adc_status |= 0x40; /*not busy*/

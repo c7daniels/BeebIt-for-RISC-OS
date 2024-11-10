@@ -9,6 +9,7 @@
  * Email: <mjfoot@paradise.net.nz>
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "6502map.h"

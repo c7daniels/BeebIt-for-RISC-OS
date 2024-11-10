@@ -18,6 +18,7 @@
 /*b1 = PB latching enabled*/
 /*b0 = PA latching enabled*/
 
+#include <stdint.h>
 #include <stdio.h>
 #include "6502map.h"
 #include "6502cpu.h"
@@ -36,9 +37,9 @@ char r6522usrvia_ora; /*output register A*/
 char r6522usrvia_ira; /*input register A*/
 char r6522usrvia_ddrb; /*0 bit means input, 1 means output*/
 char r6522usrvia_ddra; /*0 bit means input, 1 means output*/
-char r6522usrvia_t1ll; /*T1 low order latch*/
-char r6522usrvia_t1lh; /*T1 high order latch*/
-char r6522usrvia_t2ll; /*T2 low order latch*/
+char unsigned r6522usrvia_t1ll; /*T1 low order latch*/
+char unsigned r6522usrvia_t1lh; /*T1 high order latch*/
+char unsigned r6522usrvia_t2ll; /*T2 low order latch*/
 char r6522usrvia_sr; /*status register*/
 char r6522usrvia_acr;
 char r6522usrvia_pcr;
@@ -387,12 +388,14 @@ char userviaread(int naddress)
       if (beebit_mouseemulation == MOUSE_AMXMOUSE)
       {
         /*AMX mouse stuff*/
+#ifdef __RISCOS__
         _kernel_swi(OS_Mouse,&regs,&regs);
         amx_targetx = regs.r[0];
         amx_targety = regs.r[1];
         amx_buttons = ((regs.r[2] & 0x04) >> 2);
         amx_buttons |= (regs.r[2] & 0x02);
         amx_buttons |= ((regs.r[2] & 0x01) << 2);
+#endif
 
         nresult &= 0x1F;
         nresult |= (amx_buttons ^ 7) << 5;
@@ -598,11 +601,13 @@ void userviawrite(int naddress, char nvalue)
         /*clear b2,b1 (CA1,CA2)*/
         r6522usrvia_ifr &= 0xFC;
       }
+#ifdef __RISCOS__
       if (beebit_printer)
       {
         regs.r[0] = r6522usrvia_porta;
         _kernel_swi(OS_PrintChar,&regs,&regs);
       }
+#endif
       /*clear b2 (CA1)*/
       r6522usrvia_ifr |= 0x02; /*CA1*/
       userviasetirq();

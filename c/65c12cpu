@@ -13,6 +13,7 @@
 
 /*Original BBC 6502 ran at 2MHz (2,000,000 cycles)*/
 
+#include <stdint.h>
 #include <stddef.h>
 #include <string.h>
 #include "6502map.h"

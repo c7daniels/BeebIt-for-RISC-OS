@@ -9,6 +9,7 @@
 
 /*reads/writes one byte every 80us (160 2MHz cycles)*/
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -35,6 +35,7 @@ F0 Write Track      1         1      1      1      h      E      P      0
 The Type IV command is Force Interrupt.
 */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

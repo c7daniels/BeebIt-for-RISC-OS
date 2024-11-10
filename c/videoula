@@ -18,6 +18,7 @@
    7 - Master cursor width (if set causes large cursor)
 */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "6502map.h"
@@ -288,9 +289,9 @@ void videoulasetcursor(void)
   }
 }
 
-void videoulawrite(int naddress, char nvalue)
+void videoulawrite(int naddress, int nvalue)
 {
-  char n1,n2;
+  int n1,n2;
 
   #ifdef __DEBUG__
     fprintf(htrace,"write videoula %X %X\n",naddress,nvalue);
@@ -514,6 +515,7 @@ void videoulawrite(int naddress, char nvalue)
     {
       if (lteletextmode && local_teletextform == 0)
       {
+#ifdef __RISCOS__
         if (screenmoderecords)
         {
           regs.r[0] = 0;
@@ -525,9 +527,13 @@ void videoulawrite(int naddress, char nvalue)
           bbcvdu(22);
           bbcvdu(7);
         }
+#else
+        environmentscreenmode(7);
+#endif
       }
       else
       {
+#ifdef __RISCOS__
         if (screenmoderecords)
         {
           regs.r[0] = 0;
@@ -539,6 +545,9 @@ void videoulawrite(int naddress, char nvalue)
           bbcvdu(22);
           bbcvdu(beebit_graphicsmodespecifier);
         }
+#else
+        environmentscreenmode(beebit_graphicsmodespecifier);
+#endif
       }
       ncurrentmode = video_mode;
       /*videomodechange();*/

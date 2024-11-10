@@ -18,6 +18,7 @@
 /*b1 = PB latching enabled*/
 /*b0 = PA latching enabled*/
 
+#include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 #include "6502map.h"
@@ -41,9 +42,9 @@ char r6522sysvia_ora; /*output register A*/
 char r6522sysvia_ira; /*input register A*/
 char r6522sysvia_ddrb; /*0 bit means input, 1 means output*/
 char r6522sysvia_ddra; /*0 bit means input, 1 means output*/
-char r6522sysvia_t1ll; /*T1 low order latch*/
-char r6522sysvia_t1lh; /*T1 high order latch*/
-char r6522sysvia_t2ll; /*T2 low order latch*/
+unsigned char r6522sysvia_t1ll; /*T1 low order latch*/
+unsigned char r6522sysvia_t1lh; /*T1 high order latch*/
+unsigned char r6522sysvia_t2ll; /*T2 low order latch*/
 char r6522sysvia_sr; /*status register*/
 char r6522sysvia_acr;
 char r6522sysvia_pcr;
@@ -853,6 +854,7 @@ void systemviawrite(int naddress, char nvalue)
         case 0x06:
           /*caps lock on/off*/
           /*get keyboard status*/
+#ifdef __RISCOS__
           regs.r[0] = 202;
           regs.r[1] = 0;
           regs.r[2] = 255;
@@ -874,6 +876,7 @@ void systemviawrite(int naddress, char nvalue)
             regs.r[0] = 118;
             _kernel_swi(OS_Byte,&regs,&regs);
           }
+#endif
           break;
         case 0x07:
           /*shift lock on/off*/

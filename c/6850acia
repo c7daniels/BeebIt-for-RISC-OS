@@ -16,6 +16,7 @@
  *
  */
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "6502map.h"
@@ -412,7 +413,7 @@ int uefopen(void)
   uef_chunkstart = FALSE;
   uef_tone = 0;
 
-  beebit_tapeimage = fopen(beebit_uefimage, "rb");
+  beebit_tapeimage = BEEBIT_FOPEN(beebit_uefimage, "rb");
 
   nreturn = uefvalidate(beebit_tapeimage);
 

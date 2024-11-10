@@ -19,9 +19,9 @@ extern char r6522usrvia_ora; /*output register A*/
 extern char r6522usrvia_ira; /*input register A*/
 extern char r6522usrvia_ddrb;
 extern char r6522usrvia_ddra;
-extern char r6522usrvia_t1ll;
-extern char r6522usrvia_t1lh;
-extern char r6522usrvia_t2ll;
+extern unsigned char r6522usrvia_t1ll;
+extern unsigned char r6522usrvia_t1lh;
+extern unsigned char r6522usrvia_t2ll;
 extern char r6522usrvia_sr; /*status register*/
 extern char r6522usrvia_acr;
 extern char r6522usrvia_pcr;
