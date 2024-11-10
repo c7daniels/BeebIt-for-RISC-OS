@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "6502cpu.h"
+#include "6502map.h"
 
 #include "main.h"
 #include "kernel.h"

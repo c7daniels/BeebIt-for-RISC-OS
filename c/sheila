@@ -12,9 +12,12 @@
  * Email: <convertedgames@3insdale.me.uk>
  */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include "6502map.h"
 #include "6502cpu.h"
+#include "sheila.h"
 #include "6522sysvia.h"
 #include "6522usrvia.h"
 #include "6845crtc.h"
@@ -30,6 +33,18 @@
 #include "videoula.h"
 #include "1770fdc.h"
 
+#define SHEILA_4_BLOCK(OP) \
+  OP, OP, OP, OP
+
+#define SHEILA_8_BLOCK(OP) \
+  SHEILA_4_BLOCK(OP), SHEILA_4_BLOCK(OP)
+
+#define SHEILA_16_BLOCK(OP) \
+  SHEILA_8_BLOCK(OP), SHEILA_8_BLOCK(OP)
+
+#define SHEILA_32_BLOCK(OP) \
+  SHEILA_16_BLOCK(OP), SHEILA_16_BLOCK(OP)
+
 /*extern _kernel_swi_regs regs;*/
 
 /*extern char opcode;*/
@@ -37,59 +52,81 @@
 /*sheila*/
 /*char sheila_b[0x100];*/
 
-char (*r6502read8000s[0x10])(int naddress) =
-{
-  r6502read8000_0,
-  r6502read8000_1,
-  r6502read8000_2,
-  r6502read8000_3,
-  r6502read8000_4,
-  r6502read8000_5,
-  r6502read8000_6,
-  r6502read8000_7,
-  r6502read8000_8,
-  r6502read8000_9,
-  r6502read8000_A,
-  r6502read8000_B,
-  r6502read8000_C,
-  r6502read8000_D,
-  r6502read8000_E,
-  r6502read8000_F
+SHEILAOP sheilareadsb[256] = {
+  SHEILA_32_BLOCK(sheilaread_b),
+  SHEILA_32_BLOCK(sheilaread_b),
+  SHEILA_32_BLOCK(sheilaread_b),
+  SHEILA_32_BLOCK(sheilaread_b),
+  SHEILA_32_BLOCK(sheilaread_b),
+  SHEILA_32_BLOCK(sheilaread_b),
+  SHEILA_32_BLOCK(sheilaread_b),
+  SHEILA_32_BLOCK(sheilaread_b)
 };
-void (*r6502write8000s[0x10])(int naddress, char nvalue) =
-{
-  r6502write8000_0,
-  r6502write8000_1,
-  r6502write8000_2,
-  r6502write8000_3,
-  r6502write8000_4,
-  r6502write8000_5,
-  r6502write8000_6,
-  r6502write8000_7,
-  r6502write8000_8,
-  r6502write8000_9,
-  r6502write8000_A,
-  r6502write8000_B,
-  r6502write8000_C,
-  r6502write8000_D,
-  r6502write8000_E,
-  r6502write8000_F
+SHEILAOP sheilareadsbp[256] = {
+  SHEILA_32_BLOCK(sheilaread_bp),
+  SHEILA_32_BLOCK(sheilaread_bp),
+  SHEILA_32_BLOCK(sheilaread_bp),
+  SHEILA_32_BLOCK(sheilaread_bp),
+  SHEILA_32_BLOCK(sheilaread_bp),
+  SHEILA_32_BLOCK(sheilaread_bp),
+  SHEILA_32_BLOCK(sheilaread_bp),
+  SHEILA_32_BLOCK(sheilaread_bp)
+};
+SHEILAOP sheilareadsm[256] = {
+  SHEILA_32_BLOCK(sheilaread_m),
+  SHEILA_32_BLOCK(sheilaread_m),
+  SHEILA_32_BLOCK(sheilaread_m),
+  SHEILA_32_BLOCK(sheilaread_m),
+  SHEILA_32_BLOCK(sheilaread_m),
+  SHEILA_32_BLOCK(sheilaread_m),
+  SHEILA_32_BLOCK(sheilaread_m),
+  SHEILA_32_BLOCK(sheilaread_m)
+};
+SHEILAOP sheilawritesb[256] = {
+  SHEILA_32_BLOCK(sheilawrite_b),
+  SHEILA_32_BLOCK(sheilawrite_b),
+  SHEILA_32_BLOCK(sheilawrite_b),
+  SHEILA_32_BLOCK(sheilawrite_b),
+  SHEILA_32_BLOCK(sheilawrite_b),
+  SHEILA_32_BLOCK(sheilawrite_b),
+  SHEILA_32_BLOCK(sheilawrite_b),
+  SHEILA_32_BLOCK(sheilawrite_b)
+};
+SHEILAOP sheilawritesbp[256] = {
+  SHEILA_32_BLOCK(sheilawrite_bp),
+  SHEILA_32_BLOCK(sheilawrite_bp),
+  SHEILA_32_BLOCK(sheilawrite_bp),
+  SHEILA_32_BLOCK(sheilawrite_bp),
+  SHEILA_32_BLOCK(sheilawrite_bp),
+  SHEILA_32_BLOCK(sheilawrite_bp),
+  SHEILA_32_BLOCK(sheilawrite_bp),
+  SHEILA_32_BLOCK(sheilawrite_bp)
+};
+SHEILAOP sheilawritesm[256] = {
+  SHEILA_32_BLOCK(sheilawrite_m),
+  SHEILA_32_BLOCK(sheilawrite_m),
+  SHEILA_32_BLOCK(sheilawrite_m),
+  SHEILA_32_BLOCK(sheilawrite_m),
+  SHEILA_32_BLOCK(sheilawrite_m),
+  SHEILA_32_BLOCK(sheilawrite_m),
+  SHEILA_32_BLOCK(sheilawrite_m),
+  SHEILA_32_BLOCK(sheilawrite_m)
 };
 
-void sheilareset(void)
-{
+/*void sheilareset(void)
+{*/
   /*int i;
   for (i=0;i<=0x100;i++)
     sheila_b[i] = 0xFE;*/
-}
+/*}*/
 
-char sheilaread_b(int naddress)
+struct R6502HOSTMAP* sheilaread_b(R6502HOSTMAP* map)
 {
+  int naddress = (map->address_code>>16);
   char nresult;
-
   #ifdef __DEBUG__
     fprintf(htrace,"READsheila>&%X\n",naddress);
-    fprintf(htrace,"PC=&%X OP=&%X\n",r6502_pc-1,opcode);
+    fprintf(htrace,"PC=&%X OP=&%X\n",map->pc-1,opcode);
   #endif
 
   switch (naddress & 0xFC)
@@ -142,7 +179,7 @@ char sheilaread_b(int naddress)
     case 0x3C:
       /*&FE30 - &FE3F (ROMSEL)*/
       #ifdef __DEVELOPxx__
-        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,beebit_romsel);
+        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,map->romsel);
       #endif
       nresult = 0xFE;
       break;
@@ -186,15 +223,10 @@ char sheilaread_b(int naddress)
       /*&FE80-&FE9F (8271 or 1770)*/
       nresult = i8271read(naddress);
       /*nresult = w1770read(naddress);*/
-      if (beebit_nmi AND !beebit_oldnmi)
+      if ((hostmap.nmis & NMIS_NMI) AND !(hostmap.nmis & NMIS_OLDNMI))
       {
-        #ifdef __RISCOS__
-          r6502nmi();
-        #else
-          r6502donmi();
-        #endif
+        r6502startinterrupt(&hostmap);
       }
-      beebit_oldnmi = beebit_nmi;
       #ifdef __DEBUG__
         fprintf(htrace,"read8271(&%X)=&%X\n",(naddress & 0x0F),nresult);
       #endif
@@ -249,16 +281,18 @@ char sheilaread_b(int naddress)
       nresult = memory[naddress];
       break;
   }
-  return (nresult);
+  map->m = nresult;
+  R6502_EXECUTE_STEP(map)
+  return map;
 }
 
-char sheilaread_bp(int naddress)
+struct R6502HOSTMAP* sheilaread_bp(R6502HOSTMAP* map)
 {
+  int naddress = (map->address_code>>16);
   char nresult;
-
   #ifdef __DEBUG__
     fprintf(htrace,"READsheila>&%X\n",naddress);
-    fprintf(htrace,"PC=&%X OP=&%X\n",r6502_pc-1,opcode);
+    fprintf(htrace,"PC=&%X OP=&%X\n",map->pc-1,opcode);
   #endif
 
   switch (naddress & 0xFC)
@@ -311,17 +345,17 @@ char sheilaread_bp(int naddress)
     case 0x38:
       /*&FE30 - &FE33, &FE38 - &FE3B (ROMSEL)*/
       #ifdef __DEVELOPxx__
-        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,beebit_romsel);
+        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,map->romsel);
       #endif
-      nresult = beebit_romsel;
+      nresult = map->romsel;
       break;
     case 0x34:
     case 0x3C:
       /*&FE34-&FE37, &FE3C-&FE3F (ACCCON)*/
       #ifdef __DEVELOPXX__
-        fprintf(htrace," &%X ACCCON=&%X\n",naddress,beebit_acccon);
+        fprintf(htrace," &%X ACCCON=&%X\n",naddress,map->acccon);
       #endif
-      nresult = beebit_acccon;
+      nresult = map->acccon;
       break;
     case 0x40:
     case 0x44:
@@ -422,16 +456,18 @@ char sheilaread_bp(int naddress)
       nresult = memory[naddress];
       break;
   }
-  return (nresult);
+  map->m = nresult;
+  R6502_EXECUTE_STEP(map)
+  return map;
 }
 
-char sheilaread_m(int naddress)
+struct R6502HOSTMAP* sheilaread_m(R6502HOSTMAP* map)
 {
+  int naddress = (map->address_code>>16);
   char nresult;
-
   #ifdef __DEBUG__
     fprintf(htrace,"READsheila>&%X\n",naddress);
-    fprintf(htrace,"PC=&%X OP=&%X\n",r6502_pc-1,opcode);
+    fprintf(htrace,"PC=&%X OP=&%X\n",map->pc-1,opcode);
   #endif
   switch (naddress & 0xFC)
   {
@@ -482,16 +518,16 @@ char sheilaread_m(int naddress)
     case 0x30:
       /*&FE30 - &FE33 (ROMSEL)*/
       #ifdef __DEVELOPxx__
-        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,beebit_romsel);
+        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,map->romsel);
       #endif
-      nresult = beebit_romsel;
+      nresult = map->romsel;
       break;
     case 0x34:
       /*FE34-&FE37 (ACCCON)*/
       #ifdef __DEVELOPXX__
-        fprintf(htrace," &%X ACCCON=&%X\n",naddress,beebit_acccon);
+        fprintf(htrace," &%X ACCCON=&%X\n",naddress,map->acccon);
       #endif
-      nresult = beebit_acccon;
+      nresult = map->acccon;
       break;
     case 0x38:
       /*FE38-&FE3B (INTOFF)*/
@@ -540,15 +576,10 @@ char sheilaread_m(int naddress)
     case 0x9C:
       /*&FE80-&FE9F (8271 or 1770)*/
       nresult = i8271read(naddress);
-      if (beebit_nmi AND !beebit_oldnmi)
+      if ((hostmap.nmis & NMIS_NMI) AND !(hostmap.nmis & NMIS_OLDNMI))
       {
-        #ifdef __RISCOS__
-          r6502nmi();
-        #else
-          r6502donmi();
-        #endif
+        r6502startinterrupt(&hostmap);
       }
-      beebit_oldnmi = beebit_nmi;
       break;
     case 0xA0:
     case 0xA4:
@@ -598,11 +629,15 @@ char sheilaread_m(int naddress)
       nresult = memory[naddress];
       break;
   }
-  return (nresult);
+  map->m = nresult;
+  R6502_EXECUTE_STEP(map)
+  return map;
 }
 
-void sheilawrite_b(int naddress, char nvalue)
+struct R6502HOSTMAP* sheilawrite_b(R6502HOSTMAP* map)
 {
+  int naddress = (map->address_code>>16);
+  int nvalue = map->m;
   #ifdef __DEBUG__
     fprintf(htrace,"WRITEsheila=&%X,&%X\n",naddress,nvalue);
   #endif
@@ -665,14 +700,14 @@ void sheilawrite_b(int naddress, char nvalue)
       #ifdef __DEVELOPxx__
         fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
       #endif
-      if (beebit_romselected != nvalue)
       {
-        beebit_romsel = nvalue;
-        pageinrom(beebit_romsel & 0x0F, FALSE);
+        int nrom = (nvalue & 0x0F);
+        map->bus_fork[0x0B] = map->bus_fork[0x0A]
+            = map->bus_fork[0x09] = map->bus_fork[0x08] = map->read8000s[nrom];
+        map->bus_fork[0x1B] = map->bus_fork[0x1A]
+            = map->bus_fork[0x19] = map->bus_fork[0x18] = map->write8000s[nrom];
       }
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"=&%X\n",beebit_romsel);
-      #endif
+      map->romsel = nvalue;
       break;
     case 0x40:
     case 0x44:
@@ -718,15 +753,10 @@ void sheilawrite_b(int naddress, char nvalue)
       #endif
       i8271write(naddress, nvalue);
       /*w1770write(naddress, nvalue);*/
-      if (beebit_nmi AND !beebit_oldnmi)
+      if ((hostmap.nmis & NMIS_NMI) AND !(hostmap.nmis & NMIS_OLDNMI))
       {
-        #ifdef __RISCOS__
-          r6502nmi();
-        #else
-          r6502donmi();
-        #endif
+        r6502startinterrupt(&hostmap);
       }
-      beebit_oldnmi = beebit_nmi;
       break;
     case 0xC0:
     case 0xC4:
@@ -757,10 +787,14 @@ void sheilawrite_b(int naddress, char nvalue)
       /*tubewrite(naddress,nvalue);*/
       break;
   }
+  R6502_EXECUTE_STEP(map)
+  return map;
 }
 
-void sheilawrite_bp(int naddress, char nvalue)
+struct R6502HOSTMAP* sheilawrite_bp(R6502HOSTMAP* map)
 {
+  int naddress = (map->address_code>>16);
+  int nvalue = map->m;
   #ifdef __DEBUG__
     fprintf(htrace,"WRITEsheila=&%X,&%X\n",naddress,nvalue);
   #endif
@@ -801,7 +835,7 @@ void sheilawrite_bp(int naddress, char nvalue)
       break;
     case 0x20:
       /*&FE20 - &FE23 (VIDEOULA)*/
-      /*fprintf(htrace,"UW:&%X,&%X - PC=&%x\n",naddress,nvalue,r6502_pc);*/
+      /*fprintf(htrace,"UW:&%X,&%X - PC=&%x\n",naddress,nvalue,map->pc);*/
       #ifdef __DEBUG__
         fprintf(htrace,"writevideoula(&%X,&%X)\n",naddress,nvalue);
       #endif
@@ -823,33 +857,26 @@ void sheilawrite_bp(int naddress, char nvalue)
         fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
       #endif
       {
-        /*make rom F use rom E*/
-        int nrom = (nvalue & 0x0F) == 0x0F ? 0x0E : (nvalue & 0x0F);
-        char (*read8000)(int) = r6502read8000s[nrom];
-        void (*write8000)(int, char) = r6502write8000s[nrom];
+        int nrom = (nvalue & 0x0F);
         if (nvalue & 0x80)
         {
           /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
-          r6502readoffset[0x8] = r6502readbp8000_ram;
-          r6502readoffset[0x9] = r6502readbp8000_ram;
-          r6502readoffset[0xA] = r6502readbp8000_ram;
-          r6502writeoffset[0x8] = r6502writebp8000_ram;
-          r6502writeoffset[0x9] = r6502writebp8000_ram;
-          r6502writeoffset[0xA] = r6502writebp8000_ram;
+          map->bus_fork[0x0A] = map->bus_fork[0x09]
+              = map->bus_fork[0x08] = map->read8000_ram;
+          map->bus_fork[0x1A] = map->bus_fork[0x19]
+              = map->bus_fork[0x18] = map->write8000_ram;
         }
         else
         {
-          r6502readoffset[0x8] = read8000;
-          r6502readoffset[0x9] = read8000;
-          r6502readoffset[0xA] = read8000;
-          r6502writeoffset[0x8] = write8000;
-          r6502writeoffset[0x9] = write8000;
-          r6502writeoffset[0xA] = write8000;
+          map->bus_fork[0x0A] = map->bus_fork[0x09]
+              = map->bus_fork[0x08] = map->read8000s[nrom];
+          map->bus_fork[0x1A] = map->bus_fork[0x19]
+              = map->bus_fork[0x18] = map->write8000s[nrom];
         }
-        r6502readoffset[0xB] = read8000;
-        r6502writeoffset[0xB] = write8000;
+        map->bus_fork[0x0B] = map->read8000s[nrom];
+        map->bus_fork[0x1B] = map->write8000s[nrom];
       }
-      beebit_romsel = nvalue;
+      map->romsel = nvalue;
       break;
     case 0x34:
     case 0x3C:
@@ -860,31 +887,23 @@ void sheilawrite_bp(int naddress, char nvalue)
       if (nvalue & 0x80)
       {
         /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
-        r6502readoffset[0x3] = r6502readbp3000_ram;
-        r6502readoffset[0x4] = r6502readbp3000_ram;
-        r6502readoffset[0x5] = r6502readbp3000_ram;
-        r6502readoffset[0x6] = r6502readbp3000_ram;
-        r6502readoffset[0x7] = r6502readbp3000_ram;
-        r6502writeoffset[0x3] = r6502writebp3000_ram;
-        r6502writeoffset[0x4] = r6502writebp3000_ram;
-        r6502writeoffset[0x5] = r6502writebp3000_ram;
-        r6502writeoffset[0x6] = r6502writebp3000_ram;
-        r6502writeoffset[0x7] = r6502writebp3000_ram;
+        map->bus_fork[0x07] = map->bus_fork[0x06]
+            = map->bus_fork[0x05] = map->bus_fork[0x04]
+            = map->bus_fork[0x03] = map->read3000_ram;
+        map->bus_fork[0x17] = map->bus_fork[0x16]
+            = map->bus_fork[0x15] = map->bus_fork[0x14]
+            = map->bus_fork[0x13] = map->write3000_ram;
       }
       else
       {
-        r6502readoffset[0x3] = r6502read3000;
-        r6502readoffset[0x4] = r6502read3000;
-        r6502readoffset[0x5] = r6502read3000;
-        r6502readoffset[0x6] = r6502read3000;
-        r6502readoffset[0x7] = r6502read3000;
-        r6502writeoffset[0x3] = r6502write3000;
-        r6502writeoffset[0x4] = r6502write3000;
-        r6502writeoffset[0x5] = r6502write3000;
-        r6502writeoffset[0x6] = r6502write3000;
-        r6502writeoffset[0x7] = r6502write3000;
+        map->bus_fork[0x07] = map->bus_fork[0x06]
+            = map->bus_fork[0x05] = map->bus_fork[0x04]
+            = map->bus_fork[0x03] = map->read3000;
+        map->bus_fork[0x17] = map->bus_fork[0x16]
+            = map->bus_fork[0x15] = map->bus_fork[0x14]
+            = map->bus_fork[0x13] = map->write3000;
       }
-      beebit_acccon = nvalue;
+      map->acccon = nvalue;
       break;
     case 0x40:
     case 0x44:
@@ -960,10 +979,14 @@ void sheilawrite_bp(int naddress, char nvalue)
       /*tubewrite(naddress,nvalue);*/
       break;
   }
+  R6502_EXECUTE_STEP(map)
+  return map;
 }
 
-void sheilawrite_m(int naddress, char nvalue)
+struct R6502HOSTMAP* sheilawrite_m(R6502HOSTMAP* map)
 {
+  int naddress = (map->address_code>>16);
+  int nvalue = map->m;
   #ifdef __DEBUG__
     fprintf(htrace,"WRITEsheila=&%X,&%X\n",naddress,nvalue);
   #endif
@@ -1024,27 +1047,23 @@ void sheilawrite_m(int naddress, char nvalue)
       #endif
       {
         int nrom = (nvalue & 0x0F);
-        char (*read8000)(int) = r6502read8000s[nrom];
-        void (*write8000)(int, char) = r6502write8000s[nrom];
         if (nvalue & 0x80)
         {
           /*ROMSEL b7 (RAM) (&8000-&8FFF)*/
-          r6502readoffset[0x8] = r6502readm8000_ram;
-          r6502writeoffset[0x8] = r6502writem8000_ram;
+          map->bus_fork[0x08] = map->read8000_ram;
+          map->bus_fork[0x18] = map->write8000_ram;
         }
         else
         {
-          r6502readoffset[0x8] = read8000;
-          r6502writeoffset[0x8] = write8000;
+          map->bus_fork[0x08] = map->read8000s[nrom];
+          map->bus_fork[0x18] = map->write8000s[nrom];
         }
-        r6502readoffset[0x9] = read8000;
-        r6502readoffset[0xA] = read8000;
-        r6502readoffset[0xB] = read8000;
-        r6502writeoffset[0xB] = write8000;
-        r6502writeoffset[0x9] = write8000;
-        r6502writeoffset[0xA] = write8000;
+        map->bus_fork[0x0B] = map->bus_fork[0x0A]
+            = map->bus_fork[0x09] = map->read8000s[nrom];
+        map->bus_fork[0x1B] = map->bus_fork[0x1A]
+            = map->bus_fork[0x19] = map->write8000s[nrom];
       }
-      beebit_romsel = nvalue;
+      map->romsel = nvalue;
       break;
     case 0x34:
       /*&FE34 - &FE37 (ACCCON)*/
@@ -1055,75 +1074,54 @@ void sheilawrite_m(int naddress, char nvalue)
       {
         case 0x00:
           /*RAM*/
-          r6502readoffset[0x3] = r6502read3000;
-          r6502readoffset[0x4] = r6502read3000;
-          r6502readoffset[0x5] = r6502read3000;
-          r6502readoffset[0x6] = r6502read3000;
-          r6502readoffset[0x7] = r6502read3000;
-          r6502writeoffset[0x3] = r6502write3000;
-          r6502writeoffset[0x4] = r6502write3000;
-          r6502writeoffset[0x5] = r6502write3000;
-          r6502writeoffset[0x6] = r6502write3000;
-          r6502writeoffset[0x7] = r6502write3000;
+          map->bus_fork[0x07] = map->bus_fork[0x06]
+              = map->bus_fork[0x05] = map->bus_fork[0x04]
+              = map->bus_fork[0x03] = map->read3000;
+          map->bus_fork[0x17] = map->bus_fork[0x16]
+              = map->bus_fork[0x15] = map->bus_fork[0x14]
+              = map->bus_fork[0x13] = map->write3000;
           break;
         case 0x02:
           /*ACCCON b1 (E)*/
-          r6502readoffset[0x3] = r6502readm3000_e;
-          r6502readoffset[0x4] = r6502readm3000_e;
-          r6502readoffset[0x5] = r6502readm3000_e;
-          r6502readoffset[0x6] = r6502readm3000_e;
-          r6502readoffset[0x7] = r6502readm3000_e;
-          r6502writeoffset[0x3] = r6502writem3000_e;
-          r6502writeoffset[0x4] = r6502writem3000_e;
-          r6502writeoffset[0x5] = r6502writem3000_e;
-          r6502writeoffset[0x6] = r6502writem3000_e;
-          r6502writeoffset[0x7] = r6502writem3000_e;
+          map->bus_fork[0x07] = map->bus_fork[0x06]
+              = map->bus_fork[0x05] = map->bus_fork[0x04]
+              = map->bus_fork[0x03] = map->read3000_e;
+          map->bus_fork[0x17] = map->bus_fork[0x16]
+              = map->bus_fork[0x15] = map->bus_fork[0x14]
+              = map->bus_fork[0x13] = map->write3000_e;
           break;
         case 0x04:
         case 0x06:
           /*ACCCON b2 (X)*/
-          r6502readoffset[0x3] = r6502readm3000_x;
-          r6502readoffset[0x4] = r6502readm3000_x;
-          r6502readoffset[0x5] = r6502readm3000_x;
-          r6502readoffset[0x6] = r6502readm3000_x;
-          r6502readoffset[0x7] = r6502readm3000_x;
-          r6502writeoffset[0x3] = r6502writem3000_x;
-          r6502writeoffset[0x4] = r6502writem3000_x;
-          r6502writeoffset[0x5] = r6502writem3000_x;
-          r6502writeoffset[0x6] = r6502writem3000_x;
-          r6502writeoffset[0x7] = r6502writem3000_x;
+          map->bus_fork[0x07] = map->bus_fork[0x06]
+              = map->bus_fork[0x05] = map->bus_fork[0x04]
+              = map->bus_fork[0x03] = map->read3000_x;
+          map->bus_fork[0x17] = map->bus_fork[0x16]
+              = map->bus_fork[0x15] = map->bus_fork[0x14]
+              = map->bus_fork[0x13] = map->write3000_x;
           break;
       }
-
       if (nvalue & 0x08)
       {
         /*ACCCON b3 (Y)*/
         /*&C000-&DFFF*/
-        r6502readoffset[0xC] = r6502readmC000_y;
-        r6502readoffset[0xD] = r6502readmC000_y;
-        r6502writeoffset[0xC] = r6502writemC000_y;
-        r6502writeoffset[0xD] = r6502writemC000_y;
+        map->bus_fork[0x0D] = map->bus_fork[0x0C] = map->readC000_y;
+        map->bus_fork[0x1D] = map->bus_fork[0x1C] = map->writeC000_y;
       }
       else
       {
         /*&C000-&DFFF*/
-        r6502readoffset[0xC] = r6502readC000;
-        r6502readoffset[0xD] = r6502readC000;
-        r6502writeoffset[0xC] = r6502writeC000;
-        r6502writeoffset[0xD] = r6502writeC000;
+        map->bus_fork[0x0D] = map->bus_fork[0x0C] = map->bus_fork[0x0E];
+        map->bus_fork[0x1D] = map->bus_fork[0x1C] = map->bus_fork[0x1E];
       }
 
       if (nvalue & 0x80)
       {
         /*IRR*/
-        #ifdef __RISCOS__
-          r6502irq();
-        #else
-          r6502doirq();
-        #endif
+        r6502startinterrupt(&hostmap);
         nvalue &= 0x7F;
       }
-      beebit_acccon = nvalue;
+      map->acccon = nvalue;
       break;
     case 0x38:
       /*&FE38 - &FE3B (INTOFF)*/
@@ -1171,15 +1169,10 @@ void sheilawrite_m(int naddress, char nvalue)
     case 0x9C:
       /*&FE80 - &FE9F (8271 or 1770)*/
       i8271write(naddress, nvalue);
-      if (beebit_nmi AND !beebit_oldnmi)
+      if ((hostmap.nmis & NMIS_NMI) AND !(hostmap.nmis & NMIS_OLDNMI))
       {
-        #ifdef __RISCOS__
-          r6502nmi();
-        #else
-          r6502donmi();
-        #endif
+        r6502startinterrupt(&hostmap);
       }
-      beebit_oldnmi = beebit_nmi;
       break;
     case 0xC0:
     case 0xC4:
@@ -1206,4 +1199,6 @@ void sheilawrite_m(int naddress, char nvalue)
       /*tubewrite(naddress,nvalue);*/
       break;
   }
+  R6502_EXECUTE_STEP(map)
+  return map;
 }

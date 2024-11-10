@@ -6,6 +6,11 @@
 ;
 ; Email: <mjfoot@paradise.net.nz>
 ;
+
+  GET h.6502cpus
+
+  GET h.6502maps
+
 ; Use the GET directive to include register definitions as if typed here
 
   GET     h.RegNames
@@ -19,9 +24,9 @@
   AREA    |C$$code|, CODE, READONLY
 
 ; Import global symbols
+  IMPORT |hostmap|
   IMPORT |memory|
   IMPORT |shadow|
-  IMPORT |beebit_acccon|
   IMPORT |beebit_vdusel|
   IMPORT |videoula_palette|
   IMPORT |video_address|
@@ -43,8 +48,8 @@
   ;r0 = address offset in riscos memory (screen)
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:R6502_ACCCON] ;acccon
   LDR r12,=beebit_vdusel
   LDR r3,[r12] ;vdusel
   TST r2,r3 ;test vdusel set
@@ -127,8 +132,8 @@ mode4plot4_end
   ;r0 = address offset in riscos memory (screen)
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:R6502_ACCCON] ;acccon
   LDR r12,=beebit_vdusel
   LDR r3,[r12] ;vdusel
   TST r2,r3 ;test vdusel set
@@ -220,8 +225,8 @@ mode4plot8_end
   ;r0 = address offset in riscos memory (screen)
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:R6502_ACCCON] ;acccon
   LDR r12,=beebit_vdusel
   LDR r3,[r12] ;vdusel
   TST r2,r3 ;test vdusel set
@@ -310,8 +315,8 @@ mode5plot4_end
   ;r0 = address offset in riscos memory (screen)
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:R6502_ACCCON] ;acccon
   LDR r12,=beebit_vdusel
   LDR r3,[r12] ;vdusel
   TST r2,r3 ;test vdusel set
@@ -417,8 +422,8 @@ mode5plot8_end
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
   ;LDR r12,=memory ;bbc memory space
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:R6502_ACCCON] ;acccon
   LDR r12,=beebit_vdusel
   LDR r3,[r12] ;vdusel
   ;ANDS r2,r2,#&80
@@ -525,8 +530,8 @@ mode8plot4_end
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
   ;LDR r12,=memory ;bbc memory space
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:R6502_ACCCON] ;acccon
   LDR r12,=beebit_vdusel
   LDR r3,[r12] ;vdusel
   ;ANDS r2,r2,#&80

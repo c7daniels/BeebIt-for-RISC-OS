@@ -1,0 +1,102 @@
+;>6502maps.h
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Interleaved CPU and video emulation
+;
+; (C) Copyright Crispian Daniels, 2024
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+R6502_SCAN_SEQUENCE EQU 256
+R6502_DECODE_SEQUENCE EQU 257
+R6502_RESET_SEQUENCE EQU 258
+R6502_INTERRUPT_SEQUENCE EQU 259
+R6502_OPCODE_07_SEQUENCE EQU 260
+
+R6502_LOG2_MAX_SEQUENCE_LENGTH EQU 3
+
+                        ^ 0
+TIMERS_CYCLESMONOTONIC  # &4
+TIMERS_CYCLE            # &4
+TIMERS_CYCLESTOGO       # &4
+TIMERS_CYCLESORIGINAL   # &4
+TIMERS_SYSVIATOGO       # &4
+TIMERS_SYSVIAORIGINAL   # &4
+TIMERS_USRVIATOGO       # &4
+TIMERS_USRVIAORIGINAL   # &4
+TIMERS_I8271TOGO        # &4
+TIMERS_W1770TOGO        # &4
+TIMERS_ADCTOGO          # &4
+TIMERS_M6850TOGO        # &4
+TIMERS_VIDEOTOGO        # &4
+SIZEOF_TIMERMAP         * @
+
+;a C representation of this storage map appears in 6502cpu.h
+;offsets are intended to equal barrel-shift constants
+                        ^ 0
+R6502_CPU_STATE         # &4
+R6502_ADDRESS_CODE      # &4
+R6502_PC_CODE           # &4
+R6502_SP_CODE           # &4
+R6502_LATCH             # &4
+R6502_M                 # &1
+R6502_A                 # &1
+R6502_X                 # &1
+R6502_Y                 # &1
+R6502_PS                # &1
+R6502_IRQ               # &1
+R6502_NMIS              # &1
+                        # &1
+R6502_TIMERS            # SIZEOF_TIMERMAP
+R6502_TRANSITION1ACTION # &4
+R6502_TRANSITION2ACTION # &4
+R6502_YIELDACTION       # &4
+R6502_FETCHACTION       # &4
+R6502_FETCHTHENTESTIRQACTION # &4
+R6502_RESETACTION       # &4
+R6502_INTERRUPTACTION   # &4
+R6502_TIMESINTERRUPTMISSED # &4
+R6502_LBREAK            # &4
+R6502_ROMSEL            # &1
+R6502_ACCCON            # &1
+R6502_READCOMPLETED     # &1
+                        # &1
+R6502_ROMWRITABLE       # &10
+R6502_READ3000          # &4
+R6502_WRITE3000         # &4
+R6502_READ3000_RAM      # &4
+R6502_WRITE3000_RAM     # &4
+R6502_READ3000_E        # &4
+R6502_WRITE3000_E       # &4
+R6502_READ3000_X        # &4
+R6502_WRITE3000_X       # &4
+R6502_READ8000_RAM      # &4
+R6502_WRITE8000_RAM     # &4
+R6502_READC000_Y        # &4
+R6502_WRITEC000_Y       # &4
+R6502_SWAPPAGESINTOMEMORY # &4
+R6502_SWAPPAGESOUTOFMEMORY # &4
+R6502_ZERIBEEPWRITEBYTE # &4
+R6502_ZERIBEEPWORKSPACE # &4
+                        # &138
+R6502_BUS_FORK          # &200
+                        # &1780
+R6502_READ_8000S        # &40
+R6502_WRITE_8000S       # &40
+R6502_HIGH_READ_FORK    # &1000
+R6502_HIGH_WRITE_FORK   # &1000
+R6502_HIGH_STRETCHED_READ_FORK  # &1000
+R6502_HIGH_STRETCHED_WRITE_FORK # &1000
+R6502_STEPS             # &2400
+SIZEOF_R6502MAP         * @
+;appended host memory
+R6502_MEMORY            # &10000
+R6502_SHADOW            * @
+R6502_ANDY              # &1000
+R6502_HAZEL             # &2000
+R6502_LYNNE             # &5000
+R6502_ROMS              # &40000
+
+  END

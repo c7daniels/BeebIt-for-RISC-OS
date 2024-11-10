@@ -12,13 +12,20 @@
  * Email: <convertedgames@3insdale.me.uk>
  */
 
-/*sheila*/
-extern char sheila_b[0x100];
+struct R6502HOSTMAP;
 
-void sheilareset(void);
-int sheilaread_b(int);
-int sheilaread_bp(int);
-int sheilaread_m(int);
-void sheilawrite_b(unsigned int, int);
-void sheilawrite_bp(unsigned int, int);
-void sheilawrite_m(unsigned int, int);
+typedef struct R6502HOSTMAP* (*SHEILAOP)(struct R6502HOSTMAP *map);
+
+extern SHEILAOP sheilareadsb[256];
+extern SHEILAOP sheilareadsbp[256];
+extern SHEILAOP sheilawritesb[256];
+extern SHEILAOP sheilawritesbp[256];
+extern SHEILAOP sheilareadsm[256];
+extern SHEILAOP sheilawritesm[256];
+
+R6502HOSTMAP* sheilaread_b(struct R6502HOSTMAP *map);
+R6502HOSTMAP* sheilaread_bp(struct R6502HOSTMAP *map);
+R6502HOSTMAP* sheilaread_m(struct R6502HOSTMAP *map);
+R6502HOSTMAP* sheilawrite_b(struct R6502HOSTMAP *map);
+R6502HOSTMAP* sheilawrite_bp(struct R6502HOSTMAP *map);
+R6502HOSTMAP* sheilawrite_m(struct R6502HOSTMAP *map);

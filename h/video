@@ -78,7 +78,7 @@ extern void videosetplot(void);
 extern void videohostmodevars(void);
 extern int writeusedcolours(void);
 extern void videofreeworkspace(void);
-extern void videoreset(int lfull);
+extern void videoreset(void);
 extern void videomodechange(void);
 /*extern void videoupdate(void);*/
 extern void videoscanline(void);

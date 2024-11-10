@@ -21,14 +21,6 @@
 #define TRUE  0xFF
 #define FALSE 0x00
 
-#define IRQ_6522SYSVIA 0x01
-#define IRQ_6522USRVIA 0x02
-#define IRQ_6850ACIA 0x04
-
-#define IRQ_NOT6522SYSVIA 0xFE
-#define IRQ_NOT6522USRVIA 0xFD
-#define IRQ_NOT6850ACIA 0xFB
-
 #define NAME_MODELB "Model B"
 #define NAME_MODELBPLUS "Model B+"
 #define NAME_MASTER128 "Master 128"
@@ -77,6 +69,10 @@
   #endif
 #endif
 
+struct R6502HOSTMAP;
+
+extern struct R6502HOSTMAP hostmap;
+
 extern char memory[0x10000]; /*65536 bytes*/
 extern char shadow[0x8000]; /*32768 bytes*/
 /*shadow replaces andy,hazel and lynne for speed*/
@@ -87,7 +83,6 @@ extern char roms[16][0x4000];
 
 extern int beebit_trace;
 extern char beebit_osrom[MACHINE_COMPACT+1][128];
-extern int beebit_romwritable[16];
 extern int beebit_romwrite[(MACHINE_COMPACT*16)+16];
 extern char beebit_romimage[(MACHINE_COMPACT*16)+16][128];
 extern char beebit_rompath[128];
@@ -124,28 +119,16 @@ extern int beebit_printer;
 extern int beebit_links; /*keyboard links*/
 extern int beebit_button1; /*joystick button 1*/
 extern int beebit_button2; /*joystick button 2*/
-extern int beebit_romsel; /*ROMSELect*/
-extern int beebit_acccon; /*ACCCON*/
-extern int beebit_memorymap; /*flags for memory/shadow swapping*/
 extern int beebit_vdusel; /*VDUSEL (0x80) for B+, D (0x01) for Master 128*/
-extern int beebit_romselected;
-extern int beebit_rommodified;
 extern int beebit_leds,host_leds;
 extern int beebit_rommask;
-extern int beebit_yield;
 extern int beebit_exit;
 
-extern int beebit_irq;
-extern int beebit_nmi;
-extern int beebit_oldnmi;
-
 extern void copyselectedromintomemory(void);
-extern void pageinrom(int nrom, int lmosram);
 extern int loadrom(char *cfilename,int nslot);
-extern void updateviatimers(int ncycles);
-extern void updateothertimers(int ncycles);
-extern void updatetimers(void);
 extern void updatekeyboard(void);
+extern struct R6502HOSTMAP* startperipheralreset(struct R6502HOSTMAP *map, int full);
+extern struct R6502HOSTMAP* endperipheralreset(struct R6502HOSTMAP *map);
 extern int beebitsectorcount(FILE *hfile);
 extern int beebitimagedsd(int nimagetype);
 extern int beebitimagetype(FILE *hfile, int nsectorcount);

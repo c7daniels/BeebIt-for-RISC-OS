@@ -26,7 +26,7 @@ extern int videoula_flashcolour;
 
 extern int ncurrentmode,lteletextmode;
 
-extern void videoulareset(int lfull);
+extern void videoulareset(void);
 extern void videoulasetpalette(void);
 extern int videoularead(unsigned int naddress);
 extern void videoulawrite(int naddress, int nvalue);

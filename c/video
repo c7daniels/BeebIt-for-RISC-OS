@@ -20,6 +20,7 @@
 #include <string.h>
 #include <math.h>
 #include <time.h>
+#include "6502map.h"
 #include "6502cpu.h"
 
 #include "6522sysvia.h"
@@ -112,7 +113,6 @@ int teletext_rightextra;
 /*int video_vsync0;*/ /*start of vertical sync scan line*/
 /*int video_vsync1;*/ /*end of vertical sync scan line*/
 int video_mode; /*screen mode*/
-int video_timer; /*scanline timer*/
 
 /*int video_phase;*/
 int video_currentrow; /*current row being drawn on local screen*/
@@ -546,7 +546,7 @@ void videorecalc(void)
   video_synchold = 0;
 }
 
-void videoreset(int lfull)
+void videoreset(void)
 {
   /*video_phase = VIDEO_DRAWWAIT;*/
   video_field = 0;
@@ -573,26 +573,23 @@ void videoreset(int lfull)
   teletext_holdgraphics = FALSE;
   teletext_steady = TRUE;
   teletext_timer = 0;
-  if (lfull)
+  switch (beebit_machinetype)
   {
-    switch (beebit_machinetype)
-    {
-      case MACHINE_MODELB:
-      case MACHINE_MODELBPLUS:
-        video_timer = 600000;
-        break;
-      case MACHINE_MASTER128:
-        video_timer = 1400000;
-        break;
-      case MACHINE_COMPACT:
-        video_timer = 2000000;
-        break;
-      default:
-        video_timer = 600000;
-        break;
-    }
-    video_framerate = 0;
+    case MACHINE_MODELB:
+    case MACHINE_MODELBPLUS:
+      hostmap.timers.video_togo = 600000;
+      break;
+    case MACHINE_MASTER128:
+      hostmap.timers.video_togo = 1400000;
+      break;
+    case MACHINE_COMPACT:
+      hostmap.timers.video_togo = 2000000;
+      break;
+    default:
+      hostmap.timers.video_togo = 600000;
+      break;
   }
+  video_framerate = 0;
   cursor_timer = cursor_blinktime;
   cursor_on = TRUE;
   videorecalc();
@@ -1497,7 +1494,7 @@ void videoteletextrelay(void)
       }
       break;
     case MACHINE_MODELBPLUS:
-      if (beebit_acccon & 0x80)
+      if (hostmap.acccon & 0x80)
       {
         while (nx > 0)
         {
@@ -1526,7 +1523,7 @@ void videoteletextrelay(void)
       break;
     case MACHINE_MASTER128:
     case MACHINE_COMPACT:
-      if (beebit_acccon & 0x01)
+      if (hostmap.acccon & 0x01)
       {
         /*LYNNE (D)*/
         while (nx > 0)
@@ -3008,14 +3005,14 @@ void videoteletextdrawrow(void)
         video_n = memory[video_address];
         break;
       case MACHINE_MODELBPLUS:
-        if (beebit_acccon & 0x80)
+        if (hostmap.acccon & 0x80)
           video_n = shadow[video_address];
         else
           video_n = memory[video_address];
         break;
       case MACHINE_MASTER128:
       case MACHINE_COMPACT:
-        if (beebit_acccon & 0x01)
+        if (hostmap.acccon & 0x01)
           /*LYNNE (D)*/
           video_n = shadow[video_address];
         else
@@ -3498,6 +3495,18 @@ void videomodechange(void)
   }
 }
 
+R6502HOSTMAP *videoatzerocycles(R6502HOSTMAP *map)
+{
+  hostmap.timers.video_togo = 0;
+
+  /*
+  videoscanline needs to return when a vsync is done and returns to the Wimp_Poll. Only exit when a vsync in detected, including when F12 is pressed
+  */
+  videoscanline();
+
+  return map;
+}
+
 void videoscanline(void)
 {
   int naddress,localrow,nscaledscreen;
@@ -3530,8 +3539,6 @@ void videoscanline(void)
 
   if (video_synchold == 0)
   {
-    /*r6502_cyclestogo += 4;*/
-
     /*vertical sync width*/
     if (m6845_vc == m6845_vsp && m6845_sc <= m6845_vsw)
     {
@@ -3558,15 +3565,15 @@ void videoscanline(void)
       {
         if (videoula_clockrate)
           /*fast clock mode (2MHz cycles) */
-          video_timer -= charstodisplayline;
+          hostmap.timers.video_togo -= charstodisplayline;
         else
           /*slow clock mode (milliseconds)*/
-          video_timer -= (charstodisplayline << 1);
+          hostmap.timers.video_togo -= (charstodisplayline << 1);
       }
 
       /*VSYNC pulse is delayed on interlace even frame*/
       if (m6845_interlaceon && video_field == 0)
-        video_timer += (m6845_horizontaltotal>>1);
+        hostmap.timers.video_togo += (m6845_horizontaltotal>>1);
 
       /*print screen during vertical sync*/
       if (lprintscreen !=0)
@@ -3585,7 +3592,7 @@ void videoscanline(void)
     {
       /*Take off time VSYNC end was delayed*/
       if (m6845_interlaceon && video_field == 0)
-        video_timer -= (m6845_horizontaltotal>>1);
+        hostmap.timers.video_togo -= (m6845_horizontaltotal>>1);
 
       /*Run CPU forward to horizontal display*/
       charstodisplayline = m6845_r[0x00] - m6845_r[0x02];
@@ -3593,10 +3600,10 @@ void videoscanline(void)
       {
         if (videoula_clockrate)
           /*fast clock mode (2MHz cycles) */
-          video_timer += charstodisplayline;
+          hostmap.timers.video_togo += charstodisplayline;
         else
           /*slow clock mode (milliseconds)*/
-          video_timer += (charstodisplayline << 1);
+          hostmap.timers.video_togo += (charstodisplayline << 1);
       }
 
       if (video_mode != ncurrentmode)
@@ -3659,7 +3666,7 @@ void videoscanline(void)
       systemviasetirq();
       r6522sysvia_ira = (r6522sysvia_ora & r6522sysvia_ddra) + (r6522sysvia_porta & ~r6522sysvia_ddra);
 
-      beebit_yield = TRUE;
+      r6502startyield(&hostmap);
 
       /*if (singletask)
       {*/
@@ -3678,19 +3685,7 @@ void videoscanline(void)
 
   /*---timing---*/
 
-  /*if (lteletextmode)
-  {
-    video_timer += (m6845_horizontaltotal*m6845_sl);
-    video_timer += m6845_horizontaltotal + 32;
-  }
-  else
-  {*/
-  /*if (videoula_clockrate)
-    video_timer += m6845_horizontaltotal;
-  else
-    video_timer += (m6845_horizontaltotal << 1);*/
-  video_timer += m6845_horizontaltotal;
-  /*}*/
+  hostmap.timers.video_togo += m6845_horizontaltotal;
 
   /*---reset---*/
 
@@ -3701,7 +3696,7 @@ void videoscanline(void)
   {
     /*Dummy line brings sum of even + odd field time to 40 ms for Revs*/
     if (m6845_interlaceon && video_field == 0)
-      video_timer += m6845_horizontaltotal;
+      hostmap.timers.video_togo += m6845_horizontaltotal;
 
     videorecalc();
     m6845_vc = m6845_sc = 0;
@@ -3788,7 +3783,7 @@ void videoscanline(void)
           /*for (i=0;i<=0xFF;i++)
             shadow[0x2F00+i] = shadow[0xDF00+i];
         }*/
-        if (video_address >= 0x8000) /* AND !(beebit_acccon & beebit_vdusel))*/
+        if (video_address >= 0x8000) /* AND !(hostmap.acccon & beebit_vdusel))*/
         {
           video_address &= 0x7FFF;
           video_address += video_baseaddress;
