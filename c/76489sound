@@ -330,6 +330,7 @@ void soundprocess(void)
 
 void soundplay(int nchannel)
 {
+#ifdef __RISCOS__
   #ifdef __DEBUG__
     fprintf(htrace,"CH:%i &%X\n",nchannel,a76489_frequency[nchannel]);
   #endif
@@ -388,4 +389,5 @@ void soundplay(int nchannel)
       _kernel_swi(Sound_Control,&regs,&regs);
     }
   }
+#endif
 }

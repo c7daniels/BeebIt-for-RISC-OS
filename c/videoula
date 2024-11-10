@@ -352,6 +352,7 @@ R6502HOSTMAP* videoula00write(R6502HOSTMAP* map, unsigned int address_code)
   {
     if (lteletextmode && local_teletextform == 0)
     {
+#ifdef __RISCOS__
       if (screenmoderecords)
       {
         regs.r[0] = 0;
@@ -363,9 +364,13 @@ R6502HOSTMAP* videoula00write(R6502HOSTMAP* map, unsigned int address_code)
         bbcvdu(22);
         bbcvdu(7);
       }
+#else
+      environmentscreenmode(7);
+#endif
     }
     else
     {
+#ifdef __RISCOS__
       if (screenmoderecords)
       {
         regs.r[0] = 0;
@@ -377,6 +382,9 @@ R6502HOSTMAP* videoula00write(R6502HOSTMAP* map, unsigned int address_code)
         bbcvdu(22);
         bbcvdu(beebit_graphicsmodespecifier);
       }
+#else
+      environmentscreenmode(beebit_graphicsmodespecifier);
+#endif
     }
     ncurrentmode = video_mode;
     videohostmodevars();

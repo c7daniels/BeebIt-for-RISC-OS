@@ -136,11 +136,12 @@ char cbintohex[0x10] = {48,49,50,51,52,53,54,55,56,57,65,66,67,68,69,70};
 #ifdef BEEBIT_NO_ASM
 unsigned int getword(char *cblock)
 {
+  unsigned char* p = (unsigned char*)cblock;
   unsigned int nreturn;
-  nreturn = cblock[0];
-  nreturn += (cblock[1] << 8);
-  nreturn += (cblock[2] << 16);
-  nreturn += (cblock[3] << 24);
+  nreturn = p[0];
+  nreturn += (p[1] << 8);
+  nreturn += (p[2] << 16);
+  nreturn += (p[3] << 24);
   return nreturn;
 }
 
@@ -166,17 +167,55 @@ void swappages(char *cblock1, char *cblock2, int npagecount)
 }
 #endif
 
-void itoa(int nvalue,char *cbuffer)
+int itoa(int nvalue,char *cbuffer, int maximumLength)
 {
+#ifdef __RISCOS__
   regs.r[0] = nvalue;
   regs.r[1] = (int)cbuffer;
-  regs.r[2] = 10;
+  regs.r[2] = maximumLength;
   _kernel_swi(OS_BinaryToDecimal,&regs,&regs);
   cbuffer[regs.r[2]] = 0;
+  return regs.r[2];
+#else
+  int i,j,swap;
+  int negative = nvalue < 0;
+  unsigned int a = negative ? (unsigned int)(-nvalue) : (unsigned int)nvalue;
+
+  if (negative)
+    nvalue = -nvalue;
+
+  for (i = 0; i < maximumLength; i++)
+  {
+    cbuffer[i] = '0' + a % 10;
+    a /= 10;
+    if (!a)
+      break;
+  }
+
+  if (nvalue || (i == maximumLength && negative))
+  {
+    i = 0;
+  }
+  else if (negative)
+  {
+    cbuffer[i] = '-';
+    i++;
+  }
+
+  for (j=(i>>1); j>=0; j--)
+  {
+    swap = cbuffer[j];
+    cbuffer[j] = cbuffer[i-j-1];
+    cbuffer[i-j-1] = swap;
+  }
+  cbuffer[i] = 0;
+  return i;
+#endif
 }
 
 void wimperror(char *cerror)
 {
+#ifdef __RISCOS__
   char cname[16];
   strcpy(cname,APP_NAME);
   setword(b,0);
@@ -188,8 +227,12 @@ void wimperror(char *cerror)
   regs.r[4] = 0;
   regs.r[5] = 0;
   _kernel_swi(Wimp_ReportError,&regs,&regs);
+#else
+  fprintf(stderr, "%s\n", cerror);
+#endif
 }
 
+#ifdef __RISCOS__
 int wimpconfirm(char *cmessage)
 {
   char cname[16],cbuttons[12];
@@ -285,9 +328,11 @@ void writeicon(int nwindow,int nicon,char *ctext,int neor,int nclear)
     _kernel_swi(Wimp_SetIconState,&regs,&regs);
   }
 }
+#endif
 
 void updateappicon(void)
 {
+#ifdef __RISCOS__
   switch (beebit_machinetype)
   {
     case MACHINE_MODELB:
@@ -317,8 +362,10 @@ void updateappicon(void)
   setword(b+8,0x00);
   setword(b+12,0x80);
   _kernel_swi(Wimp_SetIconState,&regs,&regs);
+#endif
 }
 
+#ifdef __RISCOS__
 void getwindowstate(int hwindow)
 {
   setword(b,hwindow);
@@ -1033,6 +1080,7 @@ int helprequest(int hwindow, int hicon, char *cbuffer)
   }
   return (nlen);
 }
+#endif
 
 void configsave(void)
 {
@@ -1045,13 +1093,17 @@ void configsave(void)
   char choicedir[]="<Choices$Write>.BeebIt";
   SCREENMODERECORD *r;
 
+#ifdef __RISCOS__
   regs.r[0] = 8; /* create directory*/
   regs.r[1] = (int)choicedir;
   regs.r[4] = 0;
   _kernel_swi(OS_File,&regs,&regs);
+#else
+  environmentcreatedirectory(choicedir);
+#endif
 
   /*hfile = fopen("<BeebIt$Dir>.!Config","w");*/
-  hfile = fopen("<Choices$Write>.BeebIt.Choices","w");
+  hfile = BEEBIT_FOPEN("<Choices$Write>.BeebIt.Choices","w");
 
   if (hfile == NULL)
     wimperror("Unable to save configuration.");
@@ -1221,18 +1273,10 @@ void configsave(void)
       {
         r = screenmoderecords+i;
         cbuffer = cname;
-        regs.r[0] = r->xres;
-        regs.r[1] = (int)cbuffer;
-        regs.r[2] = 10;
-        _kernel_swi(OS_BinaryToDecimal,&regs,&regs);
-        cbuffer += regs.r[2];
+        cbuffer += itoa(r->xres,cbuffer,10);
         strcpy(cbuffer," x ");
         cbuffer += 3;
-        regs.r[0] = r->yres;
-        regs.r[1] = (int)cbuffer;
-        regs.r[2] = 10;
-        _kernel_swi(OS_BinaryToDecimal,&regs,&regs);
-        cbuffer += regs.r[2];
+        cbuffer += itoa(r->yres,cbuffer,10);
         *cbuffer = 0;
         fputs(cname, hfile);
       }
@@ -1296,17 +1340,18 @@ void configsave(void)
     /*keyboard links*/
     strcpy(cname,"KeyboardLinks=");
     fputs(cname, hfile);
-    itoa(beebit_links,cname);
+    itoa(beebit_links,cname,10);
     fputs(cname, hfile);
     fputs("\n", hfile);
 
     fclose(hfile);
 
     /*delete old file*/
-    remove("<BeebIt$Dir>.!Config");
+    BEEBIT_REMOVE("<BeebIt$Dir>.!Config");
   }
 }
 
+#ifdef __RISCOS__
 int finddisplaymodebyicon(char* cbuffer)
 {
   int i;
@@ -1325,6 +1370,7 @@ int finddisplaymodebyicon(char* cbuffer)
 
   return DISPLAY_MODE_AUTO;
 }
+#endif
 
 int getdisplaymodezoomavailability(int displaymode)
 {
@@ -1365,6 +1411,7 @@ int getdisplaymodezoomavailability(int displaymode)
   return n;
 }
 
+#ifdef __RISCOS__
 void updatezoommenuitems(int availability)
 {
   char *citem;
@@ -1607,6 +1654,7 @@ void storewimpmode(void)
   /*_kernel_swi(OS_ScreenMode,&regs,&regs);
   strncpy((char *)regs.r[1], cwimpmodeblock, 24);*/
 }
+#endif
 
 void gobeebit(void)
 {
@@ -1632,13 +1680,16 @@ void gobeebit(void)
   if (lredraw)
   {
     screentobuffer();
+#ifdef __RISCOS__
     regs.r[0] = nwimpmode; /*(int)cwimpmodeblock;*/
     _kernel_swi(Wimp_SetMode,&regs,&regs);
+#endif
   }
   /*regs.r[0] = -1;
   _kernel_swi(Wimp_ForceRedraw,&regs,&regs);*/
 }
 
+#ifdef __RISCOS__
 /*void dumpscreen(void)
 {
   char cbuffer[128];
@@ -2663,6 +2714,7 @@ void closedown(void)
   regs.r[1] = 0x4B534154;
   _kernel_swi(Wimp_CloseDown,&regs,&regs);
 }
+#endif
 
 void setup(void)
 {
@@ -3201,6 +3253,7 @@ void setup(void)
 
 void menus(void)
 {
+#ifdef __RISCOS__
   char *citem;
   int i,implementedzoomnumbercount;
 
@@ -3483,8 +3536,10 @@ void menus(void)
   setword(citem+4,-1);
   setword(citem+8,0x7009011);
   strcpy((citem+12),"Quit");
+#endif
 }
 
+#ifdef __RISCOS__
 int createwin(char *cwindow)
 {
   int nwindow;
@@ -3505,9 +3560,11 @@ int createwin(char *cwindow)
   nwindow = regs.r[0];
   return nwindow;
 }
+#endif
 
 void windows(void)
 {
+#ifdef __RISCOS__
   char ctemplate[80],cname[12];
   char *cbuffer;
   niconbufb = (int)ciconbuf;
@@ -3546,10 +3603,12 @@ void windows(void)
   fake_selectclick(hsaveas,file_tosave + 2); /*memory dump*/
   /*iconbitset(hsaveas,3,22);*/ /*snapshot*/
   _kernel_swi(Wimp_CloseTemplate,&regs,&regs);
+#endif
 }
 
 void init(void)
 {
+#ifdef __RISCOS__
   int i;
   char cname[32];
   _kernel_oserror *err;
@@ -3613,14 +3672,16 @@ void init(void)
   _kernel_swi(Wimp_CreateIcon,&regs,&regs);
   nicon = regs.r[0];
 
-  detectscreenmodes();
-
   for (i=0,zoomnumbercount=0; displayzoomicons[i] != (char*)-1; i++)
   {
     zoomnumbercount++;
   }
+#endif
+
+  detectscreenmodes();
 }
 
+#ifdef __RISCOS__
 int do_poll(int poll_mask)
 {
   /*while (NOT lquit)*/
@@ -3710,6 +3771,7 @@ else
   }
   return FALSE;
 }
+#endif
 
 /*int main(void)*/
 int main(int argc,char *argv[])
@@ -3741,6 +3803,7 @@ int main(int argc,char *argv[])
   }
   setup();
 
+#ifdef __RISCOS__
   if (argc > 1)
   {
     storewimpmode();
@@ -3748,4 +3811,7 @@ int main(int argc,char *argv[])
   }
 
   while (TRUE) do_poll(0);  /*infinite loop*/
+#else
+  return environmentgobeebit(argc,argv);
+#endif
 }

@@ -862,6 +862,7 @@ R6502HOSTMAP* systemvia00write_b(R6502HOSTMAP* map, unsigned int address_code)
     case 0x06:
       /*caps lock on/off*/
       /*get keyboard status*/
+#ifdef __RISCOS__
       regs.r[0] = 202;
       regs.r[1] = 0;
       regs.r[2] = 255;
@@ -883,6 +884,7 @@ R6502HOSTMAP* systemvia00write_b(R6502HOSTMAP* map, unsigned int address_code)
         regs.r[0] = 118;
         _kernel_swi(OS_Byte,&regs,&regs);
       }
+#endif
       break;
     case 0x07:
       /*shift lock on/off*/

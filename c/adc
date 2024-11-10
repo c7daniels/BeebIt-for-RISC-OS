@@ -53,6 +53,7 @@ void adcmodevars(void)
   int xres,yres;
   int xeig,yeig;
 
+#ifdef __RISCOS__
   regs.r[0] = -1;
   regs.r[1] = 4;
   _kernel_swi(OS_ReadModeVariable,&regs,&regs);
@@ -66,6 +67,12 @@ void adcmodevars(void)
   regs.r[1] = 12;
   _kernel_swi(OS_ReadModeVariable,&regs,&regs);
   yres = regs.r[2] + 1;
+#else
+  xeig = environmentreadmodevariable(-1, 4);
+  yeig = environmentreadmodevariable(-1, 5);
+  xres = environmentreadmodevariable(-1, 11) + 1;
+  yres = environmentreadmodevariable(-1, 12) + 1;
+#endif
 
   if (adc_x_osunits != (xres<<xeig))
   {
@@ -84,6 +91,7 @@ R6502HOSTMAP* adcpoll(R6502HOSTMAP* map)
   int nvalue;
   map->s0adc.status &= 0x0F;
 
+#ifdef __RISCOS__
   if (beebit_mouseemulation == MOUSE_JOYSTICK)
   {
     /*mouse position in OS units*/
@@ -134,6 +142,7 @@ R6502HOSTMAP* adcpoll(R6502HOSTMAP* map)
     }
   }
   else
+#endif
     nvalue = adc_floating_value;
 
   map->s0adc.status |= 0x40; /*not busy*/

@@ -9,6 +9,8 @@
  * Email: <convertedgames@3insdale.me.uk>
  */
 
+#include <stdint.h>
+#include <stdlib.h>
 #include "beebit.h"
 #include "kernel.h"
 #include "riscos.h"
@@ -37,12 +39,12 @@ char *displayzoomiconarray[13] = {
 char **displayzoomicons = displayzoomiconarray;
 
 #ifdef VIDEOSCALE_WITH_OVERSCALE
-void (*scalegraphics1)(int bufferaddress, int hostaddress);
-void (*scaleteletext1)(int bufferaddress, int hostaddress);
+void (*scalegraphics1)(intptr_t bufferaddress, intptr_t hostaddress);
+void (*scaleteletext1)(intptr_t bufferaddress, intptr_t hostaddress);
 int scalelineslimit;
 int scalelengthlimit;
 
-void limitcallscalegraphics(int bufferaddress, int hostaddress)
+void limitcallscalegraphics(intptr_t bufferaddress, intptr_t hostaddress)
 {
   if (hostaddress + host_scaledlinelength - nhostscreen > scalelineslimit * nhostscreenlinelength)
   {
@@ -57,7 +59,7 @@ void limitcallscalegraphics(int bufferaddress, int hostaddress)
   local_linelengthfloor = length;
 }
 
-void limitcallscaleteletext(int bufferaddress, int hostaddress)
+void limitcallscaleteletext(intptr_t bufferaddress, intptr_t hostaddress)
 {
   if (hostaddress + host_scaledlinelength - nhostscreen > scalelineslimit * nhostscreenlinelength)
   {
@@ -72,7 +74,7 @@ void limitcallscaleteletext(int bufferaddress, int hostaddress)
   local_linelengthfloor = length;
 }
 
-void limitedblankrow(int hostaddress, int length, int mask)
+void limitedblankrow(intptr_t hostaddress, int length, int mask)
 {
   if (hostaddress + nhostscreenlinelength - nhostscreen > scalelineslimit * nhostscreenlinelength)
   {
@@ -96,10 +98,11 @@ void limitscale(VIDEOSCALECHOICE *choice, int length, int lines)
 }
 #endif
 
-static void readzoomavailabilitymodevars(int mode,int* ratioshift,int *xres,int *yres)
+static void readzoomavailabilitymodevars(intptr_t mode,int* ratioshift,int *xres,int *yres)
 {
   int xeig,yeig;
 
+#ifdef __RISCOS__
   regs.r[0] = mode;
   regs.r[1] = 4;
   _kernel_swi(OS_ReadModeVariable,&regs,&regs);
@@ -113,11 +116,17 @@ static void readzoomavailabilitymodevars(int mode,int* ratioshift,int *xres,int 
   regs.r[1] = 12;
   _kernel_swi(OS_ReadModeVariable,&regs,&regs);
   *yres = regs.r[2] + 1;
+#else
+  xeig = environmentreadmodevariable(mode, 4);
+  yeig = environmentreadmodevariable(mode, 5);
+  *xres = environmentreadmodevariable(mode, 11) + 1;
+  *yres = environmentreadmodevariable(mode, 12) + 1;
+#endif
 
   *ratioshift = 1 + xeig - yeig;
 }
 
-int getoverscalezoomavailabilityformode(int mode)
+int getoverscalezoomavailabilityformode(intptr_t mode)
 {
   int xres,yres;
   int ratioshift,flags;
@@ -154,7 +163,7 @@ int getoverscalezoomavailabilityformode(int mode)
   return flags;
 }
 
-static int getfittedzoomavailabilityformode(int mode,int nlines)
+static int getfittedzoomavailabilityformode(intptr_t mode,int nlines)
 {
   int xres,yres;
   int ratioshift,flags;
@@ -208,12 +217,12 @@ static int getfittedzoomavailabilityformode(int mode,int nlines)
   return flags;
 }
 
-int get256linezoomavailabilityformode(int mode)
+int get256linezoomavailabilityformode(intptr_t mode)
 {
   return getfittedzoomavailabilityformode(mode,256);
 }
 
-int getzoomnumberformode(int mode)
+int getzoomnumberformode(intptr_t mode)
 {
   int number,i;
 
@@ -240,6 +249,7 @@ int getzoomnumberformode(int mode)
 
 int hostmode7isexpectedmode7(void)
 {
+#ifdef __RISCOS__
   int xres,yres;
 
   regs.r[0] = 7;
@@ -259,6 +269,9 @@ int hostmode7isexpectedmode7(void)
   /*accept 320 x 250 Mode 7*/
   /*and reject 640 x 500 Mode 7, too big for a Mode 12 screen save buffer*/
   return xres == 320 || yres == 250;
+#else
+  return 0;
+#endif
 }
 
 int getentrysizeforbarrelshiftedlookup(VIDEOSCALELUTPARAMETERS *lutparams, int log2bpp)
@@ -281,7 +294,7 @@ void video4lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
 
   nstop = getentrysizeforbarrelshiftedlookup(lutparams,2)<<1;
 
-  ilut = (int*)((int)videoscale_workspace+lutparams->offset);
+  ilut = (int*)((intptr_t)videoscale_workspace+lutparams->offset);
 
   for (i=0; i<256; i++)
   {
@@ -339,7 +352,7 @@ void video8lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
   int *ilut;
 
   nstop = getentrysizeforbarrelshiftedlookup(lutparams,3);
-  ilut = (int*)((int)videoscale_workspace+lutparams->offset);
+  ilut = (int*)((intptr_t)videoscale_workspace+lutparams->offset);
 
   for (i=0; i<256; i++)
   {
@@ -397,7 +410,7 @@ void video16lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
   int *ilut;
 
   nstop = getentrysizeforbarrelshiftedlookup(lutparams,4)>>1;
-  ilut = (int*)((int)videoscale_workspace+lutparams->offset);
+  ilut = (int*)((intptr_t)videoscale_workspace+lutparams->offset);
 
   for (i=0; i<256; i++)
   {
@@ -454,7 +467,7 @@ void video32lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
   int *ilut;
 
   nstop = getentrysizeforbarrelshiftedlookup(lutparams,5)>>2;
-  ilut = (int*)((int)videoscale_workspace+lutparams->offset);
+  ilut = (int*)((intptr_t)videoscale_workspace+lutparams->offset);
 
   for (i=0; i<256; i++)
   {
@@ -518,7 +531,7 @@ void setverticalscalesandteletextform(VIDEOSCALECHOICE *choice, int graphicsscal
   }
 }
 
-void videoscalechoose(int mode, VIDEOSCALECHOICE *choice)
+void videoscalechoose(intptr_t mode, VIDEOSCALECHOICE *choice)
 {
   int modeflags,ncolour;
   int log2bpp,xres,yres;
@@ -531,6 +544,7 @@ void videoscalechoose(int mode, VIDEOSCALECHOICE *choice)
 #endif
   const int xresbeforescalemax = 1024; /*the limit at standard line frequency*/
 
+#ifdef __RISCOS__
   regs.r[0] = mode;
   regs.r[1] = 0;
   _kernel_swi(OS_ReadModeVariable,&regs,&regs);
@@ -553,6 +567,15 @@ void videoscalechoose(int mode, VIDEOSCALECHOICE *choice)
   regs.r[1] = 12;
   _kernel_swi(OS_ReadModeVariable,&regs,&regs);
   yres = regs.r[2] + 1;
+#else
+  modeflags = environmentreadmodevariable(mode, 0);
+  ncolour = environmentreadmodevariable(mode, 3);
+  xeig = environmentreadmodevariable(mode, 4);
+  yeig = environmentreadmodevariable(mode, 5);
+  log2bpp = environmentreadmodevariable(mode, 9);
+  xres = environmentreadmodevariable(mode, 11) + 1;
+  yres = environmentreadmodevariable(mode, 12) + 1;
+#endif
 
   scaleselector = 0;
   ratioshift = 1 + xeig - yeig;
@@ -569,8 +592,12 @@ void videoscalechoose(int mode, VIDEOSCALECHOICE *choice)
   choice->initteletext = NULL;
   choice->scalegraphics = NULL;
   choice->scaleteletext = NULL;
-  
+
+#ifdef __RISCOS__
   zoomnumber = getzoomnumberformode(mode);
+#else
+  zoomnumber = 1;
+#endif
 
   if (zoomnumber & 1)
   {
@@ -638,6 +665,7 @@ void videoscalechoose(int mode, VIDEOSCALECHOICE *choice)
 
   if (choice->mode != -1)
   {
+#ifdef __RISCOS__
     if (mode == 12)
     {
       /*check to see if we can use 16 colour mode 7*/
@@ -650,6 +678,7 @@ void videoscalechoose(int mode, VIDEOSCALECHOICE *choice)
         }
       }
     }
+#endif
     if (xres > xresbeforescalemax)
     {
       choice->linelengthfloor = (xresbeforescalemax >> 3) << log2bpp;
@@ -663,6 +692,7 @@ void videoscalechoose(int mode, VIDEOSCALECHOICE *choice)
     return;
   }
 
+#ifdef __RISCOS__
   choice->mode = 12;
   setverticalscalesandteletextform(choice, 1, 1);
 
@@ -949,5 +979,8 @@ void videoscalechoose(int mode, VIDEOSCALECHOICE *choice)
   }
   ylimit = yres;
   limitscale(choice, xlimit, ylimit);
+#endif
+#else
+  abort();
 #endif
 }

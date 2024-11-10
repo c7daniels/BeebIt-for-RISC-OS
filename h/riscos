@@ -7,7 +7,7 @@
  * Email: <mikef@voyager.co.nz>
  */
 
-extern int nhostscreen;
+extern intptr_t nhostscreen;
 extern int nhostscreenlinelength;
 extern char keylookup[0x100];
 extern char keystatus[0x100];
@@ -22,31 +22,31 @@ extern void escapedisable(void);
 extern void escapeenable(void);
 extern void cursordisable(void);
 extern void cursorenable(void);
-extern void roundteletextalpha(int naddress, int nupperhalfaddress, int nlowerhalfaddress);
-extern void blankrow(int naddress, int ncount, int nvalue);
-extern void blankrowx(unsigned int naddress, unsigned int ncount, unsigned int nvalue, unsigned int nscreen_width, unsigned int nlines);
+extern void roundteletextalpha(intptr_t naddress, intptr_t nupperhalfaddress, intptr_t nlowerhalfaddress);
+extern void blankrow(intptr_t naddress, int ncount, int nvalue);
+extern void blankrowx(intptr_t naddress, unsigned int ncount, unsigned int nvalue, unsigned int nscreen_width, unsigned int nlines);
 extern void bbcvdu(char);
 extern void inttohex4(int);
 extern void inttohex8(int);
 extern void screenstartandlinelength(void);
 extern void vsync(void);
+extern void mode0plot4(intptr_t naddress, int n);
+extern void mode0plot8(intptr_t naddress, int n);
+extern void mode1plot4(intptr_t naddress, int n);
+extern void mode1plot8(intptr_t naddress, int n);
+extern void mode2plot4(intptr_t naddress, int n);
+extern void mode2plot8(intptr_t naddress, int n);
+extern void mode4plot4(intptr_t naddress, int n);
+extern void mode4plot8(intptr_t naddress, int n);
+extern void mode5plot4(intptr_t naddress, int n);
+extern void mode5plot8(intptr_t naddress, int n);
+extern void mode8plot4(intptr_t naddress, int n);
+extern void mode8plot8(intptr_t naddress, int n);
 #ifdef __RISCOS__
   extern void zeribeepattach(struct R6502HOSTMAP *map);
   extern void zeribeepwrite(struct R6502HOSTMAP *map, char nvalue);
   extern void zeribeepdetach(void);
 
-  extern void mode0plot4(int naddress, int n);
-  extern void mode0plot8(int naddress, int n);
-  extern void mode1plot4(int naddress, int n);
-  extern void mode1plot8(int naddress, int n);
-  extern void mode2plot4(int naddress, int n);
-  extern void mode2plot8(int naddress, int n);
-  extern void mode4plot4(int naddress, int n);
-  extern void mode4plot8(int naddress, int n);
-  extern void mode5plot4(int naddress, int n);
-  extern void mode5plot8(int naddress, int n);
-  extern void mode8plot4(int naddress, int n);
-  extern void mode8plot8(int naddress, int n);
   extern void video4copyscale(int bufferaddress, int hostaddress);
   extern void video6lutscale(int bufferaddress, int hostaddress);
   extern void video8lutsixdotscale(int bufferaddress, int hostaddress);

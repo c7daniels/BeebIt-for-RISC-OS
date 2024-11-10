@@ -36,6 +36,10 @@
 #include "videoscale.h"
 #include "videoula.h"
 #include "adc.h"
+#ifndef __RISCOS__
+#include <sys/time.h>
+#include <signal.h>
+#endif
 
 #ifndef ColourTrans_ReturnColourNumber
 #define ColourTrans_ReturnColourNumber 0x040744
@@ -132,7 +136,7 @@ int video_display;
 int video_framerate; /*frames rate (0-255)*/
 char video_n1,video_n2;
 int *videoscale_workspace = NULL;
-int nlocalscreen;
+intptr_t nlocalscreen;
 int nlocalscreenlinelength;
 int local_linelengthfloor; /*line length compatible with optimised blank, plot and scale routines*/
 int local_teletextform; /*line ratio, pixel depth and graphics separation*/
@@ -150,51 +154,64 @@ int host_screenoffsetlines;
 int host_screenoffsetremainder;
 unsigned int cursor_bitmap;
 
-clock_t nclock;
+#ifdef __RISCOS__
+static clock_t nclock;
+#else
+static sigset_t signal_set;
+#endif
 int nx,ny,nxoffscreen,nxend;
-char video_n;
-int nscreen;
+unsigned char video_n;
+intptr_t nscreen;
 
 void (*videoplot)(void);
-void (*mode0plot)(int screenaddress, int displaywidth);
-void (*mode1plot)(int screenaddress, int displaywidth);
-void (*mode2plot)(int screenaddress, int displaywidth);
-void (*mode3plot)(int screenaddress, int displaywidth);
-void (*mode4plot)(int screenaddress, int displaywidth);
-void (*mode5plot)(int screenaddress, int displaywidth);
-void (*mode6plot)(int screenaddress, int displaywidth);
-void (*mode8plot)(int screenaddress, int displaywidth);
+void (*mode0plot)(intptr_t screenaddress, int displaywidth);
+void (*mode1plot)(intptr_t screenaddress, int displaywidth);
+void (*mode2plot)(intptr_t screenaddress, int displaywidth);
+void (*mode3plot)(intptr_t screenaddress, int displaywidth);
+void (*mode4plot)(intptr_t screenaddress, int displaywidth);
+void (*mode5plot)(intptr_t screenaddress, int displaywidth);
+void (*mode6plot)(intptr_t screenaddress, int displaywidth);
+void (*mode8plot)(intptr_t screenaddress, int displaywidth);
 void (*videoteletext)(void);
 /*void (*video_plot[7])(void);*/
 void (*videoscalegraphicsinit)(VIDEOSCALELUTPARAMETERS *lutparams);
 void (*videoscaleteletextinit)(VIDEOSCALELUTPARAMETERS *lutparams);
-void (*videographicsscale)(int bufferaddress, int hostaddress);
-void (*videoteletextscale)(int bufferaddress, int hostaddress);
+void (*videographicsscale)(intptr_t bufferaddress, intptr_t hostaddress);
+void (*videoteletextscale)(intptr_t bufferaddress, intptr_t hostaddress);
 
 void videoinit(void)
 {
   FILE *hfile;
-  int pointer,i;
+  intptr_t pointer;
+  int i;
 
-  hfile = fopen("<BeebIt$Dir>.Resources.MODE7A","rb");
+  hfile = BEEBIT_FOPEN("<BeebIt$Dir>.Resources.MODE7A","rb");
   if (hfile != NULL)
   {
     fread(teletext_alpha.normal,1,sizeof(teletext_alpha.normal),hfile);
     fclose(hfile);
   }
-  pointer = (int)teletext_alpha.normal;
+  pointer = (intptr_t)teletext_alpha.normal;
   for (i=0; i<224; i++)
   {
     roundteletextalpha(pointer, pointer - sizeof(teletext_alpha.field0),
                                 pointer + sizeof(teletext_alpha.normal));
     pointer += 80;
   }
-  hfile = fopen("<BeebIt$Dir>.Resources.MODE7G","rb");
+  hfile = BEEBIT_FOPEN("<BeebIt$Dir>.Resources.MODE7G","rb");
   if (hfile != NULL)
   {
     fread(teletext_graphics,1,sizeof(teletext_graphics),hfile);
     fclose(hfile);
   }
+
+#ifndef __RISCOS__
+  struct itimerval timervalue = { {0, 20000}, {0, 20000} };
+  sigemptyset(&signal_set);
+  sigaddset(&signal_set, SIGALRM);
+  sigprocmask(SIG_BLOCK, &signal_set, NULL);
+  setitimer(ITIMER_REAL, &timervalue, NULL);
+#endif
 }
 
 void videosetpalette(void)
@@ -214,6 +231,7 @@ void videosetpalette(void)
   {
     weights[0] = 0.0f;
     weights[7] = 1.0f;
+    gamma = 1.0f;
 
     switch (beebit_palette)
     {
@@ -234,7 +252,6 @@ void videosetpalette(void)
         weights[4] = 0.1499f;
         weights[5] = 0.4155f;
         weights[6] = 0.7343f;
-        gamma = 1.0f;
         break;
     }
 
@@ -302,7 +319,7 @@ void videosetscale(void)
       videoscale_workspace = malloc(workspacesize);
     }
 
-    nlocalscreen = (int)videoscale_workspace + choice.lutsize;
+    nlocalscreen = (intptr_t)videoscale_workspace + choice.lutsize;
     nlocalscreenlinelength = local_linelengthfloor;
 
     host_graphicslutparameters = choice.graphicslutparameters;
@@ -372,9 +389,11 @@ void videosetplot(void)
   if (local_teletextform == 0)
   {
     videoteletext = videoteletextrelay;
+#ifdef __RISCOS__
     bbcvdu(84);
     bbcvdu(55);
     bbcvdu(32);
+#endif
   }
   else
   {
@@ -393,6 +412,7 @@ void videohostmodevars(void)
 
   screenstartandlinelength();
 
+#ifdef __RISCOS__
   regs.r[0] = beebit_graphicsmodespecifier;
   regs.r[1] = 3;
   _kernel_swi(OS_ReadModeVariable,&regs,&regs);
@@ -400,6 +420,10 @@ void videohostmodevars(void)
   regs.r[1] = 9;
   _kernel_swi(OS_ReadModeVariable,&regs,&regs);
   log2bpp = regs.r[2];
+#else
+  ncolour = environmentreadmodevariable(beebit_graphicsmodespecifier, 3);
+  log2bpp = environmentreadmodevariable(beebit_graphicsmodespecifier, 9);
+#endif
 
   if (ncolour == 15 || ncolour == 255)
   {
@@ -415,21 +439,30 @@ void videohostmodevars(void)
       fullpalette[i] = (i<<24)|(i<<16)|(i<<8);
     }
 
+#ifdef __RISCOS__
     regs.r[0] = -1;
     regs.r[1] = -1;
     regs.r[2] = (int)fullpalette;
     regs.r[3] = 0;
     regs.r[4] = 0;
     _kernel_swi(ColourTrans_WritePalette,&regs,&regs);
+#endif
   }
   else
   {
+#ifdef __RISCOS__
     for (i=0; i<8; i++)
     {
       regs.r[0] = palette_specified[i];
       _kernel_swi(ColourTrans_ReturnColourNumber,&regs,&regs);
       host_colournumbers[i] = regs.r[0];
     }
+#else
+    for (i=0; i<8; i++)
+    {
+      host_colournumbers[i] = environmentgetcolournumber(palette_specified[i]);
+    }
+#endif
   }
 
   for (i=0; i<8; i++)
@@ -505,6 +538,7 @@ void videohostmodevars(void)
 
 int writeusedcolours(void)
 {
+#ifdef __RISCOS__
   const char* const names[8] = {
     "Black",
     "Red",
@@ -528,6 +562,7 @@ int writeusedcolours(void)
       palette_specified[i]);
     wimpwrite(buffer,1,strlen(buffer));
   }
+#endif
 
   return 1;
 }
@@ -552,7 +587,9 @@ void videoreset(void)
   /*video_phase = VIDEO_DRAWWAIT;*/
   video_field = 0;
   video_drawline = 0;
+#ifdef __RISCOS__
   nclock = clock()+TIME_50HZ;
+#endif
   m6845_vc = 0; /*m6845_vsp;*/
   m6845_sc = -1;
   video_currentrow = 0;
@@ -601,23 +638,7 @@ void videoblankline(void)
   /*blank rows until end of screen - mode 12,15 has 256 lines*/
   if (video_currentrow < 256)
   {
-    #ifdef __RISCOS__
-      blankrow(nscreen,local_linelengthfloor,0);
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      while (nx < nlocalscreenlinelength)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen,local_linelengthfloor,0);
   }
 }
 
@@ -630,40 +651,14 @@ void videodrawline0(void)
   if (m6845_sc & 0x08)
   {
     /*blank lines > 8*/
-    #ifdef __RISCOS__
-      /*nx = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
-      blankrow(nscreen,nx,0);*/
-      blankrow(nscreen,local_linelengthfloor,0);
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
-      while (nx < nxend) /*80*/
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    /*nx = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
+    blankrow(nscreen,nx,0);*/
+    blankrow(nscreen,local_linelengthfloor,0);
   }
   else
   {
-    #ifdef __RISCOS__
-      blankrow(nscreen,m6845_leftextra,0x00);
-      nx = m6845_leftextra;
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = m6845_leftextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen,m6845_leftextra,0x00);
+    nx = m6845_leftextra;
     video_address += (m6845_leftoffscreen<<1);
     if (video_address >= 0x8000)
     {
@@ -671,39 +666,8 @@ void videodrawline0(void)
       video_address += hostmap.screenstartaddress;
     }
     /*draw displayed data*/
-    #ifdef __RISCOS__
-      mode0plot(nscreen+nx,video_displaywidth);
-      nx += video_displaywidth;
-    #else
-      /*nxend = nx+(m6845_screenwidth<<2);*/
-      nxend = nx+video_displaywidth;
-      while (nx < nxend) /*80*/
-      {
-        video_n = memory[video_address];
-        /*&01 &02*/
-        video_n1 = videoula_palette[((video_n & 0x80)>>7)];
-        video_n2 = videoula_palette[((video_n & 0x40)>>6)];
-        cscreen[nx++] = (video_n2<<4) | video_n1;
-        /*&04 &08*/
-        video_n1 = videoula_palette[((video_n & 0x20)>>5)];
-        video_n2 = videoula_palette[((video_n & 0x10)>>4)];
-        cscreen[nx++] = (video_n2<<4) | video_n1;
-        /*&10 &20*/
-        video_n1 = videoula_palette[((video_n & 0x08)>>3)];
-        video_n2 = videoula_palette[((video_n & 0x04)>>2)];
-        cscreen[nx++] = (video_n2<<4) | video_n1;
-        /*&40 &80*/
-        video_n1 = videoula_palette[((video_n & 0x02)>>1)];
-        video_n2 = videoula_palette[(video_n & 0x01)];
-        cscreen[nx++] = (video_n2<<4) | video_n1;
-        video_address += 8;
-        if (video_address >= 0x8000)
-        {
-          video_address &= 0x7FFF;
-          video_address += video_baseaddress;
-        }
-      }
-    #endif
+    mode0plot(nscreen+nx,video_displaywidth);
+    nx += video_displaywidth;
     video_address += (m6845_rightoffscreen<<1);
     if (video_address >= 0x8000)
     {
@@ -711,18 +675,7 @@ void videodrawline0(void)
       video_address += hostmap.screenstartaddress;
     }
     /*draw trailing blank area on this line*/
-    #ifdef __RISCOS__
       blankrow(nscreen+nx,m6845_rightextra,0x00);
-    #else
-      nxend = nx+m6845_rightextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
   }
 }
 
@@ -734,97 +687,29 @@ void videodrawline1(void)
   if (m6845_sc & 0x08)
   {
     /*blank lines > 8*/
-    #ifdef __RISCOS__
       /*nx = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
       blankrow(nscreen,nx,0);*/
       blankrow(nscreen,local_linelengthfloor,0);
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
-      while (nx < nxend) /*80*/
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
   }
   else
   {
-    #ifdef __RISCOS__
       blankrow(nscreen,m6845_leftextra,0x00);
       nx = m6845_leftextra;
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = m6845_leftextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
     video_address += (m6845_leftoffscreen<<1);
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
       mode1plot(nscreen+nx,video_displaywidth);
       nx += video_displaywidth;
-    #else
-      /*nxend = nx+(m6845_screenwidth<<2);*/
-      nxend = nx+video_displaywidth;
-      while (nx < nxend)
-      {
-        video_n = memory[video_address];
-        /*&02 &01*/
-        video_n1 = ((video_n & 0x80)>>6) | ((video_n & 0x08)>>3);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        /*&08 &04*/
-        video_n1 = ((video_n & 0x40)>>5) | ((video_n & 0x04)>>2);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        /*&20 &10*/
-        video_n1 = ((video_n & 0x20)>>4) | ((video_n & 0x02)>>1);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        /*&80 &40*/
-        video_n1 = ((video_n & 0x10)>>3) | (video_n & 0x01);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        video_address += 8;
-        if (video_address >= 0x8000)
-        {
-          video_address &= 0x7FFF;
-          video_address += video_baseaddress;
-        }
-      }
-    #endif
     video_address += (m6845_rightoffscreen<<1);
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
       blankrow(nscreen+nx,m6845_rightextra,0x00);
-    #else
-      nxend = nx+m6845_rightextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
   }
 }
 
@@ -836,91 +721,29 @@ void videodrawline2(void)
   if (m6845_sc & 0x08)
   {
     /*blank lines > 8*/
-    #ifdef __RISCOS__
-      /*nx = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
-      blankrow(nscreen,nx,0);*/
-      blankrow(nscreen,local_linelengthfloor,0x00);
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
-      while (nx < nxend) /*80*/
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    /*nx = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
+    blankrow(nscreen,nx,0);*/
+    blankrow(nscreen,local_linelengthfloor,0x00);
   }
   else
   {
-    #ifdef __RISCOS__
-      blankrow(nscreen,m6845_leftextra,0x00);
-      nx = m6845_leftextra;
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = m6845_leftextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen,m6845_leftextra,0x00);
+    nx = m6845_leftextra;
     video_address += (m6845_leftoffscreen<<1);
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      mode2plot(nscreen+nx,video_displaywidth);
-      nx += video_displaywidth;
-    #else
-      /*nxend = nx+(m6845_screenwidth<<2);*/
-      nxend = nx+video_displaywidth;
-      while (nx < nxend)
-      {
-        video_n = memory[video_address];
-        /*&08 &04 &02 &01*/
-        video_n1 = ((video_n & 0x80)>>4) | ((video_n & 0x20)>>3) | ((video_n & 0x08)>>2) | ((video_n & 0x02)>>1);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        /*&08 &04 &02 &01*/
-        video_n1 = ((video_n & 0x40)>>3) | ((video_n & 0x10)>>2) | ((video_n & 0x04)>>1) | (video_n & 0x01);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        video_address += 8;
-        if (video_address >= 0x8000)
-        {
-          video_address &= 0x7FFF;
-          video_address += video_baseaddress;
-        }
-      }
-    #endif
+    mode2plot(nscreen+nx,video_displaywidth);
+    nx += video_displaywidth;
     video_address += (m6845_rightoffscreen<<1);
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      blankrow(nscreen+nx,m6845_rightextra,0x00);
-    #else
-      nxend = nx+m6845_rightextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
 }
 
@@ -932,97 +755,30 @@ void videodrawline3(void)
   if (m6845_sc & 0x08)
   {
     /*blank lines > 8*/
-    #ifdef __RISCOS__
-      /*nx = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
-      blankrow(nscreen,nx,0);*/
-      blankrow(nscreen,local_linelengthfloor,0);
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
-      while (nx < nxend) /*80*/
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    /*nx = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
+    blankrow(nscreen,nx,0);*/
+    blankrow(nscreen,local_linelengthfloor,0);
   }
   else
   {
-    #ifdef __RISCOS__
-      blankrow(nscreen,m6845_leftextra,0x00);
-      nx = m6845_leftextra;
-    #else
-      nx = 0;
-      nxend = m6845_leftextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen,m6845_leftextra,0x00);
+    nx = m6845_leftextra;
     video_address += (m6845_leftoffscreen<<1);
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      /*screen code is the same as mode 0*/
-      mode0plot(nscreen+nx,video_displaywidth);
-      nx += video_displaywidth;
-    #else
-      /*nxend = nx+(m6845_screenwidth<<2);*/
-      nxend = nx+video_displaywidth;
-      while (nx < nxend)
-      {
-        video_n = memory[video_address];
-        /*&01 &02*/
-        video_n1 = videoula_palette[((video_n & 0x80)>>7)];
-        video_n2 = videoula_palette[((video_n & 0x40)>>6)];
-        cscreen[nx++] = (video_n2<<4) | video_n1;
-        /*&04 &08*/
-        video_n1 = videoula_palette[((video_n & 0x20)>>5)];
-        video_n2 = videoula_palette[((video_n & 0x10)>>4)];
-        cscreen[nx++] = (video_n2<<4) | video_n1;
-        /*&10 &20*/
-        video_n1 = videoula_palette[((video_n & 0x08)>>3)];
-        video_n2 = videoula_palette[((video_n & 0x04)>>2)];
-        cscreen[nx++] = (video_n2<<4) | video_n1;
-        /*&40 &80*/
-        video_n1 = videoula_palette[((video_n & 0x02)>>1)];
-        video_n2 = videoula_palette[(video_n & 0x01)];
-        cscreen[nx++] = (video_n2<<4) | video_n1;
-        video_address += 8;
-        if (video_address >= 0x8000)
-        {
-          video_address &= 0x7FFF;
-          video_address += video_baseaddress;
-        }
-      }
-    #endif
+    /*screen code is the same as mode 0*/
+    mode0plot(nscreen+nx,video_displaywidth);
+    nx += video_displaywidth;
     video_address += (m6845_rightoffscreen<<1);
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      blankrow(nscreen+nx,m6845_rightextra,0x00);
-    #else
-      nxend = nx+m6845_rightextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
 }
 
@@ -1034,105 +790,29 @@ void videodrawline4(void)
   if (m6845_sc & 0x08)
   {
     /*blank lines > 8*/
-    #ifdef __RISCOS__
-      /*nx = (m6845_screenwidth<<3) + m6845_leftextra + m6845_rightextra;
-      blankrow(nscreen,nx,0);*/
-      blankrow(nscreen,local_linelengthfloor,0);
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = (m6845_screenwidth<<3) + m6845_leftextra + m6845_rightextra;
-      while (nx < nxend) /*80*/
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    /*nx = (m6845_screenwidth<<3) + m6845_leftextra + m6845_rightextra;
+    blankrow(nscreen,nx,0);*/
+    blankrow(nscreen,local_linelengthfloor,0);
   }
   else
   {
-    #ifdef __RISCOS__
-      blankrow(nscreen,m6845_leftextra,0x00);
-      nx = m6845_leftextra;
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = m6845_leftextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen,m6845_leftextra,0x00);
+    nx = m6845_leftextra;
     video_address += m6845_leftoffscreen;
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      mode4plot(nscreen+nx,video_displaywidth);
-      nx += video_displaywidth;
-    #else
-      /*nxend = nx+(m6845_screenwidth<<3);*/
-      nxend = nx+video_displaywidth;
-      while (nx < nxend) /*80*/
-      {
-        video_n = memory[video_address];
-        /*&01 &01*/
-        video_n1 = videoula_palette[((video_n & 0x80)>>7)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&02 &02*/
-        video_n1 = videoula_palette[((video_n & 0x40)>>6)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&04 &04*/
-        video_n1 = videoula_palette[((video_n & 0x20)>>5)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&08 &08*/
-        video_n1 = videoula_palette[((video_n & 0x10)>>4)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&10 &10*/
-        video_n1 = videoula_palette[((video_n & 0x08)>>3)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&20 &20*/
-        video_n1 = videoula_palette[((video_n & 0x04)>>2)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&40 &40*/
-        video_n1 = videoula_palette[((video_n & 0x02)>>1)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&80 &80*/
-        video_n1 = videoula_palette[(video_n & 0x01)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        video_address += 8;
-        if (video_address >= 0x8000)
-        {
-          video_address &= 0x7FFF;
-          video_address += video_baseaddress;
-        }
-      }
-    #endif
+    mode4plot(nscreen+nx,video_displaywidth);
+    nx += video_displaywidth;
     video_address += m6845_rightoffscreen;
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      blankrow(nscreen+nx,m6845_rightextra,0x00);
-    #else
-      nxend = nx+m6845_rightextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
 }
 
@@ -1144,101 +824,29 @@ void videodrawline5(void)
   if (m6845_sc & 0x08)
   {
     /*blank lines > 8*/
-    #ifdef __RISCOS__
-      /*nx = (m6845_screenwidth<<3) + m6845_leftextra + m6845_rightextra;
-      blankrow(nscreen,nx,0);*/
-      blankrow(nscreen,local_linelengthfloor,0);
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = (m6845_screenwidth<<3) + m6845_leftextra + m6845_rightextra;
-      while (nx < nxend) /*80*/
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    /*nx = (m6845_screenwidth<<3) + m6845_leftextra + m6845_rightextra;
+    blankrow(nscreen,nx,0);*/
+    blankrow(nscreen,local_linelengthfloor,0);
   }
   else
   {
-    #ifdef __RISCOS__
-      blankrow(nscreen,m6845_leftextra,0x00);
-      nx = m6845_leftextra;
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = m6845_leftextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen,m6845_leftextra,0x00);
+    nx = m6845_leftextra;
     video_address += m6845_leftoffscreen;
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      mode5plot(nscreen+nx,video_displaywidth);
-      nx += video_displaywidth;
-    #else
-      /*nxend = nx+(m6845_screenwidth<<3);*/
-      nxend = nx+video_displaywidth;
-      while (nx < nxend)
-      {
-        video_n = memory[video_address];
-        /*&02 &01*/
-        video_n1 = ((video_n & 0x80)>>6) | ((video_n & 0x08)>>3);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        /*&08 &04*/
-        video_n1 = ((video_n & 0x40)>>5) | ((video_n & 0x04)>>2);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        /*&20 &10*/
-        video_n1 = ((video_n & 0x20)>>4) | ((video_n & 0x02)>>1);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        /*&80 &40*/
-        video_n1 = ((video_n & 0x10)>>3) | (video_n & 0x01);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        video_address += 8;
-        if (video_address >= 0x8000)
-        {
-          video_address &= 0x7FFF;
-          video_address += video_baseaddress;
-        }
-      }
-    #endif
+    mode5plot(nscreen+nx,video_displaywidth);
+    nx += video_displaywidth;
     video_address += m6845_rightoffscreen;
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      blankrow(nscreen+nx,m6845_rightextra,0x00);
-    #else
-      nxend = nx+m6845_rightextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
 }
 
@@ -1250,105 +858,30 @@ void videodrawline6(void)
   if (m6845_sc & 0x08)
   {
     /*blank lines > 8*/
-    #ifdef __RISCOS__
-      /*nx = (m6845_screenwidth<<3) + m6845_leftextra + m6845_rightextra;
-      blankrow(nscreen,nx,0);*/
-      blankrow(nscreen,local_linelengthfloor,0);
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = (m6845_screenwidth<<3) + m6845_leftextra + m6845_rightextra;
-      while (nx < nxend) /*80*/
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    /*nx = (m6845_screenwidth<<3) + m6845_leftextra + m6845_rightextra;
+    blankrow(nscreen,nx,0);*/
+    blankrow(nscreen,local_linelengthfloor,0);
   }
   else
   {
-    #ifdef __RISCOS__
-      blankrow(nscreen,m6845_leftextra,0x00);
-      nx = m6845_leftextra;
-    #else
-      nx = 0;
-      nxend = m6845_leftextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen,m6845_leftextra,0x00);
+    nx = m6845_leftextra;
     video_address += m6845_leftoffscreen;
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      /*screen code is the same as mode 4*/
-      mode4plot(nscreen+nx,video_displaywidth);
-      nx += video_displaywidth;
-    #else
-      /*nxend = nx+(m6845_screenwidth<<3);*/
-      nxend = nx+video_displaywidth;
-      while (nx < nxend)
-      {
-        video_n = memory[video_address];
-        /*&01 &01*/
-        video_n1 = videoula_palette[((video_n & 0x80)>>7)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&02 &02*/
-        video_n1 = videoula_palette[((video_n & 0x40)>>6)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&04 &04*/
-        video_n1 = videoula_palette[((video_n & 0x20)>>5)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&08 &08*/
-        video_n1 = videoula_palette[((video_n & 0x10)>>4)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&10 &10*/
-        video_n1 = videoula_palette[((video_n & 0x08)>>3)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&20 &20*/
-        video_n1 = videoula_palette[((video_n & 0x04)>>2)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&40 &40*/
-        video_n1 = videoula_palette[((video_n & 0x02)>>1)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        /*&80 &80*/
-        video_n1 = videoula_palette[(video_n & 0x01)];
-        cscreen[nx++] = (video_n1<<4) | video_n1;
-        video_address += 8;
-        if (video_address >= 0x8000)
-        {
-          video_address &= 0x7FFF;
-          video_address += video_baseaddress;
-        }
-      }
-    #endif
+    /*screen code is the same as mode 4*/
+    mode4plot(nscreen+nx,video_displaywidth);
+    nx += video_displaywidth;
     video_address += m6845_rightoffscreen;
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      blankrow(nscreen+nx,m6845_rightextra,0x00);
-    #else
-      nxend = nx+m6845_rightextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
 }
 
@@ -1360,96 +893,35 @@ void videodrawline8(void)
   if (m6845_sc & 0x08)
   {
     /*blank lines > 8*/
-    #ifdef __RISCOS__
-      /*nx = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
-      blankrow(nscreen,nx,0);*/
-      blankrow(nscreen,local_linelengthfloor,0);
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
-      while (nx < nxend) /*80*/
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    /*nx = (m6845_screenwidth<<2) + m6845_leftextra + m6845_rightextra;
+    blankrow(nscreen,nx,0);*/
+    blankrow(nscreen,local_linelengthfloor,0);
   }
   else
   {
-    #ifdef __RISCOS__
-      blankrow(nscreen,m6845_leftextra,0x00);
-      nx = m6845_leftextra;
-    #else
-      cscreen = (char *)nscreen;
-      nx = 0;
-      nxend = m6845_leftextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen,m6845_leftextra,0x00);
+    nx = m6845_leftextra;
     video_address += (m6845_leftoffscreen<<1);
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      mode8plot(nscreen+nx,video_displaywidth);
-      nx += video_displaywidth;
-    #else
-      /*nxend = nx+(m6845_screenwidth<<2);*/
-      nxend = nx+video_displaywidth;
-      while (nx < nxend)
-      {
-        video_n = memory[video_address];
-        /*&08 &04 &02 &01*/
-        video_n1 = ((video_n & 0x80)>>4) | ((video_n & 0x20)>>3) | ((video_n & 0x08)>>2) | ((video_n & 0x02)>>1);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        /*&08 &04 &02 &01*/
-        video_n1 = ((video_n & 0x40)>>3) | ((video_n & 0x10)>>2) | ((video_n & 0x04)>>1) | (video_n & 0x01);
-        video_n2 = videoula_palette[video_n1];
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        cscreen[nx++] = (video_n2<<4) | video_n2;
-        video_address += 8;
-        if (video_address >= 0x8000)
-        {
-          video_address &= 0x7FFF;
-          video_address += video_baseaddress;
-        }
-      }
-    #endif
+    mode8plot(nscreen+nx,video_displaywidth);
+    nx += video_displaywidth;
     video_address += (m6845_rightoffscreen<<1);
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
       video_address += hostmap.screenstartaddress;
     }
-    #ifdef __RISCOS__
-      blankrow(nscreen+nx,m6845_rightextra,0x00);
-    #else
-      nxend = nx+m6845_rightextra;
-      while (nx < nxend)
-      {
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-        cscreen[nx++] = 0;
-      }
-    #endif
+    blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
 }
 
 void videoteletextrelay(void)
 {
+#ifdef __RISCOS__
   /*
    *mode 7 - 40x25, 640x256, 4 bpp, 1k (TELETEXT)
    */
@@ -1581,24 +1053,13 @@ void videoteletextrelay(void)
     {
       nscreen = nhostscreen+(m6845_vc * 0x640) + 0x5A0;
       nscreen += (cursor_x << 2);
-      #ifdef __RISCOS__
-        blankrow(nscreen,cursor_width,cursor_bitmap);
-      #else
-        cscreen = (char *)nscreen;
-        cscreen[0] = 0x77;
-        cscreen[1] = 0x77;
-        cscreen[2] = 0x77;
-        cscreen[3] = 0x77;
-        cscreen[4] = 0x77;
-        cscreen[5] = 0x77;
-        cscreen[6] = 0x77;
-        cscreen[7] = 0x77;
-      #endif
+      blankrow(nscreen,cursor_width,cursor_bitmap);
     }
   }
+#endif
 }
 
-void teletext4blankchar1(int address)
+void teletext4blankchar1(intptr_t address)
 {
   char *cscreen;
 
@@ -1608,7 +1069,7 @@ void teletext4blankchar1(int address)
   setword(cscreen,teletext_backcolourmask);
 }
 
-void teletext8blankchar1(int address)
+void teletext8blankchar1(intptr_t address)
 {
   char *cscreen;
 
@@ -1624,7 +1085,7 @@ void teletext8blankchar1(int address)
 
 void teletextblankchar(void)
 {
-  int address;
+  intptr_t address;
   int i;
 
   address = nscreen;
@@ -1648,7 +1109,7 @@ void teletextblankchar(void)
 }
 
 /*single width, single height*/
-void teletext4alphanormal1(int address, int pointer, int row)
+void teletext4alphanormal1(intptr_t address, intptr_t pointer, int row)
 {
   unsigned int data,data0,data1;
   char *cscreen;
@@ -1669,7 +1130,7 @@ void teletext4alphanormal1(int address, int pointer, int row)
 }
 
 /*single width, single height*/
-void teletext8alphanormal1(int address, int pointer, int row)
+void teletext8alphanormal1(intptr_t address, intptr_t pointer, int row)
 {
   unsigned int data,data0,data1,data2;
   char *cscreen;
@@ -1706,7 +1167,7 @@ void teletext8alphanormal1(int address, int pointer, int row)
   setword(cscreen,data2);
 }
 /*single width, single height*/
-void teletext8alpharounded1(int address, int pointer, int row)
+void teletext8alpharounded1(intptr_t address, intptr_t pointer, int row)
 {
   unsigned int data,data0,data1,data2;
   char *cscreen;
@@ -1747,9 +1208,9 @@ void teletext8alpharounded1(int address, int pointer, int row)
 void teletextalphanormal(void)
 {
   int row;
-  int pointer, address;
+  intptr_t pointer, address;
 
-  pointer = (int)teletext_alpha.normal + (((teletext_character | 0x80) - 0x20) * 80);
+  pointer = (intptr_t)teletext_alpha.normal + (((teletext_character | 0x80) - 0x20) * 80);
   address = nscreen;
 
   switch (local_teletextform >> 1)
@@ -1820,9 +1281,9 @@ void teletextalphanormal(void)
 void teletextalphadoubletop(void)
 {
   int row;
-  int pointer, address;
+  intptr_t pointer, address;
 
-  pointer = (int)teletext_alpha.normal + (((teletext_character | 0x80) - 0x20) * 80);
+  pointer = (intptr_t)teletext_alpha.normal + (((teletext_character | 0x80) - 0x20) * 80);
   address = nscreen;
 
   switch (local_teletextform >> 1)
@@ -1917,9 +1378,9 @@ void teletextalphadoubletop(void)
 void teletextalphadoublebottom(void)
 {
   int row;
-  int pointer, address;
+  intptr_t pointer, address;
 
-  pointer = (int)teletext_alpha.normal + (((teletext_character | 0x80) - 0x20) * 80 + 40);
+  pointer = (intptr_t)teletext_alpha.normal + (((teletext_character | 0x80) - 0x20) * 80 + 40);
   address = nscreen;
 
   switch (local_teletextform >> 1)
@@ -2011,7 +1472,7 @@ void teletextalphadoublebottom(void)
   }
 }
 
-void teletext4graphicscontiguous1(int address, int pointer, int row)
+void teletext4graphicscontiguous1(intptr_t address, intptr_t pointer, int row)
 {
   unsigned int data,data0,data1;
   char *cscreen;
@@ -2031,7 +1492,7 @@ void teletext4graphicscontiguous1(int address, int pointer, int row)
   setword(cscreen,data);
 }
 
-void teletext8graphicscontiguous1(int address, int pointer, int row)
+void teletext8graphicscontiguous1(intptr_t address, intptr_t pointer, int row)
 {
   unsigned int data,data0,data1;
   char *cscreen;
@@ -2058,9 +1519,9 @@ void teletext8graphicscontiguous1(int address, int pointer, int row)
 void teletextgraphicscontiguous(void)
 {
   int row;
-  int pointer, address;
+  intptr_t pointer, address;
 
-  pointer = (int)teletext_graphics + (((teletext_character | 0x80) - 0x20) * 80);
+  pointer = (intptr_t)teletext_graphics + (((teletext_character | 0x80) - 0x20) * 80);
   address = nscreen;
 
   switch (local_teletextform >> 1)
@@ -2128,7 +1589,7 @@ void teletextgraphicscontiguous(void)
   }
 }
 
-void teletext4graphics6separated1(int address, int pointer, int row)
+void teletext4graphics6separated1(intptr_t address, intptr_t pointer, int row)
 {
   unsigned int data,data0,data1;
   char *cscreen;
@@ -2151,7 +1612,7 @@ void teletext4graphics6separated1(int address, int pointer, int row)
   setword(cscreen,data);
 }
 
-void teletext8graphics6separated1(int address, int pointer, int row)
+void teletext8graphics6separated1(intptr_t address, intptr_t pointer, int row)
 {
   unsigned int data,data0,data1;
   char *cscreen;
@@ -2180,7 +1641,7 @@ void teletext8graphics6separated1(int address, int pointer, int row)
   setword(cscreen,((data & 0x0000FFFF) | (teletext_backcolourmask & 0xFFFF0000)));
 }
 
-void teletext4graphics8separated1(int address, int pointer, int row)
+void teletext4graphics8separated1(intptr_t address, intptr_t pointer, int row)
 {
   unsigned int data,data0,data1;
   char *cscreen;
@@ -2203,7 +1664,7 @@ void teletext4graphics8separated1(int address, int pointer, int row)
   setword(cscreen,data);
 }
 
-void teletext8graphics8separated1(int address, int pointer, int row)
+void teletext8graphics8separated1(intptr_t address, intptr_t pointer, int row)
 {
   unsigned int data,data0,data1;
   char *cscreen;
@@ -2244,10 +1705,10 @@ void teletext8graphics8separated1(int address, int pointer, int row)
 void teletextgraphicsseparated(void)
 {
   unsigned int row;
-  unsigned int pointer, address;
+  intptr_t pointer, address;
   char *cscreen;
 
-  pointer = (int)teletext_graphics + (((teletext_character | 0x80) - 0x20) * 80);
+  pointer = (intptr_t)teletext_graphics + (((teletext_character | 0x80) - 0x20) * 80);
   address = nscreen;
 
   switch (local_teletextform)
@@ -2923,10 +2384,10 @@ void videoteletextdrawrow(void)
   int i;
   int teletext_oldcolour;
   int teletext_oldcolourmask;
-  int nscreen_temp;
+  intptr_t nscreen_temp;
   int displaycursorx,displaycursorwidth;
   int borderlength,precedingrowlength;
-  int nscaledscreen;
+  intptr_t nscaledscreen;
 
   if (videoteletextscale)
   {
@@ -3354,22 +2815,7 @@ void videoteletextdrawrow(void)
         nscreen += displaycursorx;
         for (i = (local_teletextform >> 2); i > 0; i--)
         {
-          #ifdef __RISCOS__
-            blankrow(nscreen,displaycursorwidth,cursor_bitmap);
-          #else
-            cscreen = (char *)nscreen;
-            cscreen[0] = 0x77;
-            cscreen[1] = 0x77;
-            cscreen[2] = 0x77;
-            cscreen[3] = 0x77;
-            if (local_teletextform & 2)
-            {
-              cscreen[4] = 0x77;
-              cscreen[5] = 0x77;
-              cscreen[6] = 0x77;
-              cscreen[7] = 0x77;
-            }
-          #endif
+          blankrow(nscreen,displaycursorwidth,cursor_bitmap);
           nscreen = nscreen + nlocalscreenlinelength;
         }
       }
@@ -3510,7 +2956,8 @@ R6502HOSTMAP *videoatzerocycles(R6502HOSTMAP *map)
 
 void videoscanline(void)
 {
-  int naddress,localrow,nscaledscreen;
+  intptr_t nscaledscreen;
+  int naddress,localrow;
   int displaycursorx,displaycursorwidth;
   int charstodisplayline;
 
@@ -3620,6 +3067,7 @@ void videoscanline(void)
           if (lteletextmode)
           {
             videoulasetcursor();
+#ifdef __RISCOS__
             if (screenmoderecords)
             {
               regs.r[0] = 0;
@@ -3631,6 +3079,9 @@ void videoscanline(void)
               bbcvdu(22);
               bbcvdu(7);
             }
+#else
+            environmentscreenmode(7);
+#endif
             videohostmodevars();
             adcmodevars();
             cursordisable();
@@ -3638,6 +3089,7 @@ void videoscanline(void)
           else if (ncurrentmode == 7 OR ncurrentmode == -1)
           {
             videoulasetcursor();
+#ifdef __RISCOS__
             if (screenmoderecords)
             {
               regs.r[0] = 0;
@@ -3649,6 +3101,9 @@ void videoscanline(void)
               bbcvdu(22);
               bbcvdu(beebit_graphicsmodespecifier);
             }
+#else
+            environmentscreenmode(beebit_graphicsmodespecifier);
+#endif
             videohostmodevars();
             adcmodevars();
             cursordisable();
@@ -3667,6 +3122,11 @@ void videoscanline(void)
       systemviasetirq();
       hostmap.s0sysvia.ira = (hostmap.s0sysvia.ora & hostmap.s0sysvia.ddra) + (hostmap.s0sysvia.porta & ~hostmap.s0sysvia.ddra);
 
+#ifndef __RISCOS__
+      int sig;
+      environmentpresentvideoframe();
+#endif
+
       r6502startyield(&hostmap);
 
       /*if (singletask)
@@ -3675,10 +3135,19 @@ void videoscanline(void)
       if (beebit_cpuspeed == CPU_2MHZ)
       {
         vsync(); /*wait for native scren vsync*/
+#ifdef __RISCOS__
         while (clock() < nclock)
         {
         }
         nclock = clock()+TIME_50HZ;
+#else
+        do
+        {
+          if (0 != sigwait(&signal_set, &sig))
+            break;
+        }
+        while (sig != SIGALRM);
+#endif
       }
       /*}*/
     }
@@ -3885,54 +3354,42 @@ void videoscanline(void)
             {
               /*nscreen = nlocalscreen+(localrow*nlocalscreenlinelength)+cursor_x;*/
               nscreen += displaycursorx;
-              #ifdef __RISCOS__
-                if (videoula_clockrate)
+              if (videoula_clockrate)
+              {
+                /*modes 0-3*/
+                switch (beebit_graphicsmode)
                 {
-                  /*modes 0-3*/
-                  switch (beebit_graphicsmode)
-                  {
-                    case 12:
-                    case 15:
-                      blankrow(nscreen,displaycursorwidth,cursor_bitmap);
-                      break;
-                    case 20:
-                    case 21:
-                      nscreen = nscreen - nlocalscreenlinelength;
-                      blankrow(nscreen,displaycursorwidth,cursor_bitmap);
-                      nscreen = nscreen + nlocalscreenlinelength;
-                      blankrow(nscreen,displaycursorwidth,cursor_bitmap);
-                      break;
-                  }
+                  case 12:
+                  case 15:
+                    blankrow(nscreen,displaycursorwidth,cursor_bitmap);
+                    break;
+                  case 20:
+                  case 21:
+                    nscreen = nscreen - nlocalscreenlinelength;
+                    blankrow(nscreen,displaycursorwidth,cursor_bitmap);
+                    nscreen = nscreen + nlocalscreenlinelength;
+                    blankrow(nscreen,displaycursorwidth,cursor_bitmap);
+                    break;
                 }
-                else
+              }
+              else
+              {
+                /*modes 4-7*/
+                switch (beebit_graphicsmode)
                 {
-                  /*modes 4-7*/
-                  switch (beebit_graphicsmode)
-                  {
-                    case 12:
-                    case 15:
-                      blankrow(nscreen,displaycursorwidth,cursor_bitmap);
-                      break;
-                    case 20:
-                    case 21:
-                      nscreen = nscreen - nlocalscreenlinelength;
-                      blankrow(nscreen,displaycursorwidth,cursor_bitmap);
-                      nscreen = nscreen + nlocalscreenlinelength;
-                      blankrow(nscreen,displaycursorwidth,cursor_bitmap);
-                      break;
-                  }
+                  case 12:
+                  case 15:
+                    blankrow(nscreen,displaycursorwidth,cursor_bitmap);
+                    break;
+                  case 20:
+                  case 21:
+                    nscreen = nscreen - nlocalscreenlinelength;
+                    blankrow(nscreen,displaycursorwidth,cursor_bitmap);
+                    nscreen = nscreen + nlocalscreenlinelength;
+                    blankrow(nscreen,displaycursorwidth,cursor_bitmap);
+                    break;
                 }
-              #else
-                cscreen = (char *)nscreen;
-                cscreen[0] = 0x77;
-                cscreen[1] = 0x77;
-                cscreen[2] = 0x77;
-                cscreen[3] = 0x77;
-                cscreen[4] = 0x77;
-                cscreen[5] = 0x77;
-                cscreen[6] = 0x77;
-                cscreen[7] = 0x77;
-              #endif
+              }
             }
           }
         }
@@ -3954,3 +3411,516 @@ void videoscanline(void)
     }
   }
 }
+
+
+#ifdef BEEBIT_NO_ASM
+void blankrow(intptr_t naddress, int ncount, int nvalue)
+{
+    if (ncount == 0)
+        return;
+
+    char* caddress = (char*)naddress;
+
+    for (char* p = caddress + ncount - 4; p >= caddress; p -= 4)
+    {
+        p[0] = nvalue & 0xFF;
+        p[1] = (nvalue>>8) & 0xFF;
+        p[2] = (nvalue>>16) & 0xFF;
+        p[3] = (nvalue>>24) & 0xFF;
+    }
+}
+
+void mode0plot4(intptr_t naddress, int n)
+{
+  unsigned char* cscreen;
+  const unsigned char* mem;
+  int video_n, video_n1, video_n2;
+
+  cscreen = (unsigned char*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  for (; n>=4; n-=4)
+  {
+    video_n = mem[video_address];
+    /*&01 &02*/
+    video_n1 = videoula_palette[((video_n & 0x80)>>7)];
+    video_n2 = videoula_palette[((video_n & 0x40)>>6)];
+    *cscreen++ = (video_n2<<4) | video_n1;
+    /*&04 &08*/
+    video_n1 = videoula_palette[((video_n & 0x20)>>5)];
+    video_n2 = videoula_palette[((video_n & 0x10)>>4)];
+    *cscreen++ = (video_n2<<4) | video_n1;
+    /*&10 &20*/
+    video_n1 = videoula_palette[((video_n & 0x08)>>3)];
+    video_n2 = videoula_palette[((video_n & 0x04)>>2)];
+    *cscreen++ = (video_n2<<4) | video_n1;
+    /*&40 &80*/
+    video_n1 = videoula_palette[((video_n & 0x02)>>1)];
+    video_n2 = videoula_palette[(video_n & 0x01)];
+    *cscreen++ = (video_n2<<4) | video_n1;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode0plot8(intptr_t naddress, int n)
+{
+  uint32_t* uscreen;
+  const unsigned char* mem;
+  unsigned int base,diff,sum;
+  int video_n;
+
+  uscreen = (uint32_t*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  base = videoula_palette[0];
+  diff = videoula_palette[1] - base;
+  base = (base<<8) | base;
+  base = (base<<16) | base;
+
+  for (; n>=8; n-=8)
+  {
+    video_n = mem[video_address];
+    sum = base;
+    /*&01 &02*/
+    if ((video_n & 0x80)>>7)
+      sum += diff;
+    if ((video_n & 0x40)>>6)
+      sum += (diff<<8);
+    /*&04 &08*/
+    if ((video_n & 0x20)>>5)
+      sum += (diff<<16);
+    if ((video_n & 0x10)>>4)
+      sum += (diff<<24);
+    *uscreen++ = sum;
+    sum = base;
+    /*&10 &20*/
+    if ((video_n & 0x08)>>3)
+      sum += diff;
+    if ((video_n & 0x04)>>2)
+      sum += (diff<<8);
+    /*&40 &80*/
+    if ((video_n & 0x02)>>1)
+      sum += (diff<<16);
+    if (video_n & 0x01)
+      sum += (diff<<24);
+    *uscreen++ = sum;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode1plot4(intptr_t naddress, int n)
+{
+  unsigned char* cscreen;
+  const unsigned char* mem;
+  int video_n, video_n1, video_n2;
+
+  cscreen = (unsigned char*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  for (; n>=4; n-=4)
+  {
+    video_n = mem[video_address];
+    /*&02 &01*/
+    video_n1 = ((video_n & 0x80)>>6) | ((video_n & 0x08)>>3);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    /*&08 &04*/
+    video_n1 = ((video_n & 0x40)>>5) | ((video_n & 0x04)>>2);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    /*&20 &10*/
+    video_n1 = ((video_n & 0x20)>>4) | ((video_n & 0x02)>>1);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    /*&80 &40*/
+    video_n1 = ((video_n & 0x10)>>3) | (video_n & 0x01);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode1plot8(intptr_t naddress, int n)
+{
+  uint32_t* uscreen;
+  const unsigned char* mem;
+  int video_n,video_n1,video_n2;
+
+  uscreen = (uint32_t*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  for (; n>=8; n-=8)
+  {
+    video_n = mem[video_address];
+    /*&02 &01*/
+    video_n1 = videoula_palette[((video_n & 0x80)>>6) | ((video_n & 0x08)>>3)];
+    /*&08 &04*/
+    video_n2 = videoula_palette[((video_n & 0x40)>>5) | ((video_n & 0x04)>>2)];
+    *uscreen++ = (video_n2<<24) | (video_n2<<16) | (video_n1<<8) | video_n1;
+    /*&20 &10*/
+    video_n1 = videoula_palette[((video_n & 0x20)>>4) | ((video_n & 0x02)>>1)];
+    /*&80 &40*/
+    video_n2 = videoula_palette[((video_n & 0x10)>>3) | (video_n & 0x01)];
+    *uscreen++ = (video_n2<<24) | (video_n2<<16) | (video_n1<<8) | video_n1;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode2plot4(intptr_t naddress, int n)
+{
+  unsigned char* cscreen;
+  const unsigned char* mem;
+  int video_n, video_n1, video_n2;
+
+  cscreen = (unsigned char*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  for (; n>=4; n-=4)
+  {
+    video_n = mem[video_address];
+    /*&08 &04 &02 &01*/
+    video_n1 = ((video_n & 0x80)>>4) | ((video_n & 0x20)>>3) | ((video_n & 0x08)>>2) | ((video_n & 0x02)>>1);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    *cscreen++ = (video_n2<<4) | video_n2;
+    /*&08 &04 &02 &01*/
+    video_n1 = ((video_n & 0x40)>>3) | ((video_n & 0x10)>>2) | ((video_n & 0x04)>>1) | (video_n & 0x01);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    *cscreen++ = (video_n2<<4) | video_n2;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode2plot8(intptr_t naddress, int n)
+{
+  uint32_t* uscreen;
+  const unsigned char* mem;
+  int video_n,video_n1;
+
+  uscreen = (uint32_t*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  for (; n>=8; n-=8)
+  {
+    video_n = mem[video_address];
+    /*&08 &04 &02 &01*/
+    video_n1 = videoula_palette[((video_n & 0x80)>>4) | ((video_n & 0x20)>>3) | ((video_n & 0x08)>>2) | ((video_n & 0x02)>>1)];
+    *uscreen++ = (video_n1<<24) | (video_n1<<16) | (video_n1<<8) | video_n1;
+    /*&08 &04 &02 &01*/
+    video_n1 = videoula_palette[((video_n & 0x40)>>3) | ((video_n & 0x10)>>2) | ((video_n & 0x04)>>1) | (video_n & 0x01)];
+    *uscreen++ = (video_n1<<24) | (video_n1<<16) | (video_n1<<8) | video_n1;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode4plot4(intptr_t naddress, int n)
+{
+  unsigned char* cscreen;
+  const unsigned char* mem;
+  int video_n, video_n1;
+
+  cscreen = (unsigned char*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  for (; n>=8; n-=8)
+  {
+    video_n = mem[video_address];
+    /*&01 &01*/
+    video_n1 = videoula_palette[((video_n & 0x80)>>7)];
+    *cscreen++ = (video_n1<<4) | video_n1;
+    /*&02 &02*/
+    video_n1 = videoula_palette[((video_n & 0x40)>>6)];
+    *cscreen++ = (video_n1<<4) | video_n1;
+    /*&04 &04*/
+    video_n1 = videoula_palette[((video_n & 0x20)>>5)];
+    *cscreen++ = (video_n1<<4) | video_n1;
+    /*&08 &08*/
+    video_n1 = videoula_palette[((video_n & 0x10)>>4)];
+    *cscreen++ = (video_n1<<4) | video_n1;
+    /*&10 &10*/
+    video_n1 = videoula_palette[((video_n & 0x08)>>3)];
+    *cscreen++ = (video_n1<<4) | video_n1;
+    /*&20 &20*/
+    video_n1 = videoula_palette[((video_n & 0x04)>>2)];
+    *cscreen++ = (video_n1<<4) | video_n1;
+    /*&40 &40*/
+    video_n1 = videoula_palette[((video_n & 0x02)>>1)];
+    *cscreen++ = (video_n1<<4) | video_n1;
+    /*&80 &80*/
+    video_n1 = videoula_palette[(video_n & 0x01)];
+    *cscreen++ = (video_n1<<4) | video_n1;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode4plot8(intptr_t naddress, int n)
+{
+  uint32_t* uscreen;
+  const unsigned char* mem;
+  unsigned int base,diff,sum;
+  int video_n;
+
+  uscreen = (uint32_t*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  base = videoula_palette[0];
+  diff = videoula_palette[1] - base;
+  base = (base<<8) | base;
+  base = (base<<16) | base;
+
+  for (; n>=16; n-=16)
+  {
+    video_n = mem[video_address];
+    sum = base;
+    /*&01 &02*/
+    if ((video_n & 0x80)>>7)
+      sum += diff;
+    if ((video_n & 0x40)>>6)
+      sum += (diff<<16);
+    *uscreen++ = sum;
+    sum = base;
+    /*&04 &08*/
+    if ((video_n & 0x20)>>5)
+      sum += diff;
+    if ((video_n & 0x10)>>4)
+      sum += (diff<<16);
+    *uscreen++ = sum;
+    sum = base;
+    /*&10 &20*/
+    if ((video_n & 0x08)>>3)
+      sum += diff;
+    if ((video_n & 0x04)>>2)
+      sum += (diff<<16);
+    *uscreen++ = sum;
+    sum = base;
+    /*&40 &80*/
+    if ((video_n & 0x02)>>1)
+      sum += diff;
+    if (video_n & 0x01)
+      sum += (diff<<16);
+    *uscreen++ = sum;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode5plot4(intptr_t naddress, int n)
+{
+  unsigned char* cscreen;
+  const unsigned char* mem;
+  int video_n, video_n1;
+
+  cscreen = (unsigned char*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  for (; n>=8; n-=8)
+  {
+    video_n = mem[video_address];
+    /*&02 &01*/
+    video_n1 = ((video_n & 0x80)>>6) | ((video_n & 0x08)>>3);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    *cscreen++ = (video_n2<<4) | video_n2;
+    /*&08 &04*/
+    video_n1 = ((video_n & 0x40)>>5) | ((video_n & 0x04)>>2);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    *cscreen++ = (video_n2<<4) | video_n2;
+    /*&20 &10*/
+    video_n1 = ((video_n & 0x20)>>4) | ((video_n & 0x02)>>1);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    *cscreen++ = (video_n2<<4) | video_n2;
+    /*&80 &40*/
+    video_n1 = ((video_n & 0x10)>>3) | (video_n & 0x01);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    *cscreen++ = (video_n2<<4) | video_n2;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode5plot8(intptr_t naddress, int n)
+{
+  uint32_t* uscreen;
+  const unsigned char* mem;
+  int video_n,video_n1;
+
+  uscreen = (uint32_t*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  for (; n>=16; n-=16)
+  {
+    video_n = mem[video_address];
+    /*&02 &01*/
+    video_n1 = videoula_palette[((video_n & 0x80)>>6) | ((video_n & 0x08)>>3)];
+    *uscreen++ = (video_n1<<24) | (video_n1<<16) | (video_n1<<8) | video_n1;
+    /*&08 &04*/
+    video_n1 = videoula_palette[((video_n & 0x40)>>5) | ((video_n & 0x04)>>2)];
+    *uscreen++ = (video_n1<<24) | (video_n1<<16) | (video_n1<<8) | video_n1;
+    /*&20 &10*/
+    video_n1 = videoula_palette[((video_n & 0x20)>>4) | ((video_n & 0x02)>>1)];
+    *uscreen++ = (video_n1<<24) | (video_n1<<16) | (video_n1<<8) | video_n1;
+    /*&80 &40*/
+    video_n1 = videoula_palette[((video_n & 0x10)>>3) | (video_n & 0x01)];
+    *uscreen++ = (video_n1<<24) | (video_n1<<16) | (video_n1<<8) | video_n1;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode8plot4(intptr_t naddress, int n)
+{
+  unsigned char* cscreen;
+  const unsigned char* mem;
+  int video_n, video_n1;
+
+  cscreen = (unsigned char*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  for (; n>=4; n-=4)
+  {
+    video_n = mem[video_address];
+    /*&08 &04 &02 &01*/
+    video_n1 = ((video_n & 0x80)>>4) | ((video_n & 0x20)>>3) | ((video_n & 0x08)>>2) | ((video_n & 0x02)>>1);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    *cscreen++ = (video_n2<<4) | video_n2;
+    /*&08 &04 &02 &01*/
+    video_n1 = ((video_n & 0x40)>>3) | ((video_n & 0x10)>>2) | ((video_n & 0x04)>>1) | (video_n & 0x01);
+    video_n2 = videoula_palette[video_n1];
+    *cscreen++ = (video_n2<<4) | video_n2;
+    *cscreen++ = (video_n2<<4) | video_n2;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void mode8plot8(intptr_t naddress, int n)
+{
+  uint32_t* uscreen;
+  const unsigned char* mem;
+  int video_n,video_n1;
+
+  uscreen = (uint32_t*)naddress;
+  if (hostmap.acccon & beebit_vdusel)
+    mem = (unsigned char*)shadow;
+  else
+    mem = (unsigned char*)memory;
+
+  for (; n>=16; n-=6)
+  {
+    video_n = mem[video_address];
+    /*&08 &04 &02 &01*/
+    video_n1 = videoula_palette[((video_n & 0x80)>>4) | ((video_n & 0x20)>>3) | ((video_n & 0x08)>>2) | ((video_n & 0x02)>>1)];
+    *uscreen++ = (video_n1<<24) | (video_n1<<16) | (video_n1<<8) | video_n1;
+    *uscreen++ = (video_n1<<24) | (video_n1<<16) | (video_n1<<8) | video_n1;
+    /*&08 &04 &02 &01*/
+    video_n1 = videoula_palette[((video_n & 0x40)>>3) | ((video_n & 0x10)>>2) | ((video_n & 0x04)>>1) | (video_n & 0x01)];
+    *uscreen++ = (video_n1<<24) | (video_n1<<16) | (video_n1<<8) | video_n1;
+    *uscreen++ = (video_n1<<24) | (video_n1<<16) | (video_n1<<8) | video_n1;
+    video_address += 8;
+    if (video_address >= 0x8000)
+    {
+      video_address &= 0x7FFF;
+      video_address += hostmap.screenstartaddress;
+    }
+  }
+}
+
+void roundteletextalpha(intptr_t naddress, intptr_t nupperhalfaddress, intptr_t nlowerhalfaddress)
+{
+  int i;
+  for (i=0; i<20; i++)
+  {
+    ((uint32_t*)nupperhalfaddress)[i] = ((uint32_t*)naddress)[i];
+    ((uint32_t*)nlowerhalfaddress)[i] = ((uint32_t*)naddress)[i];
+  }
+}
+#endif

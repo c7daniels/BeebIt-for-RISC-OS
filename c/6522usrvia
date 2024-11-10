@@ -358,12 +358,14 @@ R6502HOSTMAP* uservia00read(R6502HOSTMAP* map, unsigned int address_code)
   if (beebit_mouseemulation == MOUSE_AMXMOUSE)
   {
     /*AMX mouse stuff*/
+#ifdef __RISCOS__
     _kernel_swi(OS_Mouse,&regs,&regs);
     map->s2amx.targetx = regs.r[0];
     map->s2amx.targety = regs.r[1];
     map->s2amx.buttons = ((regs.r[2] & 0x04) >> 2);
     map->s2amx.buttons |= (regs.r[2] & 0x02);
     map->s2amx.buttons |= ((regs.r[2] & 0x01) << 2);
+#endif
 
     nresult &= 0x1F;
     nresult |= (map->s2amx.buttons ^ 7) << 5;
@@ -620,11 +622,13 @@ R6502HOSTMAP* uservia01write(R6502HOSTMAP* map, unsigned int address_code)
     /*clear b2,b1 (CA1,CA2)*/
     map->s0usrvia.ifr &= 0xFC;
   }
+#ifdef __RISCOS__
   if (beebit_printer)
   {
     regs.r[0] = map->s0usrvia.porta;
     _kernel_swi(OS_PrintChar,&regs,&regs);
   }
+#endif
   /*clear b2 (CA1)*/
   map->s0usrvia.ifr |= 0x02; /*CA1*/
   userviasetirq();
