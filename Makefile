@@ -365,6 +365,7 @@ o.sheila:	h.tube
 o.sheila:	h.videoula
 o.sheila:	h.1770fdc
 o.scrmode:	c.scrmode
+o.scrmode:	h.beebit
 o.scrmode:	h.main
 o.scrmode:	C:h.kernel
 o.scrmode:	h.swis

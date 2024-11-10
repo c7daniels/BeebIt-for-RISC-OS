@@ -382,7 +382,7 @@ int uefopen(void)
   hmap->B_serial.uef_chunkstart = FALSE;
   hmap->B_serial.uef_tone = 0;
 
-  beebit_tapeimage = fopen(beebit_uefimage, "rb");
+  beebit_tapeimage = BEEBIT_FOPEN(beebit_uefimage, "rb");
 
   nreturn = uefvalidate(beebit_tapeimage);
 
