@@ -346,6 +346,7 @@ struct R6502CPUMAP* videoula00write(struct R6502CPUMAP* cmap, uintptr_t address_
   {
     if (lteletextmode && local_teletextform == 0)
     {
+#ifdef __RISCOS__
       if (screenmoderecords)
       {
         regs.r[0] = 0;
@@ -357,9 +358,13 @@ struct R6502CPUMAP* videoula00write(struct R6502CPUMAP* cmap, uintptr_t address_
         bbcvdu(22);
         bbcvdu(7);
       }
+#else
+      environmentscreenmode(7);
+#endif
     }
     else
     {
+#ifdef __RISCOS__
       if (screenmoderecords)
       {
         regs.r[0] = 0;
@@ -371,6 +376,9 @@ struct R6502CPUMAP* videoula00write(struct R6502CPUMAP* cmap, uintptr_t address_
         bbcvdu(22);
         bbcvdu(beebit_graphicsmodespecifier);
       }
+#else
+      environmentscreenmode(beebit_graphicsmodespecifier);
+#endif
     }
     ncurrentmode = video_mode;
     videohostmodevars();

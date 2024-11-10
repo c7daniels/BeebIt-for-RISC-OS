@@ -116,18 +116,23 @@ int loadrom(char *cfilename,int nslot)
   char cname[256] ="BeebItInternalRom:";
   char setname[256] ="SET BeebItInternalRom$Path ";
   FILE *hfile;
-  int nlen, lreturn, nfilesize;
+  int lreturn;
+  size_t nlen, nfilesize;
 
   strcat(setname,beebit_rompath);
   nlen = strlen(setname);
   if (setname[nlen-1] != 0x2E AND setname[nlen-1] != 0x3A) /*. or :*/
     strcat(setname,".");
+#ifdef __RISCOS__
   _kernel_oscli(setname);
+#else
+  environmentsetinternalrompath(setname+27);
+#endif
   strcat(cname,cfilename);
 
   lreturn = TRUE;
 
-  hfile = fopen(cname,"rb");
+  hfile = BEEBIT_FOPEN(cname,"rb");
   if (hfile == NULL)
   {
     lreturn = FALSE;
@@ -355,10 +360,10 @@ void beebitinit(void)
   hostinit();
 
   /*#ifdef __DEVELOP__
-    htrace = fopen("<BeebIt$Dir>.!TRACE","w");
+    htrace = BEEBIT_FOPEN("<BeebIt$Dir>.!TRACE","w");
   #else
     #ifdef __DEBUG__
-      htrace = fopen("<BeebIt$Dir>.!TRACE","w");
+      htrace = BEEBIT_FOPEN("<BeebIt$Dir>.!TRACE","w");
     #endif
   #endif*/
 }
@@ -433,7 +438,7 @@ int beebitenter(void)
     {
       if (strlen(beebit_discimage[i]) > 1)
       {
-        beebit_driveimage[i] = fopen(beebit_discimage[i],"rb+");
+        beebit_driveimage[i] = BEEBIT_FOPEN(beebit_discimage[i],"rb+");
         if (beebit_driveimage[i] == NULL)
         {
           beebit_sectorcount[i] = 0;
@@ -466,18 +471,18 @@ int beebitenter(void)
         if (beebit_machinetype == MACHINE_MASTER128)
         {
           /*new location*/
-          hfile = fopen("Choices:BeebIt.CMOSM","rb");
+          hfile = BEEBIT_FOPEN("Choices:BeebIt.CMOSM","rb");
           if (hfile == NULL)
             /*old location*/
-            hfile = fopen("<BeebIt$Dir>.CMOSM","rb");
+            hfile = BEEBIT_FOPEN("<BeebIt$Dir>.CMOSM","rb");
         }
         else
         {
           /*new location*/
-          hfile = fopen("Choices:BeebIt.CMOSC","rb");
+          hfile = BEEBIT_FOPEN("Choices:BeebIt.CMOSC","rb");
           if (hfile == NULL)
             /*old location*/
-          hfile = fopen("<BeebIt$Dir>.CMOSC","rb");
+          hfile = BEEBIT_FOPEN("<BeebIt$Dir>.CMOSC","rb");
         }
         if (hfile == NULL)
           memcpy(beebit_cmos,beebit_cmosdefault,0x40);
@@ -505,6 +510,7 @@ int beebitenter(void)
     /*if (beebit_singletask)
     {*/
 
+#ifdef __RISCOS__
     /*set keyboard status*/
     regs.r[0] = 202;
     regs.r[1] = beebit_leds & 0x10;
@@ -514,6 +520,7 @@ int beebitenter(void)
     host_leds = regs.r[1];
     regs.r[0] = 118;
     _kernel_swi(OS_Byte,&regs,&regs);
+#endif
 
     /*disable <Break>*/
     breakdisable();
@@ -521,7 +528,7 @@ int beebitenter(void)
     escapedisable();
 
     /*work out the best video mode to use*/
-    /*hh1 = fopen("<BeebIt$Dir>.Trace","w");*/
+    /*hh1 = BEEBIT_FOPEN("<BeebIt$Dir>.Trace","w");*/
 
     beebit_graphicsmodespecifier = -1;
     switch (beebit_displaymode)
@@ -608,6 +615,7 @@ int beebitenter(void)
       {
         if (video_mode == 7 && local_teletextform == 0)
         {
+#ifdef __RISCOS__
           if (screenmoderecords)
           {
             regs.r[0] = 0;
@@ -619,9 +627,13 @@ int beebitenter(void)
             bbcvdu(22);
             bbcvdu(7);
           }
+#else
+          environmentscreenmode(7);
+#endif
         }
         else
         {
+#ifdef __RISCOS__
           if (screenmoderecords)
           {
             regs.r[0] = 0;
@@ -633,6 +645,9 @@ int beebitenter(void)
             bbcvdu(22);
             bbcvdu(beebit_graphicsmodespecifier);
           }
+#else
+          environmentscreenmode(beebit_graphicsmodespecifier);
+#endif
         }
 
         crtcteletextwidthextra();
@@ -722,6 +737,7 @@ void beebitexit(void)
     /*enable <Break>*/
     breakenable();
 
+#ifdef __RISCOS__
     /*set keyboard status*/
     regs.r[0] = 202;
     regs.r[1] = host_leds & 0x10;
@@ -729,6 +745,7 @@ void beebitexit(void)
     _kernel_swi(OS_Byte,&regs,&regs);
     regs.r[0] = 118;
     _kernel_swi(OS_Byte,&regs,&regs);
+#endif
   /*}
   else
   {*/
@@ -744,25 +761,29 @@ void beebitexit(void)
       break;
     case MACHINE_MASTER128:
     case MACHINE_COMPACT:
+#ifdef __RISCOS__
       regs.r[0] = 8; /* create directory*/
       regs.r[1] = (int)choicedir;
       regs.r[4] = 0;
       _kernel_swi(OS_File,&regs,&regs);
+#else
+      environmentcreatedirectory(choicedir);
+#endif
       if (beebit_machinetype == MACHINE_MASTER128)
       {
         /*new location*/
-        hfile = fopen("<Choices$Write>.BeebIt.CMOSM","wb");
+        hfile = BEEBIT_FOPEN("<Choices$Write>.BeebIt.CMOSM","wb");
         if (hfile != NULL)
           /*delete old file*/
-          remove("<BeebIt$Dir>.CMOSM");
+          BEEBIT_REMOVE("<BeebIt$Dir>.CMOSM");
        }
       else
       {
         /*new location*/
-        hfile = fopen("<Choices$Write>.BeebIt.CMOSC","wb");
+        hfile = BEEBIT_FOPEN("<Choices$Write>.BeebIt.CMOSC","wb");
         if (hfile != NULL)
           /*delete old file*/
-          remove("<BeebIt$Dir>.CMOSC");
+          BEEBIT_REMOVE("<BeebIt$Dir>.CMOSC");
       }
       if (hfile != NULL)
       {
@@ -808,10 +829,10 @@ void beebitclosedown(void)
     #endif
   #endif*/
   /*#ifdef __DEBUG__
-    hfile = fopen("<BeebIt$Dir>.DUMP","wb");
+    hfile = BEEBIT_FOPEN("<BeebIt$Dir>.DUMP","wb");
     fwrite(memory,1,0x10000,hfile);
     fclose(hfile);
-    hfile = fopen("<BeebIt$Dir>.SCREEN","wb");
+    hfile = BEEBIT_FOPEN("<BeebIt$Dir>.SCREEN","wb");
     fwrite(memory+video_startaddress,1,0x2800,hfile);
     fclose(hfile);
   #endif*/

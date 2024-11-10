@@ -33,7 +33,7 @@ void keyboardreset(void)
 void keyboardload(char *filename)
 {
   FILE * hfile;
-  hfile = fopen(filename,"rb");
+  hfile = BEEBIT_FOPEN(filename,"rb");
   if (hfile != NULL)
   {
     fread(&keylookup,1,0x100,hfile);

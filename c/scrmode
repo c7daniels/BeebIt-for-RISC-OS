@@ -15,6 +15,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "beebit.h"
 #include "main.h"
 #include "kernel.h"
 #include "swis.h"
@@ -32,7 +33,11 @@ SCREENMODERECORD *screenmoderecords;
 SCREENMODEICON *screenmodeicons;
 int screenmoderecordcount;
 
+#ifdef __RISCOS__
 static const char *modevarcolumnnames = "XRES YRES  NCOLOUR  EX EY  MODEFLAGS LOG2BPP\n";
+#else
+extern int environmentenumeratescreenmodes(int ntoskip, int *block, int blocksize);
+#endif
 
 static int comparescreenmoderecords(SCREENMODERECORD *a, SCREENMODERECORD *b)
 {
@@ -66,6 +71,7 @@ static int comparescreenmoderecordncolours(SCREENMODERECORD *a, SCREENMODERECORD
   return 1;
 }
 
+#ifdef __RISCOS__
 static int writemodevariables(intptr_t mode)
 {
   char buffer[128];
@@ -102,19 +108,23 @@ static int writemodevariables(intptr_t mode)
 
   return 1;
 }
+#endif
 
 static void detectscreenmodesbyenumeration(int writeaction)
 {
+#ifdef __RISCOS__
   const char *formatcolumnname = "\nFMT ";
   const char *available = " AVAILABLE";
   char buffer[128];
+  int c;
+#endif
   int modeblock[10];
   SCREENMODERECORD r,r2;
   SCREENMODERECORD* insertionptr;
   char *cnext;
   int enumblock[32];
   int nallocated,ntoskip,nread;
-  int c,i,j;
+  int i,j;
   int *emode;
   int eformat,insertionindex,direction;
 #ifdef SCREEN_MODES_WITH_NCOLOUR_OPTIONS
@@ -122,11 +132,13 @@ static void detectscreenmodesbyenumeration(int writeaction)
   char* ncsuffix;
 #endif
 
+#ifdef __RISCOS__
   if (writeaction == DETECTMODE_WRITESHORTLIST || writeaction == DETECTMODE_WRITELONGLIST)
   {
     wimpwrite(formatcolumnname,1,strlen(formatcolumnname));
     wimpwrite(modevarcolumnnames,1,strlen(modevarcolumnnames));
   }
+#endif
 
 #ifdef SCREEN_MODES_WITH_NCOLOUR_OPTIONS
   nallocated = 24;
@@ -139,12 +151,16 @@ static void detectscreenmodesbyenumeration(int writeaction)
 
   do
   {
+#ifdef __RISCOS__
     regs.r[0] = 2;
     regs.r[2] = ntoskip;
     regs.r[6] = (int)enumblock;
     regs.r[7] = sizeof(enumblock);
     _kernel_swi(OS_ScreenMode,&regs,&regs);
     nread = regs.r[2];
+#else
+    nread = environmentenumeratescreenmodes(ntoskip, enumblock, sizeof(enumblock));
+#endif
     ntoskip -= nread;
 
     for (i=nread, emode=enumblock; i<0; i++, emode += (*emode>>2))
@@ -176,6 +192,7 @@ static void detectscreenmodesbyenumeration(int writeaction)
 
       if (eformat == 0)
       {
+#ifdef __RISCOS__
         regs.r[0] = (int)modeblock;
         regs.r[1] = 0;
         _kernel_swi(OS_ReadModeVariable,&regs,&regs);
@@ -183,8 +200,13 @@ static void detectscreenmodesbyenumeration(int writeaction)
         regs.r[1] = 3;
         _kernel_swi(OS_ReadModeVariable,&regs,&regs);
         r.ncolour = regs.r[2];
+#else
+        r.modeflags = environmentreadmodevariable((intptr_t)modeblock, 0);
+        r.ncolour = environmentreadmodevariable((intptr_t)modeblock, 3);
+#endif
       }
 
+#ifdef __RISCOS__
       if (writeaction == DETECTMODE_WRITELONGLIST)
       {
         snprintf(buffer,sizeof(buffer),"%2d  ",r.fmt);
@@ -192,14 +214,19 @@ static void detectscreenmodesbyenumeration(int writeaction)
         writemodevariables((int)modeblock);
         wimpwrite("\n",1,1);
       }
+#endif
 
       if (r.log2bpp < 2 || r.log2bpp > 5)
         continue;
 
       if (r.modeflags & 1) continue;
 
+#ifdef __RISCOS__
       regs.r[0] = (int)modeblock;
       if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) != NULL || c != 0)
+#else
+      if (environmentcheckmodevalid((intptr_t)modeblock) != 0)
+#endif
       {
         continue;
       }
@@ -213,8 +240,12 @@ static void detectscreenmodesbyenumeration(int writeaction)
 
         screenmodesetblock(&r2,&modeblock);
 
+#ifdef __RISCOS__
         regs.r[0] = (int)modeblock;
         if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) != NULL || c != 0)
+#else
+        if (environmentcheckmodevalid((intptr_t)modeblock) != 0)
+#endif
         {
           screenmodesetblock(&r,&modeblock);
         }
@@ -222,6 +253,7 @@ static void detectscreenmodesbyenumeration(int writeaction)
         {
           r = r2;
 
+#ifdef __RISCOS__
           if (writeaction == DETECTMODE_WRITELONGLIST)
           {
             snprintf(buffer,sizeof(buffer),"%2d  ",r.fmt);
@@ -230,6 +262,7 @@ static void detectscreenmodesbyenumeration(int writeaction)
             wimpwrite(available,1,strlen(available));
             wimpwrite("\n",1,1);
           }
+#endif
         }
       }
 
@@ -304,6 +337,7 @@ static void detectscreenmodesbyenumeration(int writeaction)
     r = screenmoderecords[i];
     cnext = screenmodeicons[i];
 
+#ifdef __RISCOS__
     if (writeaction == DETECTMODE_WRITESHORTLIST)
     {
       screenmodesetblock(&r,&modeblock);
@@ -312,23 +346,16 @@ static void detectscreenmodesbyenumeration(int writeaction)
       writemodevariables((int)modeblock);
       wimpwrite("\n",1,1);
     }
+#endif
 
-    regs.r[0] = r.xres;
-    regs.r[1] = (int)cnext;
-    regs.r[2] = 5;
-    _kernel_swi(OS_BinaryToDecimal,&regs,&regs);
-    cnext += regs.r[2];
+    cnext += itoa(r.xres, cnext, 5);
 
     cnext[0] = ' ';
     cnext[1] = 'x';
     cnext[2] = ' ';
     cnext += 3;
 
-    regs.r[0] = r.yres;
-    regs.r[1] = (int)cnext;
-    regs.r[2] = 5;
-    _kernel_swi(OS_BinaryToDecimal,&regs,&regs);
-    cnext += regs.r[2];
+    cnext += itoa(r.yres, cnext, 5);
 
 #ifdef SCREEN_MODES_WITH_NCOLOUR_OPTIONS
     nc = (unsigned int)r.ncolour + 1;
@@ -358,11 +385,7 @@ static void detectscreenmodesbyenumeration(int writeaction)
       ncsuffix = "";
     }
 
-    regs.r[0] = nc;
-    regs.r[1] = (int)cnext;
-    regs.r[2] = 10;
-    _kernel_swi(OS_BinaryToDecimal,&regs,&regs);
-    cnext += regs.r[2];
+    cnext += itoa(nc, cnext, 10);
 
     strcpy(cnext, ncsuffix);
 #endif
@@ -371,8 +394,13 @@ static void detectscreenmodesbyenumeration(int writeaction)
 
 void detectscreenmodes(void)
 {
+#ifdef __RISCOS__
   int c;
+#endif
   numberedscreenmodeflags = 0;
+  screenmoderecordcount = 0;
+  screenmoderecords = NULL;
+#ifdef __RISCOS__
   regs.r[0] = 12;
   if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) == NULL && c == 0)
     numberedscreenmodeflags |= (1<<12);
@@ -382,13 +410,12 @@ void detectscreenmodes(void)
   regs.r[0] = 21;
   if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) == NULL && c == 0)
     numberedscreenmodeflags |= (1<<21);
-  screenmoderecordcount = 0;
-  screenmoderecords = NULL;
   regs.r[0] = 0x81;
   regs.r[1] = 0x00;
   regs.r[2] = 0xFF;
   _kernel_swi(OS_Byte,&regs,&regs);
   if (regs.r[1] >= 0xA5)
+#endif
   {
     detectscreenmodesbyenumeration(DETECTMODE_WITHOUTWRITE);
   }
@@ -396,6 +423,7 @@ void detectscreenmodes(void)
 
 int writeusedscreenmode(intptr_t mode)
 {
+#ifdef __RISCOS__
   VIDEOSCALECHOICE choice;
   VIDEOSCALELUTPARAMETERS glp,tlp;
   VERTICALVIDEOSCALES vs;
@@ -476,12 +504,14 @@ int writeusedscreenmode(intptr_t mode)
   {
     wimpwrite(teletextrelaymessage,1,strlen(teletextrelaymessage));
   }
+#endif
 
   return 1;
 }
 
 int writenumberedmodelist(void)
 {
+#ifdef __RISCOS__
   int c;
   int modeblock[10];
   int mode;
@@ -533,12 +563,14 @@ int writenumberedmodelist(void)
     }
     wimpwrite("\n",1,1);
   }
+#endif
 
   return 1;
 }
 
 int writescreenmodelist(int longlist)
 {
+#ifdef __RISCOS__
   int savedscreenmoderecordcount;
   SCREENMODERECORD *savedscreenmoderecords;
   SCREENMODEICON *savedscreenmodeicons;
@@ -566,6 +598,7 @@ int writescreenmodelist(int longlist)
     screenmoderecords = savedscreenmoderecords;
     screenmodeicons = savedscreenmodeicons;
   }
+#endif
 
   return 1;
 }
@@ -651,7 +684,9 @@ void screenmodesetblock(SCREENMODERECORD* r, int (*modeblock)[10])
 
 intptr_t screenmodespecifymedium(int (*modeblock)[10])
 {
+#ifdef __RISCOS__
   int c;
+#endif
 
   (*modeblock)[0] = 1;
   (*modeblock)[1] = 640;
@@ -664,16 +699,20 @@ intptr_t screenmodespecifymedium(int (*modeblock)[10])
   (*modeblock)[8] = 255;
   (*modeblock)[9] = -1;
 
+#ifdef __RISCOS__
   regs.r[0] = (int)modeblock;
   if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) != NULL || c != 0)
     return 15;
   else
+#endif
     return (intptr_t)modeblock;
 }
 
 intptr_t screenmodespecifyhigh(int (*modeblock)[10])
 {
+#ifdef __RISCOS__
   int c;
+#endif
 
   (*modeblock)[0] = 1;
   (*modeblock)[1] = 640;
@@ -686,9 +725,11 @@ intptr_t screenmodespecifyhigh(int (*modeblock)[10])
   (*modeblock)[8] = 255;
   (*modeblock)[9] = -1;
 
+#ifdef __RISCOS__
   regs.r[0] = (int)modeblock;
   if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) != NULL || c != 0)
     return 21;
   else
+#endif
     return (intptr_t)modeblock;
 }
