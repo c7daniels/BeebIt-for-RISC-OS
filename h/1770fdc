@@ -20,8 +20,6 @@
 #define ADFS_NON_INTERLEAVED 0x10 /*non interleaved*/
 #define ADFS_INTERLEAVED 0x11 /*interleaved*/
 
-extern int w1770_timer;
-
 extern void w1770reset(void);
 extern int w1770getsectorcount(FILE *hfile);
 extern int w1770getimagetype(FILE *hfile, int nsectorcount);

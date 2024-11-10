@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "6502map.h"
 #include "6502cpu.h"
 #include "6850acia.h"
 #include "beebit.h"
@@ -47,7 +48,6 @@ int m6850_transmittingRTS;
 int m6850_transmittingIRQ;
 int m6850_cleardcd;
 int m6850_firstreset;
-int m6850_timer;
 int m6850_timerreset;
 
 /*int serialula_baudrate[8] = {19200,1200,4800,150,9600,300,2400,75};*/
@@ -84,7 +84,7 @@ void aciareset(void)
 
   m6850_cleardcd = 0;
   m6850_timerreset = m6850_pollspeed64[9]; /*300 baud*/
-  m6850_timer = 0;
+  hostmap.timers.m6850_togo = 0;
 
   m6850_firstreset = TRUE;
 
@@ -96,12 +96,21 @@ void aciareset(void)
   uef_bufferpointer = 0;
 }
 
+R6502HOSTMAP* aciaatzerocycles(R6502HOSTMAP* map)
+{
+  aciapoll();
+
+  map->timers.m6850_togo = m6850_timerreset<<1;
+
+  return map;
+}
+
 void aciasetirq(void)
 {
   if (m6850_statusreg & 0x80 AND m6850_controlreg & 0x80)
-    beebit_irq |= IRQ_6850ACIA;
+    hostmap.irq |= IRQ_6850ACIA;
   else
-    beebit_irq &= IRQ_NOT6850ACIA;
+    hostmap.irq &= IRQ_NOT6850ACIA;
 }
 
 void aciadcdhigh(void)
@@ -254,23 +263,13 @@ void aciacontrolwrite(void)
       m6850_statusreg &= 0xFE;
       /*clear irq*/
       m6850_statusreg &= 0x7F;
-      beebit_irq &= IRQ_NOT6850ACIA;
+      hostmap.irq &= IRQ_NOT6850ACIA;
       break;
   }
 }
 
 char aciaread(int naddress)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
   /*if ((naddress & 0x0F) != 0x08)
   {
   bbcvdu(82);*/
@@ -307,7 +306,7 @@ char aciaread(int naddress)
       m6850_statusreg &= 0xFE;
 
       m6850_statusreg &= 0x7F;
-      beebit_irq &= IRQ_NOT6850ACIA;
+      hostmap.irq &= IRQ_NOT6850ACIA;
 
       return (m6850_rxdatareg);
       break;
@@ -318,16 +317,6 @@ char aciaread(int naddress)
 
 void aciawrite(int naddress,int nvalue)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
   switch (naddress & 0x0F)
   {
     case 0x08:
@@ -340,7 +329,7 @@ void aciawrite(int naddress,int nvalue)
       m6850_statusreg &= 0xFD; /*TDRE*/
       /*clear irq*/
       m6850_statusreg &= 0x7F;
-      beebit_irq &= IRQ_NOT6850ACIA;
+      hostmap.irq &= IRQ_NOT6850ACIA;
       break;
   }
 }
@@ -349,31 +338,12 @@ void aciawrite(int naddress,int nvalue)
 
 char serialularead(int naddress)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
   return (serialula_reg);
 }
 
 void serialulawrite(int naddress,int nvalue)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
+  int cyclecount;
   serialula_reg = nvalue;
 
   serialula_txbaud = (serialula_reg & 0x07);
@@ -395,12 +365,17 @@ void serialulawrite(int naddress,int nvalue)
   if (serialula_reg & 0x80)
   {
     /*TAPE*/
-    if (m6850_timer == 0)
-      m6850_timer = m6850_timerreset;
+    if (hostmap.timers.m6850_togo == 0 && m6850_timerreset > 0)
+    {
+      hostmap.timers.m6850_togo = m6850_timerreset<<1;
+      TIMER_GET_CYCLE_COUNT(cyclecount, &hostmap)
+      hostmap.timers.m6850_togo += cyclecount;
+      TIMER_LIMIT_CYCLES_TO_GO(&hostmap, hostmap.timers.m6850_togo)
+    }
   }
   else
     /*RS423*/
-    m6850_timer = 0;
+    hostmap.timers.m6850_togo = 0;
 }
 
 /*-- UEF --*/

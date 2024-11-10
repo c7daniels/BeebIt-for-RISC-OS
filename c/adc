@@ -10,8 +10,9 @@
  */
 
 #include <stdio.h>
-#include "6502cpu.h"
+#include "6502map.h"
 #include "6522sysvia.h"
+#include "adc.h"
 #include "beebit.h"
 #include "kernel.h"
 #include "swis.h"
@@ -25,7 +26,6 @@ int adc_resolution;
 int adc_status;
 int adc_highbyte;
 int adc_lowbyte;
-int adc_timer; /*adc timer*/
 static int adc_suppressfirst;
 static int adc_x_osunits;
 static int adc_y_osunits;
@@ -40,7 +40,7 @@ void adcreset(void)
   adc_resolution = 0;
   adc_highbyte = 0;
   adc_lowbyte = 0;
-  adc_timer = 0;
+  hostmap.timers.adc_togo = 0;
 }
 
 void adcenter(void)
@@ -79,6 +79,13 @@ void adcmodevars(void)
     adc_y_osunits = (yres<<yeig);
     adc_input_y_low = (adc_y_osunits>>1)-255;
   }
+}
+
+R6502HOSTMAP* adcatzerocycles(R6502HOSTMAP* map)
+{
+  adcpoll();
+
+  return map;
 }
 
 void adcpoll(void)
@@ -173,15 +180,6 @@ char adcread(int naddress)
    *b6:
    */
   /*char nresult;*/
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
 
   naddress &= 3;
   switch (naddress)
@@ -211,16 +209,7 @@ void adcwrite(int naddress,int nvalue)
    * b3=1: 10 bit resolution/10ms
    * interrupt is generated when conversion is done.
    */
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
+  int cyclecount;
   adc_channel = (nvalue & 3);
   adc_flag = (nvalue & 4)>>2;
   adc_resolution = (nvalue & 8)>>3;
@@ -229,7 +218,10 @@ void adcwrite(int naddress,int nvalue)
   /*not complete*/
   adc_status |= 0x80;
   if (adc_resolution)
-    adc_timer +=  10000;
+    hostmap.timers.adc_togo =  10000<<1;
   else
-    adc_timer +=  4000;
+    hostmap.timers.adc_togo =   4000<<1;
+  TIMER_GET_CYCLE_COUNT(cyclecount, &hostmap)
+  hostmap.timers.adc_togo += cyclecount;
+  TIMER_LIMIT_CYCLES_TO_GO(&hostmap, hostmap.timers.adc_togo)
 }

@@ -1,0 +1,140 @@
+/*>6502map.h
+ *
+ * BeebIt - BBC Micro Model B Emulator
+ *
+ * Interleaved CPU and video emulation
+ *
+ * (C) Copyright Crispian Daniels, 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
+ */
+
+struct R6502HOSTMAP;
+
+typedef struct R6502HOSTMAP* (*R6502OP)(struct R6502HOSTMAP *map); /*returning the parameter leaves it in r0 for the next call from AArch32 assembly language*/
+
+#define R6502_READ_SEQUENCE 256
+#define R6502_DECODE_SEQUENCE 257
+#define R6502_RESET_SEQUENCE 258
+#define R6502_INTERRUPT_SEQUENCE 259
+#define R6502_OPCODE_07_SEQUENCE 260
+#define R6502_SEQUENCE_CAPACITY 261
+
+#define R6502_LOG2_MAX_SEQUENCE_LENGTH 3
+
+typedef struct
+{
+  unsigned int cyclesmonotonic; /*used by zeribeepwrite*/
+  int cycle;
+  int cyclestogo;
+  int cyclesoriginal;
+  int r6522sysvia_togo;
+  int r6522sysvia_original;
+  int r6522usrvia_togo;
+  int r6522usrvia_original;
+  int i8271_togo;
+  int w1770_togo;
+  int adc_togo;
+  int m6850_togo;
+  int video_togo;
+} TIMERWORKSPACE;
+
+/*Rockwell 6502 Central Processor Unit (CPU)*/
+/*an assembly language representation of this struct appears in 6502cpus.h*/
+/*offsets are intended to equal barrel-shift constants in AArch32*/
+typedef struct R6502HOSTMAP
+{
+  int cpu_state; /*index into table of steps*/
+  unsigned int address_code; /*shifted value on address bus with bus code*/
+  unsigned int pc_code; /*shifted program counter with bus code*/
+  unsigned int sp_code; /*rotated stack pointer and bus code*/
+  unsigned int latch; /*addressing temporary value*/
+  unsigned char m; /*value on data bus*/
+  unsigned char a, x, y; /*3 registers A,X,Y*/
+  unsigned char ps; /*processor status*/
+  unsigned char irq;
+  unsigned char nmis;
+  unsigned char _nmis_padding[1];
+  TIMERWORKSPACE timers;
+  R6502OP transition1action, transition2action;
+  R6502OP yieldaction;
+  R6502OP fetchaction, interruptfetchaction;
+  R6502OP fetchthentestirqaction, resetaction;
+  int timesinterruptmissed;
+  unsigned int lbreak;
+  unsigned char romsel; /*ROMSELect*/
+  unsigned char acccon;  /*ACCCON*/
+  unsigned char readcompleted;
+  unsigned char _readcompleted_padding[1];
+  char romwritable[16];
+  R6502OP read3000, write3000;
+  R6502OP read3000_ram, write3000_ram;
+  R6502OP read3000_e, write3000_e;
+  R6502OP read3000_x, write3000_x;
+  R6502OP read8000_ram, write8000_ram;
+  R6502OP readC000_y, writeC000_y;
+  R6502OP swappagesintomemory, swappagesoutofmemory;
+  void *zeribeep_writebyte;
+  void *zeribeep_workspace;
+  unsigned int _low_padding[78];
+  R6502OP bus_fork[128];
+  unsigned int _bus_fork_padding[1504];
+  R6502OP read8000s[16];
+  R6502OP write8000s[16];
+  R6502OP high_read_fork[1024];
+  R6502OP high_write_fork[1024];
+  R6502OP high_stretched_read_fork[1024];
+  R6502OP high_stretched_write_fork[1024];
+  R6502OP steps[R6502_SEQUENCE_CAPACITY<<R6502_LOG2_MAX_SEQUENCE_LENGTH];
+  R6502OP _steps_padding[(288-R6502_SEQUENCE_CAPACITY)<<R6502_LOG2_MAX_SEQUENCE_LENGTH];
+  /*6502cpus.s appends memory, shadow and roms to the host R6502HOSTMAP*/
+} R6502HOSTMAP;
+
+
+#define TIMER_LIMIT_CYCLES_TO_GO(MAP, LIMIT) \
+  { \
+    TIMERWORKSPACE *ts = &(MAP)->timers; \
+    int excess = ts->cyclesoriginal - (LIMIT); \
+    if (excess > 0) \
+    { \
+      ts->cyclesoriginal -= excess; \
+      ts->cyclestogo -= excess; \
+    } \
+  }
+
+#define TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(MAP, P, LIMIT) \
+  { \
+    TIMERWORKSPACE *ts = &(MAP)->timers; \
+    int excess = ts->P##_original - (LIMIT); \
+    if (excess > 0) \
+    { \
+      ts->P##_original -= excess; \
+      ts->P##_togo -= excess; \
+      excess = ts->cyclesoriginal - ts->P##_togo; \
+      if (excess > 0) \
+      { \
+        ts->cyclesoriginal -= excess; \
+        ts->cyclestogo -= excess; \
+      } \
+    } \
+  }
+
+#define TIMER_GET_CYCLE_COUNT(OUT, MAP) \
+  { \
+    TIMERWORKSPACE *ts = &(MAP)->timers; \
+OUT = ts->cyclesoriginal - ts->cyclestogo; \
+  }
+
+#define TIMER_GET_PERIPHERAL_CYCLE_COUNT(OUT, MAP, P) \
+  { \
+    TIMERWORKSPACE *ts = &(MAP)->timers; \
+OUT = ts->cyclesoriginal - ts->cyclestogo + ts->P##_original - ts->P##_togo; \
+  }
+
+#define TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(OUT, MAP, P) \
+  { \
+    TIMERWORKSPACE *ts = &(MAP)->timers; \
+    OUT = ts->cyclesoriginal - ts->cyclestogo; \
+    OUT += (ts->cycle^OUT^1)&1; \
+    OUT += ts->P##_original - ts->P##_togo; \
+  }

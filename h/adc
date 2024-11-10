@@ -14,7 +14,6 @@ extern int adc_resolution;
 extern int adc_status;
 extern int adc_highbyte;
 extern int adc_lowbyte;
-extern int adc_timer; /*adc timer*/
 
 extern void adcreset(void);
 extern void adcenter(void);

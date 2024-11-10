@@ -12,9 +12,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "6502map.h"
 #include "6502cpu.h"
 #include "8271fdc.h"
 #include "beebit.h"
+#include "riscos.h"
 #include "keyboard.h"
 
 #ifdef __DEVELOP__
@@ -46,7 +48,6 @@ int i8271_headloadtime;
 char i8271_badtrack[2][2]; /*drive,track*/
 char i8271_parameter[16]; /*heaps more than we need*/
 char i8271_data[0x1000]; /*hope we don't get any sectors > 4096 bytes*/
-int i8271_timer;
 int i8271_writestart; /*indicates when writing starts*/
 
 int ncurrentdrive,CurrentTrack, CurrentSector, SectorsToGo, SectorLength, ByteWithinSector;
@@ -85,10 +86,27 @@ int acommandlookup[20][2] = {
 void i8271setnmi(void)
 {
   if (i8271_statusreg & 8)
-    beebit_nmi = TRUE; /*|= (1<<0);*/
+    hostmap.nmis |= NMIS_NMI;
   else
-    beebit_nmi = FALSE; /*&= ~(1<<0);*/
-  /*fprintf(htrace,"NMI=&%X\n",nmiinterrupt);*/
+    hostmap.nmis &= (NMIS_NOTNMI & NMIS_NOTOLDNMI);
+}
+
+static void i8271addtotimer(int cycles)
+{
+  int cyclesin;
+
+  if (hostmap.timers.i8271_togo > 0)
+  {
+    hostmap.timers.i8271_togo += cycles;
+  }
+  else
+  {
+    cyclesin = hostmap.timers.cyclesoriginal - hostmap.timers.cyclestogo;
+
+    hostmap.timers.i8271_togo = cyclesin + cycles;
+
+    TIMER_LIMIT_CYCLES_TO_GO(&hostmap, hostmap.timers.i8271_togo)
+  }
 }
 
 void i8271reset(void)
@@ -109,7 +127,7 @@ void i8271reset(void)
   i8271_modereg = 0;
   i8271_outputport = 0;
   i8271_inputport = 0;
-  i8271_timer = 0;
+  hostmap.timers.i8271_togo = 0;
 
   /*0/1 for surface number*/
   i8271_currenttrack[0] = 0;
@@ -119,6 +137,18 @@ void i8271reset(void)
   i8271_badtrack[0][1] = 0xFF;
   i8271_badtrack[1][0] = 0xFF;
   i8271_badtrack[1][1] = 0xFF;
+}
+
+R6502HOSTMAP* i8271atzerocycles(R6502HOSTMAP* map)
+{
+  i8271poll();
+
+  if ((map->nmis & NMIS_NMI) AND !(map->nmis & NMIS_OLDNMI))
+  {
+    r6502startinterrupt(map);
+  }
+
+  return map;
 }
 
 void i8271closedown(void)
@@ -134,7 +164,7 @@ void inerror(int nerror)
   ninerror = nerror;
   i8271_statusreg = 0x80;
   i8271setnmi();
-  i8271_timer += (r6502_cyclestogo+50);
+  i8271addtotimer(50<<1);
 }
 
 void i8271readimage(FILE *hfile, int nlocation, int nlength)
@@ -267,8 +297,7 @@ void i8271interrupt0B(void)
         SectorsToGo = -1; /* To let us bail out */
         i8271setnmi();
         /*i8271_timer += i8271_steprate;*/
-        /*i8271_timer += (r6502_cyclestogo+160);*/
-        i8271_timer += 160;
+        hostmap.timers.i8271_togo += (80<<1);
       }
     }
   }
@@ -278,7 +307,7 @@ void i8271interrupt0B(void)
   {
     i8271_statusreg = 0x8C; /* Command busy, */
     i8271setnmi();
-    i8271_timer += 160; /*(r6502_cyclestogo+160);*/
+    hostmap.timers.i8271_togo += (80<<1);
   }
   /*fprintf(htrace,"RESULTREG=%u\n",i8271_resultreg);*/
 }
@@ -318,8 +347,7 @@ void i8271interrupt13(void)
       SectorsToGo = -1; /* To let us bail out */
       i8271setnmi();
       /*i8271_timer += i8271_steprate;*/
-      /*i8271_timer += (r6502_cyclestogo+160);*/
-      i8271_timer += 160;
+      hostmap.timers.i8271_togo += (80<<1);
     }
   }
 
@@ -327,7 +355,7 @@ void i8271interrupt13(void)
   {
     i8271_statusreg = 0x8C; /* Command busy, */
     i8271setnmi();
-    i8271_timer += (r6502_cyclestogo+160);
+    hostmap.timers.i8271_togo += (80<<1);
   }
 }
 
@@ -383,8 +411,7 @@ void i8271interrupt23(void)
         SectorsToGo = -1; /* To let us bail out */
         i8271setnmi();
         /*i8271_timer += i8271_steprate;*/
-        /*i8271_timer += (r6502_cyclestogo+160);*/
-        i8271_timer += 160;
+        hostmap.timers.i8271_togo += (80<<1);
       }
     }
   }
@@ -394,7 +421,7 @@ void i8271interrupt23(void)
   {
     i8271_statusreg = 0x8C; /* Command busy, */
     i8271setnmi();
-    i8271_timer += 160; /*(r6502_cyclestogo+160);*/
+    hostmap.timers.i8271_togo += (80<<1);
   }
   /*fprintf(htrace,"RESULTREG=%u\n",i8271_resultreg);*/
 }
@@ -632,7 +659,7 @@ void i8271command0B(void)
   /*command busy*/
   i8271_statusreg = 0x80;
   i8271setnmi();
-  i8271_timer += (r6502_cyclestogo+160);
+  i8271addtotimer(160<<1);
 }
 
 /* readdatavarlen
@@ -700,7 +727,7 @@ void i8271command13(void)
     ByteWithinSector = 0;
     i8271_statusreg = 0x80; /* Command busy */
     i8271setnmi();
-    i8271_timer += (r6502_cyclestogo+160);
+    i8271addtotimer(160<<1);
   /*}
   else
   {
@@ -758,7 +785,7 @@ void i8271command1F(void)
   /*command busy*/
   i8271_statusreg = 0x80;
   i8271setnmi();
-  i8271_timer += (r6502_cyclestogo+100);
+  i8271addtotimer(160<<1);
 }
 
 /* format command
@@ -821,7 +848,7 @@ void i8271command23(void)
   /*command busy*/
   i8271_statusreg = 0x80;
   i8271setnmi();
-  i8271_timer += (r6502_cyclestogo+160);
+  i8271addtotimer(160<<1);
 }
 
 /* seek command
@@ -867,7 +894,7 @@ void i8271command29(void)
 
   i8271_statusreg = 0x80; /*command busy*/
   i8271setnmi();
-  i8271_timer += (r6502_cyclestogo+100);
+  i8271addtotimer(160<<1);
 }
 
 /* read drive status command
