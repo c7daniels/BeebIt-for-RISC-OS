@@ -142,7 +142,7 @@ void aciaresettimer(void)
   int bits;
 
   if (beebit_fasttape)
-    m6850_timerreset = 800; /*1000;*/
+    m6850_timerreset = 1000;
   else
   {
     bits = m6850_bits + m6850_stop;
