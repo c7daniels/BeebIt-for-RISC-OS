@@ -6,8 +6,7 @@
  *
  * Email: <mjfoot.nz@gmail.com>
  *
- * Enhanced host screen mode compatibility (and more)
- *   contributed by Crispian Daniels in 2024
+ * Addressing optimization contributed by Crispian Daniels in 2024
  *
  * Email: <convertedgames@3insdale.me.uk>
  */
@@ -16,16 +15,17 @@ struct R6502HOSTMAP;
 
 typedef struct R6502HOSTMAP* (*SHEILAOP)(struct R6502HOSTMAP *map);
 
-extern SHEILAOP sheilareadsb[256];
-extern SHEILAOP sheilareadsbp[256];
-extern SHEILAOP sheilawritesb[256];
-extern SHEILAOP sheilawritesbp[256];
-extern SHEILAOP sheilareadsm[256];
-extern SHEILAOP sheilawritesm[256];
+extern void sheilareset(R6502HOSTMAP* map);
 
-R6502HOSTMAP* sheilaread_b(struct R6502HOSTMAP *map);
-R6502HOSTMAP* sheilaread_bp(struct R6502HOSTMAP *map);
-R6502HOSTMAP* sheilaread_m(struct R6502HOSTMAP *map);
-R6502HOSTMAP* sheilawrite_b(struct R6502HOSTMAP *map);
-R6502HOSTMAP* sheilawrite_bp(struct R6502HOSTMAP *map);
-R6502HOSTMAP* sheilawrite_m(struct R6502HOSTMAP *map);
+extern struct R6502HOSTMAP* hostconstantread00(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* hostconstantreadFE(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* hostconstantreadFF(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* romselread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* accconread(struct R6502HOSTMAP* map);
+
+extern struct R6502HOSTMAP* hostnowrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* romselwrite_b(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* romselwrite_bp(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* romselwrite_m(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* accconwrite_bp(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* accconwrite_m(struct R6502HOSTMAP* map);

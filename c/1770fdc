@@ -2,9 +2,13 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2000
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 /*
 Type I commands are Restore, Seek, Step, Step In, and Step Out.
@@ -36,6 +40,7 @@ The Type IV command is Force Interrupt.
 */
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -87,48 +92,19 @@ extern _kernel_swi_regs regs;
 
 char w1770_data[1024]; /*hope we don't get any sectors > 1024 bytes*/
 
-char w1770_controlreg;
-char w1770_statusreg;
-char w1770_trackreg;
-char w1770_sectorreg;
-char w1770_datareg;
-char w1770_commandreg;
-char w1770_track;
-int w1770_stepdir;
-int w1770_steptime;
-
-int w1770_drive;
-int w1770_side;
-int w1770_density;
-int w1770_byteinsector;
-int w1770_writegate;
-int w1770_lastbyte;
-
 void w1770reset(void)
 {
-  w1770_controlreg = 1;
-  w1770_statusreg = 0;
-  w1770_trackreg = w1770_track = 0;
-  w1770_sectorreg = 0;
-  w1770_datareg = 0;
-  w1770_commandreg = 0;
-  w1770_stepdir = WD1770_STEPIN;
-  w1770_steptime = 0;
-  hostmap.timers.w1770_togo = 0;
-  w1770_lastbyte = FALSE;
-  w1770_writegate = FALSE;
-}
-
-R6502HOSTMAP* w1770atzerocycles(R6502HOSTMAP* map)
-{
-  w1770poll();
-
-  if ((map->nmis & NMIS_NMI) AND !(map->nmis & NMIS_OLDNMI))
-  {
-    r6502startinterrupt(map);
-  }
-
-  return map;
+  hostmap.s0w1770.controlreg = 1;
+  hostmap.s0w1770.statusreg = 0;
+  hostmap.s0w1770.trackreg = hostmap.s0w1770.track = 0;
+  hostmap.s0w1770.sectorreg = 0;
+  hostmap.s0w1770.datareg = 0;
+  hostmap.s0w1770.commandreg = 0;
+  hostmap.s2w1770.stepdir = WD1770_STEPIN;
+  hostmap.s2w1770.steptime = 0;
+  hostmap.s2cycles.w1770_togo = 0;
+  hostmap.s2w1770.lastbyte = FALSE;
+  hostmap.s2w1770.writegate = FALSE;
 }
 
 void w1770readimage(FILE *hfile, int nlocation, int nlength)
@@ -153,37 +129,37 @@ void w1770discread(void)
 {
   /*ndrive = drive number (0-3)*/
   int ndrive, nlocation, nsize;
-  ndrive = w1770_drive+w1770_side;
+  ndrive = hostmap.s0w1770.drive+hostmap.s0w1770.side;
   if (beebit_imagetype[ndrive] != DFS_NONE)
   {
     switch (beebit_imagetype[ndrive])
     {
       case DFS_SSD:
-        nlocation = (w1770_track*DFS_SECTORS_PER_TRACK)+w1770_sectorreg;
+        nlocation = (hostmap.s0w1770.track*DFS_SECTORS_PER_TRACK)+hostmap.s0w1770.sectorreg;
         nsize = DFS_SECTOR_SIZE;
         break;
       case DFS_DSD_TRACK:
-        ndrive = w1770_drive;
-        nlocation = ((w1770_track*2)*DFS_SECTORS_PER_TRACK)+w1770_sectorreg;
-        if (w1770_side > 0)
+        ndrive = hostmap.s0w1770.drive;
+        nlocation = ((hostmap.s0w1770.track*2)*DFS_SECTORS_PER_TRACK)+hostmap.s0w1770.sectorreg;
+        if (hostmap.s0w1770.side > 0)
           nlocation += DFS_SECTORS_PER_TRACK;
         nsize = DFS_SECTOR_SIZE;
         break;
       case DFS_DSD_SIDE:
-        ndrive = w1770_drive;
-        nlocation = (w1770_track*DFS_SECTORS_PER_TRACK)+w1770_sectorreg;
-        if (w1770_drive > 0)
+        ndrive = hostmap.s0w1770.drive;
+        nlocation = (hostmap.s0w1770.track*DFS_SECTORS_PER_TRACK)+hostmap.s0w1770.sectorreg;
+        if (hostmap.s0w1770.drive > 0)
           nlocation += beebit_sectorcount[ndrive];
         nsize = DFS_SECTOR_SIZE;
         break;
       case ADFS_NON_INTERLEAVED:
-        nlocation = (w1770_track*ADFS_SECTORS_PER_TRACK)+w1770_sectorreg;
+        nlocation = (hostmap.s0w1770.track*ADFS_SECTORS_PER_TRACK)+hostmap.s0w1770.sectorreg;
         nsize = ADFS_SECTOR_SIZE;
         break;
       case ADFS_INTERLEAVED:
-        ndrive = w1770_drive;
-        nlocation = ((w1770_track*2)*ADFS_SECTORS_PER_TRACK)+w1770_sectorreg;
-        if (w1770_side > 0)
+        ndrive = hostmap.s0w1770.drive;
+        nlocation = ((hostmap.s0w1770.track*2)*ADFS_SECTORS_PER_TRACK)+hostmap.s0w1770.sectorreg;
+        if (hostmap.s0w1770.side > 0)
           nlocation += ADFS_SECTORS_PER_TRACK;
         nsize = ADFS_SECTOR_SIZE;
         break;
@@ -210,37 +186,37 @@ void w1770discwrite(void)
 {
   /*ndrive = drive number (0-3)*/
   int ndrive, nlocation, nsize;
-  ndrive = w1770_drive+w1770_side;
+  ndrive = hostmap.s0w1770.drive+hostmap.s0w1770.side;
   if (beebit_imagetype[ndrive] != DFS_NONE)
   {
     switch (beebit_imagetype[ndrive])
     {
       case DFS_SSD:
-        nlocation = (w1770_track*DFS_SECTORS_PER_TRACK)+w1770_sectorreg;
+        nlocation = (hostmap.s0w1770.track*DFS_SECTORS_PER_TRACK)+hostmap.s0w1770.sectorreg;
         nsize = DFS_SECTOR_SIZE;
         break;
       case DFS_DSD_TRACK:
-        ndrive = w1770_drive;
-        nlocation = ((w1770_track*2)*DFS_SECTORS_PER_TRACK)+w1770_sectorreg;
-        if (w1770_side > 0)
+        ndrive = hostmap.s0w1770.drive;
+        nlocation = ((hostmap.s0w1770.track*2)*DFS_SECTORS_PER_TRACK)+hostmap.s0w1770.sectorreg;
+        if (hostmap.s0w1770.side > 0)
           nlocation += DFS_SECTORS_PER_TRACK;
         nsize = DFS_SECTOR_SIZE;
         break;
       case DFS_DSD_SIDE:
-        ndrive = w1770_drive;
-        nlocation = (w1770_track*DFS_SECTORS_PER_TRACK)+w1770_sectorreg;
-        if (w1770_drive > 0)
+        ndrive = hostmap.s0w1770.drive;
+        nlocation = (hostmap.s0w1770.track*DFS_SECTORS_PER_TRACK)+hostmap.s0w1770.sectorreg;
+        if (hostmap.s0w1770.drive > 0)
           nlocation += beebit_sectorcount[ndrive];
         nsize = DFS_SECTOR_SIZE;
         break;
       case ADFS_NON_INTERLEAVED:
-        nlocation = (w1770_track*ADFS_SECTORS_PER_TRACK)+w1770_sectorreg;
+        nlocation = (hostmap.s0w1770.track*ADFS_SECTORS_PER_TRACK)+hostmap.s0w1770.sectorreg;
         nsize = ADFS_SECTOR_SIZE;
         break;
       case ADFS_INTERLEAVED:
-        ndrive = w1770_drive;
-        nlocation = ((w1770_track*2)*ADFS_SECTORS_PER_TRACK)+w1770_sectorreg;
-        if (w1770_side > 0)
+        ndrive = hostmap.s0w1770.drive;
+        nlocation = ((hostmap.s0w1770.track*2)*ADFS_SECTORS_PER_TRACK)+hostmap.s0w1770.sectorreg;
+        if (hostmap.s0w1770.side > 0)
           nlocation += ADFS_SECTORS_PER_TRACK;
         nsize = ADFS_SECTOR_SIZE;
         break;
@@ -261,225 +237,225 @@ void w1770discwrite(void)
   }
 }
 
-void w1770poll(void)
+R6502HOSTMAP* w1770poll(R6502HOSTMAP* map)
 {
   #ifdef WD1770_DEBUG
   bbcvdu(80);
   bbcvdu(32);
-  inttohex(w1770_commandreg);
+  inttohex(map->s0w1770.commandreg);
   bbcvdu(32);
-  inttohex(w1770_statusreg);
+  inttohex(map->s0w1770.statusreg);
   bbcvdu(13);
   bbcvdu(10);
   #endif
-  switch (w1770_commandreg & 0xF0)
+  switch (map->s0w1770.commandreg & 0xF0)
   {
     case 0x00:
       /*restore*/
-      if (!(w1770_statusreg & STATUS_NOTSPINUP))
+      if (!(map->s0w1770.statusreg & STATUS_NOTSPINUP))
       {
         /*disable the motor spin up sequence*/
-        w1770_statusreg |= STATUS_NOTSPINUP;
-        w1770_statusreg |= STATUS_MOTORON;
+        map->s0w1770.statusreg |= STATUS_NOTSPINUP;
+        map->s0w1770.statusreg |= STATUS_MOTORON;
         /*verify?*/
       }
-      w1770_statusreg &= STATUS_NOTBUSY;
+      map->s0w1770.statusreg &= STATUS_NOTBUSY;
       SETNMI;
       break;
     case 0x10:
       /*seek*/
-      w1770_statusreg &= STATUS_NOTBUSY;
+      map->s0w1770.statusreg &= STATUS_NOTBUSY;
       SETNMI;
       break;
     case 0x20:
     case 0x30:
       /*step command*/
-      w1770_statusreg &= STATUS_NOTBUSY;
+      map->s0w1770.statusreg &= STATUS_NOTBUSY;
       SETNMI;
     case 0x40:
     case 0x50:
       /*step in command*/
-      w1770_statusreg &= STATUS_NOTBUSY;
+      map->s0w1770.statusreg &= STATUS_NOTBUSY;
       SETNMI;
       break;
     case 0x60:
     case 0x70:
       /*step out command*/
-      w1770_statusreg &= STATUS_NOTBUSY;
+      map->s0w1770.statusreg &= STATUS_NOTBUSY;
       SETNMI;
       break;
     case 0x80:
     case 0x90:
       /*read sector*/
-      if (w1770_lastbyte)
+      if (map->s2w1770.lastbyte)
       {
         /*the last byte of the sector has been read*/
-        w1770_lastbyte = FALSE;
-        if (w1770_commandreg & 0x10)
+        map->s2w1770.lastbyte = FALSE;
+        if (map->s0w1770.commandreg & 0x10)
         {
           /*multiple sector*/
-          if (beebit_imagetype[w1770_drive+w1770_side] & ADFS_MASK)
+          if (beebit_imagetype[map->s0w1770.drive+map->s0w1770.side] & ADFS_MASK)
           {
             /*ADFS*/
-            if (w1770_sectorreg >= ADFS_SECTORS_PER_TRACK)
-              w1770_statusreg &= STATUS_NOTBUSY;
+            if (map->s0w1770.sectorreg >= ADFS_SECTORS_PER_TRACK)
+              map->s0w1770.statusreg &= STATUS_NOTBUSY;
           }
           else
           {
             /*DFS*/
-            if (w1770_sectorreg >= DFS_SECTORS_PER_TRACK)
-              w1770_statusreg &= STATUS_NOTBUSY;
+            if (map->s0w1770.sectorreg >= DFS_SECTORS_PER_TRACK)
+              map->s0w1770.statusreg &= STATUS_NOTBUSY;
           }
-          w1770_byteinsector = 0;
+          map->s2w1770.byteinsector = 0;
 
         }
         else
-          w1770_statusreg &= STATUS_NOTBUSY;
+          map->s0w1770.statusreg &= STATUS_NOTBUSY;
         SETNMI
       }
       else
       {
-        if (!(w1770_statusreg & STATUS_DATAREQUEST))
+        if (!(map->s0w1770.statusreg & STATUS_DATAREQUEST))
         {
-          if (w1770_byteinsector == 0)
+          if (map->s2w1770.byteinsector == 0)
             w1770discread();
-          w1770_datareg = w1770_data[w1770_byteinsector++];
-          /*w1770_statusreg &= STATUS_NOTCRCERROR;*/
-          w1770_statusreg &= STATUS_NOTRECORDTYPE;
-          w1770_statusreg |= STATUS_DATAREQUEST;
-          if (beebit_imagetype[w1770_drive+w1770_side] & ADFS_MASK)
+          map->s0w1770.datareg = w1770_data[map->s2w1770.byteinsector++];
+          /*map->s0w1770.statusreg &= STATUS_NOTCRCERROR;*/
+          map->s0w1770.statusreg &= STATUS_NOTRECORDTYPE;
+          map->s0w1770.statusreg |= STATUS_DATAREQUEST;
+          if (beebit_imagetype[map->s0w1770.drive+map->s0w1770.side] & ADFS_MASK)
             /*ADFS*/
-            w1770_lastbyte = (w1770_byteinsector & ADFS_SECTOR_SIZE);
+            map->s2w1770.lastbyte = (map->s2w1770.byteinsector & ADFS_SECTOR_SIZE);
           else
             /*DFS*/
-            w1770_lastbyte = (w1770_byteinsector & DFS_SECTOR_SIZE);
-          if (w1770_lastbyte)
+            map->s2w1770.lastbyte = (map->s2w1770.byteinsector & DFS_SECTOR_SIZE);
+          if (map->s2w1770.lastbyte)
           {
             /*end of sector*/
-            w1770_byteinsector = 0;
-            /*w1770_statusreg &= STATUS_NOTBUSY;*/
-            hostmap.timers.w1770_togo += (16<<1);
+            map->s2w1770.byteinsector = 0;
+            /*map->s0w1770.statusreg &= STATUS_NOTBUSY;*/
+            map->s2cycles.w1770_togo += (16<<1);
           }
           else
-            hostmap.timers.w1770_togo += (64<<1);
-          /*hostmap.timers.w1770_togo += (62+(w1770_byteinsector & 1))<<1;*/
+            map->s2cycles.w1770_togo += (64<<1);
+          /*map->s2cycles.w1770_togo += (62+(map->s2w1770.byteinsector & 1))<<1;*/
           /*SETNMI;*/
         }
         else
-          w1770_statusreg |= STATUS_LOSTDATA;
+          map->s0w1770.statusreg |= STATUS_LOSTDATA;
         SETNMI
       }
       break;
     case 0xA0:
     case 0xB0:
       /*write sector*/
-      if (!beebit_discwritable[w1770_drive+w1770_side])
+      if (!beebit_discwritable[map->s0w1770.drive+map->s0w1770.side])
       {
-        w1770_statusreg |= STATUS_WRITEPROTECT;
-        w1770_statusreg &= STATUS_NOTBUSY;
+        map->s0w1770.statusreg |= STATUS_WRITEPROTECT;
+        map->s0w1770.statusreg &= STATUS_NOTBUSY;
         SETNMI
       }
-      else if (!w1770_writegate)
+      else if (!map->s2w1770.writegate)
       {
-        hostmap.timers.w1770_togo += (64<<1);
+        map->s2cycles.w1770_togo += (64<<1);
         SETNMI
       }
       else
       {
-        if (w1770_lastbyte)
+        if (map->s2w1770.lastbyte)
         {
           /*the last byte of the sector has been written*/
-          w1770_lastbyte = FALSE;
+          map->s2w1770.lastbyte = FALSE;
         }
         else
         {
-          if (!(w1770_statusreg & STATUS_DATAREQUEST))
+          if (!(map->s0w1770.statusreg & STATUS_DATAREQUEST))
           {
             #ifdef WD1770_DEBUG
             bbcvdu(66);
             bbcvdu(32);
-            inttohex(w1770_byteinsector);
+            inttohex(map->s2w1770.byteinsector);
             bbcvdu(32);
-            inttohex(w1770_datareg);
+            inttohex(map->s0w1770.datareg);
             bbcvdu(13);
             bbcvdu(10);
             #endif
-            w1770_data[w1770_byteinsector++] = w1770_datareg;
-            /*w1770_statusreg &= STATUS_NOTCRCERROR;*/
-            w1770_statusreg &= STATUS_NOTRECORDTYPE;
-            w1770_statusreg |= STATUS_DATAREQUEST;
+            w1770_data[map->s2w1770.byteinsector++] = map->s0w1770.datareg;
+            /*map->s0w1770.statusreg &= STATUS_NOTCRCERROR;*/
+            map->s0w1770.statusreg &= STATUS_NOTRECORDTYPE;
+            map->s0w1770.statusreg |= STATUS_DATAREQUEST;
 
-            if (beebit_imagetype[w1770_drive+w1770_side] & ADFS_MASK)
+            if (beebit_imagetype[map->s0w1770.drive+map->s0w1770.side] & ADFS_MASK)
               /*ADFS*/
-              w1770_lastbyte = (w1770_byteinsector & ADFS_SECTOR_SIZE);
+              map->s2w1770.lastbyte = (map->s2w1770.byteinsector & ADFS_SECTOR_SIZE);
             else
               /*DFS*/
-              w1770_lastbyte = (w1770_byteinsector & DFS_SECTOR_SIZE);
-            if (w1770_lastbyte)
+              map->s2w1770.lastbyte = (map->s2w1770.byteinsector & DFS_SECTOR_SIZE);
+            if (map->s2w1770.lastbyte)
             {
               w1770discwrite();
               /*end of sector*/
-              w1770_byteinsector = 0;
-              /*w1770_statusreg &= STATUS_NOTBUSY;*/
-              hostmap.timers.w1770_togo += (16<<1);
+              map->s2w1770.byteinsector = 0;
+              /*map->s0w1770.statusreg &= STATUS_NOTBUSY;*/
+              map->s2cycles.w1770_togo += (16<<1);
 
-              if (w1770_commandreg & 0x10)
+              if (map->s0w1770.commandreg & 0x10)
               {
                 /*multiple sector*/
-                if (beebit_imagetype[w1770_drive+w1770_side] & ADFS_MASK)
+                if (beebit_imagetype[map->s0w1770.drive+map->s0w1770.side] & ADFS_MASK)
                 {
                   /*ADFS*/
-                  if (w1770_sectorreg >= ADFS_SECTORS_PER_TRACK)
-                    w1770_statusreg &= STATUS_NOTBUSY;
+                  if (map->s0w1770.sectorreg >= ADFS_SECTORS_PER_TRACK)
+                    map->s0w1770.statusreg &= STATUS_NOTBUSY;
                 }
                 else
                 {
                   /*DFS*/
-                  if (w1770_sectorreg >= DFS_SECTORS_PER_TRACK)
-                    w1770_statusreg &= STATUS_NOTBUSY;
+                  if (map->s0w1770.sectorreg >= DFS_SECTORS_PER_TRACK)
+                    map->s0w1770.statusreg &= STATUS_NOTBUSY;
                 }
-                w1770_byteinsector = 0;
+                map->s2w1770.byteinsector = 0;
               }
               else
-                w1770_statusreg &= STATUS_NOTBUSY;
+                map->s0w1770.statusreg &= STATUS_NOTBUSY;
               SETNMI
             }
             else
-              hostmap.timers.w1770_togo += (64<<1);
-            /*hostmap.timers.w1770_togo += (62+(w1770_byteinsector & 1))<<1;*/
+              map->s2cycles.w1770_togo += (64<<1);
+            /*map->s2cycles.w1770_togo += (62+(map->s2w1770.byteinsector & 1))<<1;*/
             /*SETNMI;*/
           }
           else
-            w1770_statusreg |= STATUS_LOSTDATA;
+            map->s0w1770.statusreg |= STATUS_LOSTDATA;
           SETNMI
         }
       }
       break;
     case 0xC0:
       /*read address*/
-      switch (w1770_byteinsector)
+      switch (map->s2w1770.byteinsector)
       {
         case 0:
-          w1770_datareg = w1770_track;
+          map->s0w1770.datareg = map->s0w1770.track;
           break;
         case 1:
-          w1770_datareg = w1770_side;
+          map->s0w1770.datareg = map->s0w1770.side;
           break;
         case 2:
-          w1770_datareg = w1770_sectorreg;
+          map->s0w1770.datareg = map->s0w1770.sectorreg;
           break;
         case 3:
           /*sector length*/
-          w1770_datareg = 1;
+          map->s0w1770.datareg = 1;
           break;
         case 4:
         case 5:
-          w1770_datareg = 0;
+          map->s0w1770.datareg = 0;
           break;
         default:
-          w1770_statusreg &= STATUS_NOTBUSY;
+          map->s0w1770.statusreg &= STATUS_NOTBUSY;
       }
-      w1770_byteinsector++;
+      map->s2w1770.byteinsector++;
       SETNMI
       break;
     case 0xD0:
@@ -487,6 +463,12 @@ void w1770poll(void)
     case 0xF0:
       break;
   }
+
+  if ((map->nmis & NMIS_NMI) AND !(map->nmis & NMIS_OLDNMI))
+  {
+    r6502startinterrupt(map);
+  }
+  return map;
 }
 
 void w1770type1flags(char nvalue)
@@ -495,46 +477,46 @@ void w1770type1flags(char nvalue)
   switch (nvalue & 0x03)
   {
     case 0x00:
-      w1770_steptime = 6000;
+      hostmap.s2w1770.steptime = 6000;
       break;
     case 0x01:
-      w1770_steptime = 12000;
+      hostmap.s2w1770.steptime = 12000;
       break;
     case 0x02:
-      w1770_steptime = 20000;
+      hostmap.s2w1770.steptime = 20000;
       break;
     case 0x03:
-      w1770_steptime = 30000;
+      hostmap.s2w1770.steptime = 30000;
       break;
   }
 
   /*verify flag*/
   if (nvalue & 0x04)
-    hostmap.timers.w1770_togo += (30000<<1); /*30ms*/
+    hostmap.s2cycles.w1770_togo += (30000<<1); /*30ms*/
 
-  w1770_statusreg |= STATUS_BUSY;
-  w1770_statusreg &= STATUS_NOTDATAREQUEST;
-  w1770_statusreg &= STATUS_NOTCRCERROR;
-  w1770_statusreg &= STATUS_NOTNOTFOUND;
+  hostmap.s0w1770.statusreg |= STATUS_BUSY;
+  hostmap.s0w1770.statusreg &= STATUS_NOTDATAREQUEST;
+  hostmap.s0w1770.statusreg &= STATUS_NOTCRCERROR;
+  hostmap.s0w1770.statusreg &= STATUS_NOTNOTFOUND;
   UNSETNMI
 
   /*motor on*/
   if (nvalue & 0x08)
   {
     /*disable the motor spin up sequence*/
-    w1770_statusreg |= STATUS_NOTSPINUP;
-    hostmap.timers.w1770_togo += (WD1770_ONEREVOLUTION<<1);
+    hostmap.s0w1770.statusreg |= STATUS_NOTSPINUP;
+    hostmap.s2cycles.w1770_togo += (WD1770_ONEREVOLUTION<<1);
   }
   else
   {
-    if (!(w1770_statusreg & STATUS_MOTORON))
+    if (!(hostmap.s0w1770.statusreg & STATUS_MOTORON))
     {
       /*the motor is off*/
       /*turn motor on*/
-      w1770_statusreg |= STATUS_MOTORON;
-      w1770_statusreg &= STATUS_SPINUP;
+      hostmap.s0w1770.statusreg |= STATUS_MOTORON;
+      hostmap.s0w1770.statusreg &= STATUS_SPINUP;
       /*wait 6 revolutions*/
-      hostmap.timers.w1770_togo += ((WD1770_ONEREVOLUTION<<1)*6);
+      hostmap.s2cycles.w1770_togo += ((WD1770_ONEREVOLUTION<<1)*6);
     }
   }
 }
@@ -542,176 +524,176 @@ void w1770type1flags(char nvalue)
 void w1770commandrestore(char nvalue)
 {
   w1770type1flags(nvalue);
-  if (w1770_track == 0)
-    w1770_trackreg = 0;
+  if (hostmap.s0w1770.track == 0)
+    hostmap.s0w1770.trackreg = 0;
   else
   {
-    if (w1770_track <= 255)
+    if (hostmap.s0w1770.track <= 255)
     {
-      w1770_track = w1770_trackreg = 0;
-      w1770_statusreg &= STATUS_TRACKZERO;
+      hostmap.s0w1770.track = hostmap.s0w1770.trackreg = 0;
+      hostmap.s0w1770.statusreg &= STATUS_TRACKZERO;
     }
     else
     {
-      w1770_track -= 0xFF;
+      hostmap.s0w1770.track -= 0xFF;
       if (nvalue & 0x04)
-        w1770_statusreg |= STATUS_NOTTRACKZERO;
+        hostmap.s0w1770.statusreg |= STATUS_NOTTRACKZERO;
     }
   }
-  if (hostmap.timers.w1770_togo <= 0)
-    hostmap.timers.w1770_togo = 1;
+  if (hostmap.s2cycles.w1770_togo <= 0)
+    hostmap.s2cycles.w1770_togo = 1;
 }
 
 void w1770commandseek(char nvalue)
 {
   w1770type1flags(nvalue);
-  w1770_trackreg = w1770_track = w1770_datareg;
-  if (hostmap.timers.w1770_togo <= 0)
-    hostmap.timers.w1770_togo = 1;
+  hostmap.s0w1770.trackreg = hostmap.s0w1770.track = hostmap.s0w1770.datareg;
+  if (hostmap.s2cycles.w1770_togo <= 0)
+    hostmap.s2cycles.w1770_togo = 1;
 }
 
 void w1770commandstep(char nvalue)
 {
   w1770type1flags(nvalue);
-  switch (w1770_stepdir)
+  switch (hostmap.s2w1770.stepdir)
   {
     case WD1770_STEPIN:
-      w1770_track++;
+      hostmap.s0w1770.track++;
       break;
     case WD1770_STEPOUT:
-      w1770_track--;
+      hostmap.s0w1770.track--;
       break;
   }
   /*update track register*/
-  if (w1770_commandreg & 0x10)
-    w1770_trackreg = w1770_track = w1770_track;
+  if (hostmap.s0w1770.commandreg & 0x10)
+    hostmap.s0w1770.trackreg = hostmap.s0w1770.track = hostmap.s0w1770.track;
 
-  hostmap.timers.w1770_togo += (w1770_steptime<<1);
+  hostmap.s2cycles.w1770_togo += (hostmap.s2w1770.steptime<<1);
 }
 
 void w1770commandstepin(char nvalue)
 {
   w1770type1flags(nvalue);
-  w1770_track++;
-  w1770_stepdir = WD1770_STEPIN;
+  hostmap.s0w1770.track++;
+  hostmap.s2w1770.stepdir = WD1770_STEPIN;
   /*update track register*/
-  if (w1770_commandreg & 0x10)
-    w1770_trackreg = w1770_track = w1770_track;
+  if (hostmap.s0w1770.commandreg & 0x10)
+    hostmap.s0w1770.trackreg = hostmap.s0w1770.track = hostmap.s0w1770.track;
 
-  hostmap.timers.w1770_togo += (w1770_steptime<<1);
+  hostmap.s2cycles.w1770_togo += (hostmap.s2w1770.steptime<<1);
 }
 
 void w1770commandstepout(char nvalue)
 {
   w1770type1flags(nvalue);
-  w1770_track--;
-  w1770_stepdir = WD1770_STEPOUT;
+  hostmap.s0w1770.track--;
+  hostmap.s2w1770.stepdir = WD1770_STEPOUT;
   /*update track register*/
-  if (w1770_commandreg & 0x10)
-    w1770_trackreg = w1770_track;
+  if (hostmap.s0w1770.commandreg & 0x10)
+    hostmap.s0w1770.trackreg = hostmap.s0w1770.track;
 
-  hostmap.timers.w1770_togo += (w1770_steptime<<1);
+  hostmap.s2cycles.w1770_togo += (hostmap.s2w1770.steptime<<1);
 }
 
 void w1770type2flags(char nvalue)
 {
-  w1770_statusreg |= STATUS_BUSY;
-  w1770_statusreg &= STATUS_NOTLOSTDATA;
-  w1770_statusreg &= STATUS_NOTNOTFOUND;
-  w1770_statusreg &= STATUS_NOTRECORDTYPE;
-  w1770_statusreg &= STATUS_NOTWRITEPROTECT;
+  hostmap.s0w1770.statusreg |= STATUS_BUSY;
+  hostmap.s0w1770.statusreg &= STATUS_NOTLOSTDATA;
+  hostmap.s0w1770.statusreg &= STATUS_NOTNOTFOUND;
+  hostmap.s0w1770.statusreg &= STATUS_NOTRECORDTYPE;
+  hostmap.s0w1770.statusreg &= STATUS_NOTWRITEPROTECT;
   UNSETNMI
 
   /*motor on*/
   if (nvalue & 0x08)
   {
     /*disable the motor spin up sequence*/
-    w1770_statusreg |= STATUS_NOTSPINUP;
-    hostmap.timers.w1770_togo += (WD1770_ONEREVOLUTION<<1);
+    hostmap.s0w1770.statusreg |= STATUS_NOTSPINUP;
+    hostmap.s2cycles.w1770_togo += (WD1770_ONEREVOLUTION<<1);
   }
   else
   {
-    if (!(w1770_statusreg & STATUS_MOTORON))
+    if (!(hostmap.s0w1770.statusreg & STATUS_MOTORON))
     {
       /*the motor is off*/
       /*turn motor on*/
-      w1770_statusreg |= STATUS_MOTORON;
-      w1770_statusreg &= STATUS_SPINUP;
+      hostmap.s0w1770.statusreg |= STATUS_MOTORON;
+      hostmap.s0w1770.statusreg &= STATUS_SPINUP;
       /*wait 6 revolutions*/
-      hostmap.timers.w1770_togo += ((WD1770_ONEREVOLUTION<<1)*6);
+      hostmap.s2cycles.w1770_togo += ((WD1770_ONEREVOLUTION<<1)*6);
     }
   }
 
   if (nvalue & 0x04)
     /*settling delay 30ms*/
-    hostmap.timers.w1770_togo += (30000<<1);
+    hostmap.s2cycles.w1770_togo += (30000<<1);
 }
 
 void w1770commandreadsector(char nvalue)
 {
   w1770type2flags(nvalue);
-  w1770_statusreg &= STATUS_NOTDATAREQUEST;
-  w1770_byteinsector = 0;
+  hostmap.s0w1770.statusreg &= STATUS_NOTDATAREQUEST;
+  hostmap.s2w1770.byteinsector = 0;
 
   /*an underestimate of the time to recognise and read the first byte in the sector*/
-  hostmap.timers.w1770_togo += (320<<1);
+  hostmap.s2cycles.w1770_togo += (320<<1);
 }
 
 void w1770commandwritesector(char nvalue)
 {
   w1770type2flags(nvalue);
 
-  if (beebit_discwritable[w1770_drive+w1770_side])
-    w1770_statusreg |= STATUS_DATAREQUEST;
+  if (beebit_discwritable[hostmap.s0w1770.drive+hostmap.s0w1770.side])
+    hostmap.s0w1770.statusreg |= STATUS_DATAREQUEST;
 
-  w1770_byteinsector = 0;
+  hostmap.s2w1770.byteinsector = 0;
 
-  w1770_writegate = FALSE;
+  hostmap.s2w1770.writegate = FALSE;
 
   /*an underestimate of the time to recognise the first byte in the sector*/
-  hostmap.timers.w1770_togo += (256<<1);
+  hostmap.s2cycles.w1770_togo += (256<<1);
 }
 
 void w1770type3flags(char nvalue)
 {
-  w1770_statusreg |= STATUS_BUSY;
-  w1770_statusreg &= STATUS_NOTDATAREQUEST;
-  w1770_statusreg &= STATUS_NOTLOSTDATA;
-  w1770_statusreg &= STATUS_NOTNOTFOUND;
-  w1770_statusreg &= STATUS_NOTRECORDTYPE;
+  hostmap.s0w1770.statusreg |= STATUS_BUSY;
+  hostmap.s0w1770.statusreg &= STATUS_NOTDATAREQUEST;
+  hostmap.s0w1770.statusreg &= STATUS_NOTLOSTDATA;
+  hostmap.s0w1770.statusreg &= STATUS_NOTNOTFOUND;
+  hostmap.s0w1770.statusreg &= STATUS_NOTRECORDTYPE;
   UNSETNMI
 
   /*motor on*/
   if (nvalue & 0x08)
   {
     /*disable the motor spin up sequence*/
-    w1770_statusreg |= STATUS_NOTSPINUP;
-    hostmap.timers.w1770_togo += (WD1770_ONEREVOLUTION<<1);
+    hostmap.s0w1770.statusreg |= STATUS_NOTSPINUP;
+    hostmap.s2cycles.w1770_togo += (WD1770_ONEREVOLUTION<<1);
   }
   else
   {
-    if (!(w1770_statusreg & STATUS_MOTORON))
+    if (!(hostmap.s0w1770.statusreg & STATUS_MOTORON))
     {
       /*the motor is off*/
       /*turn motor on*/
-      w1770_statusreg |= STATUS_MOTORON;
-      w1770_statusreg &= STATUS_SPINUP;
+      hostmap.s0w1770.statusreg |= STATUS_MOTORON;
+      hostmap.s0w1770.statusreg &= STATUS_SPINUP;
       /*wait 6 revolutions*/
-      hostmap.timers.w1770_togo += ((WD1770_ONEREVOLUTION<<1)*6);
+      hostmap.s2cycles.w1770_togo += ((WD1770_ONEREVOLUTION<<1)*6);
     }
   }
 
   if (nvalue & 0x04)
     /*settling delay 30ms*/
-    hostmap.timers.w1770_togo += (30000<<1);
+    hostmap.s2cycles.w1770_togo += (30000<<1);
 }
 
 void w1770commandreadaddress(char nvalue)
 {
   w1770type3flags(nvalue);
-  w1770_byteinsector = 0;
-  if (hostmap.timers.w1770_togo <= 0)
-    hostmap.timers.w1770_togo = 1;
+  hostmap.s2w1770.byteinsector = 0;
+  if (hostmap.s2cycles.w1770_togo <= 0)
+    hostmap.s2cycles.w1770_togo = 1;
 }
 
 void w1770commandreadtrack(char nvalue)
@@ -728,7 +710,7 @@ void w1770commandwritetrack(char nvalue)
 
 void w1770forceinterruptcommand(char nvalue)
 {
-  w1770_statusreg &= STATUS_NOTBUSY;
+  hostmap.s0w1770.statusreg &= STATUS_NOTBUSY;
   switch (nvalue & 0x0C)
   {
     case 0x00:
@@ -738,14 +720,14 @@ void w1770forceinterruptcommand(char nvalue)
       break;
     case 0x08:
       SETNMI
-      w1770_commandreg = 0xD0;
+      hostmap.s0w1770.commandreg = 0xD0;
       break;
     case 0x0C:
       SETNMI
-      w1770_commandreg = 0xD0;
+      hostmap.s0w1770.commandreg = 0xD0;
       break;
   }
-  w1770_datareg = 0;
+  hostmap.s0w1770.datareg = 0;
 
   if ((hostmap.nmis & NMIS_NMI) AND !(hostmap.nmis & NMIS_OLDNMI))
   {
@@ -760,10 +742,10 @@ void w1770command(char nvalue)
   bbcvdu(32);
   inttohex(nvalue);
   bbcvdu(32);
-  inttohex(w1770_statusreg);
+  inttohex(hostmap.s0w1770.statusreg);
   bbcvdu(32);*/
   /*if a command is issued, it is executed immediately*/
-  hostmap.timers.w1770_togo = 0;
+  hostmap.s2cycles.w1770_togo = 0;
 
   switch (nvalue & 0xF0)
   {
@@ -828,277 +810,115 @@ void w1770command(char nvalue)
   bbcvdu(32);
   inttohex(nvalue);
   bbcvdu(32);
-  inttohex(w1770_statusreg);
+  inttohex(hostmap.s0w1770.statusreg);
   bbcvdu(32);*/
 
-  if (hostmap.timers.w1770_togo > 0)
+  if (hostmap.s2cycles.w1770_togo > 0)
   {
     TIMER_GET_CYCLE_COUNT(cyclecount, &hostmap)
-    hostmap.timers.w1770_togo += cyclecount;
-    TIMER_LIMIT_CYCLES_TO_GO(&hostmap, hostmap.timers.w1770_togo)
+    hostmap.s2cycles.w1770_togo += cyclecount;
+    TIMER_LIMIT_CYCLES_TO_GO(&hostmap, hostmap.s2cycles.w1770_togo)
   }
 }
 
-char w1770controlread(void)
+R6502HOSTMAP* w1770controlread(R6502HOSTMAP* map)
 {
-  /*bbcvdu(67);
-  bbcvdu(82);
-  bbcvdu(32);
-  inttohex(w1770_controlreg);
-  bbcvdu(32);*/
-  /*regs.r[0] = 0x81;
-  regs.r[1] = 0x40;
-  regs.r[2] = 0x01;
-  _kernel_swi(OS_Byte,&regs,&regs);*/
-  return (w1770_controlreg);
+  map->m = map->s0w1770.controlreg;
+  return R6502_EXECUTE_STEP(map);
 }
 
-void w1770controlwrite(char nvalue)
+R6502HOSTMAP* w1770controlwrite_bp(R6502HOSTMAP* map)
 {
-  #ifdef WD1770_DEBUG
-  bbcvdu(67);
-  bbcvdu(87);
-  bbcvdu(32);
-  inttohex(nvalue);
-  bbcvdu(32);
-  #endif
-  /*regs.r[0] = 0x81;
-  regs.r[1] = 0x40;
-  regs.r[2] = 0x00;
-  _kernel_swi(OS_Byte,&regs,&regs);*/
+  map->s0w1770.controlreg = map->m;
+  map->s0w1770.density = (map->m & 0x08);
+  map->s0w1770.side = ((map->m & 0x04) >> 1); /*0 or 2*/
+  map->s0w1770.drive = ((map->m & 0x03) >> 1);
+  return R6502_EXECUTE_STEP(map);
+}
 
-  w1770_controlreg = nvalue;
-  switch (beebit_machinetype)
+R6502HOSTMAP* w1770controlwrite_m(R6502HOSTMAP* map)
+{
+  map->s0w1770.controlreg = map->m;
+  map->s0w1770.density = (map->m & 0x20);
+  map->s0w1770.side = ((map->m & 0x10) >> 3); /*0 or 2*/
+  map->s0w1770.drive = ((map->m & 0x03) >> 1);
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* w1770statusread(R6502HOSTMAP* map)
+{
+  UNSETNMI;
+  map->m = map->s0w1770.statusreg;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* w1770trackread(R6502HOSTMAP* map)
+{
+  map->m = map->s0w1770.trackreg;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* w1770sectorread(R6502HOSTMAP* map)
+{
+  map->m = map->s0w1770.sectorreg;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* w1770dataread(R6502HOSTMAP* map)
+{
+  if (map->s0w1770.commandreg & 0x80)
+    map->s0w1770.statusreg &= STATUS_NOTDATAREQUEST;
+  map->m = map->s0w1770.datareg;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* w1770commandwrite(R6502HOSTMAP* map)
+{
+  UNSETNMI;
+  /*command words are only loaded in the command register when the busy status bit is off (status bit 0)*/
+  if (map->s0w1770.statusreg & STATUS_BUSY)
   {
-    case MACHINE_MODELB:
-      w1770_density = (nvalue & 0x40);
-      w1770_side = ((nvalue & 0x01) << 1);
-      w1770_drive = (nvalue & 0x01);
-      break;
-    case MACHINE_MODELBPLUS:
-      w1770_density = (nvalue & 0x08);
-      w1770_side = ((nvalue & 0x04) >> 1); /*0 or 2*/
-      w1770_drive = ((nvalue & 0x03) >> 1);
-      break;
-    case MACHINE_MASTER128:
-    case MACHINE_COMPACT:
-      w1770_density = (nvalue & 0x20);
-      w1770_side = ((nvalue & 0x10) >> 3); /*0 or 2*/
-      w1770_drive = ((nvalue & 0x03) >> 1);
-      break;
+    if ((map->m & 0xF0) == 0xD0)
+    {
+      map->s0w1770.commandreg = map->m;
+      w1770command(map->m);
+    }
   }
-  #ifdef WD1770_DEBUG
-  bbcvdu(68);
-  inttohex(w1770_drive);
-  bbcvdu(83);
-  inttohex(w1770_side);
-  bbcvdu(13);
-  bbcvdu(10);
-  #endif
+  else
+  {
+    if (beebit_imagetype[map->s0w1770.drive+map->s0w1770.side] == DFS_NONE)
+    {
+      map->s0w1770.statusreg &= STATUS_NOTBUSY;
+      map->s0w1770.statusreg |= STATUS_NOTFOUND;
+    }
+    else
+    {
+      map->s0w1770.commandreg = map->m;
+      w1770command(map->m);
+    }
+  }
+  return R6502_EXECUTE_STEP(map);
 }
 
-char w1770read(int naddress)
+R6502HOSTMAP* w1770trackwrite(R6502HOSTMAP* map)
 {
-  /*int ntotal;*/
-  char nresult;
-  /*Computer        Location of disk chip & chip  Location of drive control
-    ---------------------------------------------------------------------
-    BBC B with Opus     &FE80 - &FE83    WD1770             &FE84
-    BBC B+              &FE84 - &FE87    WD1770             &FE80
-    BBC Master          &FE28 - &FE2B    WD1770             &FE24
-    Archimedes                ?          WD1772               ?
-  */
-
-  /*fprintf(htrace,"WDR=&%X\n",naddress);*/
-  /*printf("WDR=&%X\n",naddress);
-  regs.r[0] = 0x81;
-  regs.r[1] = 0;
-  regs.r[2] = 0xFF;
-  _kernel_swi(OS_Byte,&regs,&regs);*/
-  #ifdef WD1770_DEBUG
-  bbcvdu(82);
-  bbcvdu(32);
-  inttohex(naddress);
-  bbcvdu(13);
-  bbcvdu(10);
-  #endif
-  /*regs.r[0] = 0x81;
-  regs.r[1] = 0x40;
-  regs.r[2] = 0x00;
-  _kernel_swi(OS_Byte,&regs,&regs);*/
-
-  switch (naddress & 0x07)
-  {
-    case 0x00:
-      /*status reg*/
-      UNSETNMI;
-      nresult = w1770_statusreg;
-  /*bbcvdu(83);
-  bbcvdu(32);
-  inttohex(w1770_commandreg);
-  bbcvdu(32);
-  inttohex(w1770_statusreg);
-  bbcvdu(32);*/
-      break;
-    case 0x01:
-      /*track reg*/
-      nresult = w1770_trackreg;
-      break;
-    case 0x02:
-      /*sector reg*/
-      nresult = w1770_sectorreg;
-      break;
-    case 0x03:
-      /*data reg*/
-      if (w1770_commandreg & 0x80)
-        w1770_statusreg &= STATUS_NOTDATAREQUEST;
-      /*bbcvdu(68);
-      bbcvdu(32);*/
-      nresult = w1770_datareg;
-      break;
-    case 0x04:
-      /*status reg*/
-      UNSETNMI;
-      nresult = w1770_statusreg;
-      break;
-    case 0x05:
-      /*track reg*/
-      nresult = w1770_trackreg;
-      break;
-    case 0x06:
-      /*sector reg*/
-      nresult = w1770_sectorreg;
-      break;
-    case 0x07:
-      /*data reg*/
-      if (w1770_commandreg & 0x80)
-        w1770_statusreg &= STATUS_NOTDATAREQUEST;
-      nresult = w1770_datareg;
-      break;
-    default:
-      nresult = 0xFE;
-      break;
-  }
-  return (nresult);
+  map->s0w1770.trackreg = map->s0w1770.track = map->m;
+  return R6502_EXECUTE_STEP(map);
 }
 
-void w1770write(int naddress, char nvalue)
+R6502HOSTMAP* w1770sectorwrite(R6502HOSTMAP* map)
 {
-  /*int ntotal;*/
-  /*Computer        Location of disk chip & chip  Location of drive control
-    ---------------------------------------------------------------------
-    BBC B with Opus     &FE80 - &FE83    WD1770             &FE84
-    BBC B+              &FE84 - &FE87    WD1770             &FE80
-    BBC Master          &FE28 - &FE2B    WD1770             &FE24
-    Archimedes                ?          WD1772               ?
-  */
+  map->s0w1770.sectorreg = map->m;
+  return R6502_EXECUTE_STEP(map);
+}
 
-  /*fprintf(htrace,"WDW=&%X, &%X\n",(naddress & 0x0F), nvalue);*/
-  /*printf("WDW=&%X &%X  \n",naddress, nvalue);
-  regs.r[0] = 0x81;
-  regs.r[1] = 0x7F;
-  regs.r[2] = 0x00;
-  _kernel_swi(OS_Byte,&regs,&regs);*/
-  #ifdef WD1770_DEBUG
-  bbcvdu(87);
-  bbcvdu(32);
-  inttohex(naddress);
-  bbcvdu(32);
-  inttohex(nvalue);
-  bbcvdu(13);
-  bbcvdu(10);
-  #endif
-  /*regs.r[0] = 0x81;
-  regs.r[1] = 0x40;
-  regs.r[2] = 0x01;
-  _kernel_swi(OS_Byte,&regs,&regs);*/
-  switch (naddress & 0x07)
+R6502HOSTMAP* w1770datawrite(R6502HOSTMAP* map)
+{
+  if (map->s0w1770.commandreg & 0x80)
   {
-    case 0x00:
-      /*command reg*/
-      UNSETNMI;
-      /*command words are only loaded in the command register when the busy status bit is off (status bit 0)*/
-      if (w1770_statusreg & STATUS_BUSY)
-      {
-        if ((nvalue & 0xF0) == 0xD0)
-        {
-          w1770_commandreg = nvalue;
-          w1770command(nvalue);
-        }
-      }
-      else
-      {
-        if (beebit_imagetype[w1770_drive+w1770_side] == DFS_NONE)
-        {
-          w1770_statusreg &= STATUS_NOTBUSY;
-          w1770_statusreg |= STATUS_NOTFOUND;
-        }
-        else
-        {
-          w1770_commandreg = nvalue;
-          w1770command(nvalue);
-        }
-      }
-      break;
-    case 0x01:
-      /*track reg*/
-      w1770_trackreg = w1770_track = nvalue;
-      break;
-    case 0x02:
-      /*sector reg*/
-      w1770_sectorreg = nvalue;
-      break;
-    case 0x03:
-      /*data reg*/
-      if (w1770_commandreg & 0x80)
-      {
-        w1770_statusreg &= STATUS_NOTDATAREQUEST;
-        w1770_writegate = TRUE;
-      }
-      w1770_datareg = nvalue;
-      break;
-    case 0x04:
-      /*command reg*/
-      UNSETNMI;
-      /*command words are only loaded in the command register when the busy status bit is off (status bit 0)*/
-      if (w1770_statusreg & STATUS_BUSY)
-      {
-        if ((nvalue & 0xF0) == 0xD0)
-        {
-          w1770_commandreg = nvalue;
-          w1770command(nvalue);
-        }
-      }
-      else
-      {
-        if (beebit_imagetype[w1770_drive+w1770_side] == DFS_NONE)
-        {
-          w1770_statusreg &= STATUS_NOTBUSY;
-          w1770_statusreg |= STATUS_NOTFOUND;
-        }
-        else
-        {
-          w1770_commandreg = nvalue;
-          w1770command(nvalue);
-        }
-      }
-      break;
-    case 0x05:
-      /*track reg*/
-      w1770_trackreg = w1770_track = nvalue;
-      break;
-    case 0x06:
-      /*sector reg*/
-      w1770_sectorreg = nvalue;
-      break;
-    case 0x07:
-      /*data reg*/
-      if (w1770_commandreg & 0x80)
-      {
-        w1770_statusreg &= STATUS_NOTDATAREQUEST;
-        w1770_writegate = TRUE;
-      }
-      w1770_datareg = nvalue;
-      break;
+    map->s0w1770.statusreg &= STATUS_NOTDATAREQUEST;
+    map->s2w1770.writegate = TRUE;
   }
+  map->s0w1770.datareg = map->m;
+  return R6502_EXECUTE_STEP(map);
 }

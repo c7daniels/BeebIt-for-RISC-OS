@@ -256,9 +256,9 @@ void beebitreset(void)
     beebit_imagetype[2] = DFS_NONE;
     beebit_imagetype[3] = DFS_NONE;
 
-    hostmap.timers.cycle = 0;
-    hostmap.timers.cyclestogo = 0x10000;
-    hostmap.timers.cyclesoriginal = hostmap.timers.cyclestogo;
+    hostmap.s2cycles.odd = 0;
+    hostmap.s2cycles.togo = 0x10000;
+    hostmap.s2cycles.original = hostmap.s2cycles.togo;
     hostmap.irq = 0;
     hostmap.nmis = 0;
     hostmap.lbreak = FALSE;
@@ -445,6 +445,7 @@ int beebitenter(void)
 
   lexit = FALSE;
   lredraw = TRUE;
+  hostmap.lsoundoption = beebit_sound;
   adcenter();
 
   if (beebit_machinetype != beebit_currenttype)
@@ -902,8 +903,6 @@ void beebitclosedown(void)
     fwrite(memory+video_startaddress,1,0x2800,hfile);
     fclose(hfile);
   #endif*/
-
-  i8271closedown();
 
   /*free space for screen buffer sprite*/
   spritefree();

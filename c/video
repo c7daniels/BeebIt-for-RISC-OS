@@ -615,16 +615,16 @@ void videoreset(void)
   {
     case MACHINE_MODELB:
     case MACHINE_MODELBPLUS:
-      hostmap.timers.video_togo = 600000;
+      hostmap.s2cycles.video_togo = 600000;
       break;
     case MACHINE_MASTER128:
-      hostmap.timers.video_togo = 1400000;
+      hostmap.s2cycles.video_togo = 1400000;
       break;
     case MACHINE_COMPACT:
-      hostmap.timers.video_togo = 2000000;
+      hostmap.s2cycles.video_togo = 2000000;
       break;
     default:
-      hostmap.timers.video_togo = 600000;
+      hostmap.s2cycles.video_togo = 600000;
       break;
   }
   video_framerate = 0;
@@ -663,7 +663,7 @@ void videodrawline0(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     /*draw displayed data*/
     mode0plot(nscreen+nx,video_displaywidth);
@@ -672,7 +672,7 @@ void videodrawline0(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     /*draw trailing blank area on this line*/
       blankrow(nscreen+nx,m6845_rightextra,0x00);
@@ -699,7 +699,7 @@ void videodrawline1(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
       mode1plot(nscreen+nx,video_displaywidth);
       nx += video_displaywidth;
@@ -707,7 +707,7 @@ void videodrawline1(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
       blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
@@ -733,7 +733,7 @@ void videodrawline2(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     mode2plot(nscreen+nx,video_displaywidth);
     nx += video_displaywidth;
@@ -741,7 +741,7 @@ void videodrawline2(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
@@ -767,7 +767,7 @@ void videodrawline3(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     /*screen code is the same as mode 0*/
     mode0plot(nscreen+nx,video_displaywidth);
@@ -776,7 +776,7 @@ void videodrawline3(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
@@ -802,7 +802,7 @@ void videodrawline4(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     mode4plot(nscreen+nx,video_displaywidth);
     nx += video_displaywidth;
@@ -810,7 +810,7 @@ void videodrawline4(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
@@ -836,7 +836,7 @@ void videodrawline5(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     mode5plot(nscreen+nx,video_displaywidth);
     nx += video_displaywidth;
@@ -844,7 +844,7 @@ void videodrawline5(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
@@ -870,7 +870,7 @@ void videodrawline6(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     /*screen code is the same as mode 4*/
     mode4plot(nscreen+nx,video_displaywidth);
@@ -879,7 +879,7 @@ void videodrawline6(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
@@ -905,7 +905,7 @@ void videodrawline8(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     mode8plot(nscreen+nx,video_displaywidth);
     nx += video_displaywidth;
@@ -913,7 +913,7 @@ void videodrawline8(void)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
     blankrow(nscreen+nx,m6845_rightextra,0x00);
   }
@@ -2944,7 +2944,7 @@ void videomodechange(void)
 
 R6502HOSTMAP *videoatzerocycles(R6502HOSTMAP *map)
 {
-  hostmap.timers.video_togo = 0;
+  hostmap.s2cycles.video_togo = 0;
 
   /*
   videoscanline needs to return when a vsync is done and returns to the Wimp_Poll. Only exit when a vsync in detected, including when F12 is pressed
@@ -3013,15 +3013,15 @@ void videoscanline(void)
       {
         if (videoula_clockrate)
           /*fast clock mode (2MHz cycles) */
-          hostmap.timers.video_togo -= charstodisplayline;
+          hostmap.s2cycles.video_togo -= charstodisplayline;
         else
           /*slow clock mode (milliseconds)*/
-          hostmap.timers.video_togo -= (charstodisplayline << 1);
+          hostmap.s2cycles.video_togo -= (charstodisplayline << 1);
       }
 
       /*VSYNC pulse is delayed on interlace even frame*/
       if (m6845_interlaceon && video_field == 0)
-        hostmap.timers.video_togo += (m6845_horizontaltotal>>1);
+        hostmap.s2cycles.video_togo += (m6845_horizontaltotal>>1);
 
       /*print screen during vertical sync*/
       if (lprintscreen !=0)
@@ -3040,7 +3040,7 @@ void videoscanline(void)
     {
       /*Take off time VSYNC end was delayed*/
       if (m6845_interlaceon && video_field == 0)
-        hostmap.timers.video_togo -= (m6845_horizontaltotal>>1);
+        hostmap.s2cycles.video_togo -= (m6845_horizontaltotal>>1);
 
       /*Run CPU forward to horizontal display*/
       charstodisplayline = m6845_r[0x00] - m6845_r[0x02];
@@ -3048,10 +3048,10 @@ void videoscanline(void)
       {
         if (videoula_clockrate)
           /*fast clock mode (2MHz cycles) */
-          hostmap.timers.video_togo += charstodisplayline;
+          hostmap.s2cycles.video_togo += charstodisplayline;
         else
           /*slow clock mode (milliseconds)*/
-          hostmap.timers.video_togo += (charstodisplayline << 1);
+          hostmap.s2cycles.video_togo += (charstodisplayline << 1);
       }
 
       if (video_mode != ncurrentmode)
@@ -3118,9 +3118,9 @@ void videoscanline(void)
         video_offset = 0;
       }
 
-      r6522sysvia_ifr |= 0x02; /*CA1 flag*/
+      hostmap.s0sysvia.ifr |= 0x02; /*CA1 flag*/
       systemviasetirq();
-      r6522sysvia_ira = (r6522sysvia_ora & r6522sysvia_ddra) + (r6522sysvia_porta & ~r6522sysvia_ddra);
+      hostmap.s0sysvia.ira = (hostmap.s0sysvia.ora & hostmap.s0sysvia.ddra) + (hostmap.s0sysvia.porta & ~hostmap.s0sysvia.ddra);
 
 #ifndef __RISCOS__
       int sig;
@@ -3155,7 +3155,7 @@ void videoscanline(void)
 
   /*---timing---*/
 
-  hostmap.timers.video_togo += m6845_horizontaltotal;
+  hostmap.s2cycles.video_togo += m6845_horizontaltotal;
 
   /*---reset---*/
 
@@ -3166,7 +3166,7 @@ void videoscanline(void)
   {
     /*Dummy line brings sum of even + odd field time to 40 ms for Revs*/
     if (m6845_interlaceon && video_field == 0)
-      hostmap.timers.video_togo += m6845_horizontaltotal;
+      hostmap.s2cycles.video_togo += m6845_horizontaltotal;
 
     videorecalc();
     m6845_vc = m6845_sc = 0;
@@ -3241,7 +3241,7 @@ void videoscanline(void)
         video_address = video_startaddress+video_offset+m6845_sc;
         /*if (video_address < 0x2F00)
         {*/
-          /*inttohex4(video_baseaddress);
+          /*inttohex4(hostmap.screenstartaddress);
           bbcvdu(32);
           inttohex4(video_startaddress);
           bbcvdu(32);
@@ -3256,7 +3256,7 @@ void videoscanline(void)
         if (video_address >= 0x8000) /* AND !(hostmap.acccon & beebit_vdusel))*/
         {
           video_address &= 0x7FFF;
-          video_address += video_baseaddress;
+          video_address += hostmap.screenstartaddress;
         }
 
         if (video_display) /*video_de AND m6845_displayskew != 3)*/
@@ -3465,7 +3465,7 @@ void mode0plot4(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3519,7 +3519,7 @@ void mode0plot8(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3559,7 +3559,7 @@ void mode1plot4(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3593,7 +3593,7 @@ void mode1plot8(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3627,7 +3627,7 @@ void mode2plot4(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3657,7 +3657,7 @@ void mode2plot8(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3705,7 +3705,7 @@ void mode4plot4(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3763,7 +3763,7 @@ void mode4plot8(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3807,7 +3807,7 @@ void mode5plot4(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3843,7 +3843,7 @@ void mode5plot8(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3877,7 +3877,7 @@ void mode8plot4(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }
@@ -3909,7 +3909,7 @@ void mode8plot8(intptr_t naddress, int n)
     if (video_address >= 0x8000)
     {
       video_address &= 0x7FFF;
-      video_address += video_baseaddress;
+      video_address += hostmap.screenstartaddress;
     }
   }
 }

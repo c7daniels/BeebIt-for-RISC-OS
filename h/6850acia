@@ -4,9 +4,13 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2003
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
 #define PARITY_NONE 0
@@ -19,12 +23,14 @@ extern int m6850_timerreset;
 extern char uef_buffer[0xFF];
 
 extern void aciareset(void);
-extern void aciapoll(void);
+extern struct R6502HOSTMAP* aciapoll(struct R6502HOSTMAP* map);
 extern void aciaresettimer(void);
-extern char aciaread(int naddress);
-extern void aciawrite(int naddress,int nvalue);
-extern char serialularead(int naddress);
-extern void serialulawrite(int naddress,int nvalue);
+extern struct R6502HOSTMAP* acia00read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* acia01read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* acia00write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* acia01write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* serialularead(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* serialulawrite(struct R6502HOSTMAP* map);
 extern int uefvalidate(FILE *hfile);
 extern int uefopen(void);
 extern void uefclose(void);
