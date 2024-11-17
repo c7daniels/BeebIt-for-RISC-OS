@@ -4,49 +4,52 @@
  *
  * Rockwell 6522 Versatile Interface Adapter (VIA)
  *
- * (C) Copyright Michael J Foot, 1998-2001
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mikef@voyager.co.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
-/*#define INITIALTIMERADDVALUE 2
-#define TIMERADDVALUE 4*/
-
 /*User VIA*/
-extern char r6522usrvia_orb; /*output register B*/
-extern char r6522usrvia_irb; /*input register B*/
-extern char r6522usrvia_ora; /*output register A*/
-extern char r6522usrvia_ira; /*input register A*/
-extern char r6522usrvia_ddrb;
-extern char r6522usrvia_ddra;
-extern unsigned char r6522usrvia_t1ll;
-extern unsigned char r6522usrvia_t1lh;
-extern unsigned char r6522usrvia_t2ll;
-extern char r6522usrvia_sr; /*status register*/
-extern char r6522usrvia_acr;
-extern char r6522usrvia_pcr;
-extern char r6522usrvia_ifr;
-extern char r6522usrvia_ier;
-extern char r6522usrvia_porta;
-extern char r6522usrvia_portb;
-extern int r6522usrvia_2t1; /*left-shifted timer 1 (used for speed)*/
-extern int r6522usrvia_2t2; /*left-shifted timer 2 (used for speed)*/
-extern int r6522usrvia_t1setint; /*set interrupt when timer1 reaches 0*/
-extern int r6522usrvia_t2setint; /*set interrupt when timer2 reaches 0*/
-/*extern int r6522usrvia_irq;*/ /*irq interrupt status*/
-
-extern int amx_timer; /*amx mouse timer*/
-extern int amx_buttons;
-extern int amx_currentx;
-extern int amx_currenty;
-extern int amx_targetx;
-extern int amx_targety;
-
 extern void userviaamxmouse(void);
 extern void userviastartreset(int lfull);
 extern void userviafinishreset(void);
 extern void userviabeforesnapshot(void);
 extern void userviaaftersnapshot(void);
 extern void userviasetirq(void);
-extern char userviaread(int);
-extern void userviawrite(int, char);
+
+extern struct R6502HOSTMAP* uservia00read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia01read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia02read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia03read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia04read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia05read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia06read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia07read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia08read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia09read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Aread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Bread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Cread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Dread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Eread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Fread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia00write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia01write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia02write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia03write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia04write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia05write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia06write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia07write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia08write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia09write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Awrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Bwrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Cwrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Dwrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Ewrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* uservia0Fwrite(struct R6502HOSTMAP* map);

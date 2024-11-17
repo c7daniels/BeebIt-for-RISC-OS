@@ -18,29 +18,178 @@ R6502_OPCODE_07_SEQUENCE EQU 260
 R6502_LOG2_MAX_SEQUENCE_LENGTH EQU 3
 
                         ^ 0
-TIMERS_CYCLESMONOTONIC  # &4
-TIMERS_CYCLE            # &4
-TIMERS_CYCLESTOGO       # &4
-TIMERS_CYCLESORIGINAL   # &4
-TIMERS_SYSVIATOGO       # &4
-TIMERS_SYSVIAORIGINAL   # &4
-TIMERS_USRVIATOGO       # &4
-TIMERS_USRVIAORIGINAL   # &4
-TIMERS_I8271TOGO        # &4
-TIMERS_W1770TOGO        # &4
-TIMERS_ADCTOGO          # &4
-TIMERS_M6850TOGO        # &4
-TIMERS_VIDEOTOGO        # &4
-SIZEOF_TIMERMAP         * @
+S2CYCLES_MONOTONIC      # &4
+S2CYCLES_ODD            # &4
+S2CYCLES_TOGO           # &4
+S2CYCLES_ORIGINAL       # &4
+S2CYCLES_SYSVIATOGO     # &4
+S2CYCLES_SYSVIAORIGINAL # &4
+S2CYCLES_USRVIATOGO     # &4
+S2CYCLES_USRVIAORIGINAL # &4
+S2CYCLES_I8271TOGO      # &4
+S2CYCLES_W1770TOGO      # &4
+S2CYCLES_ADCTOGO        # &4
+S2CYCLES_M6850TOGO      # &4
+S2CYCLES_VIDEOTOGO      # &4
+SIZEOF_S2CYCLESMAP      * @
+
+                        ^ 0
+S0VIA_ORB               # &1
+S0VIA_IRB               # &1
+S0VIA_ORA               # &1
+S0VIA_IRA               # &1
+S0VIA_DDRB              # &1
+S0VIA_DRRA              # &1
+S0VIA_PORTA             # &1
+S0VIA_PORTB             # &1
+S0VIA_T1LL              # &1
+S0VIA_T1LH              # &1
+S0VIA_T2LL              # &1
+S0VIA_SR                # &1
+S0VIA_ACR               # &1
+S0VIA_PCR               # &1
+S0VIA_IFR               # &1
+S0VIA_IER               # &1
+SIZEOF_S0VIAMAP         * @
+
+                        ^ 0
+S0RTC_READWRITE         # &1
+S0RTC_DATASTROBE        # &1
+S0RTC_ADDRSTROBE        # &1
+S0RTC_CHIPSELECT        # &1
+SIZEOF_S0RTC            * @
+
+                        ^ 0
+S2VIA_T1DOUBLED         # &4
+S2VIA_T2DOUBLED         # &4
+S2VIA_T1SETINT          # &4
+S2VIA_T2SETINT          # &4
+S2VIA_AFTERT1           # &4
+SIZEOF_S2VIAMAP         * @
+
+                        ^ 0
+S2AMX_TIMER             # &4
+S2AMX_BUTTONS           # &4
+S2AMX_CURRENTX          # &4
+S2AMX_CURRENTY          # &4
+S2AMX_TARGETX           # &4
+S2AMX_TARGETY           # &4
+SIZEOF_S2AMXMAP         * @
+
+                        ^ 0
+S0SERIAL_M6850_CONTROLREG # &1
+S0SERIAL_M6850_RXDATAREG # &1
+S0SERIAL_M6850_TXDATAREG # &1
+S0SERIAL_M6850_RXDATASHIFTREG # &1
+S0SERIAL_M6850_TXDATASHIFTREG # &1
+S0SERIAL_M6850_STATUSREG # &1
+S0SERIAL_ULA_REG        # &1
+S0SERIAL_UEF_DATA       # &1
+SIZEOF_S0SERIAL         * @
+
+                        ^ 0
+S2SERIAL_M6850_CTS      # &4
+S2SERIAL_M6850_RTS      # &4
+S2SERIAL_M6850_DTD      # &4
+S2SERIAL_M6850_COUNTERDIVIDE # &4
+S2SERIAL_M6850_BITS     # &4
+S2SERIAL_M6850_PARITY   # &4
+S2SERIAL_M6850_STOP     # &4
+S2SERIAL_M6850_TRANSMITTINGRTS # &4
+S2SERIAL_M6850_TRANSMITTINGIRQ # &4
+S2SERIAL_M6850_CLEARDCD # &4
+S2SERIAL_M6850_FIRSTRESET # &4
+S2SERIAL_M6850_TIMERRESET # &4
+S2SERIAL_ULA_TXBAUD     # &4
+S2SERIAL_ULA_RXBAUD     # &4
+S2SERIAL_UEF_VERSION    # &4
+S2SERIAL_UEF_FILEPOINTER # &4
+S2SERIAL_UEF_BUFFER     # &4
+S2SERIAL_UEF_BUFFERPOINT # &4
+S2SERIAL_UEF_CHUNK      # &4
+S2SERIAL_UEF_CHUNKLEN   # &4
+S2SERIAL_UEF_CHUNKSTART # &4
+S2SERIAL_UEF_TONE       # &4
+SIZEOF_S2SERIAL         * @
+
+                        ^ 0
+S0I8271_COMMANDREG      # &1
+S0I8271_STATUSREG       # &1
+S0I8271_RESULTREG       # &1
+S0I8271_DATAREG         # &1
+S0I8271_SELECT          # &1
+S0I8271_SCANSECTOR      # &1
+S0I8271_SCANCOUNTMSB    # &1
+S0I8271_SCANCOUNTLSB    # &1
+S0I8271_CURRENTTRACK    # &2
+S0I8271_MODEREG         # &1
+S0I8271_OUTPUTPORT      # &1
+S0I8271_INPUTPORT       # &1
+S0I8271_BADTRACK        # &4
+S0I8271_PARAMETER       # &10
+                        # &3
+SIZEOF_S0I8271          * @
+
+                        ^ 0
+S2I8271_STEPRATE        # &4
+S2I8271_HEADSETTLETIME  # &4
+S2I8271_INDEXCOUNT      # &4
+S2I8271_HEADLOADTIME    # &4
+S2I8271_WRITESTART      # &4
+S2I8271_NCURRENTDRIVE   # &4
+S2I8271_CURRENTTRACK    # &4
+S2I8271_CURRENTSECTOR   # &4
+S2I8271_SECTORSTOGO     # &4
+S2I8271_SECTORLENGTH    # &4
+S2I8271_BYTEWITHINSECTOR # &4
+S2I8271_NCOMMANDID      # &4
+S2I8271_NCOMMANDPARAMS  # &4
+S2I8271_PRESENT_PARAM   # &4
+S2I8271_NINERROR        # &4
+SIZEOF_S2I8271          * @
+
+                        ^ 0
+S0W1770_CONTROLREG      # &1
+S0W1770_STATUSREG       # &1
+S0W1770_TRACKREG        # &1
+S0W1770_SECTORREG       # &1
+S0W1770_DATAREG         # &1
+S0W1770_COMMANDREG      # &1
+S0W1770_TRACK           # &1
+S0W1770_DENSITY         # &1
+S0W1770_DRIVE           # &1
+S0W1770_SIDE            # &1
+                        # &2
+SIZEOF_S0W1770          * @
+
+                        ^ 0
+S2W1770_STEPDIR         # &4
+S2W1770_STEPTIME        # &4
+S2W1770_BYTEINSECTOR    # &4
+S2W1770_WRITEGATE       # &4
+S2W1770_LASTBYTE        # &4
+SIZEOF_S2W1770          * @
+
+                        ^ 0
+S0ADC_CHANNEL           # &1
+S0ADC_FLAG              # &1
+S0ADC_RESOLUTION        # &1
+S0ADC_STATUS            # &1
+S0ADC_HIGHBYTE          # &1
+S0ADC_LOWBYTE           # &1
+S0ADC_SUPPRESSFIRST     # &1
+                        # &1
+SIZEOF_S0ADC            * @
+
+                        ^ 0
+S2ADC_INPUT_X_HIGH      # &4
+S2ADC_INPUT_Y_LOW       # &4
+SIZEOF_S2ADC            * @
 
 ;a C representation of this storage map appears in 6502cpu.h
 ;offsets are intended to equal barrel-shift constants
                         ^ 0
-R6502_CPU_STATE         # &4
-R6502_ADDRESS_CODE      # &4
-R6502_PC_CODE           # &4
-R6502_SP_CODE           # &4
-R6502_LATCH             # &4
+; shift 0 offsets &00 - &FF
 R6502_M                 # &1
 R6502_A                 # &1
 R6502_X                 # &1
@@ -48,8 +197,29 @@ R6502_Y                 # &1
 R6502_PS                # &1
 R6502_IRQ               # &1
 R6502_NMIS              # &1
-                        # &1
-R6502_TIMERS            # SIZEOF_TIMERMAP
+R6502_READCOMPLETED     # &1
+R6502_ROMWRITABLE       # &10
+R6502_ROMSEL            # &1
+R6502_ACCCON            # &1
+R6502_SOUNDOPTION       # &1
+R6502_SOUNDLATCH        # &1
+R6502_SCREENSTARTINDEX  # &1
+                        # &3
+R6502_S0SERIAL          # SIZEOF_S0SERIAL
+R6502_S0SYSVIA          # SIZEOF_S0VIAMAP
+R6502_S0USRVIA          # SIZEOF_S0VIAMAP
+R6502_S0RTC             # SIZEOF_S0RTC
+R6502_S0I8271           # SIZEOF_S0I8271
+R6502_S0W1770           # SIZEOF_S0W1770
+R6502_S0ADC             # SIZEOF_S0ADC
+                        # &7C
+
+; shift 2 offsets &100 - &3FC
+R6502_CPU_STATE         # &4
+R6502_ADDRESS_CODE      # &4
+R6502_PC_CODE           # &4
+R6502_SP_CODE           # &4
+R6502_LATCH             # &4
 R6502_TRANSITION1ACTION # &4
 R6502_TRANSITION2ACTION # &4
 R6502_YIELDACTION       # &4
@@ -59,11 +229,7 @@ R6502_FETCHTHENTESTIRQACTION # &4
 R6502_RESETACTION       # &4
 R6502_TIMESINTERRUPTMISSED # &4
 R6502_LBREAK            # &4
-R6502_ROMSEL            # &1
-R6502_ACCCON            # &1
-R6502_READCOMPLETED     # &1
-                        # &1
-R6502_ROMWRITABLE       # &10
+R6502_SCREENSTARTADDRESS # &4
 R6502_READ3000          # &4
 R6502_WRITE3000         # &4
 R6502_READ3000_RAM      # &4
@@ -80,11 +246,24 @@ R6502_SWAPPAGESINTOMEMORY # &4
 R6502_SWAPPAGESOUTOFMEMORY # &4
 R6502_ZERIBEEPWRITEBYTE # &4
 R6502_ZERIBEEPWORKSPACE # &4
-                        # &138
-R6502_BUS_FORK          # &200
-                        # &1780
+R6502_S2CYCLES          # SIZEOF_S2CYCLESMAP
+R6502_S2SERIAL          # SIZEOF_S2SERIAL
+R6502_S2SYSVIA          # SIZEOF_S2VIAMAP
+R6502_S2USRVIA          # SIZEOF_S2VIAMAP
+R6502_S2AMX             # SIZEOF_S2AMXMAP
+R6502_S2I8271           # SIZEOF_S2I8271
+R6502_S2W1770           # SIZEOF_S2W1770
+R6502_S2ADC             # SIZEOF_S2ADC
+                        # &160
+
+; shift 4 offsets &400 - &FF0
+                        # &400
+R6502_S4FORKS           # &800
+
+; shift 6+ offsets &1000 -
 R6502_READ_8000S        # &40
 R6502_WRITE_8000S       # &40
+                        # &B80
 R6502_HIGH_READ_FORK    # &1000
 R6502_HIGH_WRITE_FORK   # &1000
 R6502_HIGH_STRETCHED_READ_FORK  # &1000

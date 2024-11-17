@@ -13,6 +13,7 @@
 
 /*Original BBC 6502 ran at 2MHz (2,000,000 cycles)*/
 
+#include <stdint.h>
 #include <stddef.h>
 #include <string.h>
 #include "6502map.h"
@@ -415,8 +416,7 @@ R6502HOSTMAP* r6502readm3000_x(R6502HOSTMAP* map)
   /*&3000 - &7FFF (RAM)*/
   /*LYNNE (ACCCON b2) (X)*/
   map->m = shadow[map->address_code>>16];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502readm3000_e(R6502HOSTMAP* map)
@@ -429,8 +429,7 @@ R6502HOSTMAP* r6502readm3000_e(R6502HOSTMAP* map)
     map->m = shadow[map->address_code>>16];
   else
     map->m = memory[map->address_code>>16];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502readm8000_ram(R6502HOSTMAP* map)
@@ -439,8 +438,7 @@ R6502HOSTMAP* r6502readm8000_ram(R6502HOSTMAP* map)
   /*&8000 - &8FFF*/
   /*ANDY (ROMSEL b7)*/
   map->m = shadow[(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502readmC000_y(R6502HOSTMAP* map)
@@ -449,8 +447,7 @@ R6502HOSTMAP* r6502readmC000_y(R6502HOSTMAP* map)
   /*&C000 - &DFFF*/
   /*HAZEL (ACCCON b3) (Y)*/
   map->m = shadow[(map->address_code>>16)-0xB000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502readmFC00(R6502HOSTMAP* map)
@@ -497,8 +494,7 @@ R6502HOSTMAP* r6502writem3000_x(R6502HOSTMAP* map)
   /*&3000 - &7FFF (RAM)*/
   /*LYNNE (ACCCON b2) (X)*/
   shadow[map->address_code>>16] = map->m;
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502writem3000_e(R6502HOSTMAP* map)
@@ -511,8 +507,7 @@ R6502HOSTMAP* r6502writem3000_e(R6502HOSTMAP* map)
     shadow[map->address_code>>16] = map->m;
   else
     memory[map->address_code>>16] = map->m;
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502writem8000_ram(R6502HOSTMAP* map)
@@ -521,8 +516,7 @@ R6502HOSTMAP* r6502writem8000_ram(R6502HOSTMAP* map)
   /*&8000 - &8FFF*/
   /*ANDY (ROMSEL b7)*/
   shadow[(map->address_code>>16)-0x8000] = map->m;
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502writemC000_y(R6502HOSTMAP* map)
@@ -531,8 +525,7 @@ R6502HOSTMAP* r6502writemC000_y(R6502HOSTMAP* map)
   /*&C000 - &DFFF*/
   /*HAZEL (ACCCON b3) (Y)*/
   shadow[(map->address_code>>16)-0xB000] = map->m;
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502writemFC00(R6502HOSTMAP* map)
@@ -1113,8 +1106,7 @@ int r65c12reset(R6502HOSTMAP* map)
 
   r6502resethighforks(map,
       r6502readmFC00, r6502writemFC00,
-      r6502readmFD00, r6502writemFD00,
-      sheilareadsm, sheilawritesm);
+      r6502readmFD00, r6502writemFD00);
 
   lreturn = r6502setcpuops(map, r65c12sequences);
 

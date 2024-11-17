@@ -22,6 +22,10 @@
 #include "6502cpu.h"
 #include "6522sysvia.h"
 #include "6522usrvia.h"
+#include "6850acia.h"
+#include "1770fdc.h"
+#include "8271fdc.h"
+#include "adc.h"
 #include "beebit.h"
 #include "main.h"
 #include "keyboard.h"
@@ -34,7 +38,7 @@
 extern _kernel_swi_regs regs;
 
 #ifndef BEEBIT_NO_ASM
-static_assert(offsetof(R6502HOSTMAP, bus_fork) == (BUS_BASEFLAG<<6), "R6502HOSTMAP.bus_fork is not at the required offset");
+static_assert(offsetof(R6502HOSTMAP, s4forks) == (BUS_BASEFLAG<<8), "R6502HOSTMAP.bus_fork is not at the required offset");
 #endif
 
 
@@ -558,152 +562,133 @@ R6502HOSTMAP* r6502read0000(R6502HOSTMAP* map)
 {
   /*&0000 - &2FFF (RAM)*/
   map->m = memory[map->address_code>>16];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read3000(R6502HOSTMAP* map)
 {
   /*&3000 - &7FFF (RAM)*/
   map->m = memory[map->address_code>>16];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_0(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[0][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_1(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[1][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_2(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[2][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_3(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[3][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_4(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[4][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_5(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[5][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_6(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[6][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_7(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[7][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_8(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[8][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_9(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[9][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_A(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[10][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_B(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[11][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_C(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[12][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_D(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[13][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_E(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[14][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502read8000_F(R6502HOSTMAP* map)
 {
   /*&8000 - &BFFF*/
   map->m = roms[15][(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502readC000(R6502HOSTMAP* map)
 {
   /*&C000 - &EFFF (OS)*/
   map->m = memory[map->address_code>>16];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502readF000(R6502HOSTMAP* map)
@@ -730,8 +715,7 @@ R6502HOSTMAP* r6502readbp3000_ram(R6502HOSTMAP* map)
     map->m = shadow[map->address_code>>16];
   else
     map->m = memory[map->address_code>>16];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502readbp8000_ram(R6502HOSTMAP* map)
@@ -739,24 +723,21 @@ R6502HOSTMAP* r6502readbp8000_ram(R6502HOSTMAP* map)
   /*bbc b+*/
   /*&8000 - &AFFF (SHADOW RAM)*/
   map->m = shadow[(map->address_code>>16)-0x8000];
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write0000(R6502HOSTMAP* map)
 {
   /*&0000 - &2FFF (RAM)*/
   memory[map->address_code>>16] = map->m;
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write3000(R6502HOSTMAP* map)
 {
   /*&3000 - &7FFF (RAM)*/
   memory[map->address_code>>16] = map->m;
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_0(R6502HOSTMAP* map)
@@ -767,8 +748,7 @@ R6502HOSTMAP* r6502write8000_0(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[0][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_1(R6502HOSTMAP* map)
@@ -779,8 +759,7 @@ R6502HOSTMAP* r6502write8000_1(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[1][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_2(R6502HOSTMAP* map)
@@ -791,8 +770,7 @@ R6502HOSTMAP* r6502write8000_2(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[2][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_3(R6502HOSTMAP* map)
@@ -803,8 +781,7 @@ R6502HOSTMAP* r6502write8000_3(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[3][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_4(R6502HOSTMAP* map)
@@ -815,8 +792,7 @@ R6502HOSTMAP* r6502write8000_4(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[4][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_5(R6502HOSTMAP* map)
@@ -827,8 +803,7 @@ R6502HOSTMAP* r6502write8000_5(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[5][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_6(R6502HOSTMAP* map)
@@ -839,8 +814,7 @@ R6502HOSTMAP* r6502write8000_6(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[6][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_7(R6502HOSTMAP* map)
@@ -851,8 +825,7 @@ R6502HOSTMAP* r6502write8000_7(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[7][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_8(R6502HOSTMAP* map)
@@ -863,8 +836,7 @@ R6502HOSTMAP* r6502write8000_8(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[8][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_9(R6502HOSTMAP* map)
@@ -875,8 +847,7 @@ R6502HOSTMAP* r6502write8000_9(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[9][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_A(R6502HOSTMAP* map)
@@ -887,8 +858,7 @@ R6502HOSTMAP* r6502write8000_A(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[10][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_B(R6502HOSTMAP* map)
@@ -899,8 +869,7 @@ R6502HOSTMAP* r6502write8000_B(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[11][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_C(R6502HOSTMAP* map)
@@ -911,8 +880,7 @@ R6502HOSTMAP* r6502write8000_C(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[12][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_D(R6502HOSTMAP* map)
@@ -923,8 +891,7 @@ R6502HOSTMAP* r6502write8000_D(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[13][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_E(R6502HOSTMAP* map)
@@ -935,8 +902,7 @@ R6502HOSTMAP* r6502write8000_E(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[14][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502write8000_F(R6502HOSTMAP* map)
@@ -947,15 +913,13 @@ R6502HOSTMAP* r6502write8000_F(R6502HOSTMAP* map)
     /*check sideways ram write enabled*/
     roms[15][(map->address_code>>16)-0x8000] = map->m;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502writeC000(R6502HOSTMAP* map)
 {
   /*&C000 - &EFFF (OS - should not be allowed!)*/
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502writeF000(R6502HOSTMAP* map)
@@ -981,8 +945,7 @@ R6502HOSTMAP* r6502writebp3000_ram(R6502HOSTMAP* map)
     shadow[map->address_code>>16] = map->m;
   else
     memory[map->address_code>>16] = map->m;
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502writebp8000_ram(R6502HOSTMAP* map)
@@ -990,13 +953,12 @@ R6502HOSTMAP* r6502writebp8000_ram(R6502HOSTMAP* map)
   /*bbc b+*/
   /*&8000 - &AFFF (SHADOW RAM)*/
   shadow[(map->address_code>>16)-0x8000] = map->m;
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502startstretch(R6502HOSTMAP* map)
 {
-  if ((map->timers.cycle ^ map->timers.cyclestogo ^ map->timers.cyclesoriginal) & 1)
+  if ((map->s2cycles.odd ^ map->s2cycles.togo ^ map->s2cycles.original) & 1)
     map->address_code |= BUS_STRETCH2FLAG;
   else
     map->address_code |= BUS_STRETCH1FLAG;
@@ -1026,27 +988,23 @@ R6502HOSTMAP* r6502writestretch2(R6502HOSTMAP* map)
 R6502HOSTMAP* r6502readfred(R6502HOSTMAP* map)
 {
   map->m = 0xFE;
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502readjim(R6502HOSTMAP* map)
 {
   map->m = 0xFE;
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502writefred(R6502HOSTMAP* map)
 {
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 
 R6502HOSTMAP* r6502writejim(R6502HOSTMAP* map)
 {
-  R6502_EXECUTE_STEP(map)
-  return map;
+  return R6502_EXECUTE_STEP(map);
 }
 #endif
 
@@ -2687,112 +2645,108 @@ R6502HOSTMAP* r6502advancetimers(R6502HOSTMAP* map)
 {
   extern R6502HOSTMAP* systemviaatzerocycles(R6502HOSTMAP* map);
   extern R6502HOSTMAP* userviaatzerocycles(R6502HOSTMAP* map);
-  extern R6502HOSTMAP* i8271atzerocycles(R6502HOSTMAP* map);
-  extern R6502HOSTMAP* w1770atzerocycles(R6502HOSTMAP* map);
-  extern R6502HOSTMAP* adcatzerocycles(R6502HOSTMAP* map);
-  extern R6502HOSTMAP* aciaatzerocycles(R6502HOSTMAP* map);
   extern R6502HOSTMAP* videoatzerocycles(R6502HOSTMAP* map);
   int cyclesoriginal, fewestcyclestogo, cyclestogo;
 
-  cyclesoriginal = map->timers.cyclesoriginal;
-  map->timers.cyclesoriginal = 0;
-  map->timers.cycle ^= (cyclesoriginal & 1);
-  map->timers.cyclesmonotonic += cyclesoriginal;
+  cyclesoriginal = map->s2cycles.original;
+  map->s2cycles.original = 0;
+  map->s2cycles.odd ^= (cyclesoriginal & 1);
+  map->s2cycles.monotonic += cyclesoriginal;
   fewestcyclestogo = (1<<16);
 
-  cyclestogo = map->timers.r6522sysvia_togo - cyclesoriginal;
+  cyclestogo = map->s2cycles.sysvia_togo - cyclesoriginal;
   if (cyclestogo >= 0)
   {
-    map->timers.r6522sysvia_togo = cyclestogo;
+    map->s2cycles.sysvia_togo = cyclestogo;
     if (cyclestogo == 0)
     {
       systemviaatzerocycles(map);
-      cyclestogo = map->timers.r6522sysvia_togo;
+      cyclestogo = map->s2cycles.sysvia_togo;
     }
     if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
       fewestcyclestogo = cyclestogo;
   }
 
-  cyclestogo = map->timers.r6522usrvia_togo - cyclesoriginal;
+  cyclestogo = map->s2cycles.usrvia_togo - cyclesoriginal;
   if (cyclestogo >= 0)
   {
-    map->timers.r6522usrvia_togo = cyclestogo;
+    map->s2cycles.usrvia_togo = cyclestogo;
     if (cyclestogo == 0)
     {
       userviaatzerocycles(map);
-      cyclestogo = map->timers.r6522usrvia_togo;
+      cyclestogo = map->s2cycles.usrvia_togo;
     }
     if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
       fewestcyclestogo = cyclestogo;
   }
 
-  cyclestogo = map->timers.i8271_togo - cyclesoriginal;
+  cyclestogo = map->s2cycles.i8271_togo - cyclesoriginal;
   if (cyclestogo >= 0)
   {
-    map->timers.i8271_togo = cyclestogo;
+    map->s2cycles.i8271_togo = cyclestogo;
     if (cyclestogo == 0)
     {
-      i8271atzerocycles(map);
-      cyclestogo = map->timers.i8271_togo;
+      i8271poll(map);
+      cyclestogo = map->s2cycles.i8271_togo;
     }
     if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
       fewestcyclestogo = cyclestogo;
   }
 
-  cyclestogo = map->timers.w1770_togo - cyclesoriginal;
+  cyclestogo = map->s2cycles.w1770_togo - cyclesoriginal;
   if (cyclestogo >= 0)
   {
-    map->timers.w1770_togo = cyclestogo;
+    map->s2cycles.w1770_togo = cyclestogo;
     if (cyclestogo == 0)
     {
-      w1770atzerocycles(map);
-      cyclestogo = map->timers.w1770_togo;
+      w1770poll(map);
+      cyclestogo = map->s2cycles.w1770_togo;
     }
     if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
       fewestcyclestogo = cyclestogo;
   }
 
-  cyclestogo = map->timers.adc_togo - cyclesoriginal;
+  cyclestogo = map->s2cycles.adc_togo - cyclesoriginal;
   if (cyclestogo >= 0)
   {
-    map->timers.adc_togo = cyclestogo;
+    map->s2cycles.adc_togo = cyclestogo;
     if (cyclestogo == 0)
     {
-      adcatzerocycles(map);
-      cyclestogo = map->timers.adc_togo;
+      adcpoll(map);
+      cyclestogo = map->s2cycles.adc_togo;
     }
     if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
       fewestcyclestogo = cyclestogo;
   }
 
-  cyclestogo = map->timers.m6850_togo - cyclesoriginal;
+  cyclestogo = map->s2cycles.m6850_togo - cyclesoriginal;
   if (cyclestogo >= 0)
   {
-    map->timers.m6850_togo = cyclestogo;
+    map->s2cycles.m6850_togo = cyclestogo;
     if (cyclestogo == 0)
     {
-      aciaatzerocycles(map);
-      cyclestogo = map->timers.m6850_togo;
+      aciapoll(map);
+      cyclestogo = map->s2cycles.m6850_togo;
     }
     if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
       fewestcyclestogo = cyclestogo;
   }
 
-  cyclestogo = map->timers.video_togo - cyclesoriginal;
+  cyclestogo = map->s2cycles.video_togo - cyclesoriginal;
   if (cyclestogo >= 0)
   {
-    map->timers.video_togo = cyclestogo;
+    map->s2cycles.video_togo = cyclestogo;
     if (cyclestogo == 0)
     {
       videoatzerocycles(map);
-      cyclestogo = map->timers.video_togo;
+      cyclestogo = map->s2cycles.video_togo;
     }
     if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
       fewestcyclestogo = cyclestogo;
   }
 
-  map->timers.cyclesoriginal = fewestcyclestogo;
-  map->timers.cyclestogo = fewestcyclestogo;
+  map->s2cycles.original = fewestcyclestogo;
+  map->s2cycles.togo = fewestcyclestogo;
 
   if (map->irq && !(map->ps & IFLAG))
     r6502startinterrupt(map);
@@ -2832,11 +2786,6 @@ int r6502reset(R6502HOSTMAP* map)
 
     map->swappagesintomemory = swappagesintomemorybp;
     map->swappagesoutofmemory = swappagesoutofmemorybp;
-
-    r6502resethighforks(map,
-        r6502startstretch, r6502startstretch,
-        r6502startstretch, r6502startstretch,
-        sheilareadsbp, sheilawritesbp);
   }
   else
   {
@@ -2847,12 +2796,11 @@ int r6502reset(R6502HOSTMAP* map)
 
     map->swappagesintomemory = swappagesintomemoryb;
     map->swappagesoutofmemory = swappagesoutofmemoryb;
-
-    r6502resethighforks(map,
-        r6502startstretch, r6502startstretch,
-        r6502startstretch, r6502startstretch,
-        sheilareadsb, sheilawritesb);
   }
+
+  r6502resethighforks(map,
+      r6502startstretch, r6502startstretch,
+      r6502startstretch, r6502startstretch);
 
   lreturn = r6502setcpuops(map, r6502sequences);
 
@@ -2869,49 +2817,49 @@ int r6502reset(R6502HOSTMAP* map)
 void r6502resetbusfork(R6502HOSTMAP* map)
 {
   int i;
-  map->bus_fork[0x00] = r6502read0000;
-  map->bus_fork[0x01] = r6502read0000;
-  map->bus_fork[0x02] = r6502read0000;
-  map->bus_fork[0x03] = r6502read3000;
-  map->bus_fork[0x04] = r6502read3000;
-  map->bus_fork[0x05] = r6502read3000;
-  map->bus_fork[0x06] = r6502read3000;
-  map->bus_fork[0x07] = r6502read3000;
-  map->bus_fork[0x08] = r6502read8000_0;
-  map->bus_fork[0x09] = r6502read8000_0;
-  map->bus_fork[0x0A] = r6502read8000_0;
-  map->bus_fork[0x0B] = r6502read8000_0;
-  map->bus_fork[0x0C] = r6502readC000;
-  map->bus_fork[0x0D] = r6502readC000;
-  map->bus_fork[0x0E] = r6502readC000;
-  map->bus_fork[0x0F] = r6502readF000;
-  map->bus_fork[0x10] = r6502write0000;
-  map->bus_fork[0x11] = r6502write0000;
-  map->bus_fork[0x12] = r6502write0000;
-  map->bus_fork[0x13] = r6502write3000;
-  map->bus_fork[0x14] = r6502write3000;
-  map->bus_fork[0x15] = r6502write3000;
-  map->bus_fork[0x16] = r6502write3000;
-  map->bus_fork[0x17] = r6502write3000;
-  map->bus_fork[0x18] = r6502write8000_0;
-  map->bus_fork[0x19] = r6502write8000_0;
-  map->bus_fork[0x1A] = r6502write8000_0;
-  map->bus_fork[0x1B] = r6502write8000_0;
-  map->bus_fork[0x1C] = r6502writeC000;
-  map->bus_fork[0x1D] = r6502writeC000;
-  map->bus_fork[0x1E] = r6502writeC000;
-  map->bus_fork[0x1F] = r6502writeF000;
+  map->s4forks[0x00].busop = r6502read0000;
+  map->s4forks[0x01].busop = r6502read0000;
+  map->s4forks[0x02].busop = r6502read0000;
+  map->s4forks[0x03].busop = r6502read3000;
+  map->s4forks[0x04].busop = r6502read3000;
+  map->s4forks[0x05].busop = r6502read3000;
+  map->s4forks[0x06].busop = r6502read3000;
+  map->s4forks[0x07].busop = r6502read3000;
+  map->s4forks[0x08].busop = r6502read8000_0;
+  map->s4forks[0x09].busop = r6502read8000_0;
+  map->s4forks[0x0A].busop = r6502read8000_0;
+  map->s4forks[0x0B].busop = r6502read8000_0;
+  map->s4forks[0x0C].busop = r6502readC000;
+  map->s4forks[0x0D].busop = r6502readC000;
+  map->s4forks[0x0E].busop = r6502readC000;
+  map->s4forks[0x0F].busop = r6502readF000;
+  map->s4forks[0x10].busop = r6502write0000;
+  map->s4forks[0x11].busop = r6502write0000;
+  map->s4forks[0x12].busop = r6502write0000;
+  map->s4forks[0x13].busop = r6502write3000;
+  map->s4forks[0x14].busop = r6502write3000;
+  map->s4forks[0x15].busop = r6502write3000;
+  map->s4forks[0x16].busop = r6502write3000;
+  map->s4forks[0x17].busop = r6502write3000;
+  map->s4forks[0x18].busop = r6502write8000_0;
+  map->s4forks[0x19].busop = r6502write8000_0;
+  map->s4forks[0x1A].busop = r6502write8000_0;
+  map->s4forks[0x1B].busop = r6502write8000_0;
+  map->s4forks[0x1C].busop = r6502writeC000;
+  map->s4forks[0x1D].busop = r6502writeC000;
+  map->s4forks[0x1E].busop = r6502writeC000;
+  map->s4forks[0x1F].busop = r6502writeF000;
   for (i=0x20; i<0x40; i++)
   {
-    map->bus_fork[i] = r6502stretch1;
+    map->s4forks[i].busop = r6502stretch1;
   }
   for (i=0x40; i<0x50; i++)
   {
-    map->bus_fork[i] = r6502readstretch2;
+    map->s4forks[i].busop = r6502readstretch2;
   }
   for (i=0x50; i<0x60; i++)
   {
-    map->bus_fork[i] = r6502writestretch2;
+    map->s4forks[i].busop = r6502writestretch2;
   }
 }
 
@@ -2994,11 +2942,11 @@ void r6502resetreadsandwrite8000s(R6502HOSTMAP* map)
 
 void r6502resethighforks(R6502HOSTMAP* map,
     R6502OP readFC00, R6502OP writeFC00,
-    R6502OP readFD00, R6502OP writeFD00,
-    const R6502OP* sheila_reads, const R6502OP* sheila_writes)
+    R6502OP readFD00, R6502OP writeFD00)
 {
-  const int slow_mask = 0x0F00FF0F;
   int i;
+
+  sheilareset(map);
 
   for (i=0; i<0x100; i++)
   {
@@ -3012,23 +2960,9 @@ void r6502resethighforks(R6502HOSTMAP* map,
   }
   for (i=0; i<0x100; i++)
   {
-    if (slow_mask & (1<<(i>>3)))
-    {
-      map->high_read_fork[0x200+i] = r6502startstretch;
-      map->high_write_fork[0x200+i] = r6502startstretch;
-    }
-    else
-    {
-      map->high_read_fork[0x200+i] = sheila_reads[i];
-      map->high_write_fork[0x200+i] = sheila_writes[i];
-    }
-  }
-  for (i=0; i<0x100; i++)
-  {
     map->high_read_fork[0x300+i] = r6502readC000;
     map->high_write_fork[0x300+i] = r6502writeC000;
   }
-
   for (i=0; i<0x100; i++)
   {
     map->high_stretched_read_fork[i] = r6502readfred;
@@ -3038,11 +2972,6 @@ void r6502resethighforks(R6502HOSTMAP* map,
   {
     map->high_stretched_read_fork[0x100+i] = r6502readjim;
     map->high_stretched_write_fork[0x100+i] = r6502writejim;
-  }
-  for (i=0; i<0x100; i++)
-  {
-    map->high_stretched_read_fork[0x200+i] = sheila_reads[i];
-    map->high_stretched_write_fork[0x200+i] = sheila_writes[i];
   }
   for (i=0; i<0x100; i++)
   {
@@ -3057,8 +2986,8 @@ void r6502execute(R6502HOSTMAP* map)
   map->nmis &= NMIS_NOTYIELD;
   do
   {
-    map->bus_fork[((map->address_code>>28)|(map->address_code<<4))&0x7F](map);
-    if (--map->timers.cyclestogo == 0)
+    map->s4forks[((map->address_code>>28)|(map->address_code<<4))&0x7F].busop(map);
+    if (--map->s2cycles.togo == 0)
       r6502advancetimers(map);
   }
   while (!(map->nmis & NMIS_YIELD));
@@ -3079,7 +3008,7 @@ void r6502readmemory(R6502HOSTMAP* map, char *buffer, unsigned int naddress, int
     map->readcompleted = FALSE;
     do
     {
-      map->bus_fork[((map->address_code>>28)|(map->address_code<<4))&0x7F](map);
+      map->s4forks[((map->address_code>>28)|(map->address_code<<4))&0x7F].busop(map);
     }
     while (!map->readcompleted);
     *buffer = map->m;

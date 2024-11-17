@@ -4,13 +4,20 @@
  *
  * NEC Analogue to Digital Converter - D7002C [1MHz]
  *
- * (C) Copyright Michael J Foot, 1998-2002
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
+#include <stdint.h>
+#include <stddef.h>
 #include <stdio.h>
 #include "6502map.h"
+#include "6502cpu.h"
 #include "6522sysvia.h"
 #include "adc.h"
 #include "beebit.h"
@@ -20,32 +27,23 @@
 extern _kernel_swi_regs regs;
 
 /*analog to digital converter*/
-int adc_channel;
-int adc_flag;
-int adc_resolution;
-int adc_status;
-int adc_highbyte;
-int adc_lowbyte;
-static int adc_suppressfirst;
 static int adc_x_osunits;
 static int adc_y_osunits;
-static int adc_input_x_high;
-static int adc_input_y_low;
 static const int adc_floating_value = 0x7FFF;
 
 void adcreset(void)
 {
-  adc_channel = 0;
-  adc_flag = 0;
-  adc_resolution = 0;
-  adc_highbyte = 0;
-  adc_lowbyte = 0;
-  hostmap.timers.adc_togo = 0;
+  hostmap.s0adc.channel = 0;
+  hostmap.s0adc.flag = 0;
+  hostmap.s0adc.resolution = 0;
+  hostmap.s0adc.highbyte = 0;
+  hostmap.s0adc.lowbyte = 0;
+  hostmap.s2cycles.adc_togo = 0;
 }
 
 void adcenter(void)
 {
-  adc_suppressfirst = 0;
+  hostmap.s0adc.suppressfirst = 0;
   adc_x_osunits = 0;
   adc_y_osunits = 0;
 }
@@ -72,62 +70,55 @@ void adcmodevars(void)
   if (adc_x_osunits != (xres<<xeig))
   {
     adc_x_osunits = (xres<<xeig);
-    adc_input_x_high = (adc_x_osunits>>1)+255;
+    hostmap.s2adc.input_x_high = (adc_x_osunits>>1)+255;
   }
   if (adc_y_osunits != (yres<<yeig))
   {
     adc_y_osunits = (yres<<yeig);
-    adc_input_y_low = (adc_y_osunits>>1)-255;
+    hostmap.s2adc.input_y_low = (adc_y_osunits>>1)-255;
   }
 }
 
-R6502HOSTMAP* adcatzerocycles(R6502HOSTMAP* map)
-{
-  adcpoll();
-
-  return map;
-}
-
-void adcpoll(void)
+R6502HOSTMAP* adcpoll(R6502HOSTMAP* map)
 {
   int nvalue;
-  adc_status &= 0x0F;
+  map->s0adc.status &= 0x0F;
 
   if (beebit_mouseemulation == MOUSE_JOYSTICK)
   {
     /*mouse position in OS units*/
     _kernel_swi(OS_Mouse,&regs,&regs);
 
-    if (adc_suppressfirst == 0)
+    if (map->s0adc.suppressfirst == 0)
       beebit_button1 = 0;
     else
       beebit_button1 = ((regs.r[2] & 0x04)>>2);
 
     if (((regs.r[2] & 0x04)>>2) == 0)
-      adc_suppressfirst = 1;
+      map->s0adc.suppressfirst = 1;
 
     beebit_button2 = (regs.r[2] & 0x01);
-    switch (adc_status & 3)
+    switch (map->s0adc.status & 3)
     {
       case 0:
         /*master left/right*/
         /*sliding 512 OS unit domain*/
-        if (adc_input_x_high < regs.r[0])
-          adc_input_x_high = regs.r[0];
-        else if (adc_input_x_high - 511 > regs.r[0])
-          adc_input_x_high = regs.r[0] + 511;
+        if (map->s2adc.input_x_high < regs.r[0])
+          map->s2adc.input_x_high = regs.r[0];
+        else if (map->s2adc.input_x_high - 511 > regs.r[0])
+          map->s2adc.input_x_high = regs.r[0] + 511;
 
-        nvalue = (adc_input_x_high - regs.r[0])<<7;
+        nvalue = (map->s2adc.input_x_high - regs.r[0])<<7;
         break;
       case 1:
         /*master up/down*/
         /*sliding 512 OS unit domain*/
-        if (adc_input_y_low > regs.r[1])
-          adc_input_y_low = regs.r[1];
-        else if (adc_input_y_low + 511 < regs.r[1])
-          adc_input_y_low = regs.r[1] - 511;
+        if (map->s2adc.input_y_low > regs.r[1])
+          map->s2adc.input_y_low = regs.r[1];
+        else if (map->s2adc.input_y_low + 511 < regs.r[1])
+          map->s2adc.input_y_low = regs.r[1] - 511;
 
-        nvalue = (regs.r[1] - adc_input_y_low)<<7;
+        nvalue = (regs.r[1] - map->s2adc.input_y_low)<<7;
         break;
       case 2:
         /*secondary left/right*/
@@ -145,30 +136,32 @@ void adcpoll(void)
   else
     nvalue = adc_floating_value;
 
-  adc_status |= 0x40; /*not busy*/
-  adc_status |= ((nvalue & 0xC000)>>10);
-  adc_highbyte = (nvalue>>8);
-  adc_lowbyte = (nvalue & 0xF0);
+  map->s0adc.status |= 0x40; /*not busy*/
+  map->s0adc.status |= ((nvalue & 0xC000)>>10);
+  map->s0adc.highbyte = (nvalue>>8);
+  map->s0adc.lowbyte = (nvalue & 0xF0);
 
   if (beebit_mouseemulation == MOUSE_JOYSTICK)
   {
     if (beebit_button1)
-      r6522sysvia_portb &= 0xEF;
+      map->s0sysvia.portb &= 0xEF;
     else
-      r6522sysvia_portb |= 0x10;
+      map->s0sysvia.portb |= 0x10;
 
     if (beebit_button2)
-      r6522sysvia_portb &= 0xDF;
+      map->s0sysvia.portb &= 0xDF;
     else
-      r6522sysvia_portb |= 0x20;
+      map->s0sysvia.portb |= 0x20;
   }
 
-  r6522sysvia_irb = (r6522sysvia_orb & r6522sysvia_ddrb) + (r6522sysvia_portb & ~r6522sysvia_ddrb);
+  map->s0sysvia.irb = (map->s0sysvia.orb & map->s0sysvia.ddrb) + (map->s0sysvia.portb & ~map->s0sysvia.ddrb);
   /*set CB1 to indicate end of conversion*/
-  r6522sysvia_ifr |= 0x10;
+  map->s0sysvia.ifr |= 0x10;
+
+  return map;
 }
 
-char adcread(int naddress)
+R6502HOSTMAP* adc00read(R6502HOSTMAP* map)
 {
   /*&FC00
    *b0+b1: which of the 4 input channels was selected.
@@ -179,28 +172,23 @@ char adcread(int naddress)
    *b5: 1st MSB
    *b6:
    */
-  /*char nresult;*/
-
-  naddress &= 3;
-  switch (naddress)
-  {
-    case 0:
-      return (adc_status);
-      break;
-    case 1:
-      return (adc_highbyte);
-      break;
-    case 2:
-      return (adc_lowbyte);
-      break;
-    default:
-      return (0);
-      break;
-  }
-  /*return (nresult);*/
+  map->m = map->s0adc.status;
+  return R6502_EXECUTE_STEP(map);
 }
 
-void adcwrite(int naddress,int nvalue)
+R6502HOSTMAP* adc01read(R6502HOSTMAP* map)
+{
+  map->m = map->s0adc.highbyte;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* adc02read(R6502HOSTMAP* map)
+{
+  map->m = map->s0adc.lowbyte;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* adcwrite(R6502HOSTMAP* map)
 {
   /*if naddress=&FC00 then
    * b1+b0: which of the 4 input channels to select.
@@ -210,18 +198,19 @@ void adcwrite(int naddress,int nvalue)
    * interrupt is generated when conversion is done.
    */
   int cyclecount;
-  adc_channel = (nvalue & 3);
-  adc_flag = (nvalue & 4)>>2;
-  adc_resolution = (nvalue & 8)>>3;
+  map->s0adc.channel = (map->m & 3);
+  map->s0adc.flag = (map->m & 4)>>2;
+  map->s0adc.resolution = (map->m & 8)>>3;
   /*busy*/
-  adc_status = (nvalue & 0x0F);
+  map->s0adc.status = (map->m & 0x0F);
   /*not complete*/
-  adc_status |= 0x80;
-  if (adc_resolution)
-    hostmap.timers.adc_togo =  10000<<1;
+  map->s0adc.status |= 0x80;
+  if (map->s0adc.resolution)
+    map->s2cycles.adc_togo =  10000<<1;
   else
-    hostmap.timers.adc_togo =   4000<<1;
+    map->s2cycles.adc_togo =   4000<<1;
   TIMER_GET_CYCLE_COUNT(cyclecount, &hostmap)
-  hostmap.timers.adc_togo += cyclecount;
-  TIMER_LIMIT_CYCLES_TO_GO(&hostmap, hostmap.timers.adc_togo)
+  map->s2cycles.adc_togo += cyclecount;
+  TIMER_LIMIT_CYCLES_TO_GO(&hostmap, map->s2cycles.adc_togo)
+  return R6502_EXECUTE_STEP(map);
 }

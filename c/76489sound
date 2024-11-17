@@ -9,6 +9,8 @@
  * Email: <mikef@voyager.co.nz>
  */
 
+#include <stdint.h>
+#include "6502map.h"
 #include "beebit.h"
 #include "kernel.h"
 #include "riscos.h"
@@ -221,7 +223,7 @@ void soundwrite(char nvalue)
         a76489_frequency[3] &= 0x3F0;
         a76489_frequency[3] |= (nvalue & 0x0F);
         /*fprintf(htrace,"FREQ(3)=&%X\n",a76489_frequency[3]);*/
-        if (beebit_sound)
+        if (hostmap.lsoundoption)
           soundplay(3);
         break;
       case 1:
@@ -229,7 +231,7 @@ void soundwrite(char nvalue)
         a76489_lastregister = 3;
         a76489_volume[3] = ((nvalue & 0x0F) ^ 0x0F);
         /*fprintf(htrace,"VOL(3)=&%X\n",a76489_volume[3]);*/
-        if (beebit_sound)
+        if (hostmap.lsoundoption)
           soundplay(3);
         break;
       case 2:
@@ -238,7 +240,7 @@ void soundwrite(char nvalue)
         a76489_frequency[2] &= 0x3F0;
         a76489_frequency[2] |= (nvalue & 0x0F);
         /*fprintf(htrace,"FREQ(2)=&%X\n",a76489_frequency[2]);*/
-        if (beebit_sound)
+        if (hostmap.lsoundoption)
           soundplay(2);
         break;
       case 3:
@@ -246,7 +248,7 @@ void soundwrite(char nvalue)
         a76489_lastregister = 2;
         a76489_volume[2] = ((nvalue & 0x0F) ^ 0x0F);
         /*fprintf(htrace,"VOL(2)=&%X\n",a76489_volume[2]);*/
-        if (beebit_sound)
+        if (hostmap.lsoundoption)
           soundplay(2);
         break;
       case 4:
@@ -255,7 +257,7 @@ void soundwrite(char nvalue)
         a76489_frequency[1] &= 0x3F0;
         a76489_frequency[1] |= (nvalue & 0x0F);
         /*fprintf(htrace,"FREQ(1)=&%X\n",a76489_frequency[1]);*/
-        if (beebit_sound)
+        if (hostmap.lsoundoption)
           soundplay(1);
         break;
       case 5:
@@ -263,7 +265,7 @@ void soundwrite(char nvalue)
         a76489_lastregister = 1;
         a76489_volume[1] = ((nvalue & 0x0F) ^ 0x0F);
         /*fprintf(htrace,"VOL(1)=&%X\n",a76489_volume[1]);*/
-        if (beebit_sound)
+        if (hostmap.lsoundoption)
           soundplay(1);
         break;
       case 6:
@@ -273,7 +275,7 @@ void soundwrite(char nvalue)
         /*FB (feedback control)*/
         a76489_noisefb = (nvalue & 4);
 	/*fprintf(htrace,"NOISE=&%X &%X\n",a76489_frequency[0],a76489_noisefb);*/
-        if (beebit_sound)
+        if (hostmap.lsoundoption)
           soundplay(0);
         break;
       case 7:
@@ -281,7 +283,7 @@ void soundwrite(char nvalue)
         a76489_lastregister = 0;
         a76489_volume[0] = ((nvalue & 0x0F) ^ 0x0F);
 	/*fprintf(htrace,"VOL(0)=&%X\n",a76489_volume[0]);*/
-        if (beebit_sound)
+        if (hostmap.lsoundoption)
           soundplay(0);
         break;
     }
@@ -294,7 +296,7 @@ void soundwrite(char nvalue)
     a76489_frequency[a76489_lastregister] |= ((nvalue & 0x3F)<<4);
     /*fprintf(htrace,"FREQ(%u)!=&%X\n",a76489_lastregister,a76489_frequency[a76489_lastregister]);*/
     /*fprintf(htrace,">>(%u)=&%X\n",a76489_lastregister,a76489_lookup[a76489_frequency[a76489_lastregister]]);*/
-    if (beebit_sound)
+    if (hostmap.lsoundoption)
       soundplay(a76489_lastregister);
   }
 }
@@ -312,7 +314,7 @@ void soundprocess(void)
         fprintf(htrace,"\n");
     }
   #endif*/
-  if (beebit_sound)
+  if (hostmap.lsoundoption)
   {
     soundplay(3);
     soundplay(2);

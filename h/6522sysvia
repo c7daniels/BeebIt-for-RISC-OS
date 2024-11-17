@@ -4,44 +4,16 @@
  *
  * Rockwell 6522 Versatile Interface Adapter (VIA)
  *
- * (C) Copyright Michael J Foot, 1998-2002
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
-/*#define INITIALTIMERADDVALUE 2
-#define TIMERADDVALUE 4*/
-
 /*System VIA*/
-extern char r6522sysvia_orb; /*output register B*/
-extern char r6522sysvia_irb; /*input register B*/
-extern char r6522sysvia_ora; /*output register A*/
-extern char r6522sysvia_ira; /*input register A*/
-extern char r6522sysvia_ddrb;
-extern char r6522sysvia_ddra;
-extern unsigned char r6522sysvia_t1ll;
-extern unsigned char r6522sysvia_t1lh;
-extern unsigned char r6522sysvia_t2ll;
-extern char r6522sysvia_sr; /*status register*/
-extern char r6522sysvia_acr;
-extern char r6522sysvia_pcr;
-extern char r6522sysvia_ifr;
-extern char r6522sysvia_ier;
-extern char r6522sysvia_porta;
-extern char r6522sysvia_portb;
-extern int r6522sysvia_2t1; /*left-shifted timer 1 (used for speed)*/
-extern int r6522sysvia_2t2; /*left-shifted timer 2 (used for speed)*/
-extern int r6522sysvia_t1setint; /*set interrupt when timer1 reaches 0*/
-extern int r6522sysvia_t2setint; /*set interrupt when timer2 reaches 0*/
-/*extern int r6522sysvia_irq;*/ /*irq interrupt status*/
-
-/*extern int nkeyboardrow, nkeyboardcol;
-extern int ScreenStart;
-extern int VerticalSYNCTimer;*/
-
-extern int video_baseaddress;
-extern char video_startindex; /*screen start index (system via)*/
-
 extern void systemviasetirq(void);
 extern void systemviasetca1(void);
 extern void systemviavidca1(void);
@@ -53,5 +25,42 @@ extern void keyboardcheck(int);
 extern void systemviareset(void);
 extern void systemviabeforesnapshot(void);
 extern void systemviaaftersnapshot(void);
-extern char systemviaread(int);
-extern void systemviawrite(int, char);
+
+extern struct R6502HOSTMAP* systemvia00read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia01read_b(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia01read_m(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia02read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia03read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia04read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia05read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia06read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia07read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia08read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia09read(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Aread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Bread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Cread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Dread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Eread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Fread_b(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Fread_m(struct R6502HOSTMAP* map);
+
+extern struct R6502HOSTMAP* systemvia00write_b(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia00write_m(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia01write_b(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia01write_m(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia02write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia03write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia04write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia05write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia06write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia07write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia08write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia09write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Awrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Bwrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Cwrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Dwrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Ewrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Fwrite_b(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* systemvia0Fwrite_m(struct R6502HOSTMAP* map);

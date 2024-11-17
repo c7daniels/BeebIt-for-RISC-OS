@@ -24,49 +24,226 @@ typedef struct R6502HOSTMAP* (*R6502OP)(struct R6502HOSTMAP *map); /*returning t
 
 typedef struct
 {
-  unsigned int cyclesmonotonic; /*used by zeribeepwrite*/
-  int cycle;
-  int cyclestogo;
-  int cyclesoriginal;
-  int r6522sysvia_togo;
-  int r6522sysvia_original;
-  int r6522usrvia_togo;
-  int r6522usrvia_original;
+  R6502OP busop;
+  R6502OP _busop_padding[3];
+} R6502S4FORKS;
+
+typedef struct
+{
+  unsigned int monotonic; /*used by zeribeepwrite*/
+  int odd;
+  int togo;
+  int original;
+  int sysvia_togo;
+  int sysvia_original;
+  int usrvia_togo;
+  int usrvia_original;
   int i8271_togo;
   int w1770_togo;
   int adc_togo;
   int m6850_togo;
   int video_togo;
-} TIMERWORKSPACE;
+} S2CYCLES;
+
+typedef struct
+{
+  uint8_t orb; /*output register B*/
+  uint8_t irb; /*input register B*/
+  uint8_t ora; /*output register A*/
+  uint8_t ira; /*input register A*/
+  uint8_t ddrb; /*0 bit means input, 1 means output*/
+  uint8_t ddra; /*0 bit means input, 1 means output*/
+  /*these variables contain the actual values on the lines...*/
+  uint8_t porta;
+  uint8_t portb;
+  uint8_t t1ll; /*T1 low order latch*/
+  uint8_t t1lh; /*T1 high order latch*/
+  uint8_t t2ll; /*T2 low order latch*/
+  uint8_t sr; /*status register*/
+  uint8_t acr;
+  uint8_t pcr;
+  uint8_t ifr;
+  uint8_t ier;
+} S0VIA;
+
+typedef struct
+{
+  uint8_t readwrite;
+  uint8_t datastrobe;
+  uint8_t addrstrobe;
+  uint8_t chipselect;
+} S0RTC;
+
+typedef struct
+{
+  int t1doubled; /*left-shifted timer 1 (used for speed)*/
+  int t2doubled; /*left-shifted timer 2 (used for speed)*/
+  int t1setint; /*set interrupt when timer1 reaches 0*/
+  int t2setint; /*set interrupt when timer2 reaches 0*/
+  int aftert1; /*when timer1 has passed through 0*/
+} S2VIA;
+
+typedef struct
+{
+  int timer; /*amx mouse timer*/
+  int buttons;
+  int currentx;
+  int currenty;
+  int targetx;
+  int targety;
+} S2AMX;
+
+typedef struct
+{
+  uint8_t m6850_controlreg;
+  uint8_t m6850_rxdatareg; /*receive data reg*/
+  uint8_t m6850_txdatareg; /*transmit data reg*/
+  uint8_t m6850_rxdatashiftreg; /*receive data shift reg*/
+  uint8_t m6850_txdatashiftreg; /*transmit data shift reg*/
+  uint8_t m6850_statusreg;
+  uint8_t ula_reg;
+  uint8_t uef_data;
+} S0SERIAL;
+
+typedef struct
+{
+  int m6850_CTS,m6850_RTS,m6850_DCD;
+  int m6850_counterdivide;
+  int m6850_bits, m6850_parity, m6850_stop;
+  int m6850_transmittingRTS;
+  int m6850_transmittingIRQ;
+  int m6850_cleardcd;
+  int m6850_firstreset;
+  int m6850_timerreset;
+  int ula_txbaud;
+  int ula_rxbaud;
+  int uef_version;
+  long uef_filepointer;
+  char* uef_buffer;
+  int uef_bufferpointer;
+  int uef_chunk;
+  int uef_chunklen;
+  int uef_chunkstart;
+  int uef_tone;
+} S2SERIAL;
+
+typedef struct
+{
+  uint8_t commandreg;
+  uint8_t statusreg;
+  uint8_t resultreg;
+  uint8_t datareg;
+  uint8_t select;
+  uint8_t scansector;
+  uint8_t scancountmsb;
+  uint8_t scancountlsb;
+  uint8_t currenttrack[2];
+  uint8_t modereg;
+  uint8_t outputport;
+  uint8_t inputport;
+  uint8_t badtrack[2][2]; /*drive,track*/
+  uint8_t parameter[16]; /*heaps more than we need*/
+  uint8_t _padding[3];
+} S0I8271;
+
+typedef struct
+{
+  int steprate;
+  int headsettletime;
+  int indexcount;
+  int headloadtime;
+  int writestart;
+  int ncurrentdrive,CurrentTrack, CurrentSector, SectorsToGo, SectorLength, ByteWithinSector;
+  int ncommandid,ncommandparams;
+  int PresentParam; /* From 0 */
+  int ninerror;
+} S2I8271;
+
+typedef struct
+{
+  uint8_t controlreg;
+  uint8_t statusreg;
+  uint8_t trackreg;
+  uint8_t sectorreg;
+  uint8_t datareg;
+  uint8_t commandreg;
+  uint8_t track;
+  uint8_t reset;
+  uint8_t density;
+  uint8_t drive;
+  uint8_t side;
+  uint8_t padding[1];
+} S0W1770;
+
+typedef struct
+{
+  int stepdir;
+  int steptime;
+  int byteinsector;
+  int writegate;
+  int lastbyte;
+} S2W1770;
+
+typedef struct
+{
+  uint8_t channel;
+  uint8_t flag;
+  uint8_t resolution;
+  uint8_t status;
+  uint8_t highbyte;
+  uint8_t lowbyte;
+  uint8_t suppressfirst;
+  uint8_t padding[1];
+} S0ADC;
+
+typedef struct
+{
+  int input_x_high;
+  int input_y_low;
+} S2ADC;
 
 /*Rockwell 6502 Central Processor Unit (CPU)*/
 /*an assembly language representation of this struct appears in 6502cpus.h*/
 /*offsets are intended to equal barrel-shift constants in AArch32*/
 typedef struct R6502HOSTMAP
 {
+
+  // shift 0 offsets &00 - &FF
+  uint8_t m; /*value on data bus*/
+  uint8_t a, x, y; /*3 registers A,X,Y*/
+  uint8_t ps; /*processor status*/
+  uint8_t irq;
+  uint8_t nmis;
+  uint8_t readcompleted;
+  int8_t romwritable[16];
+  uint8_t romsel; /*ROMSELect*/
+  uint8_t acccon;  /*ACCCON*/
+  uint8_t lsoundoption;
+  uint8_t lsoundlatch;
+  uint8_t screenstartindex; /*screen start index (system via)*/
+  uint8_t _s0_structpadding[3];
+  S0SERIAL s0serial;
+  S0VIA s0sysvia;
+  S0VIA s0usrvia;
+  S0RTC s0rtc;
+  S0I8271 s0i8271;
+  S0W1770 s0w1770;
+  S0ADC s0adc;
+  uint8_t _s0_padding[124];
+
+  // shift 2 offsets &100 - &3FC
   int cpu_state; /*index into table of steps*/
   unsigned int address_code; /*shifted value on address bus with bus code*/
   unsigned int pc_code; /*shifted program counter with bus code*/
   unsigned int sp_code; /*rotated stack pointer and bus code*/
   unsigned int latch; /*addressing temporary value*/
-  unsigned char m; /*value on data bus*/
-  unsigned char a, x, y; /*3 registers A,X,Y*/
-  unsigned char ps; /*processor status*/
-  unsigned char irq;
-  unsigned char nmis;
-  unsigned char _nmis_padding[1];
-  TIMERWORKSPACE timers;
   R6502OP transition1action, transition2action;
   R6502OP yieldaction;
   R6502OP fetchaction, interruptfetchaction;
   R6502OP fetchthentestirqaction, resetaction;
   int timesinterruptmissed;
   unsigned int lbreak;
-  unsigned char romsel; /*ROMSELect*/
-  unsigned char acccon;  /*ACCCON*/
-  unsigned char readcompleted;
-  unsigned char _readcompleted_padding[1];
-  char romwritable[16];
+  unsigned int screenstartaddress;
   R6502OP read3000, write3000;
   R6502OP read3000_ram, write3000_ram;
   R6502OP read3000_e, write3000_e;
@@ -76,11 +253,24 @@ typedef struct R6502HOSTMAP
   R6502OP swappagesintomemory, swappagesoutofmemory;
   void *zeribeep_writebyte;
   void *zeribeep_workspace;
-  unsigned int _low_padding[78];
-  R6502OP bus_fork[128];
-  unsigned int _bus_fork_padding[1504];
+  S2CYCLES s2cycles;
+  S2SERIAL s2serial;
+  S2VIA s2sysvia;
+  S2VIA s2usrvia;
+  S2AMX s2amx;
+  S2I8271 s2i8271;
+  S2W1770 s2w1770;
+  S2ADC s2adc;
+  unsigned int _s2_padding[88];
+
+  // shift 4 offsets &400 - &FF0
+  unsigned int _s4_padding[256];
+  R6502S4FORKS s4forks[128];
+
+  // shift 6+ offsets &1000 -
   R6502OP read8000s[16];
   R6502OP write8000s[16];
+  unsigned int _s6_padding[736];
   R6502OP high_read_fork[1024];
   R6502OP high_write_fork[1024];
   R6502OP high_stretched_read_fork[1024];
@@ -93,48 +283,48 @@ typedef struct R6502HOSTMAP
 
 #define TIMER_LIMIT_CYCLES_TO_GO(MAP, LIMIT) \
   { \
-    TIMERWORKSPACE *ts = &(MAP)->timers; \
-    int excess = ts->cyclesoriginal - (LIMIT); \
+    S2CYCLES *cy = &(MAP)->s2cycles; \
+    int excess = cy->original - (LIMIT); \
     if (excess > 0) \
     { \
-      ts->cyclesoriginal -= excess; \
-      ts->cyclestogo -= excess; \
+      cy->original -= excess; \
+      cy->togo -= excess; \
     } \
   }
 
 #define TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(MAP, P, LIMIT) \
   { \
-    TIMERWORKSPACE *ts = &(MAP)->timers; \
-    int excess = ts->P##_original - (LIMIT); \
+    S2CYCLES *cy = &(MAP)->s2cycles; \
+    int excess = cy->P##_original - (LIMIT); \
     if (excess > 0) \
     { \
-      ts->P##_original -= excess; \
-      ts->P##_togo -= excess; \
-      excess = ts->cyclesoriginal - ts->P##_togo; \
+      cy->P##_original -= excess; \
+      cy->P##_togo -= excess; \
+      excess = cy->original - cy->P##_togo; \
       if (excess > 0) \
       { \
-        ts->cyclesoriginal -= excess; \
-        ts->cyclestogo -= excess; \
+        cy->original -= excess; \
+        cy->togo -= excess; \
       } \
     } \
   }
 
 #define TIMER_GET_CYCLE_COUNT(OUT, MAP) \
   { \
-    TIMERWORKSPACE *ts = &(MAP)->timers; \
-OUT = ts->cyclesoriginal - ts->cyclestogo; \
+    S2CYCLES *cy = &(MAP)->s2cycles; \
+OUT = cy->original - cy->togo; \
   }
 
 #define TIMER_GET_PERIPHERAL_CYCLE_COUNT(OUT, MAP, P) \
   { \
-    TIMERWORKSPACE *ts = &(MAP)->timers; \
-OUT = ts->cyclesoriginal - ts->cyclestogo + ts->P##_original - ts->P##_togo; \
+    S2CYCLES *cy = &(MAP)->s2cycles; \
+OUT = cy->original - cy->togo + cy->P##_original - cy->P##_togo; \
   }
 
 #define TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(OUT, MAP, P) \
   { \
-    TIMERWORKSPACE *ts = &(MAP)->timers; \
-    OUT = ts->cyclesoriginal - ts->cyclestogo; \
-    OUT += (ts->cycle^OUT^1)&1; \
-    OUT += ts->P##_original - ts->P##_togo; \
+    S2CYCLES *cy = &(MAP)->s2cycles; \
+    OUT = cy->original - cy->togo; \
+    OUT += (cy->odd^OUT^1)&1; \
+    OUT += cy->P##_original - cy->P##_togo; \
   }

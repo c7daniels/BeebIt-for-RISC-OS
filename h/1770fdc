@@ -2,9 +2,13 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2000
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mikef@voyager.co.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
 #define DFS_SECTORS_PER_TRACK 10
@@ -23,9 +27,15 @@
 extern void w1770reset(void);
 extern int w1770getsectorcount(FILE *hfile);
 extern int w1770getimagetype(FILE *hfile, int nsectorcount);
-extern void w1770poll(void);
-extern char w1770controlread(void);
-extern void w1770controlwrite(char nvalue);
-extern char w1770read(int naddress);
-extern void w1770write(int naddress, char nvalue);
-extern void w1770closedown(void);
+extern struct R6502HOSTMAP* w1770poll(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770controlread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770controlwrite_bp(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770controlwrite_m(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770statusread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770trackread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770sectorread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770dataread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770commandwrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770trackwrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770sectorwrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* w1770datawrite(struct R6502HOSTMAP* map);

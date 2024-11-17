@@ -30,7 +30,6 @@
   IMPORT |beebit_vdusel|
   IMPORT |videoula_palette|
   IMPORT |video_address|
-  IMPORT |video_baseaddress|
 
   EXPORT |mode0plot4|
   EXPORT |mode0plot8|
@@ -243,8 +242,8 @@ mode0plot4_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r9,=video_baseaddress
-  LDR r14,[r9] ;get bbc screen base address
+  LDR r9,=hostmap
+  LDR r14,[r9,#:INDEX:R6502_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r14,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode0plot4_1
@@ -324,8 +323,8 @@ mode0plot8_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r9,=video_baseaddress
-  LDR r14,[r9] ;get bbc screen base address
+  LDR r9,=hostmap
+  LDR r14,[r9,#:INDEX:R6502_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r14,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode0plot8_1
@@ -462,8 +461,8 @@ mode1plot4_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r14,=video_baseaddress
-  LDR r14,[r14] ;get bbc screen base address
+  LDR r14,=hostmap
+  LDR r14,[r9,#:INDEX:R6502_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r14,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode1plot4_1
@@ -550,8 +549,8 @@ mode1plot8_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r14,=video_baseaddress
-  LDR r14,[r14] ;get bbc screen base address
+  LDR r14,=hostmap
+  LDR r14,[r9,#:INDEX:R6502_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r14,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode1plot8_1
@@ -757,8 +756,8 @@ mode2plot4_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r3,=video_baseaddress
-  LDR r3,[r3] ;get bbc screen base address
+  LDR r3,=hostmap
+  LDR r3,[r3,#:INDEX:R6502_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r3,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode2plot4_1
@@ -880,8 +879,8 @@ mode2plot8_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r3,=video_baseaddress
-  LDR r3,[r3] ;get bbc screen base address
+  LDR r3,=hostmap
+  LDR r3,[r3,#:INDEX:R6502_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r3,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode2plot8_1

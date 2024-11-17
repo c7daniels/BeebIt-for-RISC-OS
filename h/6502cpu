@@ -823,8 +823,7 @@ extern void r6502resetbusfork(R6502HOSTMAP *map);
 extern void r6502resetreadsandwrite8000s(R6502HOSTMAP *map);
 extern void r6502resethighforks(R6502HOSTMAP *map,
     R6502OP readFC00, R6502OP writeFC00,
-    R6502OP readFD00, R6502OP writeFD00,
-    const R6502OP* sheila_reads, const R6502OP* sheila_writes);
+    R6502OP readFD00, R6502OP writeFD00);
 extern int r6502setcpuops(R6502HOSTMAP *map, const R6502OP* const *sequences);
 extern void r6502execute(R6502HOSTMAP *map);
 extern void r6502readmemory(R6502HOSTMAP *map, char *buffer, unsigned int naddress, int ncount);

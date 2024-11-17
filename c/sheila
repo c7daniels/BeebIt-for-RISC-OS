@@ -6,12 +6,12 @@
  *
  * Email: <mjfoot.nz@gmail.com>
  *
- * Enhanced host screen mode compatibility (and more)
- *   contributed by Crispian Daniels in 2024
+ * Addressing optimization contributed by Crispian Daniels in 2024
  *
  * Email: <convertedgames@3insdale.me.uk>
  */
 
+#include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -33,1165 +33,534 @@
 #include "videoula.h"
 #include "1770fdc.h"
 
-#define SHEILA_4_BLOCK(OP) \
-  OP, OP, OP, OP
-
-#define SHEILA_8_BLOCK(OP) \
-  SHEILA_4_BLOCK(OP), SHEILA_4_BLOCK(OP)
-
-#define SHEILA_16_BLOCK(OP) \
-  SHEILA_8_BLOCK(OP), SHEILA_8_BLOCK(OP)
-
-#define SHEILA_32_BLOCK(OP) \
-  SHEILA_16_BLOCK(OP), SHEILA_16_BLOCK(OP)
-
 /*extern _kernel_swi_regs regs;*/
-
-/*extern char opcode;*/
 
 /*sheila*/
 /*char sheila_b[0x100];*/
 
-SHEILAOP sheilareadsb[256] = {
-  SHEILA_32_BLOCK(sheilaread_b),
-  SHEILA_32_BLOCK(sheilaread_b),
-  SHEILA_32_BLOCK(sheilaread_b),
-  SHEILA_32_BLOCK(sheilaread_b),
-  SHEILA_32_BLOCK(sheilaread_b),
-  SHEILA_32_BLOCK(sheilaread_b),
-  SHEILA_32_BLOCK(sheilaread_b),
-  SHEILA_32_BLOCK(sheilaread_b)
-};
-SHEILAOP sheilareadsbp[256] = {
-  SHEILA_32_BLOCK(sheilaread_bp),
-  SHEILA_32_BLOCK(sheilaread_bp),
-  SHEILA_32_BLOCK(sheilaread_bp),
-  SHEILA_32_BLOCK(sheilaread_bp),
-  SHEILA_32_BLOCK(sheilaread_bp),
-  SHEILA_32_BLOCK(sheilaread_bp),
-  SHEILA_32_BLOCK(sheilaread_bp),
-  SHEILA_32_BLOCK(sheilaread_bp)
-};
-SHEILAOP sheilareadsm[256] = {
-  SHEILA_32_BLOCK(sheilaread_m),
-  SHEILA_32_BLOCK(sheilaread_m),
-  SHEILA_32_BLOCK(sheilaread_m),
-  SHEILA_32_BLOCK(sheilaread_m),
-  SHEILA_32_BLOCK(sheilaread_m),
-  SHEILA_32_BLOCK(sheilaread_m),
-  SHEILA_32_BLOCK(sheilaread_m),
-  SHEILA_32_BLOCK(sheilaread_m)
-};
-SHEILAOP sheilawritesb[256] = {
-  SHEILA_32_BLOCK(sheilawrite_b),
-  SHEILA_32_BLOCK(sheilawrite_b),
-  SHEILA_32_BLOCK(sheilawrite_b),
-  SHEILA_32_BLOCK(sheilawrite_b),
-  SHEILA_32_BLOCK(sheilawrite_b),
-  SHEILA_32_BLOCK(sheilawrite_b),
-  SHEILA_32_BLOCK(sheilawrite_b),
-  SHEILA_32_BLOCK(sheilawrite_b)
-};
-SHEILAOP sheilawritesbp[256] = {
-  SHEILA_32_BLOCK(sheilawrite_bp),
-  SHEILA_32_BLOCK(sheilawrite_bp),
-  SHEILA_32_BLOCK(sheilawrite_bp),
-  SHEILA_32_BLOCK(sheilawrite_bp),
-  SHEILA_32_BLOCK(sheilawrite_bp),
-  SHEILA_32_BLOCK(sheilawrite_bp),
-  SHEILA_32_BLOCK(sheilawrite_bp),
-  SHEILA_32_BLOCK(sheilawrite_bp)
-};
-SHEILAOP sheilawritesm[256] = {
-  SHEILA_32_BLOCK(sheilawrite_m),
-  SHEILA_32_BLOCK(sheilawrite_m),
-  SHEILA_32_BLOCK(sheilawrite_m),
-  SHEILA_32_BLOCK(sheilawrite_m),
-  SHEILA_32_BLOCK(sheilawrite_m),
-  SHEILA_32_BLOCK(sheilawrite_m),
-  SHEILA_32_BLOCK(sheilawrite_m),
-  SHEILA_32_BLOCK(sheilawrite_m)
-};
-
-/*void sheilareset(void)
-{*/
-  /*int i;
-  for (i=0;i<=0x100;i++)
-    sheila_b[i] = 0xFE;*/
-/*}*/
-
-struct R6502HOSTMAP* sheilaread_b(R6502HOSTMAP* map)
+void sheilareset(R6502HOSTMAP* map)
 {
-  int naddress = (map->address_code>>16);
-  char nresult;
-  #ifdef __DEBUG__
-    fprintf(htrace,"READsheila>&%X\n",naddress);
-    fprintf(htrace,"PC=&%X OP=&%X\n",map->pc-1,opcode);
-  #endif
+  const int slow_mask = 0x0F00FF0F;
+  int i,j;
+  SHEILAOP* read_fork = &map->high_read_fork[0x200];
+  SHEILAOP* write_fork = &map->high_write_fork[0x200];
 
-  switch (naddress & 0xFC)
+  /*&FE00 - &FE07 (CRTC)*/
+  for (i=0x00; i<0x08; i+=0x02)
   {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07 (CRTC)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readcrtc()");
-      #endif
-      nresult = crtcread(naddress);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      nresult = aciaread(naddress);
-      break;
-    case 0x10:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readserialula()");
-      #endif
-      nresult = serialularead(naddress);
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      nresult = serialularead(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readvideoula()");
-      #endif
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x30:
-    case 0x34:
-    case 0x38:
-    case 0x3C:
-      /*&FE30 - &FE3F (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,map->romsel);
-      #endif
-      nresult = 0xFE;
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40-&FE5F*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviaread(%X)",(naddress & 0x0F));
-      #endif
-      nresult = systemviaread(naddress);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60-&FE7F*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"readuservia(&%X)",(naddress & 0x0F));
-      #endif
-      nresult = userviaread(naddress);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80-&FE9F (8271 or 1770)*/
-      nresult = i8271read(naddress);
-      /*nresult = w1770read(naddress);*/
-      if ((hostmap.nmis & NMIS_NMI) AND !(hostmap.nmis & NMIS_OLDNMI))
-      {
-        r6502startinterrupt(&hostmap);
-      }
-      #ifdef __DEBUG__
-        fprintf(htrace,"read8271(&%X)=&%X\n",(naddress & 0x0F),nresult);
-      #endif
-      break;
-    case 0xA0:
-    case 0xA4:
-    case 0xA8:
-    case 0xAC:
-      /*&FEA0-&FEAF (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB0:
-    case 0xB4:
-      /*&FEB0-&FEB7 (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB8:
-    case 0xBC:
-      /*&FEB8-&FEBF (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*FEC0-&FEDF (ADC)*/
-      nresult = adcread(naddress);
-      #ifdef __DEBUG__
-        fprintf(htrace,"readadc()");
-      #endif
-      break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFE;
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFE;
-      /*nresult = tuberead(naddress);*/
-      break;
-    default:
-      nresult = memory[naddress];
-      break;
+    read_fork[i] = crtc00read;
+    read_fork[i+1] = crtc01read;
+    write_fork[i] = crtc00write;
+    write_fork[i+1] = crtc01write;
   }
-  map->m = nresult;
-  R6502_EXECUTE_STEP(map)
-  return map;
-}
 
-struct R6502HOSTMAP* sheilaread_bp(R6502HOSTMAP* map)
-{
-  int naddress = (map->address_code>>16);
-  char nresult;
-  #ifdef __DEBUG__
-    fprintf(htrace,"READsheila>&%X\n",naddress);
-    fprintf(htrace,"PC=&%X OP=&%X\n",map->pc-1,opcode);
-  #endif
-
-  switch (naddress & 0xFC)
+  /*&FE08 - &FE0F (ACIA)*/
+  for (i=0x08; i<0x10; i+=0x02)
   {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07 (CRTC)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readcrtc()");
-      #endif
-      nresult = crtcread(naddress);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      nresult = aciaread(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x10:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readserialula()");
-      #endif
-      nresult = serialularead(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      nresult = serialularead(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readvideoula()");
-      #endif
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x30:
-    case 0x38:
-      /*&FE30 - &FE33, &FE38 - &FE3B (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,map->romsel);
-      #endif
-      nresult = map->romsel;
-      break;
-    case 0x34:
-    case 0x3C:
-      /*&FE34-&FE37, &FE3C-&FE3F (ACCCON)*/
-      #ifdef __DEVELOPXX__
-        fprintf(htrace," &%X ACCCON=&%X\n",naddress,map->acccon);
-      #endif
-      nresult = map->acccon;
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40-&FE5F*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviaread(%X)",(naddress & 0x0F));
-      #endif
-      nresult = systemviaread(naddress);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60-&FE7F*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"readuservia(&%X)",(naddress & 0x0F));
-      #endif
-      nresult = userviaread(naddress);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80-&FE9F (8271 or 1770)*/
-      if (naddress & 0x04)
-        nresult = w1770read(naddress);
-      else
-        nresult = w1770controlread();
-      break;
-    case 0xA0:
-    case 0xA4:
-    case 0xA8:
-    case 0xAC:
-      /*&FEA0-&FEAF (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB0:
-    case 0xB4:
-      /*&FEB0-&FEB7 (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB8:
-    case 0xBC:
-      /*&FEB8-&FEBF (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*FEC0-&FEDF (ADC)*/
-      nresult = adcread(naddress);
-      #ifdef __DEBUG__
-        fprintf(htrace,"readadc()");
-      #endif
-      break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFE;
-      /*nresult = tuberead(naddress);*/
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFE;
-      /*nresult = tuberead(naddress);*/
-      break;
-    default:
-      nresult = memory[naddress];
-      break;
+    read_fork[i] = acia00read;
+    read_fork[i+1] = acia01read;
+    write_fork[i] = acia00write;
+    write_fork[i+1] = acia01write;
   }
-  map->m = nresult;
-  R6502_EXECUTE_STEP(map)
-  return map;
-}
 
-struct R6502HOSTMAP* sheilaread_m(R6502HOSTMAP* map)
-{
-  int naddress = (map->address_code>>16);
-  char nresult;
-  #ifdef __DEBUG__
-    fprintf(htrace,"READsheila>&%X\n",naddress);
-    fprintf(htrace,"PC=&%X OP=&%X\n",map->pc-1,opcode);
-  #endif
-  switch (naddress & 0xFC)
+  /*&FE10 - &FE17 (SERIALULA)*/
+  for (i=0x10; i<0x18; i+=0x01)
   {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07 (CRTC)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readcrtc()");
-      #endif
-      nresult = crtcread(naddress);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      nresult = aciaread(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x10:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readserialula()");
-      #endif
-      nresult = serialularead(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      nresult = adcread(naddress);
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readvideoula()");
-      #endif
-      /*nresult = videoularead(naddress);*/
-      nresult = 0;
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      nresult = w1770controlread();
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      nresult = w1770read(naddress);
-      break;
-    case 0x30:
+    read_fork[i] = serialularead;
+    write_fork[i] = serialulawrite;
+  }
+
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    /*&FE18 - &FE1F (ADC)*/
+    for (i=0x18; i<0x20; i+=0x04)
+    {
+      read_fork[i] = adc00read;
+      read_fork[i+1] = adc01read;
+      read_fork[i+2] = adc02read;
+      read_fork[i+3] = adc02read;
+      write_fork[i] = adcwrite;
+      write_fork[i+1] = adcwrite;
+      write_fork[i+2] = adcwrite;
+      write_fork[i+3] = adcwrite;
+    }
+  }
+  else
+  {
+    /*&FE18 - &FE1F (ECONET STATION NUMBER/INTOFF)*/
+    for (i=0x18; i<0x20; i+=0x01)
+    {
+      read_fork[i] = hostconstantreadFE;
+      write_fork[i] = hostnowrite;
+    }
+  }
+
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    /*&FE20 - &FE23 (VIDEOULA)*/
+    for (i=0x20; i<0x24; i+=0x02)
+    {
+      read_fork[i] = hostconstantread00;
+      read_fork[i+1] = hostconstantread00;
+      write_fork[i] = videoula00write;
+      write_fork[i+1] = videoula01write;
+    }
+    /*&FE24 - &FE27 (FDC INTERFACE CONTROL REG)*/
+    for (i=0x24; i<0x28; i+=0x01)
+    {
+      read_fork[i] = w1770controlread;
+      write_fork[i] = w1770controlwrite_m;
+    }
+    /*&FE28 - &FE2F (FDC INTERFACE)*/
+    for (i=0x28; i<0x30; i+=0x04)
+    {
+      read_fork[i] = w1770statusread;
+      read_fork[i+1] = w1770trackread;
+      read_fork[i+2] = w1770sectorread;
+      read_fork[i+3] = w1770dataread;
+      write_fork[i] = w1770commandwrite;
+      write_fork[i+1] = w1770trackwrite;
+      write_fork[i+2] = w1770sectorwrite;
+      write_fork[i+3] = w1770datawrite;
+    }
+  }
+  else
+  {
+    /*&FE20 - &FE2F (VIDEOULA/INTON)*/
+    for (i=0x20; i<0x30; i+=0x02)
+    {
+      read_fork[i] = hostconstantreadFE;
+      read_fork[i+1] = hostconstantreadFE;
+      write_fork[i] = videoula00write;
+      write_fork[i+1] = videoula01write;
+    }
+  }
+
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    /*&FE30 - &FE33 (ROMSEL)*/
+    for (i=0x30; i<0x34; i++)
+    {
+      read_fork[i] = romselread;
+      write_fork[i] = romselwrite_m;
+    }
+    /*&FE34 - &FE37 (ACCCON)*/
+    for (i=0x34; i<0x38; i++)
+    {
+      read_fork[i] = accconread;
+      write_fork[i] = accconwrite_m;
+    }
+    /*&FE38 - &FE3B (INTOFF)*/
+    for (i=0x38; i<0x3C; i++)
+    {
+      read_fork[i] = hostconstantread00;
+      write_fork[i] = hostnowrite;
+    }
+    /*&FE3C - &FE3F (INTON)*/
+    for (i=0x3C; i<0x40; i++)
+    {
+      read_fork[i] = hostconstantread00;
+      write_fork[i] = hostnowrite;
+    }
+  }
+  else if (beebit_machinetype == MACHINE_MODELBPLUS)
+  {
+    for (j=0x30; j<0x40; j+=0x08)
+    {
       /*&FE30 - &FE33 (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,map->romsel);
-      #endif
-      nresult = map->romsel;
-      break;
-    case 0x34:
-      /*FE34-&FE37 (ACCCON)*/
-      #ifdef __DEVELOPXX__
-        fprintf(htrace," &%X ACCCON=&%X\n",naddress,map->acccon);
-      #endif
-      nresult = map->acccon;
-      break;
-    case 0x38:
-      /*FE38-&FE3B (INTOFF)*/
-      nresult = 0;
-      break;
-    case 0x3C:
-      /*FE3C-&FE3F (INTON)*/
-      nresult = 0;
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40-&FE5F*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviaread(%X)",(naddress & 0x0F));
-      #endif
-      nresult = systemviaread(naddress);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60-&FE7F*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"readuservia(&%X)",(naddress & 0x0F));
-      #endif
-      nresult = userviaread(naddress);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80-&FE9F (8271 or 1770)*/
-      nresult = i8271read(naddress);
-      if ((hostmap.nmis & NMIS_NMI) AND !(hostmap.nmis & NMIS_OLDNMI))
+      for (i=0x00; i<0x04; i++)
       {
-        r6502startinterrupt(&hostmap);
+        read_fork[j+i] = romselread;
+        write_fork[j+i] = romselwrite_bp;
       }
-      break;
-    case 0xA0:
-    case 0xA4:
-    case 0xA8:
-    case 0xAC:
-      /*&FEA0-&FEAF (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB0:
-    case 0xB4:
-      /*&FEB0-&FEB7 (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB8:
-    case 0xBC:
-      /*&FEB8-&FEBF (ECONET)*/
-      nresult = 0xFF;
-      break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*FEC0-&FEDF (ADC)*/
-      nresult = 0xFF;
-      break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFF;
-      /*nresult = tuberead(naddress);*/
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFF;
-      /*nresult = tuberead(naddress);*/
-      break;
-    default:
-      nresult = memory[naddress];
-      break;
-  }
-  map->m = nresult;
-  R6502_EXECUTE_STEP(map)
-  return map;
-}
-
-struct R6502HOSTMAP* sheilawrite_b(R6502HOSTMAP* map)
-{
-  int naddress = (map->address_code>>16);
-  int nvalue = map->m;
-  #ifdef __DEBUG__
-    fprintf(htrace,"WRITEsheila=&%X,&%X\n",naddress,nvalue);
-  #endif
-  /*sheila address space FE00-&FEFF*/
-  /*these values are only used for snapshots*/
-  /*sheila_b[naddress-0xFE00] = nvalue;*/
-
-  switch (naddress & 0xFC)
-  {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writecrtc(%X)",nvalue);
-      #endif
-      crtcwrite(naddress,nvalue);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      aciawrite(naddress,nvalue);
-      break;
-    case 0x10:
-    case 0x14:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      serialulawrite(naddress,nvalue);
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      serialulawrite(naddress,nvalue);
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writevideoula(&%X,&%X)\n",naddress,nvalue);
-      #endif
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x30:
-    case 0x34:
-    case 0x38:
-    case 0x3C:
-      /*&FE30 - &FE3F (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
-      #endif
-      {
-        int nrom = (nvalue & 0x0F);
-        map->bus_fork[0x0B] = map->bus_fork[0x0A]
-            = map->bus_fork[0x09] = map->bus_fork[0x08] = map->read8000s[nrom];
-        map->bus_fork[0x1B] = map->bus_fork[0x1A]
-            = map->bus_fork[0x19] = map->bus_fork[0x18] = map->write8000s[nrom];
-      }
-      map->romsel = nvalue;
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40 - &FE5F (SYSTEMVIA)*/
-      /*printf(" &FE40 ");*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviawrite(%X,%X)",(naddress & 0x0F),nvalue);
-      #endif
-      systemviawrite(naddress,nvalue);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60 - &FE7F (USERVIA)*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"writeuservia(&%X,&%X)",(naddress & 0x0F),nvalue);
-      #endif
-      userviawrite(naddress, nvalue);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80 - &FE9F (8271 or 1770)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"write8271(&%X,&%X)\n",(naddress & 0x0F),nvalue);
-      #endif
-      i8271write(naddress, nvalue);
-      /*w1770write(naddress, nvalue);*/
-      if ((hostmap.nmis & NMIS_NMI) AND !(hostmap.nmis & NMIS_OLDNMI))
-      {
-        r6502startinterrupt(&hostmap);
-      }
-      break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*&FEC0 - &FEDF (ADC)*/
-      adcwrite(naddress,nvalue);
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeadc()");
-      #endif
-      break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
-      break;
-  }
-  R6502_EXECUTE_STEP(map)
-  return map;
-}
-
-struct R6502HOSTMAP* sheilawrite_bp(R6502HOSTMAP* map)
-{
-  int naddress = (map->address_code>>16);
-  int nvalue = map->m;
-  #ifdef __DEBUG__
-    fprintf(htrace,"WRITEsheila=&%X,&%X\n",naddress,nvalue);
-  #endif
-  /*sheila address space FE00-&FEFF*/
-  /*these values are only used for snapshots*/
-  /*sheila_b[naddress-0xFE00] = nvalue;*/
-
-  switch (naddress & 0xFC)
-  {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writecrtc(%X)",nvalue);
-      #endif
-      crtcwrite(naddress,nvalue);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      aciawrite(naddress,nvalue);
-      break;
-    case 0x10:
-    case 0x14:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      serialulawrite(naddress,nvalue);
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      serialulawrite(naddress,nvalue);
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      /*fprintf(htrace,"UW:&%X,&%X - PC=&%x\n",naddress,nvalue,map->pc);*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writevideoula(&%X,&%X)\n",naddress,nvalue);
-      #endif
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x30:
-    case 0x38:
-      /*&FE30 - &FE33, &FE38 - &FE3B (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
-      #endif
-      {
-        int nrom = (nvalue & 0x0F);
-        if (nvalue & 0x80)
-        {
-          /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
-          map->bus_fork[0x0A] = map->bus_fork[0x09]
-              = map->bus_fork[0x08] = map->read8000_ram;
-          map->bus_fork[0x1A] = map->bus_fork[0x19]
-              = map->bus_fork[0x18] = map->write8000_ram;
-        }
-        else
-        {
-          map->bus_fork[0x0A] = map->bus_fork[0x09]
-              = map->bus_fork[0x08] = map->read8000s[nrom];
-          map->bus_fork[0x1A] = map->bus_fork[0x19]
-              = map->bus_fork[0x18] = map->write8000s[nrom];
-        }
-        map->bus_fork[0x0B] = map->read8000s[nrom];
-        map->bus_fork[0x1B] = map->write8000s[nrom];
-      }
-      map->romsel = nvalue;
-      break;
-    case 0x34:
-    case 0x3C:
-      /*&FE34 - &FE37, &FE3C - &FE3F (ACCCON)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ACCCON(&%X,&%X)\n",naddress,nvalue);
-      #endif
-      if (nvalue & 0x80)
-      {
-        /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
-        map->bus_fork[0x07] = map->bus_fork[0x06]
-            = map->bus_fork[0x05] = map->bus_fork[0x04]
-            = map->bus_fork[0x03] = map->read3000_ram;
-        map->bus_fork[0x17] = map->bus_fork[0x16]
-            = map->bus_fork[0x15] = map->bus_fork[0x14]
-            = map->bus_fork[0x13] = map->write3000_ram;
-      }
-      else
-      {
-        map->bus_fork[0x07] = map->bus_fork[0x06]
-            = map->bus_fork[0x05] = map->bus_fork[0x04]
-            = map->bus_fork[0x03] = map->read3000;
-        map->bus_fork[0x17] = map->bus_fork[0x16]
-            = map->bus_fork[0x15] = map->bus_fork[0x14]
-            = map->bus_fork[0x13] = map->write3000;
-      }
-      map->acccon = nvalue;
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40 - &FE5F (SYSTEMVIA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviawrite(%X,%X)",(naddress & 0x0F),nvalue);
-      #endif
-      systemviawrite(naddress,nvalue);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60 - &FE7F (USERVIA)*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"writeuservia(&%X,&%X)",(naddress & 0x0F),nvalue);
-      #endif
-      userviawrite(naddress, nvalue);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80 - &FE9F (8271 or 1770)*/
-      if (naddress & 0x04)
-        w1770write(naddress,nvalue);
-      else
-        w1770controlwrite(nvalue);
-      break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*&FEC0 - &FEDF (ADC)*/
-      adcwrite(naddress,nvalue);
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeadc()");
-      #endif
-      break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
-      break;
-  }
-  R6502_EXECUTE_STEP(map)
-  return map;
-}
-
-struct R6502HOSTMAP* sheilawrite_m(R6502HOSTMAP* map)
-{
-  int naddress = (map->address_code>>16);
-  int nvalue = map->m;
-  #ifdef __DEBUG__
-    fprintf(htrace,"WRITEsheila=&%X,&%X\n",naddress,nvalue);
-  #endif
-  /*sheila address space FE00-&FEFF*/
-  /*these values are only used for snapshots*/
-  /*sheila_b[naddress-0xFE00] = nvalue;*/
-  switch (naddress & 0xFC)
-  {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writecrtc(%X)",nvalue);
-      #endif
-      crtcwrite(naddress,nvalue);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      aciawrite(naddress,nvalue);
-      break;
-    case 0x10:
-    case 0x14:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      serialulawrite(naddress,nvalue);
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      adcwrite(naddress,nvalue);
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writevideoula(&%X,&%X)\n",naddress,nvalue);
-      #endif
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      w1770controlwrite(nvalue);
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      w1770write(naddress,nvalue);
-      break;
-    case 0x30:
-      /*&FE30 - &FE33 (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
-      #endif
-      {
-        int nrom = (nvalue & 0x0F);
-        if (nvalue & 0x80)
-        {
-          /*ROMSEL b7 (RAM) (&8000-&8FFF)*/
-          map->bus_fork[0x08] = map->read8000_ram;
-          map->bus_fork[0x18] = map->write8000_ram;
-        }
-        else
-        {
-          map->bus_fork[0x08] = map->read8000s[nrom];
-          map->bus_fork[0x18] = map->write8000s[nrom];
-        }
-        map->bus_fork[0x0B] = map->bus_fork[0x0A]
-            = map->bus_fork[0x09] = map->read8000s[nrom];
-        map->bus_fork[0x1B] = map->bus_fork[0x1A]
-            = map->bus_fork[0x19] = map->write8000s[nrom];
-      }
-      map->romsel = nvalue;
-      break;
-    case 0x34:
       /*&FE34 - &FE37 (ACCCON)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ACCCON(&%X,&%X)\n",naddress,nvalue);
-      #endif
-      switch (nvalue & 0x06)
+      for (i=0x04; i<0x08; i++)
       {
-        case 0x00:
-          /*RAM*/
-          map->bus_fork[0x07] = map->bus_fork[0x06]
-              = map->bus_fork[0x05] = map->bus_fork[0x04]
-              = map->bus_fork[0x03] = map->read3000;
-          map->bus_fork[0x17] = map->bus_fork[0x16]
-              = map->bus_fork[0x15] = map->bus_fork[0x14]
-              = map->bus_fork[0x13] = map->write3000;
-          break;
-        case 0x02:
-          /*ACCCON b1 (E)*/
-          map->bus_fork[0x07] = map->bus_fork[0x06]
-              = map->bus_fork[0x05] = map->bus_fork[0x04]
-              = map->bus_fork[0x03] = map->read3000_e;
-          map->bus_fork[0x17] = map->bus_fork[0x16]
-              = map->bus_fork[0x15] = map->bus_fork[0x14]
-              = map->bus_fork[0x13] = map->write3000_e;
-          break;
-        case 0x04:
-        case 0x06:
-          /*ACCCON b2 (X)*/
-          map->bus_fork[0x07] = map->bus_fork[0x06]
-              = map->bus_fork[0x05] = map->bus_fork[0x04]
-              = map->bus_fork[0x03] = map->read3000_x;
-          map->bus_fork[0x17] = map->bus_fork[0x16]
-              = map->bus_fork[0x15] = map->bus_fork[0x14]
-              = map->bus_fork[0x13] = map->write3000_x;
-          break;
+        read_fork[j+i] = accconread;
+        write_fork[j+i] = accconwrite_bp;
       }
-      if (nvalue & 0x08)
-      {
-        /*ACCCON b3 (Y)*/
-        /*&C000-&DFFF*/
-        map->bus_fork[0x0D] = map->bus_fork[0x0C] = map->readC000_y;
-        map->bus_fork[0x1D] = map->bus_fork[0x1C] = map->writeC000_y;
-      }
-      else
-      {
-        /*&C000-&DFFF*/
-        map->bus_fork[0x0D] = map->bus_fork[0x0C] = map->bus_fork[0x0E];
-        map->bus_fork[0x1D] = map->bus_fork[0x1C] = map->bus_fork[0x1E];
-      }
+    }
+  }
+  else
+  {
+    /*&FE30 - &FE3F (ROMSEL)*/
+    for (i=0x30; i<0x40; i++)
+    {
+      read_fork[i] = romselread;
+      write_fork[i] = romselwrite_b;
+    }
+  }
 
-      if (nvalue & 0x80)
+  /*&FE40-&FE5F*/
+  for (i=0x40; i<0x60; i+=0x10)
+  {
+    read_fork[i] = systemvia00read;
+    read_fork[i+0x02] = systemvia02read;
+    read_fork[i+0x03] = systemvia03read;
+    read_fork[i+0x04] = systemvia04read;
+    read_fork[i+0x05] = systemvia05read;
+    read_fork[i+0x06] = systemvia06read;
+    read_fork[i+0x07] = systemvia07read;
+    read_fork[i+0x08] = systemvia08read;
+    read_fork[i+0x09] = systemvia09read;
+    read_fork[i+0x0A] = systemvia0Aread;
+    read_fork[i+0x0B] = systemvia0Bread;
+    read_fork[i+0x0C] = systemvia0Cread;
+    read_fork[i+0x0D] = systemvia0Dread;
+    read_fork[i+0x0E] = systemvia0Eread;
+    write_fork[i+0x02] = systemvia02write;
+    write_fork[i+0x03] = systemvia03write;
+    write_fork[i+0x04] = systemvia04write;
+    write_fork[i+0x05] = systemvia05write;
+    write_fork[i+0x06] = systemvia06write;
+    write_fork[i+0x07] = systemvia07write;
+    write_fork[i+0x08] = systemvia08write;
+    write_fork[i+0x09] = systemvia09write;
+    write_fork[i+0x0A] = systemvia0Awrite;
+    write_fork[i+0x0B] = systemvia0Bwrite;
+    write_fork[i+0x0C] = systemvia0Cwrite;
+    write_fork[i+0x0D] = systemvia0Dwrite;
+    write_fork[i+0x0E] = systemvia0Ewrite;
+    if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+    {
+      read_fork[i+0x01] = systemvia01read_m;
+      read_fork[i+0x0F] = systemvia0Fread_m;
+      write_fork[i] = systemvia00write_m;
+      write_fork[i+0x01] = systemvia01write_m;
+      write_fork[i+0x0F] = systemvia0Fwrite_m;
+    }
+    else
+    {
+      read_fork[i+0x01] = systemvia01read_b;
+      read_fork[i+0x0F] = systemvia0Fread_b;
+      write_fork[i] = systemvia00write_b;
+      write_fork[i+0x01] = systemvia01write_b;
+      write_fork[i+0x0F] = systemvia0Fwrite_b;
+    }
+  }
+
+  /*&FE60-&FE7F*/
+  for (i=0x60; i<0x80; i+=0x10)
+  {
+    read_fork[i] = uservia00read;
+    read_fork[i+0x01] = uservia01read;
+    read_fork[i+0x02] = uservia02read;
+    read_fork[i+0x03] = uservia03read;
+    read_fork[i+0x04] = uservia04read;
+    read_fork[i+0x05] = uservia05read;
+    read_fork[i+0x06] = uservia06read;
+    read_fork[i+0x07] = uservia07read;
+    read_fork[i+0x08] = uservia08read;
+    read_fork[i+0x09] = uservia09read;
+    read_fork[i+0x0A] = uservia0Aread;
+    read_fork[i+0x0B] = uservia0Bread;
+    read_fork[i+0x0C] = uservia0Cread;
+    read_fork[i+0x0D] = uservia0Dread;
+    read_fork[i+0x0E] = uservia0Eread;
+    read_fork[i+0x0F] = uservia0Fread;
+    write_fork[i] = uservia00write;
+    write_fork[i+0x01] = uservia01write;
+    write_fork[i+0x02] = uservia02write;
+    write_fork[i+0x03] = uservia03write;
+    write_fork[i+0x04] = uservia04write;
+    write_fork[i+0x05] = uservia05write;
+    write_fork[i+0x06] = uservia06write;
+    write_fork[i+0x07] = uservia07write;
+    write_fork[i+0x08] = uservia08write;
+    write_fork[i+0x09] = uservia09write;
+    write_fork[i+0x0A] = uservia0Awrite;
+    write_fork[i+0x0B] = uservia0Bwrite;
+    write_fork[i+0x0C] = uservia0Cwrite;
+    write_fork[i+0x0D] = uservia0Dwrite;
+    write_fork[i+0x0E] = uservia0Ewrite;
+    write_fork[i+0x0F] = uservia0Fwrite;
+  }
+
+  if (beebit_machinetype == MACHINE_MODELBPLUS)
+  {
+    /*&FE80-&FE9F (8271 or 1770)*/
+    for (j=0x80; j<0xA0; j+=0x08)
+    {
+      /*&FE80 - &FE83 (FDC INTERFACE CONTROL REG)*/
+      for (i=0x00; i<0x04; i+=0x01)
       {
-        /*IRR*/
-        r6502startinterrupt(&hostmap);
-        nvalue &= 0x7F;
+        read_fork[j+i] = w1770controlread;
+        write_fork[j+i] = w1770controlwrite_bp;
       }
-      map->acccon = nvalue;
-      break;
-    case 0x38:
-      /*&FE38 - &FE3B (INTOFF)*/
-      break;
-    case 0x3C:
-      /*&FE3C - &FE3F (INTON)*/
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40 - &FE5F (SYSTEMVIA)*/
-      /*printf(" &FE40 ");*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviawrite(%X,%X)",(naddress & 0x0F),nvalue);
-      #endif
-      systemviawrite(naddress,nvalue);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60 - &FE7F (USERVIA)*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"writeuservia(&%X,&%X)",(naddress & 0x0F),nvalue);
-      #endif
-      userviawrite(naddress, nvalue);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80 - &FE9F (8271 or 1770)*/
-      i8271write(naddress, nvalue);
-      if ((hostmap.nmis & NMIS_NMI) AND !(hostmap.nmis & NMIS_OLDNMI))
+      /*&FE84 - &FE87 (FDC INTERFACE)*/
+      read_fork[j+0x04] = w1770statusread;
+      read_fork[j+0x05] = w1770trackread;
+      read_fork[j+0x06] = w1770sectorread;
+      read_fork[j+0x07] = w1770dataread;
+      write_fork[j+0x04] = w1770commandwrite;
+      write_fork[j+0x05] = w1770trackwrite;
+      write_fork[j+0x06] = w1770sectorwrite;
+      write_fork[j+0x07] = w1770datawrite;
+    }
+  }
+  else if (beebit_machinetype == MACHINE_MODELB)
+  {
+    /*&FE80-&FE9F (8271 or 1770)*/
+    for (j=0x80; j<0xA0; j+=0x08)
+    {
+      read_fork[j] = i8271statusread;
+      read_fork[j+1] = i8271resultread;
+      read_fork[j+2] = hostconstantreadFE;
+      read_fork[j+3] = hostconstantreadFE;
+      write_fork[j] = i8271commandwrite;
+      write_fork[j+1] = i8271parameterwrite;
+      write_fork[j+2] = i8271resetwrite;
+      write_fork[j+3] = hostnowrite;
+
+      for (i=0x04; i<0x08; i+=0x01)
       {
-        r6502startinterrupt(&hostmap);
+        read_fork[j+i] = i8271dataread;
+        write_fork[j+i] = i8271datawrite;
       }
+    }
+  }
+  else
+  {
+    for (i=0x80; i<0xA0; i+=0x01)
+    {
+      read_fork[i] = hostconstantread00;
+      write_fork[i] = hostnowrite;
+    }
+  }
+
+  /*&FEA0-&FEBF (ECONET)*/
+  for (i=0xA0; i<0xC0; i+=0x01)
+  {
+    read_fork[i] = hostconstantreadFE;
+    write_fork[i] = hostnowrite;
+  }
+
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    /*&FEC0-&FEDF (ECONET)*/
+    for (i=0xC0; i<0xE0; i++)
+    {
+      read_fork[i] = hostconstantreadFF;
+      write_fork[i] = hostnowrite;
+    }
+  }
+  else
+  {
+    /*FEC0-&FEDF (ADC)*/
+    for (i=0xC0; i<0xE0; i+=0x04)
+    {
+      read_fork[i] = adc00read;
+      read_fork[i+1] = adc01read;
+      read_fork[i+2] = adc02read;
+      read_fork[i+3] = adc02read;
+      write_fork[i] = adcwrite;
+      write_fork[i+1] = adcwrite;
+      write_fork[i+2] = adcwrite;
+      write_fork[i+3] = adcwrite;
+    }
+  }
+
+  /*FEE0-&FEFF (TUBE)*/
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    for (i=0xE0; i<0x100; i+=0x01)
+    {
+      read_fork[i] = hostconstantreadFF;
+      write_fork[i] = hostnowrite;
+    }
+  }
+  else
+  {
+    for (i=0xE0; i<0x100; i+=0x01)
+    {
+      read_fork[i] = hostconstantreadFE;
+      write_fork[i] = hostnowrite;
+    }
+  }
+
+  memcpy(&map->high_stretched_read_fork[0x200], read_fork, sizeof(SHEILAOP)<<8);
+  memcpy(&map->high_stretched_write_fork[0x200], write_fork, sizeof(SHEILAOP)<<8);
+
+  for (i=0; i<0x100; i++)
+  {
+    if (slow_mask & (1<<(i>>3)))
+    {
+      read_fork[i] = r6502startstretch;
+      write_fork[i] = r6502startstretch;
+    }
+  }
+}
+
+R6502HOSTMAP* hostconstantread00(R6502HOSTMAP* map)
+{
+  map->m = 0x00;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* hostconstantreadFE(R6502HOSTMAP* map)
+{
+  map->m = 0xFE;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* hostconstantreadFF(R6502HOSTMAP* map)
+{
+  map->m = 0xFF;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* romselread(R6502HOSTMAP* map)
+{
+  map->m = map->romsel;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* accconread(R6502HOSTMAP* map)
+{
+  map->m = map->acccon;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* hostnowrite(R6502HOSTMAP* map)
+{
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* romselwrite_b(R6502HOSTMAP* map)
+{
+  int nrom = (map->m & 0x0F);
+  map->s4forks[0x0B].busop = map->s4forks[0x0A].busop
+      = map->s4forks[0x09].busop = map->s4forks[0x08].busop = map->read8000s[nrom];
+  map->s4forks[0x1B].busop = map->s4forks[0x1A].busop
+      = map->s4forks[0x19].busop = map->s4forks[0x18].busop = map->write8000s[nrom];
+  map->romsel = map->m;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* romselwrite_bp(R6502HOSTMAP* map)
+{
+  int nrom = (map->m & 0x0F);
+  if (map->m & 0x80)
+  {
+    /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
+    map->s4forks[0x0A].busop = map->s4forks[0x09].busop
+        = map->s4forks[0x08].busop = map->read8000_ram;
+    map->s4forks[0x1A].busop = map->s4forks[0x19].busop
+        = map->s4forks[0x18].busop = map->write8000_ram;
+  }
+  else
+  {
+    map->s4forks[0x0A].busop = map->s4forks[0x09].busop
+        = map->s4forks[0x08].busop = map->read8000s[nrom];
+    map->s4forks[0x1A].busop = map->s4forks[0x19].busop
+        = map->s4forks[0x18].busop = map->write8000s[nrom];
+  }
+  map->s4forks[0x0B].busop = map->read8000s[nrom];
+  map->s4forks[0x1B].busop = map->write8000s[nrom];
+  map->romsel = map->m;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* romselwrite_m(R6502HOSTMAP* map)
+{
+  int nrom = (map->m & 0x0F);
+  if (map->m & 0x80)
+  {
+    /*ROMSEL b7 (RAM) (&8000-&8FFF)*/
+    map->s4forks[0x08].busop = map->read8000_ram;
+    map->s4forks[0x18].busop = map->write8000_ram;
+  }
+  else
+  {
+    map->s4forks[0x08].busop = map->read8000s[nrom];
+    map->s4forks[0x18].busop = map->write8000s[nrom];
+  }
+  map->s4forks[0x0B].busop = map->s4forks[0x0A].busop
+      = map->s4forks[0x09].busop = map->read8000s[nrom];
+  map->s4forks[0x1B].busop = map->s4forks[0x1A].busop
+      = map->s4forks[0x19].busop = map->write8000s[nrom];
+  map->romsel = map->m;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* accconwrite_bp(R6502HOSTMAP* map)
+{
+  if (map->m & 0x80)
+  {
+    /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
+    map->s4forks[0x07].busop = map->s4forks[0x06].busop
+        = map->s4forks[0x05].busop = map->s4forks[0x04].busop
+        = map->s4forks[0x03].busop = map->read3000_ram;
+    map->s4forks[0x17].busop = map->s4forks[0x16].busop
+        = map->s4forks[0x15].busop = map->s4forks[0x14].busop
+        = map->s4forks[0x13].busop = map->write3000_ram;
+  }
+  else
+  {
+    map->s4forks[0x07].busop = map->s4forks[0x06].busop
+        = map->s4forks[0x05].busop = map->s4forks[0x04].busop
+        = map->s4forks[0x03].busop = map->read3000;
+    map->s4forks[0x17].busop = map->s4forks[0x16].busop
+        = map->s4forks[0x15].busop = map->s4forks[0x14].busop
+        = map->s4forks[0x13].busop = map->write3000;
+  }
+  map->acccon = map->m;
+  return R6502_EXECUTE_STEP(map);
+}
+
+R6502HOSTMAP* accconwrite_m(R6502HOSTMAP* map)
+{
+  switch (map->m & 0x06)
+  {
+    case 0x00:
+      /*RAM*/
+      map->s4forks[0x07].busop = map->s4forks[0x06].busop
+          = map->s4forks[0x05].busop = map->s4forks[0x04].busop
+          = map->s4forks[0x03].busop = map->read3000;
+      map->s4forks[0x17].busop = map->s4forks[0x16].busop
+          = map->s4forks[0x15].busop = map->s4forks[0x14].busop
+          = map->s4forks[0x13].busop = map->write3000;
       break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*&FEC0 - &FEDF (ADC)*/
+    case 0x02:
+      /*ACCCON b1 (E)*/
+      map->s4forks[0x07].busop = map->s4forks[0x06].busop
+          = map->s4forks[0x05].busop = map->s4forks[0x04].busop
+          = map->s4forks[0x03].busop = map->read3000_e;
+      map->s4forks[0x17].busop = map->s4forks[0x16].busop
+          = map->s4forks[0x15].busop = map->s4forks[0x14].busop
+          = map->s4forks[0x13].busop = map->write3000_e;
       break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
+    case 0x04:
+    case 0x06:
+      /*ACCCON b2 (X)*/
+      map->s4forks[0x07].busop = map->s4forks[0x06].busop
+          = map->s4forks[0x05].busop = map->s4forks[0x04].busop
+          = map->s4forks[0x03].busop = map->read3000_x;
+      map->s4forks[0x17].busop = map->s4forks[0x16].busop
+          = map->s4forks[0x15].busop = map->s4forks[0x14].busop
+          = map->s4forks[0x13].busop = map->write3000_x;
       break;
   }
-  R6502_EXECUTE_STEP(map)
-  return map;
+  if (map->m & 0x08)
+  {
+    /*ACCCON b3 (Y)*/
+    /*&C000-&DFFF*/
+    map->s4forks[0x0D].busop = map->s4forks[0x0C].busop = map->readC000_y;
+    map->s4forks[0x1D].busop = map->s4forks[0x1C].busop = map->writeC000_y;
+  }
+  else
+  {
+    /*&C000-&DFFF*/
+    map->s4forks[0x0D].busop = map->s4forks[0x0C].busop = map->s4forks[0x0E].busop;
+    map->s4forks[0x1D].busop = map->s4forks[0x1C].busop = map->s4forks[0x1E].busop;
+  }
+
+  if (map->m & 0x80)
+  {
+    /*IRR*/
+    r6502startinterrupt(&hostmap);
+    map->m &= 0x7F;
+  }
+  map->acccon = map->m;
+  return R6502_EXECUTE_STEP(map);
 }

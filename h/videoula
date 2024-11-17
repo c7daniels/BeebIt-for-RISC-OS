@@ -2,9 +2,13 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2003
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
 /*Video ULA*/
@@ -29,5 +33,6 @@ extern int ncurrentmode,lteletextmode;
 extern void videoulareset(void);
 extern void videoulasetpalette(void);
 extern int videoularead(unsigned int naddress);
-extern void videoulawrite(int naddress, int nvalue);
+extern struct R6502HOSTMAP* videoula00write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* videoula01write(struct R6502HOSTMAP* map);
 extern void videoulasetcursor(void);

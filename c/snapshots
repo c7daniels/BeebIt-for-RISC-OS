@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -49,21 +50,21 @@ void snapshotload(FILE *hfile)
   /*&FE38 - &FE3B (INTOFF)*/
   /*&FE3C - &FE3F (INTON)*/
   /*&FE40 - &FE5F (SYSTEMVIA)*/
-  r6522sysvia_orb =r6522sysvia_portb =readhdr.sheila[0x40];
-  r6522sysvia_ora =r6522sysvia_porta =readhdr.sheila[0x41];
-  r6522sysvia_ddrb =readhdr.sheila[0x42];
-  r6522sysvia_ddra =readhdr.sheila[0x43];
-  r6522sysvia_sr =readhdr.sheila[0x4A];
-  r6522sysvia_acr =readhdr.sheila[0x4B];
-  r6522sysvia_pcr =readhdr.sheila[0x4C];
+  hostmap.s0sysvia.orb =hostmap.s0sysvia.portb =readhdr.sheila[0x40];
+  hostmap.s0sysvia.ora =hostmap.s0sysvia.porta =readhdr.sheila[0x41];
+  hostmap.s0sysvia.ddrb =readhdr.sheila[0x42];
+  hostmap.s0sysvia.ddra =readhdr.sheila[0x43];
+  hostmap.s0sysvia.sr =readhdr.sheila[0x4A];
+  hostmap.s0sysvia.acr =readhdr.sheila[0x4B];
+  hostmap.s0sysvia.pcr =readhdr.sheila[0x4C];
   /*&FE60 - &FE7F (USERVIA)*/
-  r6522usrvia_orb =r6522usrvia_portb =readhdr.sheila[0x60];
-  r6522usrvia_ora =r6522usrvia_porta =readhdr.sheila[0x61];
-  r6522usrvia_ddrb =readhdr.sheila[0x62];
-  r6522usrvia_ddra =readhdr.sheila[0x63];
-  r6522usrvia_sr =readhdr.sheila[0x6A];
-  r6522usrvia_acr =readhdr.sheila[0x6B];
-  r6522usrvia_pcr =readhdr.sheila[0x6C];
+  hostmap.s0usrvia.orb =hostmap.s0usrvia.portb =readhdr.sheila[0x60];
+  hostmap.s0usrvia.ora =hostmap.s0usrvia.porta =readhdr.sheila[0x61];
+  hostmap.s0usrvia.ddrb =readhdr.sheila[0x62];
+  hostmap.s0usrvia.ddra =readhdr.sheila[0x63];
+  hostmap.s0usrvia.sr =readhdr.sheila[0x6A];
+  hostmap.s0usrvia.acr =readhdr.sheila[0x6B];
+  hostmap.s0usrvia.pcr =readhdr.sheila[0x6C];
   /*&FE80 - &FE9F (8271 or 1770)*/
   /*&FEC0 - &FEDF (ADC)*/
 
@@ -99,81 +100,81 @@ void snapshotload(FILE *hfile)
 
       /*timers*/
 //      fread(cbuffer,1,4,hfile); /*24*/
-//      r6522sysvia_t1setint = cbuffer[0];
-//      r6522sysvia_t2setint = cbuffer[1];
-//      r6522usrvia_t1setint = cbuffer[2];
-//      r6522usrvia_t2setint = cbuffer[3];
-  r6522sysvia_t1setint =readhdr.Tim1mode;
-  r6522sysvia_t2setint =readhdr.Tim2mode;
-  r6522usrvia_t1setint =readhdr.Tim3mode;
-  r6522usrvia_t2setint =readhdr.Tim4mode;
+//      hostmap.s2sysvia.t1setint = cbuffer[0];
+//      hostmap.s2sysvia.t2setint = cbuffer[1];
+//      hostmap.s2usrvia.t1setint = cbuffer[2];
+//      hostmap.s2usrvia.t2setint = cbuffer[3];
+  hostmap.s2sysvia.t1setint =readhdr.Tim1mode;
+  hostmap.s2sysvia.t2setint =readhdr.Tim2mode;
+  hostmap.s2usrvia.t1setint =readhdr.Tim3mode;
+  hostmap.s2usrvia.t2setint =readhdr.Tim4mode;
    //in snapshots 1 =interupt, but beebit set them as TRUE(0xFF) however as
    // beebit never compares with TRUE it seems to work
       /*system via timer 1 counter*/
 //     fread(cbuffer,1,4,hfile); /*28*/
-//     r6522sysvia_t1ch = cbuffer[3];
-//     r6522sysvia_t1cl = cbuffer[2];
-//     r6522sysvia_t1 = (r6522sysvia_t1ch<<9)+(r6522sysvia_t1cl<<1);
-  r6522sysvia_2t1 =(readhdr.Tim1)<<1;
+//     hostmap.s0sysvia.t1ch = cbuffer[3];
+//     hostmap.s0sysvia.t1cl = cbuffer[2];
+//     hostmap.s0sysvia.t1 = (hostmap.s0sysvia.t1ch<<9)+(hostmap.s0sysvia.t1cl<<1);
+  hostmap.s2sysvia.t1doubled =(readhdr.Tim1)<<1;
       /*system via timer 1 latches*/
 //      fread(cbuffer,1,4,hfile); /*32*/
-//      r6522sysvia_t1lh = cbuffer[3];
-//      r6522sysvia_t1ll = cbuffer[2];
-  r6522sysvia_t1lh =(readhdr.Tim1latch)>>8;
-  r6522sysvia_t1ll =(readhdr.Tim1latch) & 0xFF;
+//      hostmap.s0sysvia.t1lh = cbuffer[3];
+//      hostmap.s0sysvia.t1ll = cbuffer[2];
+  hostmap.s0sysvia.t1lh =(readhdr.Tim1latch)>>8;
+  hostmap.s0sysvia.t1ll =(readhdr.Tim1latch) & 0xFF;
       /*system via timer 2 counter*/
 //      fread(cbuffer,1,4,hfile); /*36*/
-//      r6522sysvia_t2ch = cbuffer[3];
-//      r6522sysvia_t2cl = cbuffer[2];
-//      r6522sysvia_t2 = (r6522sysvia_t2ch<<9)+(r6522sysvia_t2cl<<1);
-  r6522sysvia_2t2 =(readhdr.Tim2)<<1;
+//      hostmap.s0sysvia.t2ch = cbuffer[3];
+//      hostmap.s0sysvia.t2cl = cbuffer[2];
+//      hostmap.s0sysvia.t2 = (hostmap.s0sysvia.t2ch<<9)+(hostmap.s0sysvia.t2cl<<1);
+  hostmap.s2sysvia.t2doubled =(readhdr.Tim2)<<1;
       /*system via timer 2 latches*/
 //      fread(cbuffer,1,4,hfile); /*40*/
-//      r6522sysvia_t2ll = cbuffer[3];
-  r6522sysvia_t2ll =(readhdr.Tim2latch) & 0xFF; //this wont work!
+//      hostmap.s0sysvia.t2ll = cbuffer[3];
+  hostmap.s0sysvia.t2ll =(readhdr.Tim2latch) & 0xFF; //this wont work!
 
       /*user via timer 1 counter*/
 //      fread(cbuffer,1,4,hfile); /*44*/
-//      r6522usrvia_t1ch = cbuffer[3];
-//      r6522usrvia_t1cl = cbuffer[2];
-//      r6522usrvia_t1 = (r6522usrvia_t1ch<<9)+(r6522usrvia_t1cl<<1);
-  r6522usrvia_2t1 =(readhdr.Tim3)<<1;
+//      hostmap.s0usrvia.t1ch = cbuffer[3];
+//      hostmap.s0usrvia.t1cl = cbuffer[2];
+//      hostmap.s0usrvia.t1 = (hostmap.s0usrvia.t1ch<<9)+(hostmap.s0usrvia.t1cl<<1);
+  hostmap.s2usrvia.t1doubled =(readhdr.Tim3)<<1;
       /*user via timer 1 latches*/
 //      fread(cbuffer,1,4,hfile); /*48*/
-//      r6522usrvia_t1lh = cbuffer[3];
-//      r6522usrvia_t1ll = cbuffer[2];
-  r6522usrvia_t1lh =(readhdr.Tim3latch)>>8;
-  r6522usrvia_t1ll =(readhdr.Tim3latch) & 0xFF;
+//      hostmap.s0usrvia.t1lh = cbuffer[3];
+//      hostmap.s0usrvia.t1ll = cbuffer[2];
+  hostmap.s0usrvia.t1lh =(readhdr.Tim3latch)>>8;
+  hostmap.s0usrvia.t1ll =(readhdr.Tim3latch) & 0xFF;
       /*user via timer 2 counter*/
 //      fread(cbuffer,1,4,hfile); /*52*/
-//      r6522usrvia_t2ch = cbuffer[3];
-//      r6522usrvia_t2cl = cbuffer[2];
-//      r6522usrvia_t2 = (r6522usrvia_t2ch<<9)+(r6522usrvia_t2cl<<1);
-  r6522usrvia_2t2 =(readhdr.Tim4)<<1;
+//      hostmap.s0usrvia.t2ch = cbuffer[3];
+//      hostmap.s0usrvia.t2cl = cbuffer[2];
+//      hostmap.s0usrvia.t2 = (hostmap.s0usrvia.t2ch<<9)+(hostmap.s0usrvia.t2cl<<1);
+  hostmap.s2usrvia.t2doubled =(readhdr.Tim4)<<1;
       /*user via timer 2 latches*/
 //      fread(cbuffer,1,4,hfile); /*56*/
-//      r6522usrvia_t2ll = cbuffer[3];
-  r6522usrvia_t2ll =(readhdr.Tim4latch) & 0xFF; //this wont work either!!
+//      hostmap.s0usrvia.t2ll = cbuffer[3];
+  hostmap.s0usrvia.t2ll =(readhdr.Tim4latch) & 0xFF; //this wont work either!!
 
       /*timer to vertical sync*/
 //      fread(cbuffer,1,4,hfile); /*60*/
 //      video_timer = getword(cbuffer);
-  hostmap.timers.video_togo =readhdr.Cvsync;
+  hostmap.s2cycles.video_togo =readhdr.Cvsync;
 
       /*unused*/
 //      fread(cbuffer,1,4,hfile); /*64*/
 //      fread(cbuffer,1,4,hfile); /*68*/
 //      fread(cbuffer,1,4,hfile); /*72*/
 //      fread(cbuffer,1,4,hfile); /*76*/
-//      r6522sysvia_ifr = cbuffer[0];
-  r6522sysvia_ifr =readhdr.SysVIAIFR;
-//      r6522sysvia_ier = cbuffer[1];
-  r6522sysvia_ier =readhdr.SysVIAIER;
+//      hostmap.s0sysvia.ifr = cbuffer[0];
+  hostmap.s0sysvia.ifr =readhdr.SysVIAIFR;
+//      hostmap.s0sysvia.ier = cbuffer[1];
+  hostmap.s0sysvia.ier =readhdr.SysVIAIER;
       systemviasetirq();
-//      r6522usrvia_ifr = cbuffer[2];
-  r6522usrvia_ifr =readhdr.UserVIAIFR;
-//      r6522usrvia_ier = cbuffer[3];
-  r6522usrvia_ier =readhdr.UserVIAIER;
+//      hostmap.s0usrvia.ifr = cbuffer[2];
+  hostmap.s0usrvia.ifr =readhdr.UserVIAIFR;
+//      hostmap.s0usrvia.ier = cbuffer[3];
+  hostmap.s0usrvia.ier =readhdr.UserVIAIER;
       userviasetirq();
 
       /*unused*/
@@ -205,7 +206,7 @@ void snapshotload(FILE *hfile)
     hostmap.romwritable[r] =transrom[read];
   }
       /*&FE20 - ignore for now*/
-  videoulawrite(0,readhdr.Sheila20); //video control register
+  hostmap.m = readhdr.Sheila20; videoula00write(&hostmap); //video control register
 //      fread(cbuffer,1,4,hfile); /*116*/
       /*6845 crtc*/
 //      j = 0;
@@ -227,8 +228,8 @@ void snapshotload(FILE *hfile)
 //      }
   for (r =0; r<0x10; r++)
   {
-    crtcwrite(0xFE00,r);
-    crtcwrite(0xFE01,readhdr.crtc[r]);
+    hostmap.m = r; crtc00write(&hostmap);
+    hostmap.m = readhdr.crtc[r]; crtc01write(&hostmap);
   }
 
 //      fread(cbuffer,1,4,hfile); /*136*/
@@ -237,8 +238,8 @@ void snapshotload(FILE *hfile)
   m6845_r[0x10] =readhdr.crtc[0x10];
   m6845_r[0x11] =readhdr.crtc[0x11];
       /*register 19*/
-//      video_startindex = cbuffer[2];
-  video_startindex =readhdr.crtc[0x12];
+//      hostmap.screenstartindex = cbuffer[2];
+  hostmap.screenstartindex =readhdr.crtc[0x12];
       /*unused*/
 //      fread(cbuffer,1,4,hfile); /*140*/
 //      fread(cbuffer,1,4,hfile); /*144*/
@@ -256,7 +257,7 @@ void snapshotload(FILE *hfile)
   {
     int read;
     read =readhdr.palette[p];
-    videoulawrite(1,(p<<4) +(read & 0xf));
+    hostmap.m = (p<<4) +(read & 0xf); videoula01write(&hostmap);
 // videoula_palette[p] =readhdr.palette[p];
   }
 
@@ -350,84 +351,84 @@ void snapheadersave(SNAPHDR *phdr)
 //  wimpwrite(cbuffer,1,4); /*20*/
   phdr ->PC =(hostmap.pc_code>>16);
 //  /*timers*/
-//  cbuffer[0] = r6522sysvia_t1setint;
-//  cbuffer[1] = r6522sysvia_t2setint;
-//  cbuffer[2] = r6522usrvia_t1setint;
-//  cbuffer[3] = r6522usrvia_t2setint;
+//  cbuffer[0] = hostmap.s2sysvia.t1setint;
+//  cbuffer[1] = hostmap.s2sysvia.t2setint;
+//  cbuffer[2] = hostmap.s2usrvia.t1setint;
+//  cbuffer[3] = hostmap.s2usrvia.t2setint;
 //  wimpwrite(cbuffer,1,4); /*24*/
-  phdr ->Tim1mode =r6522sysvia_t1setint;
-  phdr ->Tim2mode =r6522sysvia_t2setint;
-  phdr ->Tim3mode =r6522usrvia_t1setint;
-  phdr ->Tim4mode =r6522usrvia_t2setint;
+  phdr ->Tim1mode =hostmap.s2sysvia.t1setint;
+  phdr ->Tim2mode =hostmap.s2sysvia.t2setint;
+  phdr ->Tim3mode =hostmap.s2usrvia.t1setint;
+  phdr ->Tim4mode =hostmap.s2usrvia.t2setint;
 //  setword(cbuffer,0);
 //  /*system via timer 1 counter*/
-//  r6522sysvia_t1ch = ((r6522sysvia_t1>>9) & 0xFF);
-//  r6522sysvia_t1cl = ((r6522sysvia_t1>>1) & 0xFF);
-//  cbuffer[3] = r6522sysvia_t1ch;
-//  cbuffer[2] = r6522sysvia_t1cl;
+//  hostmap.s0sysvia.t1ch = ((hostmap.s0sysvia.t1>>9) & 0xFF);
+//  hostmap.s0sysvia.t1cl = ((hostmap.s0sysvia.t1>>1) & 0xFF);
+//  cbuffer[3] = hostmap.s0sysvia.t1ch;
+//  cbuffer[2] = hostmap.s0sysvia.t1cl;
 //  wimpwrite(cbuffer,1,4); /*28*/
-  phdr ->Tim1 =r6522sysvia_2t1 >>1;
+  phdr ->Tim1 =hostmap.s2sysvia.t1doubled >>1;
 //  /*system via timer 1 latches*/
-//  cbuffer[3] = r6522sysvia_t1lh;
-//  cbuffer[2] = r6522sysvia_t1ll;
+//  cbuffer[3] = hostmap.s0sysvia.t1lh;
+//  cbuffer[2] = hostmap.s0sysvia.t1ll;
 //  wimpwrite(cbuffer,1,4); /*32*/
-  phdr ->Tim1latch =r6522sysvia_t1ll +(r6522sysvia_t1lh <<8);
+  phdr ->Tim1latch =hostmap.s0sysvia.t1ll +(hostmap.s0sysvia.t1lh <<8);
 //  /*system via timer 2 counter*/
-//  r6522sysvia_t2ch = ((r6522sysvia_t2>>9) & 0xFF);
-//  r6522sysvia_t2cl = ((r6522sysvia_t2>>1) & 0xFF);
-//  cbuffer[3] = r6522sysvia_t2ch;
-//  cbuffer[2] = r6522sysvia_t2cl;
+//  hostmap.s0sysvia.t2ch = ((hostmap.s0sysvia.t2>>9) & 0xFF);
+//  hostmap.s0sysvia.t2cl = ((hostmap.s0sysvia.t2>>1) & 0xFF);
+//  cbuffer[3] = hostmap.s0sysvia.t2ch;
+//  cbuffer[2] = hostmap.s0sysvia.t2cl;
 //  wimpwrite(cbuffer,1,4); /*36*/
-  phdr ->Tim2 =r6522sysvia_2t2 >>1;
+  phdr ->Tim2 =hostmap.s2sysvia.t2doubled >>1;
 //  /*system via timer 2 latches*/
-//  cbuffer[3] = r6522sysvia_t2ll;
+//  cbuffer[3] = hostmap.s0sysvia.t2ll;
 //  cbuffer[2] = 0;
 //  wimpwrite(cbuffer,1,4); /*40*/
-  phdr ->Tim2latch =r6522sysvia_t2ll;
+  phdr ->Tim2latch =hostmap.s0sysvia.t2ll;
 
 //  /*user via timer 1 counter*/
-//  r6522usrvia_t1ch = ((r6522usrvia_t1>>9) & 0xFF);
-//  r6522usrvia_t1cl = ((r6522usrvia_t1>>1) & 0xFF);
-//  cbuffer[3] = r6522usrvia_t1ch;
-//  cbuffer[2] = r6522usrvia_t1cl;
+//  hostmap.s0usrvia.t1ch = ((hostmap.s0usrvia.t1>>9) & 0xFF);
+//  hostmap.s0usrvia.t1cl = ((hostmap.s0usrvia.t1>>1) & 0xFF);
+//  cbuffer[3] = hostmap.s0usrvia.t1ch;
+//  cbuffer[2] = hostmap.s0usrvia.t1cl;
 //  wimpwrite(cbuffer,1,4); /*44*/
-  phdr ->Tim3 =r6522usrvia_2t1 >>1;
+  phdr ->Tim3 =hostmap.s2usrvia.t1doubled >>1;
 
 //  /*user via timer 1 latches*/
-//  cbuffer[3] = r6522usrvia_t1lh;
-//  cbuffer[2] = r6522usrvia_t1ll;
+//  cbuffer[3] = hostmap.s0usrvia.t1lh;
+//  cbuffer[2] = hostmap.s0usrvia.t1ll;
 //  wimpwrite(cbuffer,1,4); /*48*/
-  phdr ->Tim3latch =r6522usrvia_t1ll +(r6522usrvia_t1lh <<8);
+  phdr ->Tim3latch =hostmap.s0usrvia.t1ll +(hostmap.s0usrvia.t1lh <<8);
 //  /*user via timer 2 counter*/
-//  r6522usrvia_t2ch = ((r6522usrvia_t2>>9) & 0xFF);
-//  r6522usrvia_t2cl = ((r6522usrvia_t2>>1) & 0xFF);
-//  cbuffer[3] = r6522usrvia_t2ch;
-//  cbuffer[2] = r6522usrvia_t2cl;
+//  hostmap.s0usrvia.t2ch = ((hostmap.s0usrvia.t2>>9) & 0xFF);
+//  hostmap.s0usrvia.t2cl = ((hostmap.s0usrvia.t2>>1) & 0xFF);
+//  cbuffer[3] = hostmap.s0usrvia.t2ch;
+//  cbuffer[2] = hostmap.s0usrvia.t2cl;
 //  wimpwrite(cbuffer,1,4); /*52*/
-  phdr ->Tim4 =r6522usrvia_2t2 >>1;
+  phdr ->Tim4 =hostmap.s2usrvia.t2doubled >>1;
 //  /*user via timer 2 latches*/
-//  cbuffer[3] = r6522usrvia_t2ll;
+//  cbuffer[3] = hostmap.s0usrvia.t2ll;
 //  cbuffer[2] = 0;
 //  wimpwrite(cbuffer,1,4); /*56*/
-  phdr ->Tim4latch =r6522usrvia_t2ll;
+  phdr ->Tim4latch =hostmap.s0usrvia.t2ll;
 //  /*timer to vertical sync*/
 //  setword(cbuffer,video_timer);
 //  wimpwrite(cbuffer,1,4); /*60*/
-  phdr ->Cvsync =hostmap.timers.video_togo;
+  phdr ->Cvsync =hostmap.s2cycles.video_togo;
 //  /*unused*/
 //  setword(cbuffer,0);
 //  wimpwrite(cbuffer,1,4); /*64*/
 //  wimpwrite(cbuffer,1,4); /*68*/
 //  wimpwrite(cbuffer,1,4); /*72*/
-//  cbuffer[0] = r6522sysvia_ifr;
-//  cbuffer[1] = r6522sysvia_ier;
-//  cbuffer[2] = r6522usrvia_ifr;
-//  cbuffer[3] = r6522usrvia_ier;
+//  cbuffer[0] = hostmap.s0sysvia.ifr;
+//  cbuffer[1] = hostmap.s0sysvia.ier;
+//  cbuffer[2] = hostmap.s0usrvia.ifr;
+//  cbuffer[3] = hostmap.s0usrvia.ier;
 //  wimpwrite(cbuffer,1,4); /*76*/
-  phdr ->SysVIAIFR =r6522sysvia_ifr;
-  phdr ->SysVIAIER =r6522sysvia_ier;
-  phdr ->UserVIAIFR =r6522usrvia_ifr;
-  phdr ->UserVIAIER =r6522usrvia_ier;
+  phdr ->SysVIAIFR =hostmap.s0sysvia.ifr;
+  phdr ->SysVIAIER =hostmap.s0sysvia.ier;
+  phdr ->UserVIAIFR =hostmap.s0usrvia.ifr;
+  phdr ->UserVIAIER =hostmap.s0usrvia.ier;
 
 //  /*unused*/
 //  setword(cbuffer,0);
@@ -484,10 +485,10 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[1] = m6845_r[0x11];
 
 //  /*register 19*/
-//  cbuffer[2] = video_startindex;
+//  cbuffer[2] = hostmap.screenstartindex;
 //  cbuffer[3] = 0;
 //  wimpwrite(cbuffer,1,4); /*136*/
-    phdr ->crtc[0x12] =video_startindex;
+    phdr ->crtc[0x12] =hostmap.screenstartindex;
 //  /*unused*/
 //  setword(cbuffer,0);
 //  wimpwrite(cbuffer,1,4); /*140*/
