@@ -239,8 +239,8 @@ typedef struct R6502HOSTMAP
   unsigned int latch; /*addressing temporary value*/
   R6502OP transition1action, transition2action;
   R6502OP yieldaction;
-  R6502OP fetchaction, fetchthentestirqaction;
-  R6502OP resetaction, interruptaction;
+  R6502OP fetchaction, interruptfetchaction;
+  R6502OP fetchthentestirqaction, resetaction;
   int timesinterruptmissed;
   unsigned int lbreak;
   unsigned int screenstartaddress;

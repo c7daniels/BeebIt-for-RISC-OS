@@ -44,7 +44,7 @@ static_assert(offsetof(R6502HOSTMAP, s4forks) == (BUS_BASEFLAG<<8), "R6502HOSTMA
 
 const R6502OP r6502_emptysequence[] = {NULL};
 const R6502OP r6502_readsequence[] = {r6502readstep, NULL};
-const R6502OP r6502_decodesequence[] = {r6502decodestep, NULL};
+const R6502OP r6502_decodesequence[] = {r6502decodestep, r6502interruptdecodestep, NULL};
 const R6502OP r6502_opcode07interfacesequence[] = {r6502opcode07interfacestep, NULL};
 
 const R6502OP r6502_nopsequence[] = R6502_IMPLIED_SEQUENCE(r6502nopfromimpliedstep);
@@ -1096,12 +1096,19 @@ R6502HOSTMAP* r6502fetch(R6502HOSTMAP* map)
   return map;
 }
 
+R6502HOSTMAP* r6502interruptfetch(R6502HOSTMAP* map)
+{
+  map->timesinterruptmissed = 0;
+  map->cpu_state = R6502_SECOND_STEP_IN(R6502_DECODE_SEQUENCE);
+  return map;
+}
+
 R6502HOSTMAP* r6502fetchthentestirq(R6502HOSTMAP* map)
 {
   map->cpu_state = R6502_FIRST_STEP_IN(R6502_DECODE_SEQUENCE);
 
   if (map->irq)
-    map->transition1action = map->interruptaction;
+    map->transition1action = map->interruptfetchaction;
   else
     map->transition1action = map->transition2action;
   R6502_CHECK_FOR_BREAK(map)
@@ -1112,13 +1119,6 @@ R6502HOSTMAP* r6502enterreset(R6502HOSTMAP* map)
 {
   map->timesinterruptmissed = 0;
   map->cpu_state = R6502_FIRST_STEP_IN(R6502_RESET_SEQUENCE);
-  return map;
-}
-
-R6502HOSTMAP* r6502enterinterrupt(R6502HOSTMAP* map)
-{
-  map->timesinterruptmissed = 0;
-  map->cpu_state = R6502_FIRST_STEP_IN(R6502_INTERRUPT_SEQUENCE);
   return map;
 }
 
@@ -1133,6 +1133,12 @@ R6502HOSTMAP* r6502decodestep(R6502HOSTMAP* map)
   map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
   map->address_code = map->pc_code;
   map->cpu_state = R6502_FIRST_STEP_IN((unsigned char)map->m);
+  return map;
+}
+
+R6502HOSTMAP* r6502interruptdecodestep(R6502HOSTMAP* map)
+{
+  map->cpu_state = R6502_FIRST_STEP_IN(R6502_INTERRUPT_SEQUENCE);
   return map;
 }
 
@@ -2387,7 +2393,7 @@ R6502HOSTMAP* r6502branchtakenstep(R6502HOSTMAP* map)
   if ((map->address_code>>24) == (map->pc_code>>24))
   {
     map->address_code = map->pc_code;
-    if (map->transition1action == map->interruptaction)
+    if (map->transition1action == map->interruptfetchaction)
     {
       map->cpu_state = R6502_FIRST_STEP_IN(R6502_DECODE_SEQUENCE);
 
@@ -2577,14 +2583,14 @@ R6502HOSTMAP* r6502pulledptopullstep(R6502HOSTMAP* map)
     {
       if (map->transition1action == map->fetchaction || map->transition1action == map->yieldaction)
       {
-        map->transition1action = map->interruptaction;
+        map->transition1action = map->interruptfetchaction;
         R6502_CHECK_FOR_BREAK(map)
       }
     }
   }
   else if (map->ps & IFLAG)
   {
-    if (map->transition1action == map->interruptaction)
+    if (map->transition1action == map->interruptfetchaction)
     {
       if (!(map->nmis & NMIS_NMI) || (map->nmis & NMIS_OLDNMI))
       {
@@ -2629,7 +2635,7 @@ R6502HOSTMAP* r6502startinterrupt(R6502HOSTMAP* map)
 {
   if (map->transition1action == map->fetchaction || map->transition1action == map->yieldaction)
   {
-    map->transition1action = map->interruptaction;
+    map->transition1action = map->interruptfetchaction;
     R6502_CHECK_FOR_BREAK(map)
   }
   return map;
@@ -2892,9 +2898,9 @@ int r6502setcpuops(R6502HOSTMAP* map, const R6502OP* const *sequences)
 
   map->yieldaction = r6502yield;
   map->fetchaction = r6502fetch;
+  map->interruptfetchaction = r6502interruptfetch;
   map->fetchthentestirqaction = r6502fetchthentestirq;
   map->resetaction = r6502enterreset;
-  map->interruptaction = r6502enterinterrupt;
   return lreturn;
 }
 

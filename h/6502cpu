@@ -58,6 +58,9 @@
 #define R6502_FIRST_STEP_IN(SEQ) \
   (((SEQ)<<R6502_LOG2_MAX_SEQUENCE_LENGTH) + R6502_STEP_BASE)
 
+#define R6502_SECOND_STEP_IN(SEQ) \
+  (((SEQ)<<R6502_LOG2_MAX_SEQUENCE_LENGTH) + R6502_STEP_BASE + 1)
+
 #define R6502_EXECUTE_STEP(MAP) \
   MAP->steps[MAP->cpu_state - R6502_STEP_BASE](MAP);
 
@@ -621,12 +624,13 @@ extern R6502HOSTMAP* r6502writejim(R6502HOSTMAP *map);
 
 extern R6502HOSTMAP* r6502yield(R6502HOSTMAP *map);
 extern R6502HOSTMAP* r6502fetch(R6502HOSTMAP *map);
+extern R6502HOSTMAP* r6502interruptfetch(R6502HOSTMAP *map);
 extern R6502HOSTMAP* r6502fetchthentestirq(R6502HOSTMAP *map);
 extern R6502HOSTMAP* r6502enterreset(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502enterinterrupt(R6502HOSTMAP *map);
 
 extern R6502HOSTMAP* r6502readstep(R6502HOSTMAP *map);
 extern R6502HOSTMAP* r6502decodestep(R6502HOSTMAP *map);
+extern R6502HOSTMAP* r6502interruptdecodestep(R6502HOSTMAP *map);
 extern R6502HOSTMAP* r6502opcode07interfacestep(R6502HOSTMAP *map);
 
 extern R6502HOSTMAP* r6502nopstep(R6502HOSTMAP *map);
