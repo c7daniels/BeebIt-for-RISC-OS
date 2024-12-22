@@ -92,11 +92,11 @@ void snapshotload(FILE *hfile)
 
 //      fread(cbuffer,1,4,hfile); /*16*/
 //      r6502_sp = cbuffer[3] ;
-  hostmap.sp_code =((readhdr.S<<24)&0xFF000000) | (BUS_BASEFLAG<<8) | 0x01;
+  hostmap.sp_code =((readhdr.S<<24)&0xFF000000);
       /*program counter*/
 //      fread(cbuffer,1,4,hfile); /*20*/
 //      r6502_pc = (cbuffer[1]<<8)+cbuffer[0];
-  hostmap.pc_code =((readhdr.PC<<16)&0xFFFF0000) | BUS_BASEFLAG;
+  hostmap.sync_pc_code =((readhdr.PC<<16)&0xFFFF0000) | BUS_BASEFLAG;
 
       /*timers*/
 //      fread(cbuffer,1,4,hfile); /*24*/
@@ -206,7 +206,7 @@ void snapshotload(FILE *hfile)
     hostmap.romwritable[r] =transrom[read];
   }
       /*&FE20 - ignore for now*/
-  hostmap.m = readhdr.Sheila20; videoula00write(&hostmap); //video control register
+  hostmap.m = readhdr.Sheila20; videoula00write(&hostmap, 0xFE200000); //video control register
 //      fread(cbuffer,1,4,hfile); /*116*/
       /*6845 crtc*/
 //      j = 0;
@@ -228,8 +228,8 @@ void snapshotload(FILE *hfile)
 //      }
   for (r =0; r<0x10; r++)
   {
-    hostmap.m = r; crtc00write(&hostmap);
-    hostmap.m = readhdr.crtc[r]; crtc01write(&hostmap);
+    hostmap.m = r; crtc00write(&hostmap, 0xFE000000);
+    hostmap.m = readhdr.crtc[r]; crtc01write(&hostmap, 0xFE010000);
   }
 
 //      fread(cbuffer,1,4,hfile); /*136*/
@@ -257,7 +257,7 @@ void snapshotload(FILE *hfile)
   {
     int read;
     read =readhdr.palette[p];
-    hostmap.m = (p<<4) +(read & 0xf); videoula01write(&hostmap);
+    hostmap.m = (p<<4) +(read & 0xf); videoula01write(&hostmap, 0xFE210000);
 // videoula_palette[p] =readhdr.palette[p];
   }
 
@@ -289,6 +289,7 @@ void snapshotload(FILE *hfile)
 
   systemviaaftersnapshot();
   userviaaftersnapshot();
+  r6502aftersnapshot(&hostmap);
 }
 
 void snapheadersave(SNAPHDR *phdr)
@@ -349,7 +350,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  /*program counter*/
 //  setword(cbuffer,r6502_pc);
 //  wimpwrite(cbuffer,1,4); /*20*/
-  phdr ->PC =(hostmap.pc_code>>16);
+  phdr ->PC =(hostmap.sync_pc_code>>16);
 //  /*timers*/
 //  cbuffer[0] = hostmap.s2sysvia.t1setint;
 //  cbuffer[1] = hostmap.s2sysvia.t2setint;
@@ -540,4 +541,5 @@ void snapheadersave(SNAPHDR *phdr)
 
   systemviaaftersnapshot();
   userviaaftersnapshot();
+  r6502aftersnapshot(&hostmap);
 }

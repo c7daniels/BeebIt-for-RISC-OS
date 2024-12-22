@@ -23,7 +23,7 @@
 extern _kernel_swi_regs regs;
 
 #ifdef BEEBIT_NO_ASM
-R6502HOSTMAP* r6502opcode07interfacestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502opcode07interfacestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
 #ifdef __RISCOS__
   int c, cb, eb, eblength, swi, regcount;
@@ -31,10 +31,12 @@ R6502HOSTMAP* r6502opcode07interfacestep(R6502HOSTMAP* map)
   char relocate;
 
   /*check if it's called from the ROM space*/
-  if (map->pc_code & 0x80000000)
+  if (map->sync_pc_code & 0x80000000)
   {
+    map->sync_pc_code = (map->sync_pc_code+0x10000) & 0xFFFFFFFF;
+
     /*Opcode 07 Interface*/
-    map->swappagesintomemory(map);
+    map->s2paging.swapintomemory(map);
 
     /*pointer to control block*/
     cb = (map->y << 8) | map->x;
@@ -143,8 +145,7 @@ R6502HOSTMAP* r6502opcode07interfacestep(R6502HOSTMAP* map)
       else
       {
         /*if X not set, point pc to &100*/
-        map->pc_code = (0x100<<16) | BUS_BASEFLAG;
-        map->address_code = map->pc_code;
+        map->sync_pc_code = (0x100<<16) | BUS_BASEFLAG;
         eb = 0x100;
         eblength = 0x40;
       }
@@ -166,15 +167,14 @@ R6502HOSTMAP* r6502opcode07interfacestep(R6502HOSTMAP* map)
         }
       }
     }
-    map->swappagesoutofmemory(map);
-    R6502_IMPLIED_FINISHED(map);
+    map->s2paging.swapoutofmemory(map);
+    R6502_NEXT_INSTRUCTION(map, map->sync_pc_code)
   }
   else
 #endif
   {
-    map->cpu_state = R6502_FIRST_STEP_IN(R6502_OPCODE_07_SEQUENCE);
-    R6502_EXECUTE_STEP(map)
+    map->cpu_state = map->sequences[R6502_OPCODE_07_SEQUENCE];
+    return (*map->cpu_state)(map, (intptr_t)(map->cpu_state+1));
   }
-  return map;
 }
 #endif

@@ -27,9 +27,7 @@
 #define NOTCFLAG 0xFE
 
 #define BUS_WRITEFLAG 0x01
-#define BUS_STRETCH1FLAG 0x02
-#define BUS_STRETCH2FLAG 0x04
-#define BUS_BASEFLAG 0x08
+#define BUS_BASEFLAG 0x0F
 
 #define IRQ_6522SYSVIA 0x01
 #define IRQ_6522USRVIA 0x02
@@ -51,34 +49,52 @@
 #define STACK_START 0x100
 #define STACK_END 0x1FF
 
-/*an assembly language version of R6502_EXECUTE_STEP appears in h/6502cpus*/
-/*this cpu_state offset shortens the AArch32 implementation*/
-#define R6502_STEP_BASE (offsetof(R6502HOSTMAP, steps) / sizeof(R6502OP))
+/*an assembly language version of R6502_JUMP_TO_READ_OP appears in h/6502cpus*/
+#define R6502_JUMP_TO_READ_OP(MAP, ADDRCODE) \
+return MAP->s4forks[(((ADDRCODE)>>28)|(((ADDRCODE)-BUS_WRITEFLAG)<<4))&0x1F].busop(MAP, ADDRCODE);
 
-#define R6502_FIRST_STEP_IN(SEQ) \
-  (((SEQ)<<R6502_LOG2_MAX_SEQUENCE_LENGTH) + R6502_STEP_BASE)
+/*an assembly language version of R6502_JUMP_TO_WRITE_OP appears in h/6502cpus*/
+#define R6502_JUMP_TO_WRITE_OP(MAP, ADDRCODE) \
+return MAP->s4forks[(((ADDRCODE)>>28)|((ADDRCODE)<<4))&0x1F].busop(MAP, ADDRCODE);
 
-#define R6502_SECOND_STEP_IN(SEQ) \
-  (((SEQ)<<R6502_LOG2_MAX_SEQUENCE_LENGTH) + R6502_STEP_BASE + 1)
-
-#define R6502_EXECUTE_STEP(MAP) \
-  MAP->steps[MAP->cpu_state - R6502_STEP_BASE](MAP);
-
-#define R6502_IMPLIED_FINISHED(MAP) \
-  MAP->transition1action(MAP);
-
-#define R6502_IMMEDIATE_FINISHED(MAP) \
+#define R6502_JUMP_TO_ZPG_READ_OP(MAP, ADDRCODE) \
   { \
-    MAP->pc_code = (MAP->pc_code + 0x10000) & 0xFFFFFFFF; \
-    MAP->address_code = MAP->pc_code; \
-    MAP->transition1action(MAP); \
+    MAP->m = MAP->pagezero[(ADDRCODE)>>24]; \
+    return MAP; \
   }
 
-#define R6502_ADDRESSING_FINISHED(MAP) \
+#define R6502_JUMP_TO_ZPG_WRITE_OP(MAP, ADDRCODE) \
   { \
-    MAP->address_code = MAP->pc_code; \
-    MAP->transition1action(MAP); \
+    MAP->pagezero[(ADDRCODE)>>24] = MAP->m; \
+    return MAP; \
   }
+
+#define R6502_JUMP_TO_STACK_READ_OP(MAP, SPCODE) \
+  { \
+    MAP->m = MAP->pageone[(SPCODE)>>24]; \
+    return MAP; \
+  }
+
+#define R6502_JUMP_TO_STACK_WRITE_OP(MAP, SPCODE) \
+  { \
+    MAP->pageone[(SPCODE)>>24] = MAP->m; \
+    return MAP; \
+  }
+
+#define R6502_JUMP_WITHOUT_BUS_OP(MAP) \
+  return MAP;
+
+#define R6502_NEXT_INSTRUCTION(MAP, PCCODE) \
+  return MAP->transition1action(MAP, PCCODE);
+
+#define R6502_IMPLIED_NEXT_INSTRUCTION(MAP) \
+  return MAP->transition1action(MAP, ((MAP)->sync_pc_code + 0x10000) & 0xFFFFFFFF);
+
+#define R6502_IMMEDIATE_NEXT_INSTRUCTION(MAP) \
+  return MAP->transition1action(MAP, ((MAP)->sync_pc_code + 0x20000) & 0xFFFFFFFF);
+
+#define R6502_ADDRESSED_NEXT_INSTRUCTION(MAP) \
+  return MAP->transition1action(MAP, ((MAP)->last_pc_code + 0x10000) & 0xFFFFFFFF);
 
 #define R6502_CHECK_FOR_BREAK(MAP) \
   { \
@@ -103,43 +119,43 @@
     {r6502loadzpgstep, __VA_ARGS__, NULL}
 
 #define R6502_MODIFY_ZPG_SEQUENCE(MODIFY_STEP) \
-    {r6502loadzpgstep, r6502tomodifystep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, r6502tozpgmodifystep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R6502_STORE_ZPG_SEQUENCE(TO_ADDRESS_STEP) \
-    {TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R6502_LOAD_ABS_SEQUENCE(...) \
     {r6502latchabslostep, r6502loadabsstep, __VA_ARGS__, NULL}
 
 #define R6502_MODIFY_ABS_SEQUENCE(MODIFY_STEP) \
-    {r6502latchabslostep, r6502loadabsstep, r6502tomodifystep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, r6502breadcrumbloadabsstep, r6502tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R6502_STORE_ABS_SEQUENCE(TO_ADDRESS_STEP) \
-    {r6502latchabslostep, TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R6502_LOAD_ZPGX_SEQUENCE(...) \
-    {r6502loadzpgstep, r6502loadzpgxstep, __VA_ARGS__, NULL}
+    {r6502breadcrumbloadzpgstep, r6502loadzpgxstep, __VA_ARGS__, NULL}
 
 #define R6502_MODIFY_ZPGX_SEQUENCE(MODIFY_STEP) \
-    {r6502loadzpgstep, r6502loadzpgxstep, r6502tomodifystep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, r6502breadcrumbloadzpgxstep, r6502tozpgmodifystep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R6502_STORE_ZPGX_SEQUENCE(TO_ADDRESS_STEP) \
-    {r6502loadzpgstep, TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R6502_LOAD_ZPGY_SEQUENCE(...) \
-    {r6502loadzpgstep, r6502loadzpgystep, __VA_ARGS__, NULL}
+    {r6502breadcrumbloadzpgstep, r6502loadzpgystep, __VA_ARGS__, NULL}
 
 #define R6502_STORE_ZPGY_SEQUENCE(TO_ADDRESS_STEP) \
-    {r6502loadzpgstep, TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R6502_LOAD_PREINDEXED_SEQUENCE(...) \
-    {r6502loadzpgstep, r6502loadzpgxstep, r6502latchzpgindlostep, r6502loadzpgindstep, __VA_ARGS__, NULL}
+    {r6502breadcrumbloadzpgstep, r6502breadcrumbloadzpgxstep, r6502latchzpgindlostep, r6502loadabsstep, __VA_ARGS__, NULL}
 
 #define R6502_MODIFY_PREINDEXED_SEQUENCE(MODIFY_STEP) \
-    {r6502loadzpgstep, r6502loadzpgxstep, r6502latchzpgindlostep, r6502loadzpgindstep, r6502tomodifystep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, r6502breadcrumbloadzpgxstep, r6502latchzpgindlostep, r6502breadcrumbloadabsstep, r6502tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R6502_STORE_PREINDEXED_SEQUENCE(TO_ADDRESS_STEP) \
-    {r6502loadzpgstep, r6502loadzpgxstep, r6502latchzpgindlostep, TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, r6502breadcrumbloadzpgxstep, r6502latchzpgindlostep, TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R6502_LOAD_ABSX_SEQUENCE(...) \
     {r6502latchabslostep, r6502loadabsxstep, r6502fixindexedstep, __VA_ARGS__, NULL}
@@ -148,46 +164,46 @@
     {r6502latchabslostep, r6502loadabsystep, r6502fixindexedstep, __VA_ARGS__, NULL}
 
 #define R6502_MODIFY_ABSX_SEQUENCE(MODIFY_STEP) \
-    {r6502latchabslostep, r6502linearloadabsxstep, r6502fixindexedstep, r6502tomodifystep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, r6502linearloadabsxstep, r6502breadcrumbfixindexedstep, r6502tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R6502_MODIFY_ABSY_SEQUENCE(MODIFY_STEP) \
-    {r6502latchabslostep, r6502linearloadabsystep, r6502fixindexedstep, r6502tomodifystep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, r6502linearloadabsystep, r6502breadcrumbfixindexedstep, r6502tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R6502_STORE_ABSX_SEQUENCE(FIX_TO_ADDRESS_STEP) \
-    {r6502latchabslostep, r6502linearloadabsxstep, FIX_TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, r6502linearloadabsxstep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R6502_STORE_ABSY_SEQUENCE(FIX_TO_ADDRESS_STEP) \
-    {r6502latchabslostep, r6502linearloadabsystep, FIX_TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, r6502linearloadabsystep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R6502_LOAD_POSTINDEXED_SEQUENCE(...) \
-    {r6502loadzpgstep, r6502latchzpgindlostep, r6502loadpostindexedstep, r6502fixindexedstep, __VA_ARGS__, NULL}
+    {r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, r6502loadabsystep, r6502fixindexedstep, __VA_ARGS__, NULL}
 
 #define R6502_MODIFY_POSTINDEXED_SEQUENCE(MODIFY_STEP) \
-    {r6502loadzpgstep, r6502latchzpgindlostep, r6502linearloadpostindexedstep, r6502fixindexedstep, r6502tomodifystep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, r6502linearloadabsystep, r6502breadcrumbfixindexedstep, r6502tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R6502_STORE_POSTINDEXED_SEQUENCE(FIX_TO_ADDRESS_STEP) \
-    {r6502loadzpgstep, r6502latchzpgindlostep, r6502linearloadpostindexedstep, FIX_TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, r6502linearloadabsystep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R6502_BRANCH_SEQUENCE(BRANCH_STEP) \
-    {BRANCH_STEP, r6502branchtakenstep, r6502nopfromaddressstep,  NULL}
+    {BRANCH_STEP, r6502branchtakenstep, r6502fixbranchtakenstep,  NULL}
 
 #define R65C12_MODIFY_ZPG_SEQUENCE(MODIFY_STEP) \
-    {r6502loadzpgstep, r6502nopstep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, r65c12zpgreadagainstep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R65C12_MODIFY_ABS_SEQUENCE(MODIFY_STEP) \
-    {r6502latchabslostep, r6502loadabsstep, r6502nopstep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, r6502breadcrumbloadabsstep, r65c12readagainstep, MODIFY_STEP, r6502skipstep, NULL}
 
-#define R65C12_LOAD_zpgind_SEQUENCE(...) \
-    {r6502loadzpgstep, r6502latchzpgindlostep, r6502loadzpgindstep, __VA_ARGS__, NULL}
+#define R65C12_LOAD_ZPGIND_SEQUENCE(...) \
+    {r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, r6502loadabsstep, __VA_ARGS__, NULL}
 
-#define R65C12_STORE_zpgind_SEQUENCE(TO_ADDRESS_STEP) \
-    {r6502loadzpgstep, r6502latchzpgindlostep, TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+#define R65C12_STORE_ZPGIND_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R65C12_MODIFY_ZPGX_SEQUENCE(MODIFY_STEP) \
-    {r6502loadzpgstep, r6502loadzpgxstep, r6502nopstep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, r6502breadcrumbloadzpgxstep, r65c12zpgreadagainstep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R65C12_MODIFY_PREINDEXED_SEQUENCE(MODIFY_STEP) \
-    {r6502loadzpgstep, r6502loadzpgxstep, r6502latchzpgindlostep, r6502loadzpgindstep, r6502nopstep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, r6502breadcrumbloadzpgxstep, r6502latchzpgindlostep, r6502breadcrumbloadabsstep, r65c12readagainstep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R65C12_LOAD_ABSX_SEQUENCE(...) \
     {r6502latchabslostep, r65c12loadabsxstep, r6502fixindexedstep, __VA_ARGS__, NULL}
@@ -196,30 +212,31 @@
     {r6502latchabslostep, r65c12loadabsystep, r6502fixindexedstep, __VA_ARGS__, NULL}
 
 #define R65C12_MODIFY_ABSX_SEQUENCE(MODIFY_STEP) \
-    {r6502latchabslostep, r65c12loadabsxstep, r6502fixindexedstep, r6502nopstep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, r65c12breadcrumbloadabsxstep, r6502breadcrumbfixindexedstep, r65c12readagainstep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R65C12_MODIFY_ABSY_SEQUENCE(MODIFY_STEP) \
-    {r6502latchabslostep, r65c12loadabsystep, r6502fixindexedstep, r6502nopstep, MODIFY_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, r65c12breadcrumbloadabsystep, r6502breadcrumbfixindexedstep, r65c12readagainstep, MODIFY_STEP, r6502skipstep, NULL}
 
 #define R65C12_STORE_ABSX_SEQUENCE(FIX_TO_ADDRESS_STEP) \
-    {r6502latchabslostep, r65c12linearloadabsxstep, FIX_TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, r65c12linearloadabsxstep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R65C12_STORE_ABSY_SEQUENCE(FIX_TO_ADDRESS_STEP) \
-    {r6502latchabslostep, r65c12linearloadabsystep, FIX_TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {r6502latchabslostep, r65c12linearloadabsystep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R65C12_LOAD_POSTINDEXED_SEQUENCE(...) \
-    {r6502loadzpgstep, r6502latchzpgindlostep, r65c12loadpostindexedstep, r6502fixindexedstep, __VA_ARGS__, NULL}
+    {r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, r65c12loadabsystep, r6502fixindexedstep, __VA_ARGS__, NULL}
 
 #define R65C12_STORE_POSTINDEXED_SEQUENCE(FIX_TO_ADDRESS_STEP) \
-    {r6502loadzpgstep, r6502latchzpgindlostep, r65c12linearloadpostindexedstep, FIX_TO_ADDRESS_STEP, r6502nopfromaddressstep, NULL}
+    {r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, r65c12linearloadabsystep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
 
 #define R65C12_BRANCH_SEQUENCE(BRANCH_STEP) \
-    {BRANCH_STEP, r65c12branchtakenstep, r6502nopfromaddressstep, NULL}
+    {BRANCH_STEP, r65c12branchtakenstep, r6502fixbranchtakenstep, NULL}
 
 
-extern const R6502OP r6502_emptysequence[];
-extern const R6502OP r6502_readsequence[];
+extern const R6502OP r6502_readstretchsequence[];
+extern const R6502OP r6502_writestretchsequence[];
 extern const R6502OP r6502_decodesequence[];
+extern const R6502OP r6502_interruptdecodesequence[];
 extern const R6502OP r6502_opcode07interfacesequence[];
 extern const R6502OP r6502_nopsequence[];
 extern const R6502OP r6502_clcsequence[];
@@ -416,11 +433,9 @@ extern const R6502OP r6502_stapostindexedsequence[];
 extern const R6502OP r6502_stxzpgsequence[];
 extern const R6502OP r6502_stxabssequence[];
 extern const R6502OP r6502_stxzpgysequence[];
-extern const R6502OP r6502_stxabsysequence[];
 extern const R6502OP r6502_styzpgsequence[];
 extern const R6502OP r6502_styabssequence[];
 extern const R6502OP r6502_styzpgxsequence[];
-extern const R6502OP r6502_styabsxsequence[];
 extern const R6502OP r6502_saxzpgsequence[];
 extern const R6502OP r6502_saxabssequence[];
 extern const R6502OP r6502_saxzpgysequence[];
@@ -550,268 +565,278 @@ extern const R6502OP r65c12_brksequence[];
 extern const R6502OP r65c12_interruptsequence[];
 
 
-extern R6502HOSTMAP* r6502read0000(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read3000(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_0(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_1(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_2(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_3(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_4(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_5(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_6(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_7(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_8(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_9(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_A(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_B(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_C(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_D(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_E(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502read8000_F(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502readC000(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502readF000(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write0000(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write3000(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_0(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_1(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_2(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_3(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_4(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_5(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_6(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_7(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_8(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_9(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_A(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_B(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_C(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_D(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_E(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502write8000_F(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writeC000(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writeF000(R6502HOSTMAP *map);
+extern R6502HOSTMAP* r6502read0000(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read3000(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_0(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_1(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_2(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_3(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_4(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_5(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_6(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_7(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_8(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_9(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_A(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_B(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_C(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_D(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_E(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502read8000_F(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502readC000(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502readF000(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write0000(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write3000(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_0(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_1(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_2(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_3(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_4(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_5(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_6(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_7(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_8(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_9(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_A(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_B(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_C(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_D(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_E(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502write8000_F(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writeC000(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writeF000(R6502HOSTMAP *map, unsigned int address_code);
 
-extern R6502HOSTMAP* r6502readbp3000_ram(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502readbp8000_ram(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writebp3000_ram(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writebp8000_ram(R6502HOSTMAP *map);
+extern R6502HOSTMAP* r6502readbp3000_ram(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502readbp3000_ramram(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502readbp8000_ram(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writebp3000_ram(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writebp3000_ramram(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writebp8000_ram(R6502HOSTMAP *map, unsigned int address_code);
 
-extern R6502HOSTMAP* r6502readm3000_x(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502readm3000_e(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502readm8000_ram(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502readmC000_y(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502readmFC00(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502readmFD00(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writem3000_x(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writem3000_e(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writem8000_ram(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writemC000_y(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writemFC00(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writemFD00(R6502HOSTMAP *map);
+extern R6502HOSTMAP* r6502readm3000_x(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502readm3000_e(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502readm8000_ram(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502readmC000_y(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502readmFC00(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502readmFD00(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writem3000_x(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writem3000_e(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writem8000_ram(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writemC000_y(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writemFC00(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writemFD00(R6502HOSTMAP *map, unsigned int address_code);
 
-extern R6502HOSTMAP* r6502startstretch(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502startstretch(R6502HOSTMAP *map);
+extern R6502HOSTMAP* r6502startreadstretch(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502startwritestretch(R6502HOSTMAP *map, unsigned int address_code);
 
-extern R6502HOSTMAP* r6502stretch1(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writestretch1(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502readstretch2(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writestretch2(R6502HOSTMAP *map);
+extern R6502HOSTMAP* r6502readfred(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502readjim(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writefred(R6502HOSTMAP *map, unsigned int address_code);
+extern R6502HOSTMAP* r6502writejim(R6502HOSTMAP *map, unsigned int address_code);
 
-extern R6502HOSTMAP* r6502readfred(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502readjim(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writefred(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502writejim(R6502HOSTMAP *map);
+extern R6502HOSTMAP* r6502yield(R6502HOSTMAP *map, unsigned int pc_code);
+extern R6502HOSTMAP* r6502fetch(R6502HOSTMAP *map, unsigned int pc_code);
+extern R6502HOSTMAP* r6502interruptfetch(R6502HOSTMAP *map, unsigned int pc_code);
+extern R6502HOSTMAP* r6502fetchthentestirq(R6502HOSTMAP *map, unsigned int pc_code);
+extern R6502HOSTMAP* r6502enterreset(R6502HOSTMAP *map, unsigned int pc_code);
 
-extern R6502HOSTMAP* r6502yield(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fetch(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502interruptfetch(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fetchthentestirq(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502enterreset(R6502HOSTMAP *map);
+extern R6502HOSTMAP* r6502decodestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502interruptdecodestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502midstretchstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502stretchedreadstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502stretchedwritestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502opcode07interfacestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
 
-extern R6502HOSTMAP* r6502readstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502decodestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502interruptdecodestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502opcode07interfacestep(R6502HOSTMAP *map);
-
-extern R6502HOSTMAP* r6502nopstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502nopfromimpliedstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502clcstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502secstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502clistep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502seistep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502cldstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502sedstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502clvstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502taxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502taystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502txastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502txsstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502tyastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502tsxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502hltstep1(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502hltstep2(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502beforepullstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502topullstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502latchabslostep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadabsstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502latchzpgindlostep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgindstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadabsxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadabsystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadpostindexedstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502linearloadabsxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502linearloadabsystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502linearloadpostindexedstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fixindexedstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12loadabsxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12loadabsystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12loadpostindexedstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12linearloadabsxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12linearloadabsystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12linearloadpostindexedstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502pulledpstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502pulledastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12pulledxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12pulledystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12bitfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502bitfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502orafromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502orafromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502andfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502andfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502eorfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502eorfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502adcfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12adcfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502adcfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12adcfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502ldafromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502ldafromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502ldxfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502ldxfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502ldyfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502ldyfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502cmpfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502cmpfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502cpxfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502cpxfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502cpyfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502cpyfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502sbcfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12sbcfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502sbcfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12sbcfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12decimalflagsfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12decimalflagsfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502nopfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502nopfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502laxfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502lasfromaddressstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502ancfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502alrfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502arrfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502xaafromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502oalfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502sbxfromimmediatestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502tomodifystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502aslastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502aslstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12aslstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502rolastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502rolstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12rolstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502lsrastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502lsrstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12lsrstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502rorastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502rorstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12rorstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12decastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502dexstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502deystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502decstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12decstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12incastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502inxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502inystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502incstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12incstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12tsbstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12trbstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502asostep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502rlastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502lsestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502rrastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502dcpstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502isbstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502topushpstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502topushastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12topushxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12topushystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgtostastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadabstostastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgindtostastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgxtostastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fixindexedtostastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgtostxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadabstostxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgytostxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fixindexedtostxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgtostystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadabstostystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgxtostystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fixindexedtostystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12loadzpgtostzstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12loadabstostzstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12loadzpgxtostzstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12fixindexedtostzstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgtosaxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadabstosaxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgytosaxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadzpgindtosaxstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fixindexedtoaxastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fixindexedtoxasstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fixindexedtosaystep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fixindexedtotasstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502pushedstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502bplstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502bmistep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502bvcstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502bvsstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502bccstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502bcsstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502bnestep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502beqstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12brastep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502branchtakenstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12branchtakenstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502fixbranchtakenstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502latchabsindlostep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12fixjmpabsindstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12fixjmpabsxindstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadpchstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502waitonresetstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502resetstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502notpushedtonotpushstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502notpushedtoresetlostep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502pushedtopushpclstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502pushedtopushpstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502pushedtopushpwithoutbstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12pushedtoresetlostep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502pushedtointerruptlostep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12pushedtointerruptlostep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r65c12pushedtobrklostep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502latchveclostep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502brktopushpchstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502latchabslobeforepushstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502topushpchstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502pushedtoloadpchstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502pulledptopullstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502pulledpclstep(R6502HOSTMAP *map);
-extern R6502HOSTMAP* r6502loadpchtoincrementstep(R6502HOSTMAP *map);
+extern R6502HOSTMAP* r6502waitstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502nopstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502clcstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502secstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502clistep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502seistep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502cldstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502sedstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502clvstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502taxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502taystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502txastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502txsstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502tyastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502tsxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502pulledastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12pulledxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12pulledystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502pulledpstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502tohltstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502hltstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502beforepullstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502topullstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502breadcrumbloadzpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502latchabslostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502breadcrumbloadabsstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadabsstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502breadcrumbloadzpgxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502latchzpgindlostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadabsxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadabsystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502linearloadabsxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502linearloadabsystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502breadcrumbfixindexedstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502fixindexedstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12breadcrumbloadabsxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12loadabsxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12breadcrumbloadabsystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12loadabsystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12linearloadabsxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12linearloadabsystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12bitimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502bitstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502oraimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502orastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502andimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502andstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502eorimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502eorstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502adcimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502adcstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12adcimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12adcstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502ldaimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502ldastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502ldximmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502ldxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502ldyimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502ldystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502cmpimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502cmpstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502cpximmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502cpxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502cpyimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502cpystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502sbcimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502sbcstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12sbcimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12sbcstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12decimalflagsimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12decimalflagsstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502skipimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502skipstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502laxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502lasstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502ancimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502alrimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502arrimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502xaaimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502oalimmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502sbximmediatestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12zpgreadagainstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12readagainstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502tozpgmodifystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502tomodifystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502aslastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502aslzpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502aslstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502rolastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502rolzpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502rolstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502lsrastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502lsrzpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502lsrstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502rorastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502rorzpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502rorstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12decastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502dexstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502deystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502deczpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502decstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12incastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502inxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502inystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502inczpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502incstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12tsbzpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12tsbstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12trbzpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12trbstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502asozpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502asostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502rlazpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502rlastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502lsezpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502lsestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502rrazpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502rrastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502dcpzpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502dcpstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502isbzpgstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502isbstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502topushpstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502topushastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12topushxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12topushystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgtostastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadabstostastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgxtostastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502fixindexedtostastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgtostxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadabstostxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgytostxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgtostystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadabstostystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgxtostystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12loadzpgtostzstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12loadabstostzstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12loadzpgxtostzstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12fixindexedtostzstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgtosaxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadabstosaxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadzpgytosaxstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502fixindexedtoaxastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502fixindexedtoxasstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502fixindexedtosaystep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502fixindexedtotasstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502pushedstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502bplstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502bmistep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502bvcstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502bvsstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502bccstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502bcsstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502bnestep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502beqstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12brastep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502branchtakenstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12branchtakenstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502fixbranchtakenstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12latchjmpabsindlostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502latchjmpabsindlostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12fixjmpabsindstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12breadcrumbfixjmpabsxindstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadpchstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502waitonresetstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502resetstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502notpushedtonotpushstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502breadcrumbnotpushedtoresetlostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502pushedtopushpclstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502pushedtopushpstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502pushedtopushpwithoutbstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12breadcrumbpushedtoresetlostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502breadcrumbpushedtointerruptlostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12breadcrumbpushedtointerruptlostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r65c12breadcrumbpushedtobrklostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502latchveclostep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502tobrkpushpchstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502topushpchstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502latchabslobeforepushstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502tojsrpushpchstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502pushedtojsrpushpclstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502pushedtoloadpchstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502pulledptopullstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502pulledpclstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
+extern R6502HOSTMAP* r6502loadpchtoincrementstep(R6502HOSTMAP *map, intptr_t incremented_cpu_state);
 extern R6502HOSTMAP* r6502startyield(R6502HOSTMAP *map);
 extern R6502HOSTMAP* r6502startinterrupt(R6502HOSTMAP *map);
 extern R6502HOSTMAP* r6502advancetimers(R6502HOSTMAP *map);
@@ -822,8 +847,9 @@ extern int r65c12reset(R6502HOSTMAP *map);
 extern void r6502resetbusfork(R6502HOSTMAP *map);
 extern void r6502resetreadsandwrite8000s(R6502HOSTMAP *map);
 extern void r6502resethighforks(R6502HOSTMAP *map,
-    R6502OP readFC00, R6502OP writeFC00,
-    R6502OP readFD00, R6502OP writeFD00);
+    R6502BUSOP readFC00, R6502BUSOP writeFC00,
+    R6502BUSOP readFD00, R6502BUSOP writeFD00);
 extern int r6502setcpuops(R6502HOSTMAP *map, const R6502OP* const *sequences);
+extern void r6502aftersnapshot(R6502HOSTMAP* map);
 extern void r6502execute(R6502HOSTMAP *map);
 extern void r6502readmemory(R6502HOSTMAP *map, char *buffer, unsigned int naddress, int ncount);

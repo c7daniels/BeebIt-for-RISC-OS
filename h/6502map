@@ -11,21 +11,31 @@
 
 struct R6502HOSTMAP;
 
-typedef struct R6502HOSTMAP* (*R6502OP)(struct R6502HOSTMAP *map); /*returning the parameter leaves it in r0 for the next call from AArch32 assembly language*/
+typedef struct R6502HOSTMAP* (*R6502OP)(struct R6502HOSTMAP *map, intptr_t incremented_cpu_state); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
 
-#define R6502_READ_SEQUENCE 256
-#define R6502_DECODE_SEQUENCE 257
-#define R6502_RESET_SEQUENCE 258
-#define R6502_INTERRUPT_SEQUENCE 259
-#define R6502_OPCODE_07_SEQUENCE 260
-#define R6502_SEQUENCE_CAPACITY 261
+typedef struct R6502HOSTMAP* (*R6502BUSOP)(struct R6502HOSTMAP *map, unsigned int address_code); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
+
+typedef struct R6502HOSTMAP* (*R6502TRANSITIONOP)(struct R6502HOSTMAP *map, unsigned int pc_code); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
+
+typedef struct R6502HOSTMAP* (*R6502SWAPOP)(struct R6502HOSTMAP *map); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
+
+#define R6502_READ_STRETCH_SEQUENCE 256
+#define R6502_WRITE_STRETCH_SEQUENCE 257
+#define R6502_DECODE_SEQUENCE 258
+#define R6502_INTERRUPT_DECODE_SEQUENCE 259
+#define R6502_RESET_SEQUENCE 260
+#define R6502_INTERRUPT_SEQUENCE 261
+#define R6502_OPCODE_07_SEQUENCE 262
+#define R6502_SEQUENCE_CAPACITY 263
+
+#define R6502_SEQUENCE_OUTSIZE_CAPACITY 288
 
 #define R6502_LOG2_MAX_SEQUENCE_LENGTH 3
 
 typedef struct
 {
-  R6502OP busop;
-  R6502OP _busop_padding[3];
+  R6502BUSOP busop;
+  R6502BUSOP _busop_padding[3];
 } R6502S4FORKS;
 
 typedef struct
@@ -44,6 +54,18 @@ typedef struct
   int m6850_togo;
   int video_togo;
 } S2CYCLES;
+
+typedef struct
+{
+  R6502BUSOP read3000, write3000;
+  R6502BUSOP read3000_ram, write3000_ram;
+  R6502BUSOP read3000_ramram, write3000_ramram;
+  R6502BUSOP read3000_e, write3000_e;
+  R6502BUSOP read3000_x, write3000_x;
+  R6502BUSOP read8000_ram, write8000_ram;
+  R6502BUSOP readC000_y, writeC000_y;
+  R6502SWAPOP swapintomemory, swapoutofmemory;
+} S2PAGING;
 
 typedef struct
 {
@@ -209,19 +231,15 @@ typedef struct R6502HOSTMAP
 {
 
   // shift 0 offsets &00 - &FF
-  uint8_t m; /*value on data bus*/
-  uint8_t a, x, y; /*3 registers A,X,Y*/
-  uint8_t ps; /*processor status*/
   uint8_t irq;
   uint8_t nmis;
-  uint8_t readcompleted;
+  uint8_t lsoundlatch;
+  uint8_t _lsoundlatch_padding[1];
   int8_t romwritable[16];
   uint8_t romsel; /*ROMSELect*/
   uint8_t acccon;  /*ACCCON*/
   uint8_t lsoundoption;
-  uint8_t lsoundlatch;
   uint8_t screenstartindex; /*screen start index (system via)*/
-  uint8_t _s0_structpadding[3];
   S0SERIAL s0serial;
   S0VIA s0sysvia;
   S0VIA s0usrvia;
@@ -229,31 +247,40 @@ typedef struct R6502HOSTMAP
   S0I8271 s0i8271;
   S0W1770 s0w1770;
   S0ADC s0adc;
-  uint8_t _s0_padding[124];
+  uint8_t _s0_padding[132];
 
   // shift 2 offsets &100 - &3FC
-  int cpu_state; /*index into table of steps*/
+  uint8_t m_shift[3];
+  uint8_t m; /*value on data bus*/
+  uint8_t a_shift[3];
+  uint8_t a; /*register*/
+  uint8_t x_shift[3];
+  uint8_t x; /*register*/
+  uint8_t y_shift[3];
+  uint8_t y; /*register*/
+  uint8_t ps_shift[3];
+  uint8_t ps; /*processor status*/
+  R6502OP *cpu_state; /*pointer into table of steps*/
+  R6502OP *stretched_cpu_state;
+  unsigned int sync_pc_code; /*shifted program counter with bus code*/
+  unsigned int last_pc_code;
   unsigned int address_code; /*shifted value on address bus with bus code*/
-  unsigned int pc_code; /*shifted program counter with bus code*/
-  unsigned int sp_code; /*rotated stack pointer and bus code*/
-  unsigned int latch; /*addressing temporary value*/
-  R6502OP transition1action, transition2action;
-  R6502OP yieldaction;
-  R6502OP fetchaction, interruptfetchaction;
-  R6502OP fetchthentestirqaction, resetaction;
+  unsigned int sp_code; /*shifted stack pointer*/
+  unsigned int address_fix_code;
+  unsigned int latch; /*shifted addressing temporary byte*/
+  char *pagezero;
+  char *pageone;
+  R6502TRANSITIONOP transition1action, transition2action;
+  R6502TRANSITIONOP yieldaction;
+  R6502TRANSITIONOP fetchaction, interruptfetchaction;
+  R6502TRANSITIONOP fetchthentestirqaction, resetaction;
   int timesinterruptmissed;
   unsigned int lbreak;
   unsigned int screenstartaddress;
-  R6502OP read3000, write3000;
-  R6502OP read3000_ram, write3000_ram;
-  R6502OP read3000_e, write3000_e;
-  R6502OP read3000_x, write3000_x;
-  R6502OP read8000_ram, write8000_ram;
-  R6502OP readC000_y, writeC000_y;
-  R6502OP swappagesintomemory, swappagesoutofmemory;
   void *zeribeep_writebyte;
   void *zeribeep_workspace;
   S2CYCLES s2cycles;
+  S2PAGING s2paging;
   S2SERIAL s2serial;
   S2VIA s2sysvia;
   S2VIA s2usrvia;
@@ -261,25 +288,36 @@ typedef struct R6502HOSTMAP
   S2I8271 s2i8271;
   S2W1770 s2w1770;
   S2ADC s2adc;
-  unsigned int _s2_padding[88];
+  unsigned int _s2_padding[76];
 
   // shift 4 offsets &400 - &FF0
-  unsigned int _s4_padding[256];
-  R6502S4FORKS s4forks[128];
+  unsigned int _s4_padding[640];
+  R6502S4FORKS s4forks[32];
 
   // shift 6+ offsets &1000 -
-  R6502OP read8000s[16];
-  R6502OP write8000s[16];
-  unsigned int _s6_padding[736];
-  R6502OP high_read_fork[1024];
-  R6502OP high_write_fork[1024];
-  R6502OP high_stretched_read_fork[1024];
-  R6502OP high_stretched_write_fork[1024];
+  R6502BUSOP read8000s[16];
+  R6502BUSOP write8000s[16];
+  R6502OP* sequences[R6502_SEQUENCE_CAPACITY];
+  R6502OP* _sequences_padding[R6502_SEQUENCE_OUTSIZE_CAPACITY - R6502_SEQUENCE_CAPACITY];
+  unsigned int _s6_padding[448];
   R6502OP steps[R6502_SEQUENCE_CAPACITY<<R6502_LOG2_MAX_SEQUENCE_LENGTH];
-  R6502OP _steps_padding[(288-R6502_SEQUENCE_CAPACITY)<<R6502_LOG2_MAX_SEQUENCE_LENGTH];
-  /*6502cpus.s appends memory, shadow and roms to the host R6502HOSTMAP*/
+  R6502OP _steps_padding[(R6502_SEQUENCE_OUTSIZE_CAPACITY-R6502_SEQUENCE_CAPACITY)<<R6502_LOG2_MAX_SEQUENCE_LENGTH];
+
+  /*6502cpus.s appends the following to the host R6502WORKSPACE:
+   r6502_high_read_fork
+   r6502_high_write_fork
+   r6502_high_stretched_read_fork
+   r6502_high_stretched_write_fork
+   memory
+   shadow
+   roms
+   */
 } R6502HOSTMAP;
 
+extern R6502BUSOP r6502_high_read_fork[1024];
+extern R6502BUSOP r6502_high_write_fork[1024];
+extern R6502BUSOP r6502_high_stretched_read_fork[1024];
+extern R6502BUSOP r6502_high_stretched_write_fork[1024];
 
 #define TIMER_LIMIT_CYCLES_TO_GO(MAP, LIMIT) \
   { \
@@ -309,22 +347,29 @@ typedef struct R6502HOSTMAP
     } \
   }
 
-#define TIMER_GET_CYCLE_COUNT(OUT, MAP) \
-  { \
-    S2CYCLES *cy = &(MAP)->s2cycles; \
-OUT = cy->original - cy->togo; \
-  }
-
 #define TIMER_GET_PERIPHERAL_CYCLE_COUNT(OUT, MAP, P) \
   { \
     S2CYCLES *cy = &(MAP)->s2cycles; \
-OUT = cy->original - cy->togo + cy->P##_original - cy->P##_togo; \
+    OUT = cy->original - cy->togo + cy->P##_original - cy->P##_togo; \
   }
 
-#define TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(OUT, MAP, P) \
+#define TIMER_GET_1MHZ_PERIPHERAL_TOGO_FOR_SNAPSHOT_OFFSET(OUT, MAP, P) \
   { \
     S2CYCLES *cy = &(MAP)->s2cycles; \
     OUT = cy->original - cy->togo; \
     OUT += (cy->odd^OUT^1)&1; \
+    OUT += cy->P##_original - cy->P##_togo; \
+  }
+
+#define TIMER_GET_TOGO_FROM_WRITE_OFFSET(OUT, MAP) \
+  { \
+    S2CYCLES *cy = &(MAP)->s2cycles; \
+    OUT = 1 + cy->original - cy->togo; \
+  }
+
+#define TIMER_GET_1MHZ_PERIPHERAL_TOGO_FROM_WRITE_OFFSET(OUT, MAP, P) \
+  { \
+    S2CYCLES *cy = &(MAP)->s2cycles; \
+    OUT = 2 + cy->original - cy->togo; \
     OUT += cy->P##_original - cy->P##_togo; \
   }

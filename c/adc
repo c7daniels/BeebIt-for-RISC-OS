@@ -161,7 +161,7 @@ R6502HOSTMAP* adcpoll(R6502HOSTMAP* map)
   return map;
 }
 
-R6502HOSTMAP* adc00read(R6502HOSTMAP* map)
+R6502HOSTMAP* adc00read(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&FC00
    *b0+b1: which of the 4 input channels was selected.
@@ -173,22 +173,22 @@ R6502HOSTMAP* adc00read(R6502HOSTMAP* map)
    *b6:
    */
   map->m = map->s0adc.status;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* adc01read(R6502HOSTMAP* map)
+R6502HOSTMAP* adc01read(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = map->s0adc.highbyte;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* adc02read(R6502HOSTMAP* map)
+R6502HOSTMAP* adc02read(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = map->s0adc.lowbyte;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* adcwrite(R6502HOSTMAP* map)
+R6502HOSTMAP* adcwrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*if naddress=&FC00 then
    * b1+b0: which of the 4 input channels to select.
@@ -209,8 +209,8 @@ R6502HOSTMAP* adcwrite(R6502HOSTMAP* map)
     map->s2cycles.adc_togo =  10000<<1;
   else
     map->s2cycles.adc_togo =   4000<<1;
-  TIMER_GET_CYCLE_COUNT(cyclecount, &hostmap)
-  map->s2cycles.adc_togo += cyclecount;
+  TIMER_GET_TOGO_FROM_WRITE_OFFSET(cyclecount, &hostmap)
+  map->s2cycles.adc_togo += 1 + cyclecount;
   TIMER_LIMIT_CYCLES_TO_GO(&hostmap, map->s2cycles.adc_togo)
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }

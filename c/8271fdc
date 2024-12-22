@@ -1199,31 +1199,31 @@ void i8271paramregwrite(char nvalue)
   }
 }
 
-R6502HOSTMAP* i8271statusread(R6502HOSTMAP* map)
+R6502HOSTMAP* i8271statusread(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = map->s0i8271.statusreg;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* i8271resultread(R6502HOSTMAP* map)
+R6502HOSTMAP* i8271resultread(R6502HOSTMAP* map, unsigned int address_code)
 {
   /* Clear interrupt request, result reg full and non-dma request flags*/
   map->s0i8271.statusreg &= ~0x1C;
   i8271setnmi();
   map->m = map->s0i8271.resultreg;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* i8271dataread(R6502HOSTMAP* map)
+R6502HOSTMAP* i8271dataread(R6502HOSTMAP* map, unsigned int address_code)
 {
   /* Clear interrupt and non-dma request - not stated but DFS never looks at result reg!*/
   map->s0i8271.statusreg &= ~0x0C;
   i8271setnmi();
   map->m = map->s0i8271.datareg;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* i8271commandwrite(R6502HOSTMAP* map)
+R6502HOSTMAP* i8271commandwrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*command register
    *b0-b5=command
@@ -1254,10 +1254,10 @@ R6502HOSTMAP* i8271commandwrite(R6502HOSTMAP* map)
       }
     }
   }
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* i8271parameterwrite(R6502HOSTMAP* map)
+R6502HOSTMAP* i8271parameterwrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   if (map->s2i8271.PresentParam < map->s2i8271.ncommandparams)
   {
@@ -1276,20 +1276,20 @@ R6502HOSTMAP* i8271parameterwrite(R6502HOSTMAP* map)
       }
     }
   }
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* i8271resetwrite(R6502HOSTMAP* map)
+R6502HOSTMAP* i8271resetwrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*The caller should write a 1 and then >10 cycles later a 0 - but I'm just going to reset on both edges*/
   i8271reset();
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* i8271datawrite(R6502HOSTMAP* map)
+R6502HOSTMAP* i8271datawrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->s0i8271.datareg = map->m;
   map->s0i8271.statusreg &= ~0x0C;
   i8271setnmi();
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }

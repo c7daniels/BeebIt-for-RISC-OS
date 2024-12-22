@@ -37,17 +37,23 @@
 
 extern _kernel_swi_regs regs;
 
-#ifndef BEEBIT_NO_ASM
-static_assert(offsetof(R6502HOSTMAP, s4forks) == (BUS_BASEFLAG<<8), "R6502HOSTMAP.bus_fork is not at the required offset");
+#ifdef BEEBIT_NO_ASM
+R6502BUSOP r6502_high_read_fork[1024];
+R6502BUSOP r6502_high_write_fork[1024];
+R6502BUSOP r6502_high_stretched_read_fork[1024];
+R6502BUSOP r6502_high_stretched_write_fork[1024];
+#else
+static_assert(offsetof(R6502HOSTMAP, s4forks) == ((BUS_BASEFLAG-BUS_WRITEFLAG)<<8), "R6502HOSTMAP.bus_fork is not at the required offset");
 #endif
 
 
-const R6502OP r6502_emptysequence[] = {NULL};
-const R6502OP r6502_readsequence[] = {r6502readstep, NULL};
-const R6502OP r6502_decodesequence[] = {r6502decodestep, r6502interruptdecodestep, NULL};
+const R6502OP r6502_readstretchsequence[] = {r6502midstretchstep, r6502stretchedreadstep, NULL};
+const R6502OP r6502_writestretchsequence[] = {r6502midstretchstep, r6502stretchedwritestep, NULL};
+const R6502OP r6502_decodesequence[] = {r6502decodestep, NULL};
+const R6502OP r6502_interruptdecodesequence[] = {r6502interruptdecodestep, NULL};
 const R6502OP r6502_opcode07interfacesequence[] = {r6502opcode07interfacestep, NULL};
 
-const R6502OP r6502_nopsequence[] = R6502_IMPLIED_SEQUENCE(r6502nopfromimpliedstep);
+const R6502OP r6502_nopsequence[] = R6502_IMPLIED_SEQUENCE(r6502nopstep);
 const R6502OP r6502_clcsequence[] = R6502_IMPLIED_SEQUENCE(r6502clcstep);
 const R6502OP r6502_secsequence[] = R6502_IMPLIED_SEQUENCE(r6502secstep);
 const R6502OP r6502_clisequence[] = R6502_IMPLIED_SEQUENCE(r6502clistep);
@@ -64,170 +70,170 @@ const R6502OP r6502_tsxsequence[] = R6502_IMPLIED_SEQUENCE(r6502tsxstep);
 const R6502OP r6502_phpsequence[] = R6502_PUSH_SEQUENCE(r6502topushpstep);
 const R6502OP r6502_plpsequence[] = R6502_PULL_SEQUENCE(r6502pulledpstep);
 const R6502OP r6502_phasequence[] = R6502_PUSH_SEQUENCE(r6502topushastep);
-const R6502OP r6502_plasequence[] = R6502_PULL_SEQUENCE(r6502ldafromaddressstep);
-const R6502OP r6502_hltsequence[] = {r6502hltstep1, r6502hltstep2, NULL};
-const R6502OP r6502_bitzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502bitfromaddressstep);
-const R6502OP r6502_bitabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502bitfromaddressstep);
-const R6502OP r6502_oraimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502orafromimmediatestep);
-const R6502OP r6502_orazpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502orafromaddressstep);
-const R6502OP r6502_oraabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502orafromaddressstep);
-const R6502OP r6502_orapreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502orafromaddressstep);
-const R6502OP r6502_orazpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502orafromaddressstep);
-const R6502OP r6502_oraabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502orafromaddressstep);
-const R6502OP r6502_oraabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502orafromaddressstep);
-const R6502OP r6502_orapostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502orafromaddressstep);
-const R6502OP r6502_andimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502andfromimmediatestep);
-const R6502OP r6502_andzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502andfromaddressstep);
-const R6502OP r6502_andabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502andfromaddressstep);
-const R6502OP r6502_andpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502andfromaddressstep);
-const R6502OP r6502_andzpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502andfromaddressstep);
-const R6502OP r6502_andabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502andfromaddressstep);
-const R6502OP r6502_andabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502andfromaddressstep);
-const R6502OP r6502_andpostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502andfromaddressstep);
-const R6502OP r6502_eorimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502eorfromimmediatestep);
-const R6502OP r6502_eorzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502eorfromaddressstep);
-const R6502OP r6502_eorabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502eorfromaddressstep);
-const R6502OP r6502_eorpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502eorfromaddressstep);
-const R6502OP r6502_eorzpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502eorfromaddressstep);
-const R6502OP r6502_eorabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502eorfromaddressstep);
-const R6502OP r6502_eorabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502eorfromaddressstep);
-const R6502OP r6502_eorpostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502eorfromaddressstep);
-const R6502OP r6502_adcimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502adcfromimmediatestep);
-const R6502OP r6502_adczpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502adcfromaddressstep);
-const R6502OP r6502_adcabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502adcfromaddressstep);
-const R6502OP r6502_adcpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502adcfromaddressstep);
-const R6502OP r6502_adczpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502adcfromaddressstep);
-const R6502OP r6502_adcabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502adcfromaddressstep);
-const R6502OP r6502_adcabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502adcfromaddressstep);
-const R6502OP r6502_adcpostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502adcfromaddressstep);
-const R6502OP r6502_ldaimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502ldafromimmediatestep);
-const R6502OP r6502_ldazpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502ldafromaddressstep);
-const R6502OP r6502_ldaabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502ldafromaddressstep);
-const R6502OP r6502_ldapreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502ldafromaddressstep);
-const R6502OP r6502_ldazpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502ldafromaddressstep);
-const R6502OP r6502_ldaabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502ldafromaddressstep);
-const R6502OP r6502_ldaabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502ldafromaddressstep);
-const R6502OP r6502_ldapostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502ldafromaddressstep);
-const R6502OP r6502_ldximmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502ldxfromimmediatestep);
-const R6502OP r6502_ldxzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502ldxfromaddressstep);
-const R6502OP r6502_ldxabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502ldxfromaddressstep);
-const R6502OP r6502_ldxzpgysequence[] = R6502_LOAD_ZPGY_SEQUENCE(r6502ldxfromaddressstep);
-const R6502OP r6502_ldxabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502ldxfromaddressstep);
-const R6502OP r6502_ldyimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502ldyfromimmediatestep);
-const R6502OP r6502_ldyzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502ldyfromaddressstep);
-const R6502OP r6502_ldyabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502ldyfromaddressstep);
-const R6502OP r6502_ldyzpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502ldyfromaddressstep);
-const R6502OP r6502_ldyabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502ldyfromaddressstep);
-const R6502OP r6502_cmpimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502cmpfromimmediatestep);
-const R6502OP r6502_cmpzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502cmpfromaddressstep);
-const R6502OP r6502_cmpabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502cmpfromaddressstep);
-const R6502OP r6502_cmppreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502cmpfromaddressstep);
-const R6502OP r6502_cmpzpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502cmpfromaddressstep);
-const R6502OP r6502_cmpabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502cmpfromaddressstep);
-const R6502OP r6502_cmpabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502cmpfromaddressstep);
-const R6502OP r6502_cmppostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502cmpfromaddressstep);
-const R6502OP r6502_cpximmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502cpxfromimmediatestep);
-const R6502OP r6502_cpxzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502cpxfromaddressstep);
-const R6502OP r6502_cpxabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502cpxfromaddressstep);
-const R6502OP r6502_cpyimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502cpyfromimmediatestep);
-const R6502OP r6502_cpyzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502cpyfromaddressstep);
-const R6502OP r6502_cpyabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502cpyfromaddressstep);
-const R6502OP r6502_sbcimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502sbcfromimmediatestep);
-const R6502OP r6502_sbczpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502sbcfromaddressstep);
-const R6502OP r6502_sbcabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502sbcfromaddressstep);
-const R6502OP r6502_sbcpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502sbcfromaddressstep);
-const R6502OP r6502_sbczpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502sbcfromaddressstep);
-const R6502OP r6502_sbcabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502sbcfromaddressstep);
-const R6502OP r6502_sbcabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502sbcfromaddressstep);
-const R6502OP r6502_sbcpostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502sbcfromaddressstep);
-const R6502OP r6502_skbimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502nopfromimmediatestep);
-const R6502OP r6502_skbzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502nopfromaddressstep);
-const R6502OP r6502_skbzpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502nopfromaddressstep);
-const R6502OP r6502_skwabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502nopfromaddressstep);
-const R6502OP r6502_skwabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502nopfromaddressstep);
-const R6502OP r6502_laxzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502laxfromaddressstep);
-const R6502OP r6502_laxabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502laxfromaddressstep);
-const R6502OP r6502_laxpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502laxfromaddressstep);
-const R6502OP r6502_laxzpgysequence[] = R6502_LOAD_ZPGY_SEQUENCE(r6502laxfromaddressstep);
-const R6502OP r6502_laxabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502laxfromaddressstep);
-const R6502OP r6502_laxpostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502laxfromaddressstep);
-const R6502OP r6502_lasabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502lasfromaddressstep);
-const R6502OP r6502_ancimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502ancfromimmediatestep);
-const R6502OP r6502_alrimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502alrfromimmediatestep);
-const R6502OP r6502_arrimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502arrfromimmediatestep);
-const R6502OP r6502_xaaimmsequence[] =  R6502_LOAD_IMM_SEQUENCE(r6502xaafromimmediatestep);
-const R6502OP r6502_oalimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502oalfromimmediatestep);
-const R6502OP r6502_sbximmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502sbxfromimmediatestep);
+const R6502OP r6502_plasequence[] = R6502_PULL_SEQUENCE(r6502pulledastep);
+const R6502OP r6502_hltsequence[] = {r6502tohltstep, r6502hltstep, NULL};
+const R6502OP r6502_bitzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502bitstep);
+const R6502OP r6502_bitabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502bitstep);
+const R6502OP r6502_oraimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502oraimmediatestep);
+const R6502OP r6502_orazpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502orastep);
+const R6502OP r6502_oraabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502orastep);
+const R6502OP r6502_orapreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502orastep);
+const R6502OP r6502_orazpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502orastep);
+const R6502OP r6502_oraabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502orastep);
+const R6502OP r6502_oraabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502orastep);
+const R6502OP r6502_orapostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502orastep);
+const R6502OP r6502_andimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502andimmediatestep);
+const R6502OP r6502_andzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502andstep);
+const R6502OP r6502_andabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502andstep);
+const R6502OP r6502_andpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502andstep);
+const R6502OP r6502_andzpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502andstep);
+const R6502OP r6502_andabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502andstep);
+const R6502OP r6502_andabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502andstep);
+const R6502OP r6502_andpostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502andstep);
+const R6502OP r6502_eorimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502eorimmediatestep);
+const R6502OP r6502_eorzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502eorstep);
+const R6502OP r6502_eorabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502eorstep);
+const R6502OP r6502_eorpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502eorstep);
+const R6502OP r6502_eorzpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502eorstep);
+const R6502OP r6502_eorabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502eorstep);
+const R6502OP r6502_eorabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502eorstep);
+const R6502OP r6502_eorpostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502eorstep);
+const R6502OP r6502_adcimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502adcimmediatestep);
+const R6502OP r6502_adczpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502adcstep);
+const R6502OP r6502_adcabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502adcstep);
+const R6502OP r6502_adcpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502adcstep);
+const R6502OP r6502_adczpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502adcstep);
+const R6502OP r6502_adcabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502adcstep);
+const R6502OP r6502_adcabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502adcstep);
+const R6502OP r6502_adcpostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502adcstep);
+const R6502OP r6502_ldaimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502ldaimmediatestep);
+const R6502OP r6502_ldazpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502ldastep);
+const R6502OP r6502_ldaabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502ldastep);
+const R6502OP r6502_ldapreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502ldastep);
+const R6502OP r6502_ldazpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502ldastep);
+const R6502OP r6502_ldaabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502ldastep);
+const R6502OP r6502_ldaabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502ldastep);
+const R6502OP r6502_ldapostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502ldastep);
+const R6502OP r6502_ldximmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502ldximmediatestep);
+const R6502OP r6502_ldxzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502ldxstep);
+const R6502OP r6502_ldxabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502ldxstep);
+const R6502OP r6502_ldxzpgysequence[] = R6502_LOAD_ZPGY_SEQUENCE(r6502ldxstep);
+const R6502OP r6502_ldxabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502ldxstep);
+const R6502OP r6502_ldyimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502ldyimmediatestep);
+const R6502OP r6502_ldyzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502ldystep);
+const R6502OP r6502_ldyabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502ldystep);
+const R6502OP r6502_ldyzpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502ldystep);
+const R6502OP r6502_ldyabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502ldystep);
+const R6502OP r6502_cmpimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502cmpimmediatestep);
+const R6502OP r6502_cmpzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502cmpstep);
+const R6502OP r6502_cmpabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502cmpstep);
+const R6502OP r6502_cmppreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502cmpstep);
+const R6502OP r6502_cmpzpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502cmpstep);
+const R6502OP r6502_cmpabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502cmpstep);
+const R6502OP r6502_cmpabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502cmpstep);
+const R6502OP r6502_cmppostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502cmpstep);
+const R6502OP r6502_cpximmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502cpximmediatestep);
+const R6502OP r6502_cpxzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502cpxstep);
+const R6502OP r6502_cpxabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502cpxstep);
+const R6502OP r6502_cpyimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502cpyimmediatestep);
+const R6502OP r6502_cpyzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502cpystep);
+const R6502OP r6502_cpyabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502cpystep);
+const R6502OP r6502_sbcimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502sbcimmediatestep);
+const R6502OP r6502_sbczpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502sbcstep);
+const R6502OP r6502_sbcabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502sbcstep);
+const R6502OP r6502_sbcpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502sbcstep);
+const R6502OP r6502_sbczpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502sbcstep);
+const R6502OP r6502_sbcabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502sbcstep);
+const R6502OP r6502_sbcabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502sbcstep);
+const R6502OP r6502_sbcpostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502sbcstep);
+const R6502OP r6502_skbimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502skipimmediatestep);
+const R6502OP r6502_skbzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502skipstep);
+const R6502OP r6502_skbzpgxsequence[] = R6502_LOAD_ZPGX_SEQUENCE(r6502skipstep);
+const R6502OP r6502_skwabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502skipstep);
+const R6502OP r6502_skwabsxsequence[] = R6502_LOAD_ABSX_SEQUENCE(r6502skipstep);
+const R6502OP r6502_laxzpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r6502laxstep);
+const R6502OP r6502_laxabssequence[] = R6502_LOAD_ABS_SEQUENCE(r6502laxstep);
+const R6502OP r6502_laxpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r6502laxstep);
+const R6502OP r6502_laxzpgysequence[] = R6502_LOAD_ZPGY_SEQUENCE(r6502laxstep);
+const R6502OP r6502_laxabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502laxstep);
+const R6502OP r6502_laxpostindexedsequence[] = R6502_LOAD_POSTINDEXED_SEQUENCE(r6502laxstep);
+const R6502OP r6502_lasabsysequence[] = R6502_LOAD_ABSY_SEQUENCE(r6502lasstep);
+const R6502OP r6502_ancimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502ancimmediatestep);
+const R6502OP r6502_alrimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502alrimmediatestep);
+const R6502OP r6502_arrimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502arrimmediatestep);
+const R6502OP r6502_xaaimmsequence[] =  R6502_LOAD_IMM_SEQUENCE(r6502xaaimmediatestep);
+const R6502OP r6502_oalimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502oalimmediatestep);
+const R6502OP r6502_sbximmsequence[] = R6502_LOAD_IMM_SEQUENCE(r6502sbximmediatestep);
 const R6502OP r6502_aslasequence[] = R6502_IMPLIED_SEQUENCE(r6502aslastep);
-const R6502OP r6502_aslzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502aslstep);
+const R6502OP r6502_aslzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502aslzpgstep);
 const R6502OP r6502_aslabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502aslstep);
-const R6502OP r6502_aslzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502aslstep);
+const R6502OP r6502_aslzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502aslzpgstep);
 const R6502OP r6502_aslabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502aslstep);
 const R6502OP r6502_rolasequence[] = R6502_IMPLIED_SEQUENCE(r6502rolastep);
-const R6502OP r6502_rolzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502rolstep);
+const R6502OP r6502_rolzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502rolzpgstep);
 const R6502OP r6502_rolabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502rolstep);
-const R6502OP r6502_rolzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502rolstep);
+const R6502OP r6502_rolzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502rolzpgstep);
 const R6502OP r6502_rolabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502rolstep);
 const R6502OP r6502_lsrasequence[] = R6502_IMPLIED_SEQUENCE(r6502lsrastep);
-const R6502OP r6502_lsrzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502lsrstep);
+const R6502OP r6502_lsrzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502lsrzpgstep);
 const R6502OP r6502_lsrabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502lsrstep);
-const R6502OP r6502_lsrzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502lsrstep);
+const R6502OP r6502_lsrzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502lsrzpgstep);
 const R6502OP r6502_lsrabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502lsrstep);
 const R6502OP r6502_rorasequence[] = R6502_IMPLIED_SEQUENCE(r6502rorastep);
-const R6502OP r6502_rorzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502rorstep);
+const R6502OP r6502_rorzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502rorzpgstep);
 const R6502OP r6502_rorabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502rorstep);
-const R6502OP r6502_rorzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502rorstep);
+const R6502OP r6502_rorzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502rorzpgstep);
 const R6502OP r6502_rorabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502rorstep);
 const R6502OP r6502_dexsequence[] = R6502_IMPLIED_SEQUENCE(r6502dexstep);
 const R6502OP r6502_deysequence[] = R6502_IMPLIED_SEQUENCE(r6502deystep);
-const R6502OP r6502_deczpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502decstep);
+const R6502OP r6502_deczpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502deczpgstep);
 const R6502OP r6502_decabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502decstep);
-const R6502OP r6502_deczpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502decstep);
+const R6502OP r6502_deczpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502deczpgstep);
 const R6502OP r6502_decabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502decstep);
 const R6502OP r6502_inxsequence[] = R6502_IMPLIED_SEQUENCE(r6502inxstep);
 const R6502OP r6502_inysequence[] = R6502_IMPLIED_SEQUENCE(r6502inystep);
-const R6502OP r6502_inczpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502incstep);
+const R6502OP r6502_inczpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502inczpgstep);
 const R6502OP r6502_incabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502incstep);
-const R6502OP r6502_inczpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502incstep);
+const R6502OP r6502_inczpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502inczpgstep);
 const R6502OP r6502_incabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502incstep);
-const R6502OP r6502_asozpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502asostep);
+const R6502OP r6502_asozpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502asozpgstep);
 const R6502OP r6502_asoabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502asostep);
-const R6502OP r6502_asozpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502asostep);
+const R6502OP r6502_asozpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502asozpgstep);
 const R6502OP r6502_asopreindexedsequence[] = R6502_MODIFY_PREINDEXED_SEQUENCE(r6502asostep);
 const R6502OP r6502_asoabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502asostep);
 const R6502OP r6502_asoabsysequence[] = R6502_MODIFY_ABSY_SEQUENCE(r6502asostep);
 const R6502OP r6502_asopostindexedsequence[] = R6502_MODIFY_POSTINDEXED_SEQUENCE(r6502asostep);
-const R6502OP r6502_rlazpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502rlastep);
+const R6502OP r6502_rlazpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502rlazpgstep);
 const R6502OP r6502_rlaabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502rlastep);
-const R6502OP r6502_rlazpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502rlastep);
+const R6502OP r6502_rlazpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502rlazpgstep);
 const R6502OP r6502_rlapreindexedsequence[] = R6502_MODIFY_PREINDEXED_SEQUENCE(r6502rlastep);
 const R6502OP r6502_rlaabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502rlastep);
 const R6502OP r6502_rlaabsysequence[] = R6502_MODIFY_ABSY_SEQUENCE(r6502rlastep);
 const R6502OP r6502_rlapostindexedsequence[] = R6502_MODIFY_POSTINDEXED_SEQUENCE(r6502rlastep);
-const R6502OP r6502_lsezpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502lsestep);
+const R6502OP r6502_lsezpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502lsezpgstep);
 const R6502OP r6502_lseabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502lsestep);
-const R6502OP r6502_lsezpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502lsestep);
+const R6502OP r6502_lsezpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502lsezpgstep);
 const R6502OP r6502_lsepreindexedsequence[] = R6502_MODIFY_PREINDEXED_SEQUENCE(r6502lsestep);
 const R6502OP r6502_lseabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502lsestep);
 const R6502OP r6502_lseabsysequence[] = R6502_MODIFY_ABSY_SEQUENCE(r6502lsestep);
 const R6502OP r6502_lsepostindexedsequence[] = R6502_MODIFY_POSTINDEXED_SEQUENCE(r6502lsestep);
-const R6502OP r6502_rrazpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502rrastep);
+const R6502OP r6502_rrazpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502rrazpgstep);
 const R6502OP r6502_rraabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502rrastep);
-const R6502OP r6502_rrazpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502rrastep);
+const R6502OP r6502_rrazpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502rrazpgstep);
 const R6502OP r6502_rrapreindexedsequence[] = R6502_MODIFY_PREINDEXED_SEQUENCE(r6502rrastep);
 const R6502OP r6502_rraabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502rrastep);
 const R6502OP r6502_rraabsysequence[] = R6502_MODIFY_ABSY_SEQUENCE(r6502rrastep);
 const R6502OP r6502_rrapostindexedsequence[] = R6502_MODIFY_POSTINDEXED_SEQUENCE(r6502rrastep);
-const R6502OP r6502_dcpzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502dcpstep);
+const R6502OP r6502_dcpzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502dcpzpgstep);
 const R6502OP r6502_dcpabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502dcpstep);
-const R6502OP r6502_dcpzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502dcpstep);
+const R6502OP r6502_dcpzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502dcpzpgstep);
 const R6502OP r6502_dcppreindexedsequence[] = R6502_MODIFY_PREINDEXED_SEQUENCE(r6502dcpstep);
 const R6502OP r6502_dcpabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502dcpstep);
 const R6502OP r6502_dcpabsysequence[] = R6502_MODIFY_ABSY_SEQUENCE(r6502dcpstep);
 const R6502OP r6502_dcppostindexedsequence[] = R6502_MODIFY_POSTINDEXED_SEQUENCE(r6502dcpstep);
-const R6502OP r6502_isbzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502isbstep);
+const R6502OP r6502_isbzpgsequence[] = R6502_MODIFY_ZPG_SEQUENCE(r6502isbzpgstep);
 const R6502OP r6502_isbabssequence[] = R6502_MODIFY_ABS_SEQUENCE(r6502isbstep);
-const R6502OP r6502_isbzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502isbstep);
+const R6502OP r6502_isbzpgxsequence[] = R6502_MODIFY_ZPGX_SEQUENCE(r6502isbzpgstep);
 const R6502OP r6502_isbpreindexedsequence[] = R6502_MODIFY_PREINDEXED_SEQUENCE(r6502isbstep);
 const R6502OP r6502_isbabsxsequence[] = R6502_MODIFY_ABSX_SEQUENCE(r6502isbstep);
 const R6502OP r6502_isbabsysequence[] = R6502_MODIFY_ABSY_SEQUENCE(r6502isbstep);
@@ -235,22 +241,20 @@ const R6502OP r6502_isbpostindexedsequence[] = R6502_MODIFY_POSTINDEXED_SEQUENCE
 const R6502OP r6502_stazpgsequence[] = R6502_STORE_ZPG_SEQUENCE(r6502loadzpgtostastep);
 const R6502OP r6502_staabssequence[] = R6502_STORE_ABS_SEQUENCE(r6502loadabstostastep);
 const R6502OP r6502_stazpgxsequence[] = R6502_STORE_ZPGX_SEQUENCE(r6502loadzpgxtostastep);
-const R6502OP r6502_stapreindexedsequence[] = R6502_STORE_PREINDEXED_SEQUENCE(r6502loadzpgindtostastep);
+const R6502OP r6502_stapreindexedsequence[] = R6502_STORE_PREINDEXED_SEQUENCE(r6502loadabstostastep);
 const R6502OP r6502_staabsxsequence[] = R6502_STORE_ABSX_SEQUENCE(r6502fixindexedtostastep);
 const R6502OP r6502_staabsysequence[] = R6502_STORE_ABSY_SEQUENCE(r6502fixindexedtostastep);
 const R6502OP r6502_stapostindexedsequence[] = R6502_STORE_POSTINDEXED_SEQUENCE(r6502fixindexedtostastep);
 const R6502OP r6502_stxzpgsequence[] = R6502_STORE_ZPG_SEQUENCE(r6502loadzpgtostxstep);
 const R6502OP r6502_stxabssequence[] = R6502_STORE_ABS_SEQUENCE(r6502loadabstostxstep);
 const R6502OP r6502_stxzpgysequence[] = R6502_STORE_ZPGY_SEQUENCE(r6502loadzpgytostxstep);
-const R6502OP r6502_stxabsysequence[] = R6502_STORE_ABSY_SEQUENCE(r6502fixindexedtostxstep);
 const R6502OP r6502_styzpgsequence[] = R6502_STORE_ZPG_SEQUENCE(r6502loadzpgtostystep);
 const R6502OP r6502_styabssequence[] = R6502_STORE_ABS_SEQUENCE(r6502loadabstostystep);
 const R6502OP r6502_styzpgxsequence[] = R6502_STORE_ZPGX_SEQUENCE(r6502loadzpgxtostystep);
-const R6502OP r6502_styabsxsequence[] = R6502_STORE_ABSX_SEQUENCE(r6502fixindexedtostystep);
 const R6502OP r6502_saxzpgsequence[] = R6502_STORE_ZPG_SEQUENCE(r6502loadzpgtosaxstep);
 const R6502OP r6502_saxabssequence[] = R6502_STORE_ABS_SEQUENCE(r6502loadabstosaxstep);
 const R6502OP r6502_saxzpgysequence[] = R6502_STORE_ZPGY_SEQUENCE(r6502loadzpgytosaxstep);
-const R6502OP r6502_saxpreindexedsequence[] = R6502_STORE_PREINDEXED_SEQUENCE(r6502loadzpgindtosaxstep);
+const R6502OP r6502_saxpreindexedsequence[] = R6502_STORE_PREINDEXED_SEQUENCE(r6502loadabstosaxstep);
 const R6502OP r6502_axaabsysequence[] = R6502_STORE_ABSY_SEQUENCE(r6502fixindexedtoaxastep);
 const R6502OP r6502_axapostindexedsequence[] = R6502_STORE_POSTINDEXED_SEQUENCE(r6502fixindexedtoaxastep);
 const R6502OP r6502_xasabsysequence[] = R6502_STORE_ABSY_SEQUENCE(r6502fixindexedtoxasstep);
@@ -265,13 +269,13 @@ const R6502OP r6502_bcssequence[] = R6502_BRANCH_SEQUENCE(r6502bcsstep);
 const R6502OP r6502_bnesequence[] = R6502_BRANCH_SEQUENCE(r6502bnestep);
 const R6502OP r6502_beqsequence[] = R6502_BRANCH_SEQUENCE(r6502beqstep);
 const R6502OP r6502_jmpabssequence[] = {r6502latchabslostep, r6502loadpchstep, NULL};
-const R6502OP r6502_jmpabsindsequence[] = {r6502latchabslostep, r6502loadabsstep, r6502latchabsindlostep, r6502loadpchstep, NULL};
-const R6502OP r6502_resetsequence[] = {r6502waitonresetstep, r6502resetstep, r6502notpushedtonotpushstep, r6502notpushedtonotpushstep, r6502notpushedtoresetlostep, r6502latchveclostep, r6502loadpchstep, NULL};
-const R6502OP r6502_brksequence[] = {r6502brktopushpchstep, r6502pushedtopushpclstep, r6502pushedtopushpstep, r6502pushedtointerruptlostep, r6502latchveclostep, r6502loadpchstep, NULL};
-const R6502OP r6502_interruptsequence[] = {r6502topushpchstep, r6502pushedtopushpclstep, r6502pushedtopushpwithoutbstep, r6502pushedtointerruptlostep, r6502latchveclostep, r6502loadpchstep, NULL};
-const R6502OP r6502_jsrsequence[] = {r6502latchabslobeforepushstep, r6502topushpchstep, r6502pushedtopushpclstep, r6502pushedtoloadpchstep, r6502loadpchstep, NULL};
+const R6502OP r6502_jmpabsindsequence[] = {r6502latchabslostep, r6502breadcrumbloadabsstep, r6502latchjmpabsindlostep, r6502loadpchstep, NULL};
+const R6502OP r6502_resetsequence[] = {r6502waitonresetstep, r6502resetstep, r6502notpushedtonotpushstep, r6502notpushedtonotpushstep, r6502breadcrumbnotpushedtoresetlostep, r6502latchveclostep, r6502loadpchstep, NULL};
+const R6502OP r6502_brksequence[] = {r6502tobrkpushpchstep, r6502pushedtopushpclstep, r6502pushedtopushpstep, r6502breadcrumbpushedtointerruptlostep, r6502latchveclostep, r6502loadpchstep, NULL};
+const R6502OP r6502_interruptsequence[] = {r6502topushpchstep, r6502pushedtopushpclstep, r6502pushedtopushpwithoutbstep, r6502breadcrumbpushedtointerruptlostep, r6502latchveclostep, r6502loadpchstep, NULL};
+const R6502OP r6502_jsrsequence[] = {r6502latchabslobeforepushstep, r6502tojsrpushpchstep, r6502pushedtojsrpushpclstep, r6502pushedtoloadpchstep, r6502loadpchstep, NULL};
 const R6502OP r6502_rtisequence[] = R6502_PULL_SEQUENCE(r6502pulledptopullstep, r6502pulledpclstep, r6502loadpchstep);
-const R6502OP r6502_rtssequence[] = R6502_PULL_SEQUENCE(r6502pulledpclstep, r6502loadpchtoincrementstep, r6502nopfromimmediatestep);
+const R6502OP r6502_rtssequence[] = R6502_PULL_SEQUENCE(r6502pulledpclstep, r6502loadpchtoincrementstep, r6502skipstep);
 
 
 const R6502OP* const r6502sequences[R6502_SEQUENCE_CAPACITY+1] =
@@ -548,463 +552,489 @@ const R6502OP* const r6502sequences[R6502_SEQUENCE_CAPACITY+1] =
   r6502_incabsxsequence, //0xFE
   r6502_isbabsxsequence, //0xFF
 
-  r6502_readsequence,
+  r6502_readstretchsequence,
+  r6502_writestretchsequence,
   r6502_decodesequence,
+  r6502_interruptdecodesequence,
   r6502_resetsequence,
   r6502_interruptsequence,
   r6502_asozpgsequence, //displaced opcode 07 sequence
   NULL
 };
 
-
 #ifdef BEEBIT_NO_ASM
-R6502HOSTMAP* r6502read0000(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read0000(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&0000 - &2FFF (RAM)*/
-  map->m = memory[map->address_code>>16];
-  return R6502_EXECUTE_STEP(map);
+  map->m = memory[address_code>>16];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read3000(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read3000(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&3000 - &7FFF (RAM)*/
-  map->m = memory[map->address_code>>16];
-  return R6502_EXECUTE_STEP(map);
+  map->m = memory[address_code>>16];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_0(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_0(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[0][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[0][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_1(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_1(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[1][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[1][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_2(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_2(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[2][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[2][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_3(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_3(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[3][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[3][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_4(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_4(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[4][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[4][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_5(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_5(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[5][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[5][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_6(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_6(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[6][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[6][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_7(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_7(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[7][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[7][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_8(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_8(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[8][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[8][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_9(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_9(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[9][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[9][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_A(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_A(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[10][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[10][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_B(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_B(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[11][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[11][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_C(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_C(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[12][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[12][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_D(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_D(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[13][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[13][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_E(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_E(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[14][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[14][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502read8000_F(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502read8000_F(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF*/
-  map->m = roms[15][(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = roms[15][(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502readC000(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502readC000(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&C000 - &EFFF (OS)*/
-  map->m = memory[map->address_code>>16];
-  return R6502_EXECUTE_STEP(map);
+  map->m = memory[address_code>>16];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502readF000(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502readF000(R6502HOSTMAP* map, unsigned int address_code)
 {
-  if (map->address_code >= 0xFC000000)
-    map->high_read_fork[(map->address_code>>16)-0xFC00](map);
+  if (address_code >= 0xFC000000)
+  {
+    return r6502_high_read_fork[(address_code>>16)-0xFC00](map, address_code);
+  }
   else
   {
     /*&F000 - &FBFF (OS)*/
-    map->m = memory[map->address_code>>16];
-    R6502_EXECUTE_STEP(map)
+    map->m = memory[address_code>>16];
+    R6502_JUMP_WITHOUT_BUS_OP(map)
   }
-  return map;
 }
 
-R6502HOSTMAP* r6502readbp3000_ram(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502readbp3000_ram(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*bbc b+*/
   /*&3000 - &7FFF*/
   /*shadow mode*/
-  unsigned int pc = (map->pc_code>>16);
-  if ((pc >= 0xC000 AND pc < 0xE000)
-    OR ((map->romsel & 0x80) AND pc >= 0xA000 AND pc < 0xB000))
-    map->m = shadow[map->address_code>>16];
+  unsigned int pc = map->sync_pc_code;
+  if (pc >= 0xC0000000 AND pc < 0xE0000000)
+  {
+    map->m = shadow[address_code>>16];
+    R6502_JUMP_WITHOUT_BUS_OP(map)
+  }
   else
-    map->m = memory[map->address_code>>16];
-  return R6502_EXECUTE_STEP(map);
+    return r6502read3000(map, address_code);
 }
 
-R6502HOSTMAP* r6502readbp8000_ram(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502readbp3000_ramram(R6502HOSTMAP* map, unsigned int address_code)
+{
+  /*bbc b+*/
+  /*&3000 - &7FFF*/
+  /*shadow mode plus 12K ram*/
+  unsigned int pc = map->sync_pc_code;
+  if (pc >= 0xA0000000 AND pc < 0xB0000000)
+  {
+    map->m = shadow[address_code>>16];
+    R6502_JUMP_WITHOUT_BUS_OP(map)
+  }
+  else
+    return r6502readbp3000_ram(map, address_code);
+}
+
+R6502HOSTMAP* r6502readbp8000_ram(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*bbc b+*/
   /*&8000 - &AFFF (SHADOW RAM)*/
-  map->m = shadow[(map->address_code>>16)-0x8000];
-  return R6502_EXECUTE_STEP(map);
+  map->m = shadow[(address_code>>16)-0x8000];
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write0000(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write0000(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&0000 - &2FFF (RAM)*/
-  memory[map->address_code>>16] = map->m;
-  return R6502_EXECUTE_STEP(map);
+  memory[address_code>>16] = map->m;
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write3000(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write3000(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&3000 - &7FFF (RAM)*/
-  memory[map->address_code>>16] = map->m;
-  return R6502_EXECUTE_STEP(map);
+  memory[address_code>>16] = map->m;
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_0(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_0(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[0])
   {
     /*check sideways ram write enabled*/
-    roms[0][(map->address_code>>16)-0x8000] = map->m;
+    roms[0][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_1(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_1(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[1])
   {
     /*check sideways ram write enabled*/
-    roms[1][(map->address_code>>16)-0x8000] = map->m;
+    roms[1][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_2(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_2(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[2])
   {
     /*check sideways ram write enabled*/
-    roms[2][(map->address_code>>16)-0x8000] = map->m;
+    roms[2][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_3(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_3(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[3])
   {
     /*check sideways ram write enabled*/
-    roms[3][(map->address_code>>16)-0x8000] = map->m;
+    roms[3][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_4(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_4(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[4])
   {
     /*check sideways ram write enabled*/
-    roms[4][(map->address_code>>16)-0x8000] = map->m;
+    roms[4][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_5(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_5(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[5])
   {
     /*check sideways ram write enabled*/
-    roms[5][(map->address_code>>16)-0x8000] = map->m;
+    roms[5][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_6(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_6(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[6])
   {
     /*check sideways ram write enabled*/
-    roms[6][(map->address_code>>16)-0x8000] = map->m;
+    roms[6][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_7(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_7(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[7])
   {
     /*check sideways ram write enabled*/
-    roms[7][(map->address_code>>16)-0x8000] = map->m;
+    roms[7][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_8(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_8(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[8])
   {
     /*check sideways ram write enabled*/
-    roms[8][(map->address_code>>16)-0x8000] = map->m;
+    roms[8][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_9(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_9(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[9])
   {
     /*check sideways ram write enabled*/
-    roms[9][(map->address_code>>16)-0x8000] = map->m;
+    roms[9][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_A(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_A(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[10])
   {
     /*check sideways ram write enabled*/
-    roms[10][(map->address_code>>16)-0x8000] = map->m;
+    roms[10][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_B(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_B(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[11])
   {
     /*check sideways ram write enabled*/
-    roms[11][(map->address_code>>16)-0x8000] = map->m;
+    roms[11][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_C(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_C(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[12])
   {
     /*check sideways ram write enabled*/
-    roms[12][(map->address_code>>16)-0x8000] = map->m;
+    roms[12][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_D(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_D(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[13])
   {
     /*check sideways ram write enabled*/
-    roms[13][(map->address_code>>16)-0x8000] = map->m;
+    roms[13][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_E(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_E(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[14])
   {
     /*check sideways ram write enabled*/
-    roms[14][(map->address_code>>16)-0x8000] = map->m;
+    roms[14][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502write8000_F(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502write8000_F(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&8000 - &BFFF (SIDEWAYS RAM)*/
   if (map->romwritable[15])
   {
     /*check sideways ram write enabled*/
-    roms[15][(map->address_code>>16)-0x8000] = map->m;
+    roms[15][(address_code>>16)-0x8000] = map->m;
   }
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502writeC000(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502writeC000(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*&C000 - &EFFF (OS - should not be allowed!)*/
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502writeF000(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502writeF000(R6502HOSTMAP* map, unsigned int address_code)
 {
-  if (map->address_code >= 0xFC000000)
-    map->high_write_fork[(map->address_code>>16)-0xFC00](map);
+  if (address_code >= 0xFC000000)
+  {
+    return r6502_high_write_fork[(address_code>>16)-0xFC00](map, address_code);
+  }
   else
   {
     /*&F000 - &FBFF (OS - should not be allowed!)*/
-    R6502_EXECUTE_STEP(map)
+    R6502_JUMP_WITHOUT_BUS_OP(map)
   }
-  return map;
 }
 
-R6502HOSTMAP* r6502writebp3000_ram(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502writebp3000_ram(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*bbc b+*/
   /*&3000 - &7FFF (RAM)*/
   /*shadow mode*/
-  unsigned int pc = (map->pc_code>>16);
-  if ((pc >= 0xC000 AND pc < 0xE000)
-    OR ((map->romsel & 0x80) AND pc >= 0xA000 AND pc < 0xB000))
-    shadow[map->address_code>>16] = map->m;
+  unsigned int pc = map->sync_pc_code;
+  if (pc >= 0xC0000000 AND pc < 0xE0000000)
+  {
+    shadow[address_code>>16] = map->m;
+    R6502_JUMP_WITHOUT_BUS_OP(map)
+  }
   else
-    memory[map->address_code>>16] = map->m;
-  return R6502_EXECUTE_STEP(map);
+    return r6502write3000(map, address_code);
 }
 
-R6502HOSTMAP* r6502writebp8000_ram(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502writebp3000_ramram(R6502HOSTMAP* map, unsigned int address_code)
+{
+  /*bbc b+*/
+  /*&3000 - &7FFF (RAM)*/
+  /*shadow mode plus 12K ram*/
+  unsigned int pc = map->sync_pc_code;
+  if (pc >= 0xA0000000 AND pc < 0xB0000000)
+  {
+    shadow[address_code>>16] = map->m;
+    R6502_JUMP_WITHOUT_BUS_OP(map)
+  }
+  else
+    return r6502writebp3000_ram(map, address_code);
+}
+
+R6502HOSTMAP* r6502writebp8000_ram(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*bbc b+*/
   /*&8000 - &AFFF (SHADOW RAM)*/
-  shadow[(map->address_code>>16)-0x8000] = map->m;
-  return R6502_EXECUTE_STEP(map);
+  shadow[(address_code>>16)-0x8000] = map->m;
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502startstretch(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502startreadstretch(R6502HOSTMAP* map, unsigned int address_code)
 {
-  if ((map->s2cycles.odd ^ map->s2cycles.togo ^ map->s2cycles.original) & 1)
-    map->address_code |= BUS_STRETCH2FLAG;
-  else
-    map->address_code |= BUS_STRETCH1FLAG;
-  return map;
+  map->address_code = address_code;
+  map->stretched_cpu_state = map->cpu_state;
+  map->cpu_state = map->sequences[R6502_READ_STRETCH_SEQUENCE];
+  if (!((map->s2cycles.odd ^ map->s2cycles.togo ^ map->s2cycles.original) & 1))
+    map->cpu_state++;
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502stretch1(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502startwritestretch(R6502HOSTMAP* map, unsigned int address_code)
 {
-  map->address_code += BUS_STRETCH1FLAG;
-  return map;
+  map->address_code = address_code;
+  map->stretched_cpu_state = map->cpu_state;
+  map->cpu_state = map->sequences[R6502_WRITE_STRETCH_SEQUENCE];
+  if (!((map->s2cycles.odd ^ map->s2cycles.togo ^ map->s2cycles.original) & 1))
+    map->cpu_state++;
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502readstretch2(R6502HOSTMAP* map)
-{
-  map->address_code -= BUS_STRETCH2FLAG;
-  map->high_stretched_read_fork[(map->address_code>>16)-0xFC00](map);
-  return map;
-}
-
-R6502HOSTMAP* r6502writestretch2(R6502HOSTMAP* map)
-{
-  map->address_code -= BUS_STRETCH2FLAG;
-  map->high_stretched_write_fork[(map->address_code>>16)-0xFC00](map);
-  return map;
-}
-
-R6502HOSTMAP* r6502readfred(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502readfred(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = 0xFE;
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502readjim(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502readjim(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = 0xFE;
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502writefred(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502writefred(R6502HOSTMAP* map, unsigned int address_code)
 {
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502writejim(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502writejim(R6502HOSTMAP* map, unsigned int address_code)
 {
-  return R6502_EXECUTE_STEP(map);
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 #endif
 
@@ -1020,7 +1050,7 @@ R6502HOSTMAP* swappagesintomemoryb(R6502HOSTMAP* map)
 R6502HOSTMAP* swappagesintomemorybp(R6502HOSTMAP* map)
 {
   int nrom;
-  unsigned int pc = (map->pc_code>>16);
+  unsigned int pc = (map->sync_pc_code>>16);
 
   if ((pc >= 0xC000 AND pc < 0xE000)
     OR ((map->romsel & 0x80) AND pc >= 0xA000 AND pc < 0xB000))
@@ -1054,7 +1084,7 @@ R6502HOSTMAP* swappagesoutofmemoryb(R6502HOSTMAP* map)
 R6502HOSTMAP* swappagesoutofmemorybp(R6502HOSTMAP* map)
 {
   int nrom;
-  unsigned int pc = (map->pc_code>>16);
+  unsigned int pc = (map->sync_pc_code>>16);
 
   if ((pc >= 0xC000 AND pc < 0xE000)
     OR ((map->romsel & 0x80) AND pc >= 0xA000 AND pc < 0xB000))
@@ -1080,96 +1110,108 @@ R6502HOSTMAP* swappagesoutofmemorybp(R6502HOSTMAP* map)
 }
 
 #ifdef BEEBIT_NO_ASM
-R6502HOSTMAP* r6502yield(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502yield(R6502HOSTMAP* map, unsigned int pc_code)
 {
   map->transition1action = map->fetchaction;
   map->transition2action = map->fetchaction;
 
-  map->cpu_state = R6502_FIRST_STEP_IN(R6502_DECODE_SEQUENCE);
+  map->sync_pc_code = pc_code;
+  map->cpu_state = map->sequences[R6502_DECODE_SEQUENCE];
   map->nmis |= NMIS_YIELD;
-  return map;
+  R6502_JUMP_TO_READ_OP(map, map->sync_pc_code)
 }
 
-R6502HOSTMAP* r6502fetch(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502fetch(R6502HOSTMAP* map, unsigned int pc_code)
 {
-  map->cpu_state = R6502_FIRST_STEP_IN(R6502_DECODE_SEQUENCE);
-  return map;
+  map->sync_pc_code = pc_code;
+  map->cpu_state = map->sequences[R6502_DECODE_SEQUENCE];
+  R6502_JUMP_TO_READ_OP(map, map->sync_pc_code)
 }
 
-R6502HOSTMAP* r6502interruptfetch(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502interruptfetch(R6502HOSTMAP* map, unsigned int pc_code)
 {
   map->timesinterruptmissed = 0;
-  map->cpu_state = R6502_SECOND_STEP_IN(R6502_DECODE_SEQUENCE);
-  return map;
+  map->sync_pc_code = pc_code;
+  map->cpu_state = map->sequences[R6502_INTERRUPT_DECODE_SEQUENCE];
+  R6502_JUMP_TO_READ_OP(map, map->sync_pc_code)
 }
 
-R6502HOSTMAP* r6502fetchthentestirq(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502fetchthentestirq(R6502HOSTMAP* map, unsigned int pc_code)
 {
-  map->cpu_state = R6502_FIRST_STEP_IN(R6502_DECODE_SEQUENCE);
+  map->sync_pc_code = pc_code;
+  map->cpu_state = map->sequences[R6502_DECODE_SEQUENCE];
 
   if (map->irq)
     map->transition1action = map->interruptfetchaction;
   else
     map->transition1action = map->transition2action;
   R6502_CHECK_FOR_BREAK(map)
-  return map;
+  R6502_JUMP_TO_READ_OP(map, map->sync_pc_code)
 }
 
-R6502HOSTMAP* r6502enterreset(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502enterreset(R6502HOSTMAP* map, unsigned int pc_code)
 {
   map->timesinterruptmissed = 0;
-  map->cpu_state = R6502_FIRST_STEP_IN(R6502_RESET_SEQUENCE);
-  return map;
+  map->sync_pc_code = pc_code;
+  map->cpu_state = map->sequences[R6502_RESET_SEQUENCE];
+  R6502_JUMP_TO_READ_OP(map, map->sync_pc_code)
 }
 
-R6502HOSTMAP* r6502readstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502decodestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->readcompleted = TRUE;
-  return map;
+  map->cpu_state = map->sequences[(unsigned char)map->m];
+  R6502_JUMP_TO_READ_OP(map, (map->sync_pc_code + 0x10000) & 0xFFFFFFFF)
 }
 
-R6502HOSTMAP* r6502decodestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502interruptdecodestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
-  map->cpu_state = R6502_FIRST_STEP_IN((unsigned char)map->m);
-  return map;
+  map->cpu_state = map->sequences[R6502_INTERRUPT_SEQUENCE];
+  R6502_JUMP_TO_READ_OP(map, map->sync_pc_code)
 }
 
-R6502HOSTMAP* r6502interruptdecodestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502midstretchstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->cpu_state = R6502_FIRST_STEP_IN(R6502_INTERRUPT_SEQUENCE);
-  return map;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_WITHOUT_BUS_OP(map)
 }
 
-R6502HOSTMAP* r6502nopstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502stretchedreadstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->cpu_state++;
-  return map;
+  map->cpu_state = map->stretched_cpu_state;
+  return r6502_high_stretched_read_fork[(map->address_code>>16)-0xFC00](map, map->address_code);
+}
+
+R6502HOSTMAP* r6502stretchedwritestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = map->stretched_cpu_state;
+  return r6502_high_stretched_write_fork[(map->address_code>>16)-0xFC00](map, map->address_code);
+}
+
+R6502HOSTMAP* r6502waitstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_TO_READ_OP(map, map->last_pc_code)
 }
 
 // IMPLIED_STEP
-R6502HOSTMAP* r6502nopfromimpliedstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502nopstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502clcstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502clcstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->ps &= NOTCFLAG;
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502secstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502secstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->ps |= CFLAG;
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502clistep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502clistep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   if (map->ps & IFLAG)
   {
@@ -1180,256 +1222,88 @@ R6502HOSTMAP* r6502clistep(R6502HOSTMAP* map)
     }
     map->ps &= NOTIFLAG;
   }
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502seistep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502seistep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->ps |= IFLAG;
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502cldstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502cldstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->ps &= NOTDFLAG;
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502sedstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502sedstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->ps |= DFLAG;
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502clvstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502clvstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->ps &= NOTVFLAG;
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502taxstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502taxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->x = map->a;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->x & NFLAG) | (map->x == 0 ? ZFLAG : 0);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502taystep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502taystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->y = map->a;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->y & NFLAG) | (map->y == 0 ? ZFLAG : 0);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502txastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502txastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a = map->x;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502txsstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502txsstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->sp_code = (map->x<<24) | (map->sp_code & 0x00FFFFFF);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  map->sp_code = (map->x<<24);
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502tyastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502tyastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a = map->y;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502tsxstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502tsxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->x = map->sp_code>>24;
+  map->x = (map->sp_code>>24);
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->x & NFLAG) | (map->x == 0 ? ZFLAG : 0);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502hltstep1(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502pulledastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code - 0x10000) & 0xFFFFFFFF;
-  map->cpu_state++;
-  return map;
-}
-R6502HOSTMAP* r6502hltstep2(R6502HOSTMAP* map)
-{
-  if (map->transition1action == map->resetaction)
-    map->resetaction(map);
-  else if (map->transition1action == map->yieldaction)
-    map->yieldaction(map);
-  return map;
+  map->a = map->m;
+  map->ps &= (NOTNFLAG & NOTZFLAG);
+  map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-// FROM_IMMEDIATE_STEP / FROM_ADDRESS_STEP
-R6502HOSTMAP* r6502beforepullstep(R6502HOSTMAP* map)
-{
-  map->address_code = ((map->sp_code&0xFF)<<24)|(map->sp_code>>8);
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502topullstep(R6502HOSTMAP* map)
-{
-  map->sp_code = (map->sp_code + 0x1000000) & 0xFFFFFFFF;
-  map->address_code = ((map->sp_code&0xFF)<<24)|(map->sp_code>>8);
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadzpgstep(R6502HOSTMAP* map)
-{
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((unsigned int)map->m<<16) | BUS_BASEFLAG;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502latchabslostep(R6502HOSTMAP* map)
-{
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
-  map->latch = map->m;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadabsstep(R6502HOSTMAP* map)
-{
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((unsigned int)map->m<<24) | (map->latch<<16) | BUS_BASEFLAG;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502latchzpgindlostep(R6502HOSTMAP* map)
-{
-  map->address_code = (map->address_code+0x10000) & 0x00FFFFFF;
-  map->latch = map->m;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadzpgindstep(R6502HOSTMAP* map)
-{
-  map->address_code = ((unsigned int)map->m<<24) | (map->latch<<16) | BUS_BASEFLAG;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadzpgxstep(R6502HOSTMAP* map)
-{
-  map->address_code = (map->address_code+((unsigned int)map->x<<16)) & 0x00FFFFFF;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadzpgystep(R6502HOSTMAP* map)
-{
-  map->address_code = (map->address_code+((unsigned int)map->y<<16)) & 0x00FFFFFF;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadabsxstep(R6502HOSTMAP* map)
-{
-  unsigned int high = (unsigned int)map->m<<24;
-  unsigned int sum = (map->latch + map->x)<<16;
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = high | (sum&0x00FF0000) | BUS_BASEFLAG;
-  map->latch = (map->address_code + (sum&0x01000000)) & 0xFFFFFFFF;
-  if (sum & 0x01000000)
-    map->cpu_state++;
-  else
-    map->cpu_state += 2;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadabsystep(R6502HOSTMAP* map)
-{
-  unsigned int high = (unsigned int)map->m<<24;
-  unsigned int sum = (map->latch + map->y)<<16;
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = high | (sum&0x00FF0000) | BUS_BASEFLAG;
-  map->latch = (map->address_code + (sum&0x01000000)) & 0xFFFFFFFF;
-  if (sum & 0x01000000)
-    map->cpu_state++;
-  else
-    map->cpu_state += 2;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadpostindexedstep(R6502HOSTMAP* map)
-{
-  unsigned int high = (unsigned int)map->m<<24;
-  unsigned int sum = (map->latch + map->y)<<16;
-  map->address_code = high | (sum&0x00FF0000) | BUS_BASEFLAG;
-  map->latch = (map->address_code + (sum&0x01000000)) & 0xFFFFFFFF;
-  if (sum & 0x01000000)
-    map->cpu_state++;
-  else
-    map->cpu_state += 2;
-  return map;
-}
-
-R6502HOSTMAP* r6502linearloadabsxstep(R6502HOSTMAP* map)
-{
-  unsigned int high = (unsigned int)map->m<<24;
-  unsigned int sum = (map->latch + map->x)<<16;
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = high | (sum&0x00FF0000) | BUS_BASEFLAG;
-  map->latch = (map->address_code + (sum&0x01000000)) & 0xFFFFFFFF;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502linearloadabsystep(R6502HOSTMAP* map)
-{
-  unsigned int high = (unsigned int)map->m<<24;
-  unsigned int sum = (map->latch + map->y)<<16;
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = high | (sum&0x00FF0000) | BUS_BASEFLAG;
-  map->latch = (map->address_code + (sum&0x01000000)) & 0xFFFFFFFF;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502linearloadpostindexedstep(R6502HOSTMAP* map)
-{
-  unsigned int high = (unsigned int)map->m<<24;
-  unsigned int sum = (map->latch + map->y)<<16;
-  map->address_code = high | (sum&0x00FF0000) | BUS_BASEFLAG;
-  map->latch = (map->address_code + (sum&0x01000000)) & 0xFFFFFFFF;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502fixindexedstep(R6502HOSTMAP* map)
-{
-  map->address_code = map->latch;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502pulledpstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502pulledpstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned char ps_old = map->ps;
 
@@ -1442,74 +1316,235 @@ R6502HOSTMAP* r6502pulledpstep(R6502HOSTMAP* map)
       R6502_CHECK_FOR_BREAK(map)
     }
   }
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502bitfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502tohltstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_TO_READ_OP(map, map->sync_pc_code)
+}
+
+R6502HOSTMAP* r6502hltstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  if (map->transition1action == map->resetaction)
+    return map->resetaction(map, map->sync_pc_code);
+  else if (map->transition1action == map->yieldaction)
+    return map->yieldaction(map, map->sync_pc_code);
+  else
+    R6502_JUMP_WITHOUT_BUS_OP(map)
+}
+
+// FROM_IMMEDIATE_STEP / FROM_ADDRESS_STEP
+R6502HOSTMAP* r6502beforepullstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_TO_STACK_READ_OP(map, map->sp_code)
+}
+
+R6502HOSTMAP* r6502topullstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->sp_code = (map->sp_code + 0x1000000) & 0xFFFFFFFF;
+  R6502_JUMP_TO_STACK_READ_OP(map, map->sp_code)
+}
+
+R6502HOSTMAP* r6502breadcrumbloadzpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->last_pc_code = (map->sync_pc_code + 0x10000) & 0xFFFFFFFF;
+  map->address_code = (map->m<<24);
+  R6502_JUMP_TO_ZPG_READ_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502loadzpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->last_pc_code = (map->sync_pc_code + 0x10000) & 0xFFFFFFFF;
+  address_code = (map->m<<24);
+  R6502_JUMP_TO_ZPG_READ_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502latchabslostep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->last_pc_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  map->latch = (map->m<<16);
+  R6502_JUMP_TO_READ_OP(map, map->last_pc_code)
+}
+
+R6502HOSTMAP* r6502breadcrumbloadabsstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->address_code = (map->m<<24) | map->latch | BUS_BASEFLAG;
+  R6502_JUMP_TO_READ_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502loadabsstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (map->m<<24) | map->latch | BUS_BASEFLAG;
+  R6502_JUMP_TO_READ_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502latchzpgindlostep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (map->address_code+0x1000000) & 0xFF000000;
+  map->latch = (map->m<<16);
+  R6502_JUMP_TO_ZPG_READ_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502breadcrumbloadzpgxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->address_code = (map->address_code+(map->x<<24)) & 0xFFFFFFFF;
+  R6502_JUMP_TO_ZPG_READ_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502loadzpgxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (map->address_code+(map->x<<24)) & 0xFFFFFFFF;
+  R6502_JUMP_TO_ZPG_READ_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502loadzpgystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (map->address_code+(map->y<<24)) & 0xFFFFFFFF;
+  R6502_JUMP_TO_ZPG_READ_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502loadabsxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int sum = map->latch + (map->x<<16);
+  unsigned int address_code = ((map->m<<24) + sum) | BUS_BASEFLAG;
+  map->address_fix_code = address_code;
+  if (sum & 0x01000000)
+  {
+    map->cpu_state = (R6502OP*)incremented_cpu_state;
+    address_code = (address_code - 0x01000000) & 0xFFFFFFFF;
+  }
+  else
+    map->cpu_state = ((R6502OP*)incremented_cpu_state)+1;
+  R6502_JUMP_TO_READ_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502loadabsystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int sum = map->latch + (map->y<<16);
+  unsigned int address_code = ((map->m<<24) + sum) | BUS_BASEFLAG;
+  map->address_fix_code = address_code;
+  if (sum & 0x01000000)
+  {
+    map->cpu_state = (R6502OP*)incremented_cpu_state;
+    address_code = (address_code - 0x01000000) & 0xFFFFFFFF;
+  }
+  else
+    map->cpu_state = ((R6502OP*)incremented_cpu_state)+1;
+  R6502_JUMP_TO_READ_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502linearloadabsxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int sum = map->latch + (map->x<<16);
+  unsigned int address_code = ((map->m<<24) + sum) | BUS_BASEFLAG;
+  map->address_fix_code = address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  if (sum & 0x01000000)
+    address_code = (address_code - 0x01000000) & 0xFFFFFFFF;
+  R6502_JUMP_TO_READ_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502linearloadabsystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int sum = map->latch + (map->y<<16);
+  unsigned int address_code = ((map->m<<24) + sum) | BUS_BASEFLAG;
+  map->address_fix_code = address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  if (sum & 0x01000000)
+    address_code = (address_code - 0x01000000) & 0xFFFFFFFF;
+  R6502_JUMP_TO_READ_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502breadcrumbfixindexedstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->address_code = map->address_fix_code;
+  R6502_JUMP_TO_READ_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502fixindexedstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = map->address_fix_code;
+  R6502_JUMP_TO_READ_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502bitstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   int aandm = map->a & map->m;
   map->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG);
   map->ps |= (map->m & (NFLAG | VFLAG)) | (aandm == 0 ? ZFLAG : 0);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502orafromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502oraimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a |= map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502orafromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502orastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a |= map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502andfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502andimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a &= map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502andfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502andstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a &= map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502eorfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502eorimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a ^= map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502eorfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502eorstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a ^= map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502adcfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502adcimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int m = map->m;
   unsigned int a = map->a;
@@ -1532,11 +1567,10 @@ R6502HOSTMAP* r6502adcfromimmediatestep(R6502HOSTMAP* map)
   if (sum >= 0x1000)
     map->ps |= CFLAG;
   map->a = ((sum>>4)&0xF0) | (sum&0xF);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502adcfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502adcstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int m = map->m;
   unsigned int a = map->a;
@@ -1559,119 +1593,106 @@ R6502HOSTMAP* r6502adcfromaddressstep(R6502HOSTMAP* map)
   if (sum >= 0x1000)
     map->ps |= CFLAG;
   map->a = ((sum>>4)&0xF0) | (sum&0xF);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502ldafromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502ldaimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a = map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502ldafromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502ldastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a = map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502ldxfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502ldximmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->x = map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->x & NFLAG) | (map->x == 0 ? ZFLAG : 0);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502ldxfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502ldxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->x = map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->x & NFLAG) | (map->x == 0 ? ZFLAG : 0);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502ldyfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502ldyimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->y = map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->y & NFLAG) | (map->y == 0 ? ZFLAG : 0);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502ldyfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502ldystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->y = map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->y & NFLAG) | (map->y == 0 ? ZFLAG : 0);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502cmpfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502cmpimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + map->a - map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502cmpfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502cmpstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + map->a - map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502cpxfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502cpximmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + map->x - map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502cpxfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502cpxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + map->x - map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502cpyfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502cpyimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + map->y - map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502cpyfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502cpystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + map->y - map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502sbcfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502sbcimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int im = 0xFF ^ map->m;
   unsigned int a = map->a;
@@ -1689,12 +1710,11 @@ R6502HOSTMAP* r6502sbcfromimmediatestep(R6502HOSTMAP* map)
     if (!(map->ps & CFLAG))
       sum -= 0x600;
   }
-  R6502_IMMEDIATE_FINISHED(map)
   map->a = ((sum>>4)&0xF0) | (sum&0xF);
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502sbcfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502sbcstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int im = 0xFF ^ map->m;
   unsigned int a = map->a;
@@ -1712,63 +1732,56 @@ R6502HOSTMAP* r6502sbcfromaddressstep(R6502HOSTMAP* map)
     if (!(map->ps & CFLAG))
       sum -= 0x600;
   }
-  R6502_ADDRESSING_FINISHED(map)
   map->a = ((sum>>4)&0xF0) | (sum&0xF);
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502nopfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502skipimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502nopfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502skipstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502laxfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502laxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->x = map->a = map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502lasfromaddressstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502lasstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int anded = (map->sp_code>>24) & map->m;
   map->x = map->a = anded;
-  map->sp_code = (anded<<24) | (map->sp_code & 0x00FFFFFF);
+  map->sp_code = (anded<<24);
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->x & NFLAG) | (map->x == 0 ? ZFLAG : 0);
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_ADDRESSED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502ancfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502ancimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a &= map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0) | ((map->a>>7) & CFLAG);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502alrfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502alrimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int anded = map->a & map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->a = ((anded>>1) & 0x7F);
   map->ps |= (map->a == 0 ? ZFLAG : 0) | (anded & CFLAG);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502arrfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502arrimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int anded = map->a & map->m;
   unsigned int rotated = ((map->ps & CFLAG)<<7) | (anded>>1);
@@ -1789,218 +1802,305 @@ R6502HOSTMAP* r6502arrfromimmediatestep(R6502HOSTMAP* map)
     map->ps |= ((anded>>7) & CFLAG);
   }
   map->a = (rotated & 0xFF);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502xaafromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502xaaimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->a = map->x & map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502oalfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502oalimmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->x = map->a = (map->a | 0xEE) & map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502sbxfromimmediatestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502sbximmediatestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + (map->a & map->x) - map->m;
   map->x = (d & 0xFF);
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (d & NFLAG) | (map->x == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
-  R6502_IMMEDIATE_FINISHED(map)
-  return map;
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(map)
 }
 // MODIFY_STEP 6502 / 65C12
-R6502HOSTMAP* r6502tomodifystep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502tozpgmodifystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code |= BUS_WRITEFLAG;
-  map->cpu_state++;
-  return map;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502aslastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502tomodifystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  unsigned int shifted = ((unsigned int)map->a<<1);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502aslastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int shifted = (map->a<<1);
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->a = shifted & 0xFF;
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502aslstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502aslzpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  unsigned int shifted = ((unsigned int)map->m<<1);
+  unsigned int shifted = (map->m<<1);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->m = shifted & 0xFF;
   map->ps |= (map->m & NFLAG) | (map->m == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502rolastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502aslstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  unsigned int rotated = ((unsigned int)map->a<<1) | (map->ps & CFLAG);
+  unsigned int shifted = (map->m<<1);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  map->m = shifted & 0xFF;
+  map->ps |= (map->m & NFLAG) | (map->m == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502rolastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int rotated = (map->a<<1) | (map->ps & CFLAG);
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->a = rotated & 0xFF;
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502rolstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502rolzpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  unsigned int rotated = ((unsigned int)map->m<<1) | (map->ps & CFLAG);
+  unsigned int rotated = (map->m<<1) | (map->ps & CFLAG);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->m = rotated & 0xFF;
   map->ps |= (map->m & NFLAG) | (map->m == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502lsrastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502rolstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int rotated = (map->m<<1) | (map->ps & CFLAG);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  map->m = rotated & 0xFF;
+  map->ps |= (map->m & NFLAG) | (map->m == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502lsrastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int shifted = (map->a>>1);
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (shifted == 0 ? ZFLAG : 0) | (map->a & CFLAG);
   map->a = shifted;
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502lsrstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502lsrzpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int shifted = (map->m>>1);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (shifted == 0 ? ZFLAG : 0) | (map->m & CFLAG);
   map->m = shifted;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502rorastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502lsrstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int shifted = (map->m>>1);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  map->ps |= (shifted == 0 ? ZFLAG : 0) | (map->m & CFLAG);
+  map->m = shifted;
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502rorastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int rotated = ((map->ps & CFLAG)<<7) | (map->a>>1);
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (rotated & NFLAG) | (rotated == 0 ? ZFLAG : 0) | (map->a & CFLAG);
   map->a = rotated;
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502rorstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502rorzpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int rotated = ((map->ps & CFLAG)<<7) | (map->m>>1);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (rotated & NFLAG) | (rotated == 0 ? ZFLAG : 0) | (map->m & CFLAG);
   map->m = rotated;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502dexstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502rorstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int rotated = ((map->ps & CFLAG)<<7) | (map->m>>1);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  map->ps |= (rotated & NFLAG) | (rotated == 0 ? ZFLAG : 0) | (map->m & CFLAG);
+  map->m = rotated;
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502dexstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->x = (map->x - 1) & 0xFF;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->x & NFLAG) | (map->x == 0 ? ZFLAG : 0);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502deystep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502deystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->y = (map->y - 1) & 0xFF;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->y & NFLAG) | (map->y == 0 ? ZFLAG : 0);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502decstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502deczpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->m = (map->m - 1) & 0xFF;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->m & NFLAG) | (map->m == 0 ? ZFLAG : 0);
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502inxstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502decstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->m = (map->m - 1) & 0xFF;
+  map->ps &= (NOTNFLAG & NOTZFLAG);
+  map->ps |= (map->m & NFLAG) | (map->m == 0 ? ZFLAG : 0);
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502inxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->x = (map->x + 1) & 0xFF;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->x & NFLAG) | (map->x == 0 ? ZFLAG : 0);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502inystep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502inystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->y = (map->y + 1) & 0xFF;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->y & NFLAG) | (map->y == 0 ? ZFLAG : 0);
-  R6502_IMPLIED_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
-R6502HOSTMAP* r6502incstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502inczpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->m = (map->m + 1) & 0xFF;
   map->ps &= (NOTNFLAG & NOTZFLAG);
   map->ps |= (map->m & NFLAG) | (map->m == 0 ? ZFLAG : 0);
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502asostep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502incstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  unsigned int shifted = ((unsigned int)map->m<<1);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->m = (map->m + 1) & 0xFF;
+  map->ps &= (NOTNFLAG & NOTZFLAG);
+  map->ps |= (map->m & NFLAG) | (map->m == 0 ? ZFLAG : 0);
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502asozpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int shifted;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  shifted = (map->m<<1);
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->a |= (shifted & 0xFF);
   map->m = shifted & 0xFF;
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502rlastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502asostep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  unsigned int rotated = ((unsigned int)map->m<<1) | (map->ps & CFLAG);
+  unsigned int shifted;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  shifted = (map->m<<1);
+  map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  map->a |= (shifted & 0xFF);
+  map->m = shifted & 0xFF;
+  map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502rlazpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int rotated = (map->m<<1) | (map->ps & CFLAG);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->a &= rotated;
   map->m = rotated & 0xFF;
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502lsestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502rlastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int rotated = (map->m<<1) | (map->ps & CFLAG);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  map->a &= rotated;
+  map->m = rotated & 0xFF;
+  map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502lsezpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int shifted = (map->m>>1);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->a ^= shifted;
   map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0) | (map->m & CFLAG);
   map->m = shifted;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502rrastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502lsestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int shifted = (map->m>>1);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  map->a ^= shifted;
+  map->ps |= (map->a & NFLAG) | (map->a == 0 ? ZFLAG : 0) | (map->m & CFLAG);
+  map->m = shifted;
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502rrazpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int m = map->m;
   unsigned int a = map->a;
   unsigned int c = m & CFLAG;
   unsigned int sum;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->m = m = ((map->ps & CFLAG)<<7) | (m>>1);
   m = ((m<<4)&0xF00) | (m&0xF);
   a = ((a<<4)&0xF00) | (a&0xF);
@@ -2020,25 +2120,66 @@ R6502HOSTMAP* r6502rrastep(R6502HOSTMAP* map)
   if (sum >= 0x1000)
     map->ps |= CFLAG;
   map->a = ((sum>>4)&0xF0) | (sum&0xF);
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502dcpstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502rrastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
+  unsigned int m = map->m;
+  unsigned int a = map->a;
+  unsigned int c = m & CFLAG;
+  unsigned int sum;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->m = m = ((map->ps & CFLAG)<<7) | (m>>1);
+  m = ((m<<4)&0xF00) | (m&0xF);
+  a = ((a<<4)&0xF00) | (a&0xF);
+  sum = a + 0x0F0 + m + c;
+  map->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  map->ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
+  if (map->ps & DFLAG)
+    sum += 6;
+  map->ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
+  if (map->ps & DFLAG)
+  {
+    if (sum & 0x80)
+      sum -= 6;
+    if (sum >= 0xA00)
+      sum += 0x600;
+  }
+  if (sum >= 0x1000)
+    map->ps |= CFLAG;
+  map->a = ((sum>>4)&0xF0) | (sum&0xF);
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502dcpzpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int d;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->m = (map->m - 1) & 0xFF;
-  unsigned int d = 0x100 + map->a - map->m;
+  d = 0x100 + map->a - map->m;
   map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   map->ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502isbstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502dcpstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int d;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->m = (map->m - 1) & 0xFF;
+  d = 0x100 + map->a - map->m;
+  map->ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  map->ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502isbzpgstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned int m = map->m;
   unsigned int a = map->a;
   unsigned int im, sum;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->m = m = (m+1) & 0xFF;
   im = 0xFF ^ map->m;
   im = ((im<<4)&0xF00) | (im&0xF);
@@ -2055,347 +2196,370 @@ R6502HOSTMAP* r6502isbstep(R6502HOSTMAP* map)
       sum -= 0x600;
   }
   map->a = ((sum>>4)&0xF0) | (sum&0xF);
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, map->address_code)
+}
+
+R6502HOSTMAP* r6502isbstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int m = map->m;
+  unsigned int a = map->a;
+  unsigned int im, sum;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->m = m = (m+1) & 0xFF;
+  im = 0xFF ^ map->m;
+  im = ((im<<4)&0xF00) | (im&0xF);
+  a = ((a<<4)&0xF00) | (a&0xF);
+  sum = a + 0x0F0 + im + (map->ps & CFLAG);
+  map->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  map->ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
+  map->ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
+  if (map->ps & DFLAG)
+  {
+    if (sum & 0x80)
+      sum -= 6;
+    if (!(map->ps & CFLAG))
+      sum -= 0x600;
+  }
+  map->a = ((sum>>4)&0xF0) | (sum&0xF);
+  R6502_JUMP_TO_WRITE_OP(map, map->address_code)
 }
 
 // TO_ADDRESS_STEP / FIX_TO_ADDRESS_STEP
-R6502HOSTMAP* r6502topushpstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502topushpstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = ((map->sp_code&0xFF)<<24) | (map->sp_code>>8) | BUS_WRITEFLAG;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->m = map->ps;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_STACK_WRITE_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502topushastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502topushastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = ((map->sp_code&0xFF)<<24) | (map->sp_code>>8) | BUS_WRITEFLAG;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->m = map->a;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_STACK_WRITE_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502loadzpgtostastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadzpgtostastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((unsigned int)map->m<<16) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->last_pc_code = (map->sync_pc_code + 0x10000) & 0xFFFFFFFF;
+  address_code = (map->m<<24);
   map->m = map->a;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502loadabstostastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadabstostastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((unsigned int)map->m<<24) | (map->latch<<16) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (map->m<<24) | map->latch | BUS_BASEFLAG;
   map->m = map->a;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_WRITE_OP(map, address_code)
 }
 
-
-R6502HOSTMAP* r6502loadzpgindtostastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadzpgxtostastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = ((unsigned int)map->m<<24) | (map->latch<<16) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = ((map->address_code+(map->x<<24)) & 0xFF000000);
   map->m = map->a;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502loadzpgxtostastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502fixindexedtostastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = ((map->address_code+((unsigned int)map->x<<16)) & 0x00FF0000) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->m = map->a;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_WRITE_OP(map, map->address_fix_code)
 }
 
-R6502HOSTMAP* r6502fixindexedtostastep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadzpgtostxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = map->latch | BUS_WRITEFLAG;
-  map->m = map->a;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadzpgtostxstep(R6502HOSTMAP* map)
-{
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((unsigned int)map->m<<16) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->last_pc_code = (map->sync_pc_code + 0x10000) & 0xFFFFFFFF;
+  address_code = (map->m<<24);
   map->m = map->x;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502loadabstostxstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadabstostxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((unsigned int)map->m<<24) | (map->latch<<16) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (map->m<<24) | map->latch | BUS_BASEFLAG;
   map->m = map->x;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502loadzpgytostxstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadzpgytostxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = ((map->address_code+((unsigned int)map->y<<16)) & 0x00FF0000) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = ((map->address_code+(map->y<<24)) & 0xFF000000);
   map->m = map->x;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502fixindexedtostxstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadzpgtostystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = map->latch | BUS_WRITEFLAG;
-  map->m = map->x;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadzpgtostystep(R6502HOSTMAP* map)
-{
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((unsigned int)map->m<<16) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->last_pc_code = (map->sync_pc_code + 0x10000) & 0xFFFFFFFF;
+  address_code = (map->m<<24);
   map->m = map->y;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502loadabstostystep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadabstostystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((unsigned int)map->m<<24) | (map->latch<<16) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (map->m<<24) | map->latch | BUS_BASEFLAG;
   map->m = map->y;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502loadzpgxtostystep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadzpgxtostystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = ((map->address_code+((unsigned int)map->x<<16)) & 0x00FF0000) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = ((map->address_code+(map->x<<24)) & 0xFF000000);
   map->m = map->y;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502fixindexedtostystep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadzpgtosaxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = map->latch | BUS_WRITEFLAG;
-  map->m = map->y;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502loadzpgtosaxstep(R6502HOSTMAP* map)
-{
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((unsigned int)map->m<<16) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->last_pc_code = (map->sync_pc_code + 0x10000) & 0xFFFFFFFF;
+  address_code = (map->m<<24);
   map->m = map->a & map->x;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502loadabstosaxstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadzpgytosaxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((unsigned int)map->m<<24) | (map->latch<<16) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = ((map->address_code+(map->y<<24)) & 0xFF000000);
   map->m = map->a & map->x;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_ZPG_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502loadzpgytosaxstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadabstosaxstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = ((map->address_code+((unsigned int)map->y<<16)) & 0x00FF0000) | BUS_BASEFLAG | BUS_WRITEFLAG;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (map->m<<24) | map->latch | BUS_BASEFLAG;
   map->m = map->a & map->x;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502loadzpgindtosaxstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502fixindexedtoaxastep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = ((unsigned int)map->m<<24) | (map->latch<<16) | BUS_BASEFLAG | BUS_WRITEFLAG;
-  map->m = map->a & map->x;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502fixindexedtoaxastep(R6502HOSTMAP* map)
-{
-  unsigned int hiplusone = (map->address_code>>24)+1;
-  map->m = map->a & map->x & hiplusone;
-  if (map->address_code != map->latch)
-    map->address_code = ((unsigned int)map->m<<24) | (map->address_code & 0x00FFFFFF);
-  map->address_code |= BUS_WRITEFLAG;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502fixindexedtoxasstep(R6502HOSTMAP* map)
-{
-  unsigned int hiplusone = (map->address_code>>24)+1;
-  map->m = map->x & hiplusone;
-  if (map->address_code != map->latch)
-    map->address_code = ((unsigned int)map->m<<24) | (map->address_code & 0x00FFFFFF);
-  map->address_code |= BUS_WRITEFLAG;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502fixindexedtosaystep(R6502HOSTMAP* map)
-{
-  unsigned int hiplusone = (map->address_code>>24)+1;
-  map->m = map->y & hiplusone;
-  if (map->address_code != map->latch)
-    map->address_code = ((unsigned int)map->m<<24) | (map->address_code & 0x00FFFFFF);
-  map->address_code |= BUS_WRITEFLAG;
-  map->cpu_state++;
-  return map;
-}
-
-R6502HOSTMAP* r6502fixindexedtotasstep(R6502HOSTMAP* map)
-{
+  unsigned int sum = map->latch + (map->y<<16);
   unsigned int anded = map->a & map->x;
-  unsigned int hiplusone = (map->address_code>>24)+1;
-  map->sp_code = (anded<<24) | (map->sp_code & 0x00FFFFFF);
-  map->m = anded & hiplusone;
-  if (map->address_code != map->latch)
-    map->address_code = ((unsigned int)map->m<<24) | (map->address_code & 0x00FFFFFF);
-  map->address_code |= BUS_WRITEFLAG;
-  map->cpu_state++;
-  return map;
+  unsigned int address_code = map->address_fix_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  if (sum & 0x01000000)
+  {
+    map->m = anded & (address_code>>24);
+    address_code = (map->m<<24) | (address_code & 0x00FFFFFF);
+  }
+  else
+    map->m = anded & ((address_code>>24)+1);
+  R6502_JUMP_TO_WRITE_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502pushedstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502fixindexedtoxasstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int sum = map->latch + (map->y<<16);
+  unsigned int address_code = map->address_fix_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  if (sum & 0x01000000)
+  {
+    map->m = map->x & (address_code>>24);
+    address_code = (map->m<<24) | (address_code & 0x00FFFFFF);
+  }
+  else
+    map->m = map->x & ((address_code>>24)+1);
+  R6502_JUMP_TO_WRITE_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502fixindexedtosaystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int sum = map->latch + (map->x<<16);
+  unsigned int address_code = map->address_fix_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  if (sum & 0x01000000)
+  {
+    map->m = map->y & (address_code>>24);
+    address_code = (map->m<<24) | (address_code & 0x00FFFFFF);
+  }
+  else
+    map->m = map->y & ((address_code>>24)+1);
+  R6502_JUMP_TO_WRITE_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502fixindexedtotasstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  unsigned int sum = map->latch + (map->y<<16);
+  unsigned int anded = map->a & map->x;
+  unsigned int address_code = map->address_fix_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->sp_code = (anded<<24);
+  if (sum & 0x01000000)
+  {
+    map->m = anded & (address_code>>24);
+    address_code = (map->m<<24) | (address_code & 0x00FFFFFF);
+  }
+  else
+    map->m = anded & ((address_code>>24)+1);
+  R6502_JUMP_TO_WRITE_OP(map, address_code)
+}
+
+R6502HOSTMAP* r6502pushedstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   map->sp_code = (map->sp_code - 0x1000000) & 0xFFFFFFFF;
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  R6502_IMPLIED_NEXT_INSTRUCTION(map)
 }
 
 // BRANCH_STEP
-R6502HOSTMAP* r6502bplstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502bplstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
+  unsigned int address_code;
+  address_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   if (map->ps & NFLAG)
-    R6502_IMPLIED_FINISHED(map)
+    R6502_NEXT_INSTRUCTION(map, address_code)
   else
   {
-    map->latch = (map->m<<16) - ((map->m<<17)&0x01000000);
-    map->cpu_state++;
+    map->latch = (map->m<<16);
+    R6502_JUMP_TO_READ_OP(map, address_code)
   }
-  return map;
 }
 
-R6502HOSTMAP* r6502bmistep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502bmistep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
+  unsigned int address_code;
+  address_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   if (map->ps & NFLAG)
   {
-    map->latch = (map->m<<16) - ((map->m<<17)&0x01000000);
-    map->cpu_state++;
+    map->latch = (map->m<<16);
+    R6502_JUMP_TO_READ_OP(map, address_code)
   }
   else
-    R6502_IMPLIED_FINISHED(map)
-  return map;
+    R6502_NEXT_INSTRUCTION(map, address_code)
 }
 
-R6502HOSTMAP* r6502bvcstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502bvcstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
+  unsigned int address_code;
+  address_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   if (map->ps & VFLAG)
-    R6502_IMPLIED_FINISHED(map)
+    R6502_NEXT_INSTRUCTION(map, address_code)
   else
   {
-    map->latch = (map->m<<16) - ((map->m<<17)&0x01000000);
-    map->cpu_state++;
+    map->latch = (map->m<<16);
+    R6502_JUMP_TO_READ_OP(map, address_code)
   }
-  return map;
 }
 
-R6502HOSTMAP* r6502bvsstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502bvsstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
+  unsigned int address_code;
+  address_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   if (map->ps & VFLAG)
   {
-    map->latch = (map->m<<16) - ((map->m<<17)&0x01000000);
-    map->cpu_state++;
+    map->latch = (map->m<<16);
+    R6502_JUMP_TO_READ_OP(map, address_code)
   }
   else
-    R6502_IMPLIED_FINISHED(map)
-  return map;
+    R6502_NEXT_INSTRUCTION(map, address_code)
 }
 
-R6502HOSTMAP* r6502bccstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502bccstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
+  unsigned int address_code;
+  address_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   if (map->ps & CFLAG)
-    R6502_IMPLIED_FINISHED(map)
+    R6502_NEXT_INSTRUCTION(map, address_code)
   else
   {
-    map->latch = (map->m<<16) - ((map->m<<17)&0x01000000);
-    map->cpu_state++;
+    map->latch = (map->m<<16);
+    R6502_JUMP_TO_READ_OP(map, address_code)
   }
-  return map;
 }
 
-R6502HOSTMAP* r6502bcsstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502bcsstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
+  unsigned int address_code;
+  address_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   if (map->ps & CFLAG)
   {
-    map->latch = (map->m<<16) - ((map->m<<17)&0x01000000);
-    map->cpu_state++;
+    map->latch = (map->m<<16);
+    R6502_JUMP_TO_READ_OP(map, address_code)
   }
   else
-    R6502_IMPLIED_FINISHED(map)
-  return map;
+    R6502_NEXT_INSTRUCTION(map, address_code)
 }
 
-R6502HOSTMAP* r6502bnestep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502bnestep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
+  unsigned int address_code;
+  address_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   if (map->ps & ZFLAG)
-    R6502_IMPLIED_FINISHED(map)
+    R6502_NEXT_INSTRUCTION(map, address_code)
   else
   {
-    map->latch = (map->m<<16) - ((map->m<<17)&0x01000000);
-    map->cpu_state++;
+    map->latch = (map->m<<16);
+    R6502_JUMP_TO_READ_OP(map, address_code)
   }
-  return map;
 }
 
-R6502HOSTMAP* r6502beqstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502beqstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
+  unsigned int address_code;
+  address_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   if (map->ps & ZFLAG)
   {
-    map->latch = (map->m<<16) - ((map->m<<17)&0x01000000);
-    map->cpu_state++;
+    map->latch = (map->m<<16);
+    R6502_JUMP_TO_READ_OP(map, address_code)
   }
   else
-    R6502_IMPLIED_FINISHED(map)
-  return map;
+    R6502_NEXT_INSTRUCTION(map, address_code)
 }
 
-R6502HOSTMAP* r6502branchtakenstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502branchtakenstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + map->latch) & 0xFFFFFFFF;
-  if ((map->address_code>>24) == (map->pc_code>>24))
+  unsigned int address_code = map->sync_pc_code + 0x20000;
+  unsigned int sum = map->latch;
+  if (sum & 0x800000)
+    sum |= 0xFF000000;
+  sum = ((address_code & 0x00FFFFFF) + sum) & 0xFFFFFFFF;
+  address_code = (address_code & 0xFF000000) | (sum & 0x00FFFFFF);
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  if (sum & 0xFF000000)
   {
-    map->address_code = map->pc_code;
+    map->address_fix_code = (address_code + (sum & 0xFF000000)) & 0xFFFFFFFF;
+    R6502_JUMP_TO_READ_OP(map, address_code)
+  }
+  else
+  {
     if (map->transition1action == map->interruptfetchaction)
     {
-      map->cpu_state = R6502_FIRST_STEP_IN(R6502_DECODE_SEQUENCE);
+      map->sync_pc_code = address_code;
+      map->cpu_state = map->sequences[R6502_DECODE_SEQUENCE];
 
       if (map->timesinterruptmissed < 256)
       {
@@ -2406,112 +2570,108 @@ R6502HOSTMAP* r6502branchtakenstep(R6502HOSTMAP* map)
         map->transition2action = map->fetchaction;
         map->nmis |= NMIS_YIELD;
       }
+      R6502_JUMP_TO_READ_OP(map, address_code)
     }
     else
-      map->transition1action(map);
+      R6502_NEXT_INSTRUCTION(map, address_code)
   }
-  else
-  {
-    map->address_code = (map->address_code & 0xFF000000) | (map->pc_code & 0x00FFFFFF);
-    map->cpu_state++;
-  }
-  return map;
 }
 
-R6502HOSTMAP* r6502fixbranchtakenstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502fixbranchtakenstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  return map->transition1action(map, map->address_fix_code);
 }
 
 // JUMPS
-R6502HOSTMAP* r6502latchabsindlostep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502latchjmpabsindlostep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = (map->address_code & 0xFF000000) | ((map->address_code+0x10000) & 0x00FFFFFF);
-  map->latch = map->m;
-  map->cpu_state++;
-  return map;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (map->address_code & 0xFF000000) | ((map->address_code+0x10000) & 0x00FFFFFF);
+  map->latch = (map->m<<16);
+  R6502_JUMP_TO_READ_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502loadpchstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadpchstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = ((unsigned int)map->m<<24) | (map->latch<<16) | BUS_BASEFLAG;
-  R6502_ADDRESSING_FINISHED(map)
-  return map;
+  unsigned int address_code = (map->m<<24) | map->latch | BUS_BASEFLAG;
+  R6502_NEXT_INSTRUCTION(map, address_code)
 }
 
 // VECTORS AND SUBROUTINES
-R6502HOSTMAP* r6502waitonresetstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502waitonresetstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  if (!(map->nmis & NMIS_OLDRESET))
-    startperipheralreset(map, FALSE);
-
-  if (!map->lbreak)
+  if (map->lbreak)
   {
+    if (!(map->nmis & NMIS_OLDRESET))
+      startperipheralreset(map, FALSE);
+
+    R6502_JUMP_WITHOUT_BUS_OP(map)
+  }
+  else
+  {
+    map->cpu_state = (R6502OP*)incremented_cpu_state;
+
+    if (!(map->nmis & NMIS_OLDRESET))
+      startperipheralreset(map, FALSE);
+
     map->nmis &= NMIS_NOTOLDRESET;
     endperipheralreset(map);
-    map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-    map->address_code = map->pc_code;
-    map->cpu_state++;
+    R6502_JUMP_TO_READ_OP(map, (map->sync_pc_code + 0x10000) & 0xFFFFFFFF)
   }
-  return map;
 }
 
-R6502HOSTMAP* r6502resetstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502resetstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = ((map->sp_code&0xFF)<<24)|(map->sp_code>>8);
-  map->cpu_state++;
-  return map;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_TO_STACK_READ_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502notpushedtonotpushstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502notpushedtonotpushstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->sp_code = (map->sp_code - 0x1000000) & 0xFFFFFFFF;
-  map->address_code = ((map->sp_code&0xFF)<<24)|(map->sp_code>>8);
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_STACK_READ_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502notpushedtoresetlostep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502breadcrumbnotpushedtoresetlostep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->sp_code = (map->sp_code - 0x1000000) & 0xFFFFFFFF;
   map->ps |= IFLAG;
   map->address_code = 0xFFFC0000 | BUS_BASEFLAG;
   map->transition1action = map->transition2action;
   R6502_CHECK_FOR_BREAK(map)
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_READ_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502pushedtopushpclstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502pushedtopushpclstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->sp_code = (map->sp_code - 0x1000000) & 0xFFFFFFFF;
-  map->address_code = ((map->sp_code&0xFF)<<24) | (map->sp_code>>8) | BUS_WRITEFLAG;
-  map->m = ((map->pc_code>>16) & 0xFF);
-  map->cpu_state++;
-  return map;
+  map->m = ((map->sync_pc_code>>16) & 0xFF);
+  R6502_JUMP_TO_STACK_WRITE_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502pushedtopushpstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502pushedtopushpstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->sp_code = (map->sp_code - 0x1000000) & 0xFFFFFFFF;
-  map->address_code = ((map->sp_code&0xFF)<<24) | (map->sp_code>>8) | BUS_WRITEFLAG;
   map->m = map->ps;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_STACK_WRITE_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502pushedtopushpwithoutbstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502pushedtopushpwithoutbstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->sp_code = (map->sp_code - 0x1000000) & 0xFFFFFFFF;
-  map->address_code = ((map->sp_code&0xFF)<<24) | (map->sp_code>>8) | BUS_WRITEFLAG;
   map->m = map->ps & NOTBFLAG;
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_STACK_WRITE_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502pushedtointerruptlostep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502breadcrumbpushedtointerruptlostep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->sp_code = (map->sp_code - 0x1000000) & 0xFFFFFFFF;
   map->ps |= IFLAG;
   if ((map->nmis & NMIS_NMI) && !(map->nmis & NMIS_OLDNMI))
@@ -2523,59 +2683,66 @@ R6502HOSTMAP* r6502pushedtointerruptlostep(R6502HOSTMAP* map)
     map->address_code = 0xFFFE0000 | BUS_BASEFLAG;
   map->transition1action = map->transition2action;
   R6502_CHECK_FOR_BREAK(map)
-  map->cpu_state++;
-  return map;
+  R6502_JUMP_TO_READ_OP(map, map->address_code)
 }
 
-R6502HOSTMAP* r6502latchveclostep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502latchveclostep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = (map->address_code+0x10000) & 0xFFFFFFFF;
-  map->latch = map->m;
-  map->cpu_state++;
-  return map;
+  unsigned int address_code;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (map->address_code+0x10000) & 0xFFFFFFFF;
+  map->latch = (map->m<<16);
+  R6502_JUMP_TO_READ_OP(map, address_code)
 }
 
-R6502HOSTMAP* r6502brktopushpchstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502tobrkpushpchstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((map->sp_code&0xFF)<<24) | (map->sp_code>>8) | BUS_WRITEFLAG;
-  map->m = ((map->pc_code>>24) & 0xFF);
-  map->cpu_state++;
-  return map;
+  map->sync_pc_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  return r6502topushpchstep(map, incremented_cpu_state);
 }
 
-R6502HOSTMAP* r6502latchabslobeforepushstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502topushpchstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = (map->pc_code + 0x10000) & 0xFFFFFFFF;
-  map->address_code = ((map->sp_code&0xFF)<<24) | (map->sp_code>>8) | BUS_WRITEFLAG;
-  map->latch = map->m;
-  map->cpu_state++;
-  return map;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->m = ((map->sync_pc_code>>24) & 0xFF);
+  R6502_JUMP_TO_STACK_WRITE_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502topushpchstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502latchabslobeforepushstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->address_code = ((map->sp_code&0xFF)<<24) | (map->sp_code>>8) | BUS_WRITEFLAG;
-  map->m = ((map->pc_code>>24) & 0xFF);
-  map->cpu_state++;
-  return map;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->last_pc_code = (map->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  map->latch = (map->m<<16);
+  R6502_JUMP_TO_STACK_READ_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502pushedtoloadpchstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502tojsrpushpchstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->m = ((map->last_pc_code>>24) & 0xFF);
+  R6502_JUMP_TO_STACK_WRITE_OP(map, map->sp_code)
+}
+
+R6502HOSTMAP* r6502pushedtojsrpushpclstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->sp_code = (map->sp_code - 0x1000000) & 0xFFFFFFFF;
-  map->address_code = map->pc_code;
-  map->cpu_state++;
-  return map;
+  map->m = ((map->last_pc_code>>16) & 0xFF);
+  R6502_JUMP_TO_STACK_WRITE_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502pulledptopullstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502pushedtoloadpchstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->sp_code = (map->sp_code - 0x1000000) & 0xFFFFFFFF;
+  R6502_JUMP_TO_READ_OP(map, map->last_pc_code)
+}
+
+R6502HOSTMAP* r6502pulledptopullstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
   unsigned char ps_old = map->ps;
-
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->sp_code = (map->sp_code + 0x1000000) & 0xFFFFFFFF;
-  map->address_code = ((map->sp_code&0xFF)<<24)|(map->sp_code>>8);
-  map->cpu_state++;
   map->ps = map->m | UFLAG | BFLAG;
   if (ps_old & IFLAG)
   {
@@ -2599,24 +2766,22 @@ R6502HOSTMAP* r6502pulledptopullstep(R6502HOSTMAP* map)
       }
     }
   }
-  return map;
+  R6502_JUMP_TO_STACK_READ_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502pulledpclstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502pulledpclstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->latch = map->m;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
   map->sp_code = (map->sp_code + 0x1000000) & 0xFFFFFFFF;
-  map->address_code = ((map->sp_code&0xFF)<<24)|(map->sp_code>>8);
-  map->cpu_state++;
-  return map;
+  map->latch = (map->m<<16);
+  R6502_JUMP_TO_STACK_READ_OP(map, map->sp_code)
 }
 
-R6502HOSTMAP* r6502loadpchtoincrementstep(R6502HOSTMAP* map)
+R6502HOSTMAP* r6502loadpchtoincrementstep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
 {
-  map->pc_code = ((unsigned int)map->m<<24) | (map->latch<<16) | BUS_BASEFLAG;
-  map->address_code = map->pc_code;
-  map->cpu_state++;
-  return map;
+  map->cpu_state = (R6502OP*)incremented_cpu_state;
+  map->last_pc_code = (map->m<<24) | map->latch | BUS_BASEFLAG;
+  R6502_JUMP_TO_READ_OP(map, map->last_pc_code)
 }
 
 R6502HOSTMAP* r6502startyield(R6502HOSTMAP* map)
@@ -2761,46 +2926,59 @@ int r6502reset(R6502HOSTMAP* map)
   /*map->a = 0;
   map->x = 0;
   map->y = 0;*/
-  map->pc_code = BUS_BASEFLAG;
-  map->sp_code = (0xFF000001) | (BUS_BASEFLAG<<8);
+  map->sync_pc_code = BUS_BASEFLAG;
+  map->sp_code = 0xFF000000;
   map->ps = UFLAG | BFLAG;
+  map->latch = 0;
+  map->m_shift[2] = map->m_shift[1] = map->m_shift[0] = 0;
+  map->a_shift[2] = map->a_shift[1] = map->a_shift[0] = 0;
+  map->x_shift[2] = map->x_shift[1] = map->x_shift[0] = 0;
+  map->y_shift[2] = map->y_shift[1] = map->y_shift[0] = 0;
+  map->ps_shift[2] = map->ps_shift[1] = map->ps_shift[0] = 0;
 
   r6502resetbusfork(map);
   r6502resetreadsandwrite8000s(map);
 
-  map->read3000 = r6502read3000;
-  map->write3000 = r6502write3000;
-  map->read3000_e = NULL;
-  map->write3000_e = NULL;
-  map->read3000_x = NULL;
-  map->write3000_x = NULL;
-  map->readC000_y = NULL;
-  map->writeC000_y = NULL;
+  map->pagezero = &memory[0];
+  map->pageone = &memory[0x100];
+
+  map->s2paging.read3000 = r6502read3000;
+  map->s2paging.write3000 = r6502write3000;
+  map->s2paging.read3000_e = NULL;
+  map->s2paging.write3000_e = NULL;
+  map->s2paging.read3000_x = NULL;
+  map->s2paging.write3000_x = NULL;
+  map->s2paging.readC000_y = NULL;
+  map->s2paging.writeC000_y = NULL;
 
   if (beebit_machinetype == MACHINE_MODELBPLUS)
   {
-    map->read3000_ram = r6502readbp3000_ram;
-    map->write3000_ram = r6502writebp3000_ram;
-    map->read8000_ram = r6502readbp8000_ram;
-    map->write8000_ram = r6502writebp8000_ram;
+    map->s2paging.read3000_ram = r6502readbp3000_ram;
+    map->s2paging.write3000_ram = r6502writebp3000_ram;
+    map->s2paging.read3000_ramram = r6502readbp3000_ramram;
+    map->s2paging.write3000_ramram = r6502writebp3000_ramram;
+    map->s2paging.read8000_ram = r6502readbp8000_ram;
+    map->s2paging.write8000_ram = r6502writebp8000_ram;
 
-    map->swappagesintomemory = swappagesintomemorybp;
-    map->swappagesoutofmemory = swappagesoutofmemorybp;
+    map->s2paging.swapintomemory = swappagesintomemorybp;
+    map->s2paging.swapoutofmemory = swappagesoutofmemorybp;
   }
   else
   {
-    map->read3000_ram = NULL;
-    map->write3000_ram = NULL;
-    map->read8000_ram = NULL;
-    map->write8000_ram = NULL;
+    map->s2paging.read3000_ram = NULL;
+    map->s2paging.write3000_ram = NULL;
+    map->s2paging.read3000_ramram = NULL;
+    map->s2paging.write3000_ramram = NULL;
+    map->s2paging.read8000_ram = NULL;
+    map->s2paging.write8000_ram = NULL;
 
-    map->swappagesintomemory = swappagesintomemoryb;
-    map->swappagesoutofmemory = swappagesoutofmemoryb;
+    map->s2paging.swapintomemory = swappagesintomemoryb;
+    map->s2paging.swapoutofmemory = swappagesoutofmemoryb;
   }
 
   r6502resethighforks(map,
-      r6502startstretch, r6502startstretch,
-      r6502startstretch, r6502startstretch);
+      r6502startreadstretch, r6502startwritestretch,
+      r6502startreadstretch, r6502startwritestretch);
 
   lreturn = r6502setcpuops(map, r6502sequences);
 
@@ -2808,7 +2986,7 @@ int r6502reset(R6502HOSTMAP* map)
   map->transition2action = map->fetchaction;
   map->timesinterruptmissed = 0;
 
-  map->cpu_state = R6502_FIRST_STEP_IN(R6502_RESET_SEQUENCE);
+  map->cpu_state = map->sequences[R6502_RESET_SEQUENCE];
   map->address_code = (map->address_code & 0xFFFF0000) | BUS_BASEFLAG;
 
   return lreturn;
@@ -2816,7 +2994,6 @@ int r6502reset(R6502HOSTMAP* map)
 
 void r6502resetbusfork(R6502HOSTMAP* map)
 {
-  int i;
   map->s4forks[0x00].busop = r6502read0000;
   map->s4forks[0x01].busop = r6502read0000;
   map->s4forks[0x02].busop = r6502read0000;
@@ -2849,18 +3026,6 @@ void r6502resetbusfork(R6502HOSTMAP* map)
   map->s4forks[0x1D].busop = r6502writeC000;
   map->s4forks[0x1E].busop = r6502writeC000;
   map->s4forks[0x1F].busop = r6502writeF000;
-  for (i=0x20; i<0x40; i++)
-  {
-    map->s4forks[i].busop = r6502stretch1;
-  }
-  for (i=0x40; i<0x50; i++)
-  {
-    map->s4forks[i].busop = r6502readstretch2;
-  }
-  for (i=0x50; i<0x60; i++)
-  {
-    map->s4forks[i].busop = r6502writestretch2;
-  }
 }
 
 int r6502setcpuops(R6502HOSTMAP* map, const R6502OP* const *sequences)
@@ -2874,6 +3039,8 @@ int r6502setcpuops(R6502HOSTMAP* map, const R6502OP* const *sequences)
 
   for (j=0; j<R6502_SEQUENCE_CAPACITY; j++)
   {
+    map->sequences[j] = entry;
+
     s = *sequences;
     i=0;
     if (s)
@@ -2906,7 +3073,7 @@ int r6502setcpuops(R6502HOSTMAP* map, const R6502OP* const *sequences)
 
 void r6502resetreadsandwrite8000s(R6502HOSTMAP* map)
 {
-  const R6502OP reads[0x10] =
+  const R6502BUSOP reads[0x10] =
   {
     r6502read8000_0, r6502read8000_1,
     r6502read8000_2, r6502read8000_3,
@@ -2917,7 +3084,7 @@ void r6502resetreadsandwrite8000s(R6502HOSTMAP* map)
     r6502read8000_C, r6502read8000_D,
     r6502read8000_E, r6502read8000_F
   };
-  R6502OP writes[0x10] =
+  R6502BUSOP writes[0x10] =
   {
     r6502write8000_0, r6502write8000_1,
     r6502write8000_2, r6502write8000_3,
@@ -2941,8 +3108,8 @@ void r6502resetreadsandwrite8000s(R6502HOSTMAP* map)
 }
 
 void r6502resethighforks(R6502HOSTMAP* map,
-    R6502OP readFC00, R6502OP writeFC00,
-    R6502OP readFD00, R6502OP writeFD00)
+    R6502BUSOP readFC00, R6502BUSOP writeFC00,
+    R6502BUSOP readFD00, R6502BUSOP writeFD00)
 {
   int i;
 
@@ -2950,34 +3117,43 @@ void r6502resethighforks(R6502HOSTMAP* map,
 
   for (i=0; i<0x100; i++)
   {
-    map->high_read_fork[i] = readFC00;
-    map->high_write_fork[i] = writeFC00;
+    r6502_high_read_fork[i] = readFC00;
+    r6502_high_write_fork[i] = writeFC00;
   }
   for (i=0; i<0x100; i++)
   {
-    map->high_read_fork[0x100+i] = readFD00;
-    map->high_write_fork[0x100+i] = writeFD00;
+    r6502_high_read_fork[0x100+i] = readFD00;
+    r6502_high_write_fork[0x100+i] = writeFD00;
   }
   for (i=0; i<0x100; i++)
   {
-    map->high_read_fork[0x300+i] = r6502readC000;
-    map->high_write_fork[0x300+i] = r6502writeC000;
+    r6502_high_read_fork[0x300+i] = r6502readC000;
+    r6502_high_write_fork[0x300+i] = r6502writeC000;
   }
   for (i=0; i<0x100; i++)
   {
-    map->high_stretched_read_fork[i] = r6502readfred;
-    map->high_stretched_write_fork[i] = r6502writefred;
+    r6502_high_stretched_read_fork[i] = r6502readfred;
+    r6502_high_stretched_write_fork[i] = r6502writefred;
   }
   for (i=0; i<0x100; i++)
   {
-    map->high_stretched_read_fork[0x100+i] = r6502readjim;
-    map->high_stretched_write_fork[0x100+i] = r6502writejim;
+    r6502_high_stretched_read_fork[0x100+i] = r6502readjim;
+    r6502_high_stretched_write_fork[0x100+i] = r6502writejim;
   }
   for (i=0; i<0x100; i++)
   {
-    map->high_stretched_read_fork[0x300+i] = r6502readC000;
-    map->high_stretched_write_fork[0x300+i] = r6502writeC000;
+    r6502_high_stretched_read_fork[0x300+i] = r6502readC000;
+    r6502_high_stretched_write_fork[0x300+i] = r6502writeC000;
   }
+}
+
+void r6502aftersnapshot(R6502HOSTMAP* map)
+{
+  char buffer[1];
+
+  r6502readmemory(&hostmap, buffer, map->sync_pc_code, 1);
+  map->m = buffer[0];
+  map->cpu_state = map->sequences[R6502_DECODE_SEQUENCE];
 }
 
 #ifdef BEEBIT_NO_ASM
@@ -2986,7 +3162,7 @@ void r6502execute(R6502HOSTMAP* map)
   map->nmis &= NMIS_NOTYIELD;
   do
   {
-    map->s4forks[((map->address_code>>28)|(map->address_code<<4))&0x7F].busop(map);
+    (*map->cpu_state)(map, (intptr_t)(map->cpu_state+1));
     if (--map->s2cycles.togo == 0)
       r6502advancetimers(map);
   }
@@ -2994,23 +3170,28 @@ void r6502execute(R6502HOSTMAP* map)
 }
 #endif
 
+static inline R6502HOSTMAP* r6502readmemorystep(R6502HOSTMAP* map, intptr_t incremented_cpu_state)
+{
+  R6502_JUMP_TO_READ_OP(map, map->address_code)
+}
+
 void r6502readmemory(R6502HOSTMAP* map, char *buffer, unsigned int naddress, int ncount)
 {
   int savedaddresscode = map->address_code;
-  int savedcpustate = map->cpu_state;
+  R6502OP* savedcpustate = map->cpu_state;
   unsigned char savedm = map->m;
 
   map->address_code = ((naddress<<16) & 0xFFFF0000) | BUS_BASEFLAG;
-  map->cpu_state = R6502_FIRST_STEP_IN(R6502_READ_SEQUENCE);
+  map->cpu_state = map->sequences[0xEA];
 
   for ( ; ncount > 0; ncount--, buffer++)
   {
-    map->readcompleted = FALSE;
-    do
+    r6502readmemorystep(map, (intptr_t)(map->cpu_state+1));
+
+    while (map->cpu_state != map->sequences[0xEA])
     {
-      map->s4forks[((map->address_code>>28)|(map->address_code<<4))&0x7F].busop(map);
+      (*map->cpu_state)(map, (intptr_t)map->cpu_state+1);
     }
-    while (!map->readcompleted);
     *buffer = map->m;
     map->address_code = (map->address_code + 0x10000) & 0xFFFFFFFF;
   }

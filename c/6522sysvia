@@ -313,7 +313,7 @@ static int systemviapickcyclestogo(void)
 void systemviareset(void)
 {
   int expiryoffset;
-  TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &hostmap, sysvia)
+  TIMER_GET_1MHZ_PERIPHERAL_TOGO_FOR_SNAPSHOT_OFFSET(expiryoffset, &hostmap, sysvia)
 
   hostmap.s2sysvia.t1doubled = expiryoffset;
   hostmap.s2sysvia.t2doubled = expiryoffset;
@@ -355,7 +355,7 @@ void systemviareset(void)
 void systemviabeforesnapshot(void)
 {
   int expiryoffset;
-  TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &hostmap, sysvia)
+  TIMER_GET_1MHZ_PERIPHERAL_TOGO_FOR_SNAPSHOT_OFFSET(expiryoffset, &hostmap, sysvia)
 
   hostmap.s2sysvia.t1doubled -= expiryoffset;
   if (!(hostmap.s0sysvia.acr & 0x20))
@@ -368,14 +368,14 @@ void systemviabeforesnapshot(void)
 void systemviaaftersnapshot(void)
 {
   int expiryoffset;
-  TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, &hostmap, sysvia)
+  TIMER_GET_1MHZ_PERIPHERAL_TOGO_FOR_SNAPSHOT_OFFSET(expiryoffset, &hostmap, sysvia)
 
   hostmap.s2sysvia.t1doubled += expiryoffset;
   TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&hostmap, sysvia, hostmap.s2sysvia.t1doubled + 2)
   if (!(hostmap.s0sysvia.acr & 0x20))
   {
     /*one-shot mode*/
-    hostmap.s2sysvia.t2doubled = expiryoffset;
+    hostmap.s2sysvia.t2doubled += expiryoffset;
     TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(&hostmap, sysvia, hostmap.s2sysvia.t2doubled + 2)
   }
 }
@@ -465,7 +465,7 @@ R6502HOSTMAP* systemviaatzerocycles(R6502HOSTMAP* map)
   return map;
 }
 
-R6502HOSTMAP* systemvia00read(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia00read(R6502HOSTMAP* map, unsigned int address_code)
 {
   unsigned int nresult;
 
@@ -510,10 +510,10 @@ R6502HOSTMAP* systemvia00read(R6502HOSTMAP* map)
   #endif
   map->m = nresult;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia01read_b(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia01read_b(R6502HOSTMAP* map, unsigned int address_code)
 {
   unsigned int nresult;
 
@@ -544,10 +544,10 @@ R6502HOSTMAP* systemvia01read_b(R6502HOSTMAP* map)
   }
   map->m = nresult;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia01read_m(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia01read_m(R6502HOSTMAP* map, unsigned int address_code)
 {
   unsigned int nresult;
 
@@ -587,24 +587,24 @@ R6502HOSTMAP* systemvia01read_m(R6502HOSTMAP* map)
   }
   map->m = nresult;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia02read(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia02read(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = map->s0sysvia.ddrb;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia03read(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia03read(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = map->s0sysvia.ddra;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia04read(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia04read(R6502HOSTMAP* map, unsigned int address_code)
 {
   int cyclecount;
 
@@ -615,10 +615,10 @@ R6502HOSTMAP* systemvia04read(R6502HOSTMAP* map)
   TIMER_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, map, sysvia)
   map->m = ((map->s2sysvia.t1doubled - cyclecount)>>1)&0xFF;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia05read(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia05read(R6502HOSTMAP* map, unsigned int address_code)
 {
   int cyclecount;
 
@@ -626,26 +626,26 @@ R6502HOSTMAP* systemvia05read(R6502HOSTMAP* map)
   TIMER_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, map, sysvia)
   map->m = ((map->s2sysvia.t1doubled - cyclecount)>>9)&0xFF;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia06read(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia06read(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*T1 low order latch*/
   map->m = map->s0sysvia.t1ll;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia07read(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia07read(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*T1 high order latch*/
   map->m = map->s0sysvia.t1lh;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia08read(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia08read(R6502HOSTMAP* map, unsigned int address_code)
 {
   int cyclecount;
 
@@ -663,10 +663,10 @@ R6502HOSTMAP* systemvia08read(R6502HOSTMAP* map)
     map->m = (map->s2sysvia.t2doubled>>1)&0xFF;
   }
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia09read(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia09read(R6502HOSTMAP* map, unsigned int address_code)
 {
   int cyclecount;
 
@@ -681,10 +681,10 @@ R6502HOSTMAP* systemvia09read(R6502HOSTMAP* map)
     map->m = (map->s2sysvia.t2doubled>>9)&0xFF;
   }
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Aread(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Aread(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*shift register*/
   /*SR interrupt flag is cleared (IFR b2)*/
@@ -692,26 +692,26 @@ R6502HOSTMAP* systemvia0Aread(R6502HOSTMAP* map)
   systemviasetirq();
   map->m = map->s0sysvia.sr;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Bread(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Bread(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*auxilary control reg*/
   map->m = map->s0sysvia.acr;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Cread(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Cread(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*peripheral control reg*/
   map->m = map->s0sysvia.pcr;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Dread(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Dread(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*interrupt flag reg*/
   /*b7 of this register will be read as a logic 1*/
@@ -719,18 +719,18 @@ R6502HOSTMAP* systemvia0Dread(R6502HOSTMAP* map)
   systemviasetirq();
   map->m = map->s0sysvia.ifr;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Eread(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Eread(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*interrupt enable reg*/
   map->m = (map->s0sysvia.ier | 0x80);
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Fread_b(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Fread_b(R6502HOSTMAP* map, unsigned int address_code)
 {
   unsigned int nresult;
 
@@ -749,10 +749,10 @@ R6502HOSTMAP* systemvia0Fread_b(R6502HOSTMAP* map)
   }
   map->m = nresult;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Fread_m(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Fread_m(R6502HOSTMAP* map, unsigned int address_code)
 {
   unsigned int nresult;
 
@@ -782,10 +782,10 @@ R6502HOSTMAP* systemvia0Fread_m(R6502HOSTMAP* map)
   }
   map->m = nresult;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia00write_b(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia00write_b(R6502HOSTMAP* map, unsigned int address_code)
 {
   int nlatch,lenabled;
 
@@ -889,10 +889,10 @@ R6502HOSTMAP* systemvia00write_b(R6502HOSTMAP* map)
       break;
   }
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia00write_m(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia00write_m(R6502HOSTMAP* map, unsigned int address_code)
 {
   int nlatch,lenabled;
 
@@ -1026,10 +1026,10 @@ R6502HOSTMAP* systemvia00write_m(R6502HOSTMAP* map)
       break;
   }
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia01write_b(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia01write_b(R6502HOSTMAP* map, unsigned int address_code)
 {
   int nlatch,lenabled;
 
@@ -1079,10 +1079,10 @@ R6502HOSTMAP* systemvia01write_b(R6502HOSTMAP* map)
       break;
   }
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia01write_m(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia01write_m(R6502HOSTMAP* map, unsigned int address_code)
 {
   int nlatch,lenabled;
 
@@ -1137,32 +1137,32 @@ R6502HOSTMAP* systemvia01write_m(R6502HOSTMAP* map)
       break;
   }
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia02write(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia02write(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->s0sysvia.ddrb = map->m;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia03write(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia03write(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->s0sysvia.ddra = map->m;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia04write(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia04write(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*T1 low order latch*/
   map->s0sysvia.t1ll = map->m;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia05write(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia05write(R6502HOSTMAP* map, unsigned int address_code)
 {
   int expiryoffset;
 
@@ -1182,40 +1182,40 @@ R6502HOSTMAP* systemvia05write(R6502HOSTMAP* map)
   }
   map->s2sysvia.t1setint = TRUE;
   map->s2sysvia.t1doubled = (map->s0sysvia.t1lh<<9) | (map->s0sysvia.t1ll<<1);
-  TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, map, sysvia)
+  TIMER_GET_1MHZ_PERIPHERAL_TOGO_FROM_WRITE_OFFSET(expiryoffset, map, sysvia)
   map->s2sysvia.t1doubled += expiryoffset;
   // the interrupt flag is set after the counter has passed through zero
   TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(map, sysvia, map->s2sysvia.t1doubled + 2)
   map->s2sysvia.aftert1 = 0;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia06write(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia06write(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*T1 low order latch*/
   map->s0sysvia.t1ll = map->m;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia07write(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia07write(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*T1 high order latch*/
   map->s0sysvia.t1lh = map->m;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia08write(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia08write(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*T2 low order latch*/
   map->s0sysvia.t2ll = map->m;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia09write(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia09write(R6502HOSTMAP* map, unsigned int address_code)
 {
   int expiryoffset;
 
@@ -1229,7 +1229,7 @@ R6502HOSTMAP* systemvia09write(R6502HOSTMAP* map)
   {
     /*one-shot mode*/
     map->s2sysvia.t2doubled = (map->m<<9) | (map->s0sysvia.t2ll<<1);
-    TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, map, sysvia)
+    TIMER_GET_1MHZ_PERIPHERAL_TOGO_FROM_WRITE_OFFSET(expiryoffset, map, sysvia)
     map->s2sysvia.t2doubled += expiryoffset;
     // the interrupt flag is set after the counter has passed through zero
     TIMER_LIMIT_PERIPHERAL_CYCLES_TO_GO(map, sysvia, map->s2sysvia.t2doubled + 2)
@@ -1241,27 +1241,27 @@ R6502HOSTMAP* systemvia09write(R6502HOSTMAP* map)
     /*speech system not available*/
   }
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Awrite(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Awrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*shift reg*/
   map->s0sysvia.sr = map->m;
   map->s0sysvia.ifr &= 0xFB;
   systemviasetirq();
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Bwrite(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Bwrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   int expiryoffset;
 
   /*auxiliary control reg*/
   if ((map->s0sysvia.acr ^ map->m) & 0x20)
   {
-    TIMER_GET_PERIPHERAL_CYCLE_COUNT_AFTER_EVEN_CYCLE(expiryoffset, map, sysvia)
+    TIMER_GET_1MHZ_PERIPHERAL_TOGO_FROM_WRITE_OFFSET(expiryoffset, map, sysvia)
     if (!(map->m & 0x20))
     {
       /*one-shot mode*/
@@ -1276,10 +1276,10 @@ R6502HOSTMAP* systemvia0Bwrite(R6502HOSTMAP* map)
   }
   map->s0sysvia.acr = map->m;
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Cwrite(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Cwrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*peripheral control reg*/
   map->s0sysvia.pcr = map->m;
@@ -1308,20 +1308,20 @@ R6502HOSTMAP* systemvia0Cwrite(R6502HOSTMAP* map)
     map->s0sysvia.ifr |= 0x08;
   }
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Dwrite(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Dwrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*interrupt flag reg*/
   map->m &= 0x7F; /*not really needed*/
   map->s0sysvia.ifr &= (~map->m);
   systemviasetirq();
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Ewrite(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Ewrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*interrupt enable reg*/
   if (map->m & 0x80)
@@ -1331,10 +1331,10 @@ R6502HOSTMAP* systemvia0Ewrite(R6502HOSTMAP* map)
   map->s0sysvia.ier &= 0x7F;
   systemviasetirq();
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Fwrite_b(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Fwrite_b(R6502HOSTMAP* map, unsigned int address_code)
 {
   int nlatch,lenabled;
 
@@ -1371,10 +1371,10 @@ R6502HOSTMAP* systemvia0Fwrite_b(R6502HOSTMAP* map)
       break;
   }
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* systemvia0Fwrite_m(R6502HOSTMAP* map)
+R6502HOSTMAP* systemvia0Fwrite_m(R6502HOSTMAP* map, unsigned int address_code)
 {
   int nlatch,lenabled;
 
@@ -1417,5 +1417,5 @@ R6502HOSTMAP* systemvia0Fwrite_m(R6502HOSTMAP* map)
       break;
   }
 
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }

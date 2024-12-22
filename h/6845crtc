@@ -59,10 +59,10 @@ extern int cursor_blinktime;
 struct R6502HOSTMAP;
 
 void crtcreset(void);
-struct R6502HOSTMAP* crtc00read(struct R6502HOSTMAP* map);
-struct R6502HOSTMAP* crtc01read(struct R6502HOSTMAP* map);
-struct R6502HOSTMAP* crtc00write(struct R6502HOSTMAP* map);
-struct R6502HOSTMAP* crtc01write(struct R6502HOSTMAP* map);
+struct R6502HOSTMAP* crtc00read(struct R6502HOSTMAP* map, unsigned int address_code);
+struct R6502HOSTMAP* crtc01read(struct R6502HOSTMAP* map, unsigned int address_code);
+struct R6502HOSTMAP* crtc00write(struct R6502HOSTMAP* map, unsigned int address_code);
+struct R6502HOSTMAP* crtc01write(struct R6502HOSTMAP* map, unsigned int address_code);
 void crtcteletextwidthextra(void);
 void crtcwidthextra(void);
 void crtchorizontal(void);

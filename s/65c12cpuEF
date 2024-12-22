@@ -27,19 +27,19 @@
 
 ; Export global symbols
 
-  EXPORT |r65c12sbcfromimmediatestep|
-  EXPORT |r65c12sbcfromaddressstep|
-  EXPORT |r65c12decimalflagsfromimmediatestep|
-  EXPORT |r65c12decimalflagsfromaddressstep|
+  EXPORT |r65c12sbcimmediatestep|
+  EXPORT |r65c12sbcstep|
+  EXPORT |r65c12decimalflagsimmediatestep|
+  EXPORT |r65c12decimalflagsstep|
+  EXPORT |r65c12pulledxstep|
 
-|r65c12sbcfromimmediatestep|
-  LDRB r1,[r0,#:INDEX:R6502_A]
-  LDRB r2,[r0,#:INDEX:R6502_M]
+|r65c12sbcimmediatestep|
   LDRB r3,[r0,#:INDEX:R6502_PS]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
   TST r3,#DFLAG
-  BNE r65c12sbcfromimmediatestepD
+  BNE r65c12sbcimmediatestepD
+  LDRB r1,[r0,#:INDEX:R6502_A]
   TEQ r2,r3,LSR #1   ;jdl** ARM c =6502 c
-  MOV r2,r2,LSL #24
   BIC r3,r3,#NFLAG|VFLAG|ZFLAG|CFLAG
   RSCS r1,r2,r1,ROR #8
   ORRMI r3,r3,#NFLAG
@@ -48,18 +48,15 @@
   MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
   ORREQ r3,r3,#ZFLAG
   STRB r1,[r0,#:INDEX:R6502_A]
-  LDR r2,[r0,#:INDEX:R6502_PC_CODE]
-  ADD r2,r2,#1:SHL:16
   STRB r3,[r0,#:INDEX:R6502_PS]
-  STR r2,[r0,#:INDEX:R6502_PC_CODE]
-  STR r2,[r0,#:INDEX:R6502_ADDRESS_CODE]
-  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
-r65c12sbcfromimmediatestepD
-r65c12sbcfromaddressstepD
+  R6502_IMMEDIATE_NEXT_INSTRUCTION
+r65c12sbcimmediatestepD
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_A]
   TEQ r2,r3,LSR #1   ;jdl** ARM c =6502 c
   ORR r1,r1,r1,ROR #8
   AND r1,r1,#&F000000F
-  ORR r2,r2,r2,ROR #8
+  ORR r2,r2,r2,ROR #24
   AND r2,r2,#&F000000F
   MVN r2,r2
   BIC r3,r3,#NFLAG|VFLAG|ZFLAG|CFLAG
@@ -75,22 +72,19 @@ r65c12sbcfromaddressstepD
   AND r1,r1,#&F000000F
   ORREQ r3,r3,#ZFLAG
   ORR r1,r1,r1,LSR #24
-  AND r1,r1,#&FF
   STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r1,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  ADD r1,r1,#1:SHL:16
   STRB r3,[r0,#:INDEX:R6502_PS]
-  LDR r3,[r0,#:INDEX:R6502_CPU_STATE]
-  ADD r3,r3,#1
-  STR r3,[r0,#:INDEX:R6502_CPU_STATE]
-  MOV pc,lr
+  R6502_JUMP_TO_READ_OP
 
-|r65c12sbcfromaddressstep|
-  LDRB r1,[r0,#:INDEX:R6502_A]
-  LDRB r2,[r0,#:INDEX:R6502_M]
+|r65c12sbcstep|
   LDRB r3,[r0,#:INDEX:R6502_PS]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
   TST r3,#DFLAG
-  BNE r65c12sbcfromaddressstepD
+  BNE r65c12sbcstepD
+  LDRB r1,[r0,#:INDEX:R6502_A]
   TEQ r2,r3,LSR #1   ;jdl** ARM c =6502 c
-  MOV r2,r2,LSL #24
   BIC r3,r3,#NFLAG|VFLAG|ZFLAG|CFLAG
   RSCS r1,r2,r1,ROR #8
   ORRMI r3,r3,#NFLAG
@@ -99,36 +93,65 @@ r65c12sbcfromaddressstepD
   MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
   ORREQ r3,r3,#ZFLAG
   STRB r1,[r0,#:INDEX:R6502_A]
-  LDR r2,[r0,#:INDEX:R6502_PC_CODE]
   STRB r3,[r0,#:INDEX:R6502_PS]
-  STR r2,[r0,#:INDEX:R6502_ADDRESS_CODE]
-  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
-	
-|r65c12decimalflagsfromimmediatestep|
+  R6502_ADDRESSED_NEXT_INSTRUCTION
+r65c12sbcstepD
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
   LDRB r1,[r0,#:INDEX:R6502_A]
-  LDRB r3,[r0,#:INDEX:R6502_PS]
-	MOVS r1,r1,LSL #24
-  LDR r2,[r0,#:INDEX:R6502_PC_CODE]
-  BIC r3,r3,#NFLAG|ZFLAG
+  TEQ r2,r3,LSR #1   ;jdl** ARM c =6502 c
+  ORR r1,r1,r1,ROR #8
+  AND r1,r1,#&F000000F
+  ORR r2,r2,r2,ROR #24
+  AND r2,r2,#&F000000F
+  MVN r2,r2
+  BIC r3,r3,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRCS r3,r3,#CFLAG
   ORRMI r3,r3,#NFLAG
+  ORRVS r3,r3,#VFLAG
+  MOV r2,r1
+  SUBCC r1,r1,#&60000000
+  TST r1,#&80
+  ADDNE r1,r1,#&F000000A
+  TST r2,#&F000000F
+  AND r1,r1,#&F000000F
   ORREQ r3,r3,#ZFLAG
-  ADD r2,r2,#1:SHL:16
-  STR r2,[r0,#:INDEX:R6502_PC_CODE]
+  ORR r1,r1,r1,LSR #24
+  STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
   STRB r3,[r0,#:INDEX:R6502_PS]
-  STR r2,[r0,#:INDEX:R6502_ADDRESS_CODE]
-  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
+  R6502_JUMP_TO_READ_OP
 
-|r65c12decimalflagsfromaddressstep|
+|r65c12decimalflagsimmediatestep|
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDRB r3,[r0,#:INDEX:R6502_PS]
+  MOVS r1,r1,LSL #24
+  BIC r3,r3,#NFLAG|ZFLAG
+  ORRMI r3,r3,#NFLAG
+  ORREQ r3,r3,#ZFLAG
+  STRB r3,[r0,#:INDEX:R6502_PS]
+  R6502_IMMEDIATE_NEXT_INSTRUCTION
+
+|r65c12decimalflagsstep|
   LDRB r1,[r0,#:INDEX:R6502_A]
   LDRB r3,[r0,#:INDEX:R6502_PS]
 	MOVS r1,r1,LSL #24
   BIC r3,r3,#NFLAG|ZFLAG
   ORRMI r3,r3,#NFLAG
   ORREQ r3,r3,#ZFLAG
-  LDR r2,[r0,#:INDEX:R6502_PC_CODE]
   STRB r3,[r0,#:INDEX:R6502_PS]
-  STR r2,[r0,#:INDEX:R6502_ADDRESS_CODE]
-  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
+  R6502_ADDRESSED_NEXT_INSTRUCTION
+
+|r65c12pulledxstep|
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDRB r3,[r0,#:INDEX:R6502_PS]
+  MOVS r1,r2,LSL #24
+  BIC r3,r3,#NFLAG|ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORRMI r3,r3,#NFLAG
+  ORREQ r3,r3,#ZFLAG
+  STRB r3,[r0,#:INDEX:R6502_PS]
+  R6502_IMPLIED_NEXT_INSTRUCTION
 
 ;Data Area
 

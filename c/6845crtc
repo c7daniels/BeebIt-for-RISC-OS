@@ -101,25 +101,25 @@ void crtcreset(void)
   /*xxx = 0;*/
 }
 
-R6502HOSTMAP* crtc00read(R6502HOSTMAP* map)
+R6502HOSTMAP* crtc00read(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = (0); /*m6845_addressreg;*/
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* crtc01read(R6502HOSTMAP* map)
+R6502HOSTMAP* crtc01read(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = (m6845_r[m6845_addressreg]);
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* crtc00write(R6502HOSTMAP* map)
+R6502HOSTMAP* crtc00write(R6502HOSTMAP* map, unsigned int address_code)
 {
   m6845_addressreg = map->m;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* crtc01write(R6502HOSTMAP* map)
+R6502HOSTMAP* crtc01write(R6502HOSTMAP* map, unsigned int address_code)
 {
   if (m6845_addressreg < 16)
     /*cannot write R16-R17*/
@@ -266,7 +266,7 @@ R6502HOSTMAP* crtc01write(R6502HOSTMAP* map)
       /*cannot write R16-R17*/
       break;
   }
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
 void crtcteletextwidthextra(void)

@@ -815,64 +815,64 @@ void w1770command(char nvalue)
 
   if (hostmap.s2cycles.w1770_togo > 0)
   {
-    TIMER_GET_CYCLE_COUNT(cyclecount, &hostmap)
-    hostmap.s2cycles.w1770_togo += cyclecount;
+    TIMER_GET_TOGO_FROM_WRITE_OFFSET(cyclecount, &hostmap)
+    hostmap.s2cycles.w1770_togo += 1 + cyclecount;
     TIMER_LIMIT_CYCLES_TO_GO(&hostmap, hostmap.s2cycles.w1770_togo)
   }
 }
 
-R6502HOSTMAP* w1770controlread(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770controlread(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = map->s0w1770.controlreg;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* w1770controlwrite_bp(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770controlwrite_bp(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->s0w1770.controlreg = map->m;
   map->s0w1770.density = (map->m & 0x08);
   map->s0w1770.side = ((map->m & 0x04) >> 1); /*0 or 2*/
   map->s0w1770.drive = ((map->m & 0x03) >> 1);
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* w1770controlwrite_m(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770controlwrite_m(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->s0w1770.controlreg = map->m;
   map->s0w1770.density = (map->m & 0x20);
   map->s0w1770.side = ((map->m & 0x10) >> 3); /*0 or 2*/
   map->s0w1770.drive = ((map->m & 0x03) >> 1);
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* w1770statusread(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770statusread(R6502HOSTMAP* map, unsigned int address_code)
 {
   UNSETNMI;
   map->m = map->s0w1770.statusreg;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* w1770trackread(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770trackread(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = map->s0w1770.trackreg;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* w1770sectorread(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770sectorread(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = map->s0w1770.sectorreg;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* w1770dataread(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770dataread(R6502HOSTMAP* map, unsigned int address_code)
 {
   if (map->s0w1770.commandreg & 0x80)
     map->s0w1770.statusreg &= STATUS_NOTDATAREQUEST;
   map->m = map->s0w1770.datareg;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* w1770commandwrite(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770commandwrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   UNSETNMI;
   /*command words are only loaded in the command register when the busy status bit is off (status bit 0)*/
@@ -897,22 +897,22 @@ R6502HOSTMAP* w1770commandwrite(R6502HOSTMAP* map)
       w1770command(map->m);
     }
   }
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* w1770trackwrite(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770trackwrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->s0w1770.trackreg = map->s0w1770.track = map->m;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* w1770sectorwrite(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770sectorwrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->s0w1770.sectorreg = map->m;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* w1770datawrite(R6502HOSTMAP* map)
+R6502HOSTMAP* w1770datawrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   if (map->s0w1770.commandreg & 0x80)
   {
@@ -920,5 +920,5 @@ R6502HOSTMAP* w1770datawrite(R6502HOSTMAP* map)
     map->s2w1770.writegate = TRUE;
   }
   map->s0w1770.datareg = map->m;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }

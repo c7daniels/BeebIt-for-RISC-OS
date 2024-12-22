@@ -295,7 +295,7 @@ void videoulasetcursor(void)
   }
 }
 
-R6502HOSTMAP* videoula00write(R6502HOSTMAP* map)
+R6502HOSTMAP* videoula00write(R6502HOSTMAP* map, unsigned int address_code)
 {
   videoula_control = map->m;
   videoula_flashcolour = (map->m & 0x01);
@@ -387,10 +387,10 @@ R6502HOSTMAP* videoula00write(R6502HOSTMAP* map)
     video_startaddress = video_storeaddress;
     video_offset = 0;
   }
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* videoula01write(R6502HOSTMAP* map)
+R6502HOSTMAP* videoula01write(R6502HOSTMAP* map, unsigned int address_code)
 {
   int n1,n2;
 
@@ -512,5 +512,5 @@ R6502HOSTMAP* videoula01write(R6502HOSTMAP* map)
       }
       break;
   }
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }

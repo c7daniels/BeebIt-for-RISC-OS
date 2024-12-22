@@ -150,7 +150,7 @@ void aciaresettimer(void)
   }
 }
 
-R6502HOSTMAP* acia00read(R6502HOSTMAP* map)
+R6502HOSTMAP* acia00read(R6502HOSTMAP* map, unsigned int address_code)
 {
   if (map->s0serial.m6850_statusreg & 0x02)
   {
@@ -164,10 +164,10 @@ R6502HOSTMAP* acia00read(R6502HOSTMAP* map)
     }
   }
   map->m = (map->s0serial.m6850_statusreg);
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* acia01read(R6502HOSTMAP* map)
+R6502HOSTMAP* acia01read(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*clear irq*/
   /*regs.r[0] = 0x04;*/ /*read byte*/
@@ -181,10 +181,10 @@ R6502HOSTMAP* acia01read(R6502HOSTMAP* map)
   map->irq &= IRQ_NOT6850ACIA;
 
   map->m = (map->s0serial.m6850_rxdatareg);
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* acia00write(R6502HOSTMAP* map)
+R6502HOSTMAP* acia00write(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->s0serial.m6850_controlreg = map->m;
   if (!(map->s0serial.m6850_controlreg & 0x10))
@@ -276,10 +276,10 @@ R6502HOSTMAP* acia00write(R6502HOSTMAP* map)
       map->irq &= IRQ_NOT6850ACIA;
       break;
   }
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* acia01write(R6502HOSTMAP* map)
+R6502HOSTMAP* acia01write(R6502HOSTMAP* map, unsigned int address_code)
 {
   /*transmit data register*/
   map->s0serial.m6850_txdatareg = map->m;
@@ -287,18 +287,18 @@ R6502HOSTMAP* acia01write(R6502HOSTMAP* map)
   /*clear irq*/
   map->s0serial.m6850_statusreg &= 0x7F;
   map->irq &= IRQ_NOT6850ACIA;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
 /*-- SERIAL ULA --*/
 
-R6502HOSTMAP* serialularead(R6502HOSTMAP* map)
+R6502HOSTMAP* serialularead(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = (map->s0serial.ula_reg);
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* serialulawrite(R6502HOSTMAP* map)
+R6502HOSTMAP* serialulawrite(R6502HOSTMAP* map, unsigned int address_code)
 {
   int cyclecount;
   map->s0serial.ula_reg = map->m;
@@ -325,15 +325,15 @@ R6502HOSTMAP* serialulawrite(R6502HOSTMAP* map)
     if (map->s2cycles.m6850_togo == 0 && map->s2serial.m6850_timerreset > 0)
     {
       map->s2cycles.m6850_togo = map->s2serial.m6850_timerreset<<1;
-      TIMER_GET_CYCLE_COUNT(cyclecount, &hostmap)
-      map->s2cycles.m6850_togo += cyclecount;
+      TIMER_GET_TOGO_FROM_WRITE_OFFSET(cyclecount, &hostmap)
+      map->s2cycles.m6850_togo += 1 + cyclecount;
       TIMER_LIMIT_CYCLES_TO_GO(&hostmap, map->s2cycles.m6850_togo)
     }
   }
   else
     /*RS423*/
     map->s2cycles.m6850_togo = 0;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
 /*-- UEF --*/

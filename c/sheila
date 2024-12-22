@@ -42,8 +42,8 @@ void sheilareset(R6502HOSTMAP* map)
 {
   const int slow_mask = 0x0F00FF0F;
   int i,j;
-  SHEILAOP* read_fork = &map->high_read_fork[0x200];
-  SHEILAOP* write_fork = &map->high_write_fork[0x200];
+  R6502BUSOP* read_fork = &r6502_high_read_fork[0x200];
+  R6502BUSOP* write_fork = &r6502_high_write_fork[0x200];
 
   /*&FE00 - &FE07 (CRTC)*/
   for (i=0x00; i<0x08; i+=0x02)
@@ -378,55 +378,55 @@ void sheilareset(R6502HOSTMAP* map)
     }
   }
 
-  memcpy(&map->high_stretched_read_fork[0x200], read_fork, sizeof(SHEILAOP)<<8);
-  memcpy(&map->high_stretched_write_fork[0x200], write_fork, sizeof(SHEILAOP)<<8);
+  memcpy(&r6502_high_stretched_read_fork[0x200], read_fork, sizeof(R6502BUSOP)<<8);
+  memcpy(&r6502_high_stretched_write_fork[0x200], write_fork, sizeof(R6502BUSOP)<<8);
 
   for (i=0; i<0x100; i++)
   {
     if (slow_mask & (1<<(i>>3)))
     {
-      read_fork[i] = r6502startstretch;
-      write_fork[i] = r6502startstretch;
+      read_fork[i] = r6502startreadstretch;
+      write_fork[i] = r6502startwritestretch;
     }
   }
 }
 
-R6502HOSTMAP* hostconstantread00(R6502HOSTMAP* map)
+R6502HOSTMAP* hostconstantread00(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = 0x00;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* hostconstantreadFE(R6502HOSTMAP* map)
+R6502HOSTMAP* hostconstantreadFE(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = 0xFE;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* hostconstantreadFF(R6502HOSTMAP* map)
+R6502HOSTMAP* hostconstantreadFF(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = 0xFF;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* romselread(R6502HOSTMAP* map)
+R6502HOSTMAP* romselread(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = map->romsel;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* accconread(R6502HOSTMAP* map)
+R6502HOSTMAP* accconread(R6502HOSTMAP* map, unsigned int address_code)
 {
   map->m = map->acccon;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* hostnowrite(R6502HOSTMAP* map)
+R6502HOSTMAP* hostnowrite(R6502HOSTMAP* map, unsigned int address_code)
 {
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* romselwrite_b(R6502HOSTMAP* map)
+R6502HOSTMAP* romselwrite_b(R6502HOSTMAP* map, unsigned int address_code)
 {
   int nrom = (map->m & 0x0F);
   map->s4forks[0x0B].busop = map->s4forks[0x0A].busop
@@ -434,19 +434,29 @@ R6502HOSTMAP* romselwrite_b(R6502HOSTMAP* map)
   map->s4forks[0x1B].busop = map->s4forks[0x1A].busop
       = map->s4forks[0x19].busop = map->s4forks[0x18].busop = map->write8000s[nrom];
   map->romsel = map->m;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* romselwrite_bp(R6502HOSTMAP* map)
+R6502HOSTMAP* romselwrite_bp(R6502HOSTMAP* map, unsigned int address_code)
 {
   int nrom = (map->m & 0x0F);
   if (map->m & 0x80)
   {
     /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
     map->s4forks[0x0A].busop = map->s4forks[0x09].busop
-        = map->s4forks[0x08].busop = map->read8000_ram;
+        = map->s4forks[0x08].busop = map->s2paging.read8000_ram;
     map->s4forks[0x1A].busop = map->s4forks[0x19].busop
-        = map->s4forks[0x18].busop = map->write8000_ram;
+        = map->s4forks[0x18].busop = map->s2paging.write8000_ram;
+    if (map->acccon & 0x80)
+    {
+      /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
+      map->s4forks[0x07].busop = map->s4forks[0x06].busop
+      = map->s4forks[0x05].busop = map->s4forks[0x04].busop
+      = map->s4forks[0x03].busop = map->s2paging.read3000_ramram;
+      map->s4forks[0x17].busop = map->s4forks[0x16].busop
+      = map->s4forks[0x15].busop = map->s4forks[0x14].busop
+      = map->s4forks[0x13].busop = map->s2paging.write3000_ramram;
+    }
   }
   else
   {
@@ -454,21 +464,31 @@ R6502HOSTMAP* romselwrite_bp(R6502HOSTMAP* map)
         = map->s4forks[0x08].busop = map->read8000s[nrom];
     map->s4forks[0x1A].busop = map->s4forks[0x19].busop
         = map->s4forks[0x18].busop = map->write8000s[nrom];
+    if (map->acccon & 0x80)
+    {
+      /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
+      map->s4forks[0x07].busop = map->s4forks[0x06].busop
+      = map->s4forks[0x05].busop = map->s4forks[0x04].busop
+      = map->s4forks[0x03].busop = map->s2paging.read3000_ram;
+      map->s4forks[0x17].busop = map->s4forks[0x16].busop
+      = map->s4forks[0x15].busop = map->s4forks[0x14].busop
+      = map->s4forks[0x13].busop = map->s2paging.write3000_ram;
+    }
   }
   map->s4forks[0x0B].busop = map->read8000s[nrom];
   map->s4forks[0x1B].busop = map->write8000s[nrom];
   map->romsel = map->m;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* romselwrite_m(R6502HOSTMAP* map)
+R6502HOSTMAP* romselwrite_m(R6502HOSTMAP* map, unsigned int address_code)
 {
   int nrom = (map->m & 0x0F);
   if (map->m & 0x80)
   {
     /*ROMSEL b7 (RAM) (&8000-&8FFF)*/
-    map->s4forks[0x08].busop = map->read8000_ram;
-    map->s4forks[0x18].busop = map->write8000_ram;
+    map->s4forks[0x08].busop = map->s2paging.read8000_ram;
+    map->s4forks[0x18].busop = map->s2paging.write8000_ram;
   }
   else
   {
@@ -480,35 +500,48 @@ R6502HOSTMAP* romselwrite_m(R6502HOSTMAP* map)
   map->s4forks[0x1B].busop = map->s4forks[0x1A].busop
       = map->s4forks[0x19].busop = map->write8000s[nrom];
   map->romsel = map->m;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* accconwrite_bp(R6502HOSTMAP* map)
+R6502HOSTMAP* accconwrite_bp(R6502HOSTMAP* map, unsigned int address_code)
 {
   if (map->m & 0x80)
   {
     /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
-    map->s4forks[0x07].busop = map->s4forks[0x06].busop
-        = map->s4forks[0x05].busop = map->s4forks[0x04].busop
-        = map->s4forks[0x03].busop = map->read3000_ram;
-    map->s4forks[0x17].busop = map->s4forks[0x16].busop
-        = map->s4forks[0x15].busop = map->s4forks[0x14].busop
-        = map->s4forks[0x13].busop = map->write3000_ram;
+    if (map->romsel & 0x80)
+    {
+      /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
+      map->s4forks[0x07].busop = map->s4forks[0x06].busop
+      = map->s4forks[0x05].busop = map->s4forks[0x04].busop
+      = map->s4forks[0x03].busop = map->s2paging.read3000_ramram;
+      map->s4forks[0x17].busop = map->s4forks[0x16].busop
+      = map->s4forks[0x15].busop = map->s4forks[0x14].busop
+      = map->s4forks[0x13].busop = map->s2paging.write3000_ramram;
+    }
+    else
+    {
+      map->s4forks[0x07].busop = map->s4forks[0x06].busop
+      = map->s4forks[0x05].busop = map->s4forks[0x04].busop
+      = map->s4forks[0x03].busop = map->s2paging.read3000_ram;
+      map->s4forks[0x17].busop = map->s4forks[0x16].busop
+      = map->s4forks[0x15].busop = map->s4forks[0x14].busop
+      = map->s4forks[0x13].busop = map->s2paging.write3000_ram;
+    }
   }
   else
   {
     map->s4forks[0x07].busop = map->s4forks[0x06].busop
         = map->s4forks[0x05].busop = map->s4forks[0x04].busop
-        = map->s4forks[0x03].busop = map->read3000;
+        = map->s4forks[0x03].busop = map->s2paging.read3000;
     map->s4forks[0x17].busop = map->s4forks[0x16].busop
         = map->s4forks[0x15].busop = map->s4forks[0x14].busop
-        = map->s4forks[0x13].busop = map->write3000;
+        = map->s4forks[0x13].busop = map->s2paging.write3000;
   }
   map->acccon = map->m;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }
 
-R6502HOSTMAP* accconwrite_m(R6502HOSTMAP* map)
+R6502HOSTMAP* accconwrite_m(R6502HOSTMAP* map, unsigned int address_code)
 {
   switch (map->m & 0x06)
   {
@@ -516,37 +549,37 @@ R6502HOSTMAP* accconwrite_m(R6502HOSTMAP* map)
       /*RAM*/
       map->s4forks[0x07].busop = map->s4forks[0x06].busop
           = map->s4forks[0x05].busop = map->s4forks[0x04].busop
-          = map->s4forks[0x03].busop = map->read3000;
+          = map->s4forks[0x03].busop = map->s2paging.read3000;
       map->s4forks[0x17].busop = map->s4forks[0x16].busop
           = map->s4forks[0x15].busop = map->s4forks[0x14].busop
-          = map->s4forks[0x13].busop = map->write3000;
+          = map->s4forks[0x13].busop = map->s2paging.write3000;
       break;
     case 0x02:
       /*ACCCON b1 (E)*/
       map->s4forks[0x07].busop = map->s4forks[0x06].busop
           = map->s4forks[0x05].busop = map->s4forks[0x04].busop
-          = map->s4forks[0x03].busop = map->read3000_e;
+          = map->s4forks[0x03].busop = map->s2paging.read3000_e;
       map->s4forks[0x17].busop = map->s4forks[0x16].busop
           = map->s4forks[0x15].busop = map->s4forks[0x14].busop
-          = map->s4forks[0x13].busop = map->write3000_e;
+          = map->s4forks[0x13].busop = map->s2paging.write3000_e;
       break;
     case 0x04:
     case 0x06:
       /*ACCCON b2 (X)*/
       map->s4forks[0x07].busop = map->s4forks[0x06].busop
           = map->s4forks[0x05].busop = map->s4forks[0x04].busop
-          = map->s4forks[0x03].busop = map->read3000_x;
+          = map->s4forks[0x03].busop = map->s2paging.read3000_x;
       map->s4forks[0x17].busop = map->s4forks[0x16].busop
           = map->s4forks[0x15].busop = map->s4forks[0x14].busop
-          = map->s4forks[0x13].busop = map->write3000_x;
+          = map->s4forks[0x13].busop = map->s2paging.write3000_x;
       break;
   }
   if (map->m & 0x08)
   {
     /*ACCCON b3 (Y)*/
     /*&C000-&DFFF*/
-    map->s4forks[0x0D].busop = map->s4forks[0x0C].busop = map->readC000_y;
-    map->s4forks[0x1D].busop = map->s4forks[0x1C].busop = map->writeC000_y;
+    map->s4forks[0x0D].busop = map->s4forks[0x0C].busop = map->s2paging.readC000_y;
+    map->s4forks[0x1D].busop = map->s4forks[0x1C].busop = map->s2paging.writeC000_y;
   }
   else
   {
@@ -562,5 +595,5 @@ R6502HOSTMAP* accconwrite_m(R6502HOSTMAP* map)
     map->m &= 0x7F;
   }
   map->acccon = map->m;
-  return R6502_EXECUTE_STEP(map);
+  return map;
 }

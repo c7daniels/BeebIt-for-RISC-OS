@@ -30,10 +30,10 @@ extern char i8271_data[0x1000]; /*hope we don't get any sectors > 4096 bytes*/
 extern void i8271readimage(FILE *hfile, int nlocation, int nlength);
 extern void i8271reset(void);
 extern struct R6502HOSTMAP* i8271poll(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* i8271statusread(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* i8271resultread(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* i8271dataread(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* i8271commandwrite(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* i8271parameterwrite(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* i8271resetwrite(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* i8271datawrite(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* i8271statusread(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* i8271resultread(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* i8271dataread(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* i8271commandwrite(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* i8271parameterwrite(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* i8271resetwrite(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* i8271datawrite(struct R6502HOSTMAP* map, unsigned int address_code);

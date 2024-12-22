@@ -37,19 +37,21 @@
 
 |r6502opcode07interfacestep|
   ;check if it's called from the ROM space
-  LDR r3,[r0,#:INDEX:R6502_PC_CODE]
+  LDR r3,[r0,#:INDEX:R6502_SYNC_PC_CODE]
   TST r3,#&80000000
   BNE r6502opcode07_interface
-  MOV_R6502_FIRST_STEP_IN r2,R6502_OPCODE_07_SEQUENCE
-  STR r2,[r0,#:INDEX:R6502_CPU_STATE]
-  LDR pc,[r0,r2,LSL #2]
+  MOV_R6502_FIRST_STEP_IN r1,r0,R6502_OPCODE_07_SEQUENCE
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR pc, [r1], #4
 r6502opcode07_interface
+  ADD r3,r3,#1:SHL:16
+  STR r3,[r0,#:INDEX:R6502_SYNC_PC_CODE]
   ;Opcode 07 Interface
   STMFD sp!,{r0,r4-r12,lr}
 
   ;swap in memory overlays
   MOV lr,pc
-  LDR pc,[r0,#:INDEX:R6502_SWAPPAGESINTOMEMORY]
+  LDR pc,[r0,#:INDEX:R6502_S2PAGING+:INDEX:S2PAGING_SWAPINTOMEMORY]
 
   ;pointer to bbc memory
   ADD r12,r0,#:INDEX:R6502_MEMORY
@@ -158,11 +160,11 @@ r6502opcode07_2
   ;swap out memory overlays
   LDR r0,[sp],#4
   MOV lr,pc
-  LDR pc,[r0,#:INDEX:R6502_SWAPPAGESOUTOFMEMORY]
-  MOV lr,pc
-  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
+  LDR pc,[r0,#:INDEX:R6502_S2PAGING+:INDEX:S2PAGING_SWAPOUTOFMEMORY]
 
-  LDMFD sp!,{r4-r12,pc}
+  LDMFD sp!,{r4-r12,lr}
+  LDR r1,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
 
 r6502opcode07_error
   ;load the swi number
@@ -189,8 +191,7 @@ r6502opcode07_errorXC
   LDR r10,[sp]
   MOV r9,#&100:SHL:16
   ORR r9,r9,#BUS_BASEFLAG
-  STR r9,[r10,#:INDEX:R6502_PC_CODE]
-  STR r9,[r10,#:INDEX:R6502_ADDRESS_CODE]
+  STR r9,[r10,#:INDEX:R6502_SYNC_PC_CODE]
   ADD r10,r12,r9,LSR #16
 
   ;length of error buffer
@@ -232,11 +233,11 @@ r6502opcode07_error5
   ;swap out memory overlays
   LDR r0,[sp],#4
   MOV lr,pc
-  LDR pc,[r0,#:INDEX:R6502_SWAPPAGESOUTOFMEMORY]
-  MOV lr,pc
-  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
+  LDR pc,[r0,#:INDEX:R6502_S2PAGING+:INDEX:S2PAGING_SWAPOUTOFMEMORY]
 
-  LDMFD sp!,{r4-r12,pc}
+  LDMFD sp!,{r4-r12,lr}
+  LDR r1,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
 
 
 ;Data Area

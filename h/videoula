@@ -33,6 +33,6 @@ extern int ncurrentmode,lteletextmode;
 extern void videoulareset(void);
 extern void videoulasetpalette(void);
 extern int videoularead(unsigned int naddress);
-extern struct R6502HOSTMAP* videoula00write(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* videoula01write(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* videoula00write(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* videoula01write(struct R6502HOSTMAP* map, unsigned int address_code);
 extern void videoulasetcursor(void);

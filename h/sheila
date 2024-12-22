@@ -13,19 +13,17 @@
 
 struct R6502HOSTMAP;
 
-typedef struct R6502HOSTMAP* (*SHEILAOP)(struct R6502HOSTMAP *map);
-
 extern void sheilareset(R6502HOSTMAP* map);
 
-extern struct R6502HOSTMAP* hostconstantread00(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* hostconstantreadFE(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* hostconstantreadFF(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* romselread(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* accconread(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* hostconstantread00(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* hostconstantreadFE(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* hostconstantreadFF(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* romselread(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* accconread(struct R6502HOSTMAP* map, unsigned int address_code);
 
-extern struct R6502HOSTMAP* hostnowrite(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* romselwrite_b(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* romselwrite_bp(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* romselwrite_m(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* accconwrite_bp(struct R6502HOSTMAP* map);
-extern struct R6502HOSTMAP* accconwrite_m(struct R6502HOSTMAP* map);
+extern struct R6502HOSTMAP* hostnowrite(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* romselwrite_b(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* romselwrite_bp(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* romselwrite_m(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* accconwrite_bp(struct R6502HOSTMAP* map, unsigned int address_code);
+extern struct R6502HOSTMAP* accconwrite_m(struct R6502HOSTMAP* map, unsigned int address_code);
