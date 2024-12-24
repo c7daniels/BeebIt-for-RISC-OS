@@ -106,7 +106,6 @@ int beebit_exit; /*exit the emulation F12 or close window*/
 
 int lexit, lprintscreen;
 /*int ncounterstart;*/
-/*clock_t nclock;*/
 
 #ifdef __DEVELOP__
   FILE *htrace;
@@ -281,7 +280,6 @@ void beebitreset(void)
       memory[0x287]=0;
       writesheila(0xFE4E,0xF2);*/
 
-      /*nclock = clock()+NEXT_TIME;*/
       beebit_currenttype = beebit_machinetype;
     }
   }

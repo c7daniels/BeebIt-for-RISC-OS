@@ -46,8 +46,6 @@
 
 extern _kernel_swi_regs regs;
 
-#define TIME_25HZ 4 /*CLK_TCK/25*/ /*25 times per second*/
-#define TIME_50HZ 2 /*CLK_TCK/50*/ /*50 times per second*/
 /*#define VIDEO_DRAWWAIT 0
 #define VIDEO_DRAWBLANK0 1
 #define VIDEO_DRAWLINE 2
@@ -150,7 +148,10 @@ int host_screenoffsetlines;
 int host_screenoffsetremainder;
 unsigned int cursor_bitmap;
 
-clock_t nclock;
+int vsynccount;
+const int ncyclespersecond = 2000000;
+int ncyclespervsync,ncyclespervsyncremainder;
+int ncyclestovsync,ncyclesfromvsynctosecond;
 int nx,ny,nxoffscreen,nxend;
 char video_n;
 int nscreen;
@@ -501,6 +502,90 @@ void videohostmodevars(void)
     nlocalscreenlinelength = nhostscreenlinelength;
     local_teletextlinelength = (local_teletextform >> 2) * nhostscreenlinelength;
   }
+
+  videomeasurerefreshrate();
+}
+
+void videomeasurerefreshrate(void)
+{
+  unsigned int starttime,elapsedtime;
+  unsigned int monotonic;
+  int nsyncs = 0;
+
+  vsync();
+  _kernel_swi(OS_ReadMonotonicTime,&regs,&regs);
+  starttime = regs.r[0];
+
+  do
+  {
+    vsync();
+    _kernel_swi(OS_ReadMonotonicTime,&regs,&regs);
+    elapsedtime = regs.r[0] - starttime;
+    nsyncs++;
+  } while (elapsedtime < 100);
+
+  /*read vertical sync counter*/
+  regs.r[0] = 176;
+  regs.r[1] = 0;
+  regs.r[2] = 0xFF;
+  _kernel_swi(OS_Byte,&regs,&regs);
+  vsynccount = regs.r[1];
+
+  ncyclespervsync = ncyclespersecond / nsyncs;
+  ncyclespervsyncremainder = ncyclespersecond % nsyncs;
+
+  ncyclestovsync = ncyclespervsync + ncyclespervsyncremainder;
+  ncyclesfromvsynctosecond = ncyclespersecond - ncyclestovsync;
+
+  monotonic = hostmap.s2cycles.monotonic + hostmap.s2cycles.original - hostmap.s2cycles.togo;
+
+  hostmap.s2cycles.monotonic_at_yield = monotonic;
+}
+
+void videowaitfornativevsync(void)
+{
+  unsigned int monotonic;
+  int nsyncs = 0;
+  int ncycles;
+
+  monotonic = hostmap.s2cycles.monotonic + hostmap.s2cycles.original - hostmap.s2cycles.togo;
+  ncycles = monotonic - hostmap.s2cycles.monotonic_at_yield;
+
+  while (ncycles > ncyclestovsync)
+  {
+    nsyncs++;
+    ncycles -= ncyclestovsync;
+    if (ncyclesfromvsynctosecond > 0)
+    {
+      ncyclestovsync = ncyclespervsync;
+      ncyclesfromvsynctosecond -= ncyclestovsync;
+    }
+    else
+    {
+      ncyclestovsync = ncyclespervsync + ncyclespervsyncremainder;
+      ncyclesfromvsynctosecond = ncyclespersecond - ncyclestovsync;
+    }
+  }
+
+  if (nsyncs > 0)
+  {
+    vsynccount = (vsynccount - nsyncs) & 0xFF;
+
+    while (TRUE)
+    {
+      /*read vertical sync counter*/
+      regs.r[0] = 176;
+      regs.r[1] = 0;
+      regs.r[2] = 0xFF;
+      _kernel_swi(OS_Byte,&regs,&regs);
+      if (!((regs.r[1] - vsynccount) & 0x80))
+        break;
+      vsync();
+    }
+  }
+
+  ncyclestovsync -= ncycles;
+  hostmap.s2cycles.monotonic_at_yield = monotonic;
 }
 
 int writeusedcolours(void)
@@ -552,7 +637,6 @@ void videoreset(void)
   /*video_phase = VIDEO_DRAWWAIT;*/
   video_field = 0;
   video_drawline = 0;
-  nclock = clock()+TIME_50HZ;
   m6845_vc = 0; /*m6845_vsp;*/
   m6845_sc = -1;
   video_currentrow = 0;
@@ -3674,11 +3758,7 @@ void videoscanline(void)
       /*sync emulated BBC clock with PC clock*/
       if (beebit_cpuspeed == CPU_2MHZ)
       {
-        vsync(); /*wait for native scren vsync*/
-        while (clock() < nclock)
-        {
-        }
-        nclock = clock()+TIME_50HZ;
+        videowaitfornativevsync();
       }
       /*}*/
     }

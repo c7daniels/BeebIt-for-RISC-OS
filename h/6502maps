@@ -21,6 +21,7 @@ R6502_LOG2_MAX_SEQUENCE_LENGTH EQU 3
 
                         ^ 0
 S2CYCLES_MONOTONIC      # &4
+S2CYCLES_YIELD_MONOTONIC # &4
 S2CYCLES_ODD            # &4
 S2CYCLES_TOGO           # &4
 S2CYCLES_ORIGINAL       # &4
@@ -271,7 +272,7 @@ R6502_S2AMX             # SIZEOF_S2AMXMAP
 R6502_S2I8271           # SIZEOF_S2I8271
 R6502_S2W1770           # SIZEOF_S2W1770
 R6502_S2ADC             # SIZEOF_S2ADC
-                        # &130
+                        # &12C
 
 ; shift 4 offsets &400 - &FF0
                         # &A00

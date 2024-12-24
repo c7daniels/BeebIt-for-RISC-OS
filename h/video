@@ -76,6 +76,8 @@ extern void videosetpalette(void);
 extern void videosetscale(void);
 extern void videosetplot(void);
 extern void videohostmodevars(void);
+extern void videomeasurerefreshrate(void);
+extern void videowaitfornativevsync(void);
 extern int writeusedcolours(void);
 extern void videofreeworkspace(void);
 extern void videoreset(void);

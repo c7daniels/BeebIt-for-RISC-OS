@@ -41,6 +41,7 @@ typedef struct
 typedef struct
 {
   unsigned int monotonic; /*used by zeribeepwrite*/
+  unsigned int monotonic_at_yield;
   int odd;
   int togo;
   int original;
@@ -288,7 +289,7 @@ typedef struct R6502HOSTMAP
   S2I8271 s2i8271;
   S2W1770 s2w1770;
   S2ADC s2adc;
-  unsigned int _s2_padding[76];
+  unsigned int _s2_padding[75];
 
   // shift 4 offsets &400 - &FF0
   unsigned int _s4_padding[640];
