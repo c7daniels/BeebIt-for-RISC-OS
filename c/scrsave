@@ -23,6 +23,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "hostmap.h"
 #include "main.h"
 #include "beebit.h"
 #include "swis.h"

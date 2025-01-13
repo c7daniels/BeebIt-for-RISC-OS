@@ -4,53 +4,53 @@
  *
  * Rockwell 6522 Versatile Interface Adapter (VIA)
  *
- * (C) Copyright Michael J Foot, 1998-2001
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mikef@voyager.co.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
-/*#define INITIALTIMERADDVALUE 2
-#define TIMERADDVALUE 4*/
-
 /*User VIA*/
-extern char r6522usrvia_orb; /*output register B*/
-extern char r6522usrvia_irb; /*input register B*/
-extern char r6522usrvia_ora; /*output register A*/
-extern char r6522usrvia_ira; /*input register A*/
-extern char r6522usrvia_ddrb;
-extern char r6522usrvia_ddra;
-extern char r6522usrvia_t1cl;
-extern char r6522usrvia_t1ch;
-extern char r6522usrvia_t1ll;
-extern char r6522usrvia_t1lh;
-extern char r6522usrvia_t2cl;
-extern char r6522usrvia_t2ch;
-extern char r6522usrvia_t2ll;
-extern char r6522usrvia_sr; /*status register*/
-extern char r6522usrvia_acr;
-extern char r6522usrvia_pcr;
-extern char r6522usrvia_ifr;
-extern char r6522usrvia_ier;
-extern char r6522usrvia_porta;
-extern char r6522usrvia_portb;
-extern int r6522usrvia_t1; /*timer 1 (used for speed)*/
-extern int r6522usrvia_t2; /*timer 2 (used for speed)*/
-extern int r6522usrvia_t1setint; /*set interrupt when timer1 reaches 0*/
-extern int r6522usrvia_t2setint; /*set interrupt when timer2 reaches 0*/
-/*extern int r6522usrvia_irq;*/ /*irq interrupt status*/
-extern int r6522usrvia_tick;
-
-extern int amx_timer; /*amx mouse timer*/
-extern int amx_buttons;
-extern int amx_currentx;
-extern int amx_currenty;
-extern int amx_targetx;
-extern int amx_targety;
-
 extern void userviaamxmouse(void);
-extern void userviareset(int lfull);
+extern void userviastartreset(int lfull);
+extern void userviafinishreset(void);
+extern void userviabeforesnapshot(void);
+extern void userviaaftersnapshot(void);
 extern void userviasetirq(void);
-extern void userviasett1t2(int);
-extern char userviaread(int);
-extern void userviawrite(int, char);
-extern int userviamintimer(void);
+extern HOSTMAP* userviaatzerocycles(HOSTMAP* hmap);
+
+extern HOSTMAP* uservia00read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia01read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia02read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia03read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia04read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia05read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia06read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia07read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia08read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia09read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Aread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Bread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Cread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Dread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Eread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Fread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia00write(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia01write(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia02write(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia03write(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia04write(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia05write(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia06write(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia07write(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia08write(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia09write(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Awrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Bwrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Cwrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Dwrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Ewrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* uservia0Fwrite(HOSTMAP* hmap, uintptr_t address_code);

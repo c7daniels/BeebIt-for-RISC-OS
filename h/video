@@ -57,7 +57,7 @@ extern int video_scanline;
 extern int video_display;
 extern int video_framerate;
 extern int *videoscale_workspace;
-extern int nlocalscreen;
+extern intptr_t nlocalscreen;
 extern int nlocalscreenlinelength;
 extern int local_linelengthfloor; /*line length compatible with optimised blank, plot and scale routines*/
 extern int local_teletextform; /*line ratio, pixel depth and graphics separation*/
@@ -78,13 +78,14 @@ extern void videosetplot(void);
 extern void videohostmodevars(void);
 extern int writeusedcolours(void);
 extern void videofreeworkspace(void);
-extern void videoreset(int lfull);
+extern void videoreset(void);
 extern void videomodechange(void);
 /*extern void videoupdate(void);*/
 extern void videoscanline(void);
 extern void videoteletextrelay(void);
 extern void videoteletextdrawrow(void);
+extern HOSTMAP* videoatzerocycles(HOSTMAP* hmap);
 
 extern void (*videoteletext)(void);
-extern void (*videographicsscale)(int bufferaddress, int hostaddress);
-extern void (*videoteletextscale)(int bufferaddress, int hostaddress);
+extern void (*videographicsscale)(intptr_t bufferaddress, intptr_t hostaddress);
+extern void (*videoteletextscale)(intptr_t bufferaddress, intptr_t hostaddress);
