@@ -328,6 +328,7 @@ void videosetscale(void)
     videographicsscale = NULL;
     videoteletextscale = NULL;
   }
+  nclock = clock()+TIME_50HZ;
 }
 
 void videosetplot(void)
@@ -3504,6 +3505,9 @@ void videoscanline(void)
   int naddress,localrow,nscaledscreen;
   int displaycursorx,displaycursorwidth;
   int charstodisplayline;
+#ifdef __RISCOS__
+  int clockdiff;
+#endif
 
   /*---counter---*/
 
@@ -3669,11 +3673,16 @@ void videoscanline(void)
       /*sync emulated BBC clock with PC clock*/
       if (beebit_cpuspeed == CPU_2MHZ)
       {
-        vsync(); /*wait for native scren vsync*/
-        while (clock() < nclock)
+        clockdiff = (int)(clock() - nclock);
+        if (clockdiff < 0)
         {
+          vsync(); /*wait for native screen vsync*/
+          do
+          {
+            clockdiff = (int)(clock() - nclock);
+          } while (clockdiff < 0);
         }
-        nclock = clock()+TIME_50HZ;
+        nclock += clockdiff+TIME_50HZ;
       }
       /*}*/
     }
