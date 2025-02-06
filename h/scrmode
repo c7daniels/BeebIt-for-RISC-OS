@@ -19,6 +19,7 @@ typedef struct
   int log2bpp : 16;
   int ncolour;
   int modeflags;
+  int refreshrate;
 } SCREENMODERECORD;
 
 #ifdef SCREEN_MODES_WITH_NCOLOUR_OPTIONS
