@@ -98,46 +98,49 @@ R6502ZONEMAP* videodisplayslowstop(R6502ZONEMAP* zmap, uintptr_t peripheral_code
 R6502ZONEMAP* videodisplayfaststop(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
 R6502ZONEMAP* videodisplayprogressivestop(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
 
-HOSTMAP* videostepSeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRDLHSstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRDLHSstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRDLstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRDLstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRDHSstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRDHSstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRDstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRDstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRLHSstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRLHSstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRLstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRLstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRHSstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRHSstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoRstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoDLHSstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoDLHSstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoDLstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoDLstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoDHSstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoDHSstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoDstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoDstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoLHSstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoLHSstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoLstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoLstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoHSstepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videoHSstepodd(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videostepFeven(HOSTMAP* hmap, uintptr_t step_code);
-HOSTMAP* videostepodd(HOSTMAP* hmap, uintptr_t step_code);
+HOSTMAP* videoupdateTMstep(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTR0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTBCB2H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTBCB2step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTBCH0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTBCstep(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTB2B1H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTB2B1step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTB2B0H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTB2B0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTB2H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTB2step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTB1H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTB1step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTB0H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTB0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTH0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateTstep(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateMstep(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateR0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateBCB2H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateBCB2step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateBCH0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateBCstep(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateB2B1H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateB2B1step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateB2B0H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateB2B0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateB2H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateB2step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateB1H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateB1step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateB0H0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateB0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdateH0step(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoupdatestep(HOSTMAP* hmap, uintptr_t incremented_step_state);
+HOSTMAP* videoidlestep(HOSTMAP* hmap, uintptr_t incremented_step_state);
 
-HOSTMAP* videoreadeventeven(HOSTMAP* hmap, uintptr_t scan_code);
-HOSTMAP* videoreadeventodd(HOSTMAP* hmap, uintptr_t scan_code);
-HOSTMAP* videoreadsignaleven(HOSTMAP* hmap, uintptr_t scan_code);
-HOSTMAP* videoreadsignalodd(HOSTMAP* hmap, uintptr_t scan_code);
-HOSTMAP* videoreadpsignaleven(HOSTMAP* hmap, uintptr_t scan_code);
-HOSTMAP* videoreadpsignalodd(HOSTMAP* hmap, uintptr_t scan_code);
+HOSTMAP* videoreadevent(HOSTMAP* hmap, uintptr_t scan_code);
+HOSTMAP* videoreadlinetest(HOSTMAP* hmap, uintptr_t scan_code);
+HOSTMAP* videoreadcursorsignal(HOSTMAP* hmap, uintptr_t scan_code);
+HOSTMAP* videoreadpcursorsignal(HOSTMAP* hmap, uintptr_t scan_code);
+HOSTMAP* videoreaddisplaysignal(HOSTMAP* hmap, uintptr_t scan_code);
 HOSTMAP* videoinactivesetskew(HOSTMAP* hmap, uint8_t r8);
 HOSTMAP* videosetskew(HOSTMAP* hmap, uint8_t r8);
 HOSTMAP* videoprogressivesetskew(HOSTMAP* hmap, uint8_t r8);
@@ -731,51 +734,20 @@ static inline void videosetdisplayfunctions(VIDEOSCALECHOICE* choice)
     hmap->B_vidbuf.setskewop = videosetskew;
 }
 
-static inline void videosetstepfunctions(VIDEOSCALECHOICE* choice)
+static inline void videosetreadfour(HOSTVIDEOREADOP* first, const HOSTVIDEOREADOP* src)
 {
-  HOSTMAP* hmap = &hostmap;
-  HOSTVIDEOSTEPOP stepops[64] = {
-    videostepSeven, videostepodd, videostepFeven, videostepodd,
-    videostepSeven, videoHSstepodd, videoHSstepFeven, videoHSstepodd,
-    videostepSeven, videoLstepodd, videoLstepFeven, videoLstepodd,
-    videostepSeven, videoLHSstepodd, videoLHSstepFeven, videoLHSstepodd,
-    videostepSeven, videoDstepodd, videoDstepFeven, videoDstepodd,
-    videostepSeven, videoDHSstepodd, videoDHSstepFeven, videoDHSstepodd,
-    videostepSeven, videoDLstepodd, videoDLstepFeven, videoDLstepodd,
-    videostepSeven, videoDLHSstepodd, videoDLHSstepFeven, videoDLHSstepodd,
-    videostepSeven, videoRstepodd, videoRstepFeven, videoRstepodd,
-    videostepSeven, videoRHSstepodd, videoRHSstepFeven, videoRHSstepodd,
-    videostepSeven, videoRLstepodd, videoRLstepFeven, videoRLstepodd,
-    videostepSeven, videoRLHSstepodd, videoRLHSstepFeven, videoRLHSstepodd,
-    videostepSeven, videoRDstepodd, videoRDstepFeven, videoRDstepodd,
-    videostepSeven, videoRDHSstepodd, videoRDHSstepFeven, videoRDHSstepodd,
-    videostepSeven, videoRDLstepodd, videoRDLstepFeven, videoRDLstepodd,
-    videostepSeven, videoRDLHSstepodd, videoRDLHSstepFeven, videoRDLHSstepodd
-  };
-
-  memcpy(hmap->videostepops, stepops, 64*sizeof(HOSTVIDEOSTEPOP));
-}
-
-static void videosetreadfour(HOSTVIDEOREADOP* first, const VIDEOREADFOUR* src)
-{
-  first[0] = (*src)[0];
-  first[4] = (*src)[1];
-  first[8] = (*src)[2];
-  first[12] = (*src)[3];
-}
-
-static void videosetreadsixteen(HOSTVIDEOREADOP* first, const VIDEOREADSIXTEEN* src)
-{
-  videosetreadfour(first, (*src)[0]);
-  videosetreadfour(first+1, (*src)[1]);
-  videosetreadfour(first+2, (*src)[2]);
-  videosetreadfour(first+3, (*src)[3]);
+  first[0] = src[0];
+  first[4] = src[1];
+  first[8] = src[2];
+  first[12] = src[3];
 }
 
 static inline void videosetreadfunctions(void)
 {
   HOSTMAP* hmap = &hostmap;
   const VIDEOREADSET* readset;
+  const VIDEOREADTWENTY* readgraphicstwenty;
+  const VIDEOREADTWENTY* readteletexttwenty;
   int i;
 
   if (beebit_videospeed == VIDEO_PROGRESSIVE_SLOW)
@@ -783,40 +755,52 @@ static inline void videosetreadfunctions(void)
   else
     readset = &videoreadset;
 
+  readgraphicstwenty = (*readset)[0];
+
   if (beebit_machinetype == MACHINE_MODELB)
-  {
-    videosetreadsixteen(&hmap->videoreadseven[0], (*readset)[0]);
-    videosetreadsixteen(&hmap->videoreadseven[16], (*readset)[0]);
-    videosetreadsixteen(&hmap->videoreadsodd[0], (*readset)[3]);
-    videosetreadsixteen(&hmap->videoreadsodd[16], (*readset)[3]);
-  }
+    readteletexttwenty = (*readset)[1];
   else
+    readteletexttwenty = (*readset)[2];
+
+  for (i=0; i<4; i++)
   {
-    videosetreadsixteen(&hmap->videoreadseven[0], (*readset)[1]);
-    videosetreadsixteen(&hmap->videoreadseven[16], (*readset)[2]);
-    videosetreadsixteen(&hmap->videoreadsodd[0], (*readset)[4]);
-    videosetreadsixteen(&hmap->videoreadsodd[16], (*readset)[5]);
+    memcpy(&hmap->videographicswrapreads[i<<2], (*(*readgraphicstwenty)[i+1]), sizeof(VIDEOREADFOUR));
+  }
+  for (i=0; i<4; i++)
+  {
+    memcpy(&hmap->videoteletextwrapreads[i<<2], (*(*readteletexttwenty)[i+1]), sizeof(VIDEOREADFOUR));
+  }
+
+  videosetreadfour(&hmap->videoreads[0], (*(* readgraphicstwenty)[0]));
+  videosetreadfour(&hmap->videoreads[1], &hmap->videographicswrapreads[hmap->screenstartindex<<2]);
+  videosetreadfour(&hmap->videoreads[2], (*(* readteletexttwenty)[0]));
+  videosetreadfour(&hmap->videoreads[3], &hmap->videoteletextwrapreads[hmap->screenstartindex<<2]);
+
+  for (i=16; i<32; i++)
+  {
+    hmap->videoreads[i] = videoreaddisplaysignal;
   }
   if (hmap->A_vidbuf.progressive)
   {
     for (i=32; i<64; i++)
     {
-      hmap->videoreadseven[i] = videoreadpsignaleven;
-      hmap->videoreadsodd[i] = videoreadpsignalodd;
+      hmap->videoreads[i] = videoreadpcursorsignal;
     }
   }
   else
   {
     for (i=32; i<64; i++)
     {
-      hmap->videoreadseven[i] = videoreadsignaleven;
-      hmap->videoreadsodd[i] = videoreadsignalodd;
+      hmap->videoreads[i] = videoreadcursorsignal;
     }
   }
   for (i=64; i<128; i++)
   {
-    hmap->videoreadseven[i] = videoreadeventeven;
-    hmap->videoreadsodd[i] = videoreadeventodd;
+    hmap->videoreads[i] = videoreadlinetest;
+  }
+  for (i=128; i<256; i++)
+  {
+    hmap->videoreads[i] = videoreadevent;
   }
 }
 
@@ -1266,11 +1250,10 @@ void videosetscale(void)
   if (beebit_videospeed == VIDEO_FAST)
     hmap->A_vidbuf.skip |= hmap->A_vidbuf.fastskipflipflop;
 
-  hmap->B_crtc.signalbuffer &= (VIDEOSTEPSIGNALDISPLAY|VIDEOSTEPSIGNALSKEW1DISPLAY|VIDEOSTEPSIGNALSKEW2DISPLAY);
+  hmap->B_crtc.cursorbuffer = 0;
 
   videoulasetloads();
   videosetdisplayfunctions(&choice);
-  videosetstepfunctions(&choice);
   videosetreadfunctions();
   if (hmap->A_vidbuf.progressive)
   {
@@ -1419,7 +1402,91 @@ void videofreeworkspace(void)
 
 void videoreset(void)
 {
+  int i;
   HOSTMAP* hmap = &hostmap;
+  CRTCSTEPOP crtctaggedops[256] = {
+    videoupdatestep, videoupdateH0step, videoupdateB0step, videoupdateB0H0step,
+    videoupdateB1step, videoupdateB1H0step, videoupdateB1step, videoupdateB1H0step,
+    videoupdateB2step, videoupdateB2H0step, videoupdateB2B0step, videoupdateB2B0H0step,
+    videoupdateB2B1step, videoupdateB2B1H0step, videoupdateB2B1step, videoupdateB2B1H0step,
+
+    videoupdateBCstep, videoupdateBCH0step, videoupdateB0step, videoupdateB0H0step,
+    videoupdateB1step, videoupdateB1H0step, videoupdateB1step, videoupdateB1H0step,
+    videoupdateBCB2step, videoupdateBCB2H0step, videoupdateB2B0step, videoupdateB2B0H0step,
+    videoupdateB2B1step, videoupdateB2B1H0step, videoupdateB2B1step, videoupdateB2B1H0step,
+
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+
+    videoupdateMstep, videoupdateMstep, videoupdateMstep, videoupdateMstep,
+    videoupdateMstep, videoupdateMstep, videoupdateMstep, videoupdateMstep,
+    videoupdateMstep, videoupdateMstep, videoupdateMstep, videoupdateMstep,
+    videoupdateMstep, videoupdateMstep, videoupdateMstep, videoupdateMstep,
+
+    videoupdateMstep, videoupdateMstep, videoupdateMstep, videoupdateMstep,
+    videoupdateMstep, videoupdateMstep, videoupdateMstep, videoupdateMstep,
+    videoupdateMstep, videoupdateMstep, videoupdateMstep, videoupdateMstep,
+    videoupdateMstep, videoupdateMstep, videoupdateMstep, videoupdateMstep,
+
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+    videoupdateR0step, videoupdateR0step, videoupdateR0step, videoupdateR0step,
+
+    videoupdateTstep, videoupdateTH0step, videoupdateTB0step, videoupdateTB0H0step,
+    videoupdateTB1step, videoupdateTB1H0step, videoupdateTB1step, videoupdateTB1H0step,
+    videoupdateTB2step, videoupdateTB2H0step, videoupdateTB2B0step, videoupdateTB2B0H0step,
+    videoupdateTB2B1step, videoupdateTB2B1H0step, videoupdateTB2B1step, videoupdateTB2B1H0step,
+
+    videoupdateTBCstep, videoupdateTBCH0step, videoupdateTB0step, videoupdateTB0H0step,
+    videoupdateTB1step, videoupdateTB1H0step, videoupdateTB1step, videoupdateTB1H0step,
+    videoupdateTBCB2step, videoupdateTBCB2H0step, videoupdateTB2B0step, videoupdateTB2B0H0step,
+    videoupdateTB2B1step, videoupdateTB2B1H0step, videoupdateTB2B1step, videoupdateTB2B1H0step,
+
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+
+    videoupdateTMstep, videoupdateTMstep, videoupdateTMstep, videoupdateTMstep,
+    videoupdateTMstep, videoupdateTMstep, videoupdateTMstep, videoupdateTMstep,
+    videoupdateTMstep, videoupdateTMstep, videoupdateTMstep, videoupdateTMstep,
+    videoupdateTMstep, videoupdateTMstep, videoupdateTMstep, videoupdateTMstep,
+
+    videoupdateTMstep, videoupdateTMstep, videoupdateTMstep, videoupdateTMstep,
+    videoupdateTMstep, videoupdateTMstep, videoupdateTMstep, videoupdateTMstep,
+    videoupdateTMstep, videoupdateTMstep, videoupdateTMstep, videoupdateTMstep,
+    videoupdateTMstep, videoupdateTMstep, videoupdateTMstep, videoupdateTMstep,
+
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
+    videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step
+  };
+
+  memcpy(hmap->crtctaggedops, crtctaggedops, 256*sizeof(CRTCSTEPOP));
 
   nclock = clock()+TIME_50HZ;
 
@@ -1448,6 +1515,9 @@ void videoreset(void)
   hmap->A_teletext.flashstage = 0;
   hmap->A_teletext.flashcounter = 50;
 
+  hmap->B_crtc.step_state = &hmap->crtcstep[VIDEOSTEPIDLEFLAG];
+  hmap->B_crtc.cursorcolumn = -1;
+
   hmap->B_videoula.cursorflags = 0;
 
   hmap->B_teletext.lookupoffset = 0;
@@ -1461,6 +1531,22 @@ void videoreset(void)
   hmap->B_vidbuf.column = 0;
   hmap->B_vidbuf.line = 0;
   hmap->B_vidbuf.linelevel = 0;
+
+  for (i=0; i<255; i++)
+  {
+    hmap->crtccolumntags[i] = 0;
+  }
+  hmap->crtccolumntags[255] = CRTCMAXCOLUMNTAG;
+
+  for (i=0; i<256; i++)
+  {
+    hmap->crtcstep[i] = hmap->crtctaggedops[hmap->crtccolumntags[i]];
+  }
+
+  for (i=256; i<512; i++)
+  {
+    hmap->crtcstep[i] = videoidlestep;
+  }
 }
 
 HOSTMAP* videotopmiddle(HOSTMAP* hmap)
@@ -1860,7 +1946,7 @@ HOSTMAP* videoendframeidle(HOSTMAP* hmap)
     hmap->A_crtc.c4 = (hmap->A_crtc.c4 + 1) & 0x7F;
     hmap->A_crtc.vs_thisrow = 0;
   }
-  else if (hmap->A_crtc.c0 > 0)
+  else if (hmap->A_crtc.r[0] > 0)
   {
     hmap->A_crtc.c9 = (hmap->A_crtc.c9 + (hmap->A_crtc.r[9] == hmap->A_crtc.r9image ? 1 : 2)) & 0x1F;
     hmap->A_crtc.c9low = hmap->A_crtc.c9 & 7;
@@ -1900,7 +1986,7 @@ HOSTMAP* videoendframeadjust(HOSTMAP* hmap)
 HOSTMAP* videoendframeadjusting(HOSTMAP* hmap)
 {
   hmap->A_crtc.in_firstline = 0;
-  if (hmap->A_crtc.c0 > 0)
+  if (hmap->A_crtc.r[0] > 0)
   {
     hmap->A_crtc.c9 = (hmap->A_crtc.c9 + 1) & 0x1F;
     hmap->A_crtc.c9low = hmap->A_crtc.c9 & 7;
@@ -1914,7 +2000,7 @@ HOSTMAP* videoendframeadjustcomplete(HOSTMAP* hmap)
   if (videodummylinerequired(hmap))
   {
     hmap->A_crtc.in_firstline = 0;
-    if (hmap->A_crtc.c0 > 0)
+    if (hmap->A_crtc.r[0] > 0)
     {
       hmap->A_crtc.c9 = (hmap->A_crtc.c9 + 1) & 0x1F;
       hmap->A_crtc.c9low = hmap->A_crtc.c9 & 7;
@@ -2153,30 +2239,35 @@ HOSTMAP* videoshiftteletext(HOSTMAP* hmap)
   return hmap;
 }
 
+HOSTMAP* videosetscreenstartindex(HOSTMAP* hmap, uint8_t index)
+{
+  hmap->screenstartindex = index;
+
+  videosetreadfour(&hmap->videoreads[1], &hmap->videographicswrapreads[index<<2]);
+  videosetreadfour(&hmap->videoreads[3], &hmap->videoteletextwrapreads[index<<2]);
+  return hmap;
+}
+
 R6502ZONEMAP* videodisplayoutleft(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t step_code;
   intptr_t column = hmap->B_vidbuf.column + 1;
   hmap->B_vidbuf.column = column;
 
   if (column >= 0)
     hmap->peripheral_code &= ~VIDEODISPLAYADVANCEMASK;
-  step_code = hmap->B_crtc.step_code;
-  return (R6502ZONEMAP*)hmap->videostepops[step_code&0xFF](hmap, step_code);
+  return (R6502ZONEMAP*)(*hmap->B_crtc.step_state)(hmap, (uintptr_t)(hmap->B_crtc.step_state+1));
 }
 
 R6502ZONEMAP* videodisplayoutright(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t step_code;
   intptr_t column = hmap->B_vidbuf.column + 1;
   hmap->B_vidbuf.column = column;
 
   if (column >= hmap->B_vidbuf.limitcolumn)
     hmap->peripheral_code ^= (VIDEODISPLAYSTOP^VIDEODISPLAYOUTRIGHT);
-  step_code = hmap->B_crtc.step_code;
-  return (R6502ZONEMAP*)hmap->videostepops[step_code&0xFF](hmap, step_code);
+  return (R6502ZONEMAP*)(*hmap->B_crtc.step_state)(hmap, (uintptr_t)(hmap->B_crtc.step_state+1));
 }
 
 static inline HOSTMAP* videoprogressiveleavingline(HOSTMAP* hmap)
@@ -2214,7 +2305,6 @@ static inline HOSTMAP* videoprogressiveleavingline(HOSTMAP* hmap)
 R6502ZONEMAP* videodisplayprogressivestop(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t step_code;
 
   hmap->B_vidbuf.linelevel += 1;
   if (hmap->B_vidbuf.linelevel >= 128)
@@ -2243,8 +2333,7 @@ R6502ZONEMAP* videodisplayprogressivestop(R6502ZONEMAP* zmap, uintptr_t peripher
       }
     }
   }
-  step_code = hmap->B_crtc.step_code;
-  return (R6502ZONEMAP*)hmap->videostepops[step_code&0xFF](hmap, step_code);
+  return (R6502ZONEMAP*)(*hmap->B_crtc.step_state)(hmap, (uintptr_t)(hmap->B_crtc.step_state+1));
 }
 
 static inline HOSTMAP* videofastleavingline(HOSTMAP* hmap)
@@ -2273,7 +2362,6 @@ static inline HOSTMAP* videofastleavingline(HOSTMAP* hmap)
 R6502ZONEMAP* videodisplayfaststop(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t step_code;
 
   hmap->B_vidbuf.linelevel += 1;
   if (hmap->B_vidbuf.linelevel >= 128)
@@ -2305,8 +2393,7 @@ R6502ZONEMAP* videodisplayfaststop(R6502ZONEMAP* zmap, uintptr_t peripheral_code
       }
     }
   }
-  step_code = hmap->B_crtc.step_code;
-  return (R6502ZONEMAP*)hmap->videostepops[step_code&0xFF](hmap, step_code);
+  return (R6502ZONEMAP*)(*hmap->B_crtc.step_state)(hmap, (uintptr_t)(hmap->B_crtc.step_state+1));
 }
 
 static inline HOSTMAP* videoslowleavingline(HOSTMAP* hmap)
@@ -2340,7 +2427,6 @@ static inline HOSTMAP* videoslowleavingline(HOSTMAP* hmap)
 R6502ZONEMAP* videodisplayslowstop(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t step_code;
 
   hmap->B_vidbuf.linelevel += 1;
   if (hmap->B_vidbuf.linelevel >= 128)
@@ -2369,19 +2455,17 @@ R6502ZONEMAP* videodisplayslowstop(R6502ZONEMAP* zmap, uintptr_t peripheral_code
       }
     }
   }
-  step_code = hmap->B_crtc.step_code;
-  return (R6502ZONEMAP*)hmap->videostepops[step_code&0xFF](hmap, step_code);
+  return (R6502ZONEMAP*)(*hmap->B_crtc.step_state)(hmap, (uintptr_t)(hmap->B_crtc.step_state+1));
 }
 
 R6502ZONEMAP* videodisplaysyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t step_code = hmap->B_crtc.step_code;
   uint8_t skip = hmap->A_vidbuf.skip;
 
   if (skip & VSYNCSKIPFLAG)
   {
-    if (!(step_code & VIDEOSTEPVSYNCDELAYFLAG) == !hmap->A_crtc.vs_counting)
+    if (!hmap->A_crtc.vs_delayed == !hmap->A_crtc.vs_counting)
     {
       hmap->B_vidbuf.leavingvsyncop(hmap);
       skip = hmap->A_vidbuf.skip;
@@ -2389,7 +2473,7 @@ R6502ZONEMAP* videodisplaysyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_code
   }
   else
   {
-    if (!(step_code & VIDEOSTEPVSYNCDELAYFLAG) != !hmap->A_crtc.vs_counting)
+    if (!hmap->A_crtc.vs_delayed != !hmap->A_crtc.vs_counting)
     {
       hmap->B_vidbuf.enteringvsyncop(hmap);
       skip = hmap->A_vidbuf.skip;
@@ -2398,7 +2482,7 @@ R6502ZONEMAP* videodisplaysyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_code
 
   if (skip & HSYNCSKIPFLAG)
   {
-    if (!(hmap->B_crtc.step_code & VIDEOSTEPHSYNCFLAG))
+    if (!(hmap->A_vidbuf.eventflags & VIDEOSTEPEVENTHSYNC))
     {
       skip &= ~HSYNCSKIPFLAG;
       hmap->A_vidbuf.skip = skip;
@@ -2407,7 +2491,7 @@ R6502ZONEMAP* videodisplaysyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_code
   }
   else
   {
-    if (hmap->B_crtc.step_code & VIDEOSTEPHSYNCFLAG)
+    if (hmap->A_vidbuf.eventflags & VIDEOSTEPEVENTHSYNC)
     {
       skip |= HSYNCSKIPFLAG;
       hmap->A_vidbuf.skip = skip;
@@ -2424,12 +2508,11 @@ R6502ZONEMAP* videodisplaysyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_code
 R6502ZONEMAP* videodisplaypsyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t step_code = hmap->B_crtc.step_code;
   uint8_t skip = hmap->A_vidbuf.skip;
 
   if (skip & VSYNCSKIPFLAG)
   {
-    if (!(step_code & VIDEOSTEPVSYNCDELAYFLAG) == !hmap->A_crtc.vs_counting)
+    if (!hmap->A_crtc.vs_delayed == !hmap->A_crtc.vs_counting)
     {
       hmap->B_vidbuf.leavingvsyncop(hmap);
       skip = hmap->A_vidbuf.skip;
@@ -2437,7 +2520,7 @@ R6502ZONEMAP* videodisplaypsyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_cod
   }
   else
   {
-    if (!(step_code & VIDEOSTEPVSYNCDELAYFLAG) != !hmap->A_crtc.vs_counting)
+    if (!hmap->A_crtc.vs_delayed != !hmap->A_crtc.vs_counting)
     {
       hmap->B_vidbuf.enteringvsyncop(hmap);
       skip = hmap->A_vidbuf.skip;
@@ -2446,7 +2529,7 @@ R6502ZONEMAP* videodisplaypsyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_cod
 
   if (skip & HSYNCSKIPFLAG)
   {
-    if (!(hmap->B_crtc.step_code & VIDEOSTEPHSYNCFLAG))
+    if (!(hmap->A_vidbuf.eventflags & VIDEOSTEPEVENTHSYNC))
     {
       skip &= ~HSYNCSKIPFLAG;
       hmap->A_vidbuf.skip = skip;
@@ -2455,7 +2538,7 @@ R6502ZONEMAP* videodisplaypsyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_cod
   }
   else
   {
-    if (hmap->B_crtc.step_code & VIDEOSTEPHSYNCFLAG)
+    if (hmap->A_vidbuf.eventflags & VIDEOSTEPEVENTHSYNC)
     {
       skip |= HSYNCSKIPFLAG;
       hmap->A_vidbuf.skip = skip;
@@ -2499,74 +2582,40 @@ R6502ZONEMAP* videodisplayppossiblestart(R6502ZONEMAP* zmap, uintptr_t periphera
   return zmap->peripheralops[peripheral_code&0xFF](zmap, peripheral_code);
 }
 
+static inline void videostartvsyncdelay(HOSTMAP* hmap)
+{
+  uintptr_t tags;
+  uint8_t value = hmap->A_crtc.r[0]>>1;
+
+  tags = hmap->crtccolumntags[value] |= CRTCONHALFR0COLUMNTAG;
+  hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+  hmap->crtccolumntags[value] = tags;
+  hmap->A_crtc.vs_delayed = 1;
+}
+
+static inline HOSTMAP* videoendvsyncdelay(HOSTMAP* hmap)
+{
+  uintptr_t tags;
+  uint8_t value = hmap->A_crtc.r[0]>>1;
+
+  tags = hmap->crtccolumntags[value] &= ~CRTCONHALFR0COLUMNTAG;
+  hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+  hmap->crtccolumntags[value] = tags;
+  hmap->A_crtc.vs_delayed = 0;
+
+  hmap->peripheral_code |= VIDEODISPLAYSYNCEDGE;
+  return hmap;
+}
+
 static inline HOSTMAP* videostartvsync(HOSTMAP* hmap)
 {
-  uintptr_t step_code = hmap->B_crtc.step_code;
-
   hmap->A_crtc.c3v = 0;
   hmap->A_crtc.vs_counting = 1;
   hmap->A_crtc.vs_thisrow = 1;
 
   if (hmap->A_crtc.delayvs)
-    step_code |= VIDEOSTEPVSYNCDELAYFLAG;
-  else
-    step_code &= ~VIDEOSTEPVSYNCDELAYFLAG;
+    videostartvsyncdelay(hmap);
   hmap->peripheral_code |= VIDEODISPLAYSYNCEDGE;
-  hmap->B_crtc.step_code = step_code;
-  return hmap;
-}
-
-static inline HOSTMAP* videoendvsyncdelay(HOSTMAP* hmap)
-{
-  hmap->B_crtc.step_code &= ~VIDEOSTEPVSYNCDELAYFLAG;
-  hmap->peripheral_code |= VIDEODISPLAYSYNCEDGE;
-  return hmap;
-}
-
-static inline HOSTMAP* videocursortest(HOSTMAP* hmap)
-{
-  uintptr_t signalbuffer;
-  int cursordisplay;
-  int c9,cstart,cstop;
-
-  if ((hmap->B_crtc.scan_code>>18) == hmap->B_crtc.cursoraddress && beebit_cursor)
-  {
-    cursordisplay = 0;
-    switch (hmap->A_crtc.r[10] & 0x60)
-    {
-      case 0x00:
-        cursordisplay = 1;
-        break;
-      case 0x40:
-        if (!(hmap->A_crtc.displaycounter & 8))
-          cursordisplay = 1;
-        break;
-      case 0x60:
-        if (!(hmap->A_crtc.displaycounter & 16))
-          cursordisplay = 1;
-        break;
-    }
-    if (cursordisplay)
-    {
-      signalbuffer = hmap->B_crtc.signalbuffer;
-      c9 = hmap->A_crtc.c9;
-      cstart = hmap->A_crtc.r[10]&0x1F;
-      cstop = hmap->A_crtc.r[11];
-      if (c9 >= cstart && c9 <= cstop)
-        signalbuffer |= (VIDEOSTEPSIGNALCURSOR<<1);
-      if (hmap->A_vidbuf.progressive)
-      {
-        c9 -= 1;
-        if (c9 >= cstart && c9 <= cstop)
-          signalbuffer |= (VIDEOSTEPSIGNALCURSOR<<17);
-        c9 += 2;
-        if (c9 >= cstart && c9 <= cstop)
-          signalbuffer |= (VIDEOSTEPSIGNALCURSOR<<9);
-      }
-      hmap->B_crtc.signalbuffer = signalbuffer;
-      hmap->B_crtc.scan_code |= VIDEOREADSIGNALFLAG;
-    }
-  }
   return hmap;
 }
 
@@ -2580,56 +2629,50 @@ static inline HOSTMAP* videoendvdisplay(HOSTMAP* hmap)
 
 static inline HOSTMAP* videoendhdisplay(HOSTMAP* hmap)
 {
-  hmap->B_crtc.signalbuffer &= ~(VIDEOSTEPSIGNALDISPLAY<<1);
-  hmap->B_crtc.step_code &= ~VIDEOSTEPHDISPLAYFLAG;
-  hmap->B_crtc.scan_code |= VIDEOREADSIGNALFLAG;
+  hmap->A_crtc.displaybuffer &= ~VIDEODISPLAYSIGNALINPUT;
+  hmap->B_crtc.scan_code |= VIDEOREADDISPLAYSIGNALFLAG;
   return hmap;
 }
 
-static inline HOSTMAP* videocontinuehdisplay(HOSTMAP* hmap)
+static inline HOSTMAP* videoendhdisplaycheckingforendofrow(HOSTMAP* hmap)
 {
-  int endofdisplay;
+  if (hmap->A_crtc.c9 == hmap->A_crtc.r[9] || hmap->A_crtc.c9 == hmap->A_crtc.r9image)
+    hmap->B_crtc.row_code = hmap->B_crtc.scan_code & 0xFFFC0000;
 
-  endofdisplay = 0;
-
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    endofdisplay = 1;
-
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[1])
-  {
-    endofdisplay = 1;
-    if (hmap->A_crtc.c9 == hmap->A_crtc.r[9] || hmap->A_crtc.c9 == hmap->A_crtc.r9image)
-      hmap->B_crtc.row_code = hmap->B_crtc.scan_code & 0xFFFC0000;
-  }
-
-  if (endofdisplay)
-    return videoendhdisplay(hmap);
-  else
-  {
-    hmap->B_crtc.signalbuffer |= (VIDEOSTEPSIGNALDISPLAY<<1);
-    return videocursortest(hmap);
-  }
+  return videoendhdisplay(hmap);
 }
 
 static inline HOSTMAP* videostarthdisplay(HOSTMAP* hmap)
 {
-  hmap->B_crtc.scan_code |= VIDEOREADSIGNALFLAG;
-  hmap->B_crtc.step_code |= VIDEOSTEPHDISPLAYFLAG;
-  return videocontinuehdisplay(hmap);
+  hmap->A_crtc.displaybuffer |= VIDEODISPLAYSIGNALINPUT;
+  hmap->B_crtc.scan_code |= VIDEOREADDISPLAYSIGNALFLAG;
+  return hmap;
 }
 
-static inline HOSTMAP* videorrcompare(HOSTMAP* hmap)
+static inline HOSTMAP* videoclearrowtestcolumntag(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  if (hmap->A_crtc.c4 == hmap->A_crtc.r[6] && hmap->A_crtc.in_vd && !hmap->A_crtc.in_firstline)
+  uintptr_t tags;
+  uint8_t column = (uint8_t)(((CRTCSTEPOP*)incremented_step_state) - 1 - hmap->crtcstep);
+
+  tags = hmap->crtccolumntags[column] & ~CRTCROWTESTCOLUMNTAG;
+  hmap->crtcstep[column] = hmap->crtctaggedops[tags];
+  hmap->crtccolumntags[column] = tags;
+  return hmap;
+}
+
+static inline HOSTMAP* videotestrowregisters(HOSTMAP* hmap)
+{
+  if (hmap->A_crtc.in_vd && hmap->A_crtc.c4 == hmap->A_crtc.r[6] && !hmap->A_crtc.in_firstline)
   {
     videoendvdisplay(hmap);
-    videoendhdisplay(hmap);
+
+    if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+      videoendhdisplay(hmap);
   }
 
   if (hmap->A_crtc.c4 == hmap->A_crtc.r[7] && !hmap->A_crtc.vs_counting && !hmap->A_crtc.vs_thisrow)
     videostartvsync(hmap);
 
-  hmap->B_crtc.step_code &= ~VIDEOSTEPROWREGISTERFLAG;
   return hmap;
 }
 
@@ -2641,9 +2684,7 @@ static inline HOSTMAP* videocountvsyncline(HOSTMAP* hmap)
     hmap->A_crtc.vs_counting = 0;
 
     if (hmap->A_crtc.delayvs)
-      hmap->B_crtc.step_code |= VIDEOSTEPVSYNCDELAYFLAG;
-    else
-      hmap->B_crtc.step_code &= ~VIDEOSTEPVSYNCDELAYFLAG;
+      videostartvsyncdelay(hmap);
     hmap->peripheral_code |= VIDEODISPLAYSYNCEDGE;
   }
   return hmap;
@@ -2652,630 +2693,778 @@ static inline HOSTMAP* videocountvsyncline(HOSTMAP* hmap)
 static inline HOSTMAP* videoendofline(HOSTMAP* hmap)
 {
   hmap->B_crtc.endoflineactions[hmap->A_crtc.endframe](hmap);
-  hmap->A_crtc.c0 = 0;
-  hmap->A_vidbuf.eventflags |= VIDEOSTEPEVENTR0HIT;
-  hmap->B_crtc.scan_code |= VIDEOREADEVENTFLAG;
-  return hmap;
-}
-
-static inline HOSTMAP* videolineRstart(HOSTMAP* hmap)
-{
-  if (hmap->A_crtc.vs_counting)
-    videocountvsyncline(hmap);
-
-  videoendofline(hmap);
-
-  if (hmap->A_crtc.in_vd)
-  {
-    if (hmap->A_crtc.c4 == hmap->A_crtc.r[6] && !hmap->A_crtc.in_firstline)
-      videoendvdisplay(hmap);
-    else
-      videostarthdisplay(hmap);
-  }
-  if (hmap->A_crtc.c4 == hmap->A_crtc.r[7] && !hmap->A_crtc.vs_counting && !hmap->A_crtc.vs_thisrow)
-    videostartvsync(hmap);
-
-  hmap->B_crtc.step_code &= ~VIDEOSTEPROWREGISTERFLAG;
-  return hmap;
-}
-
-static inline HOSTMAP* videolineRDcontinue(HOSTMAP* hmap)
-{
-  hmap->A_crtc.c0 = (hmap->A_crtc.c0 + 1) & 0xFF;
-
-  videorrcompare(hmap);
-  videocontinuehdisplay(hmap);
-  return hmap;
-}
-
-static inline HOSTMAP* videolineRcontinue(HOSTMAP* hmap)
-{
-  hmap->A_crtc.c0 = (hmap->A_crtc.c0 + 1) & 0xFF;
-
-  videorrcompare(hmap);
-  return hmap;
-}
-
-static inline HOSTMAP* videolinestart(HOSTMAP* hmap)
-{
-  if (hmap->A_crtc.vs_counting)
-    videocountvsyncline(hmap);
-
-  videoendofline(hmap);
-
-  if (hmap->A_crtc.in_vd)
-  {
-    if (hmap->A_crtc.c4 == hmap->A_crtc.r[6] && !hmap->A_crtc.in_firstline)
-      videoendvdisplay(hmap);
-    else
-      videostarthdisplay(hmap);
-  }
-  if (hmap->A_crtc.c4 == hmap->A_crtc.r[7] && !hmap->A_crtc.vs_counting && !hmap->A_crtc.vs_thisrow)
-    videostartvsync(hmap);
-
-  return hmap;
-}
-
-static inline HOSTMAP* videolineDcontinue(HOSTMAP* hmap)
-{
-  hmap->A_crtc.c0 = (hmap->A_crtc.c0 + 1) & 0xFF;
-
-  videocontinuehdisplay(hmap);
-  return hmap;
-}
-
-static inline HOSTMAP* videolinecontinue(HOSTMAP* hmap)
-{
-  hmap->A_crtc.c0 = (hmap->A_crtc.c0 + 1) & 0xFF;
+  hmap->A_vidbuf.linetestflags |= VIDEOSTEPLINETEST0;
+  hmap->B_crtc.scan_code |= VIDEOREADLINETESTFLAG;
   return hmap;
 }
 
 static inline HOSTMAP* videostarthsync(HOSTMAP* hmap)
 {
-  uint8_t r3h;
-
-  r3h = hmap->A_crtc.r[3] & 0xF;
-  if (0 < r3h)
-  {
-    hmap->A_crtc.c3h = 0;
-    hmap->B_crtc.step_code |= VIDEOSTEPHSYNCFLAG;
-    hmap->peripheral_code |= VIDEODISPLAYSYNCEDGE;
-  }
+  hmap->A_crtc.c3h = 0xF;
+  hmap->peripheral_code |= VIDEODISPLAYSYNCEDGE;
+  hmap->A_vidbuf.eventflags |= VIDEOSTEPEVENTHSYNC;
+  hmap->B_crtc.scan_code |= VIDEOREADEVENTFLAG;
   return hmap;
 }
 
-static inline HOSTMAP* videocontinuehsync(HOSTMAP* hmap)
+static inline HOSTMAP* videoincrementscancode(HOSTMAP* hmap)
 {
-  uint8_t r3h;
+  hmap->B_crtc.scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
+  return hmap;
+}
 
-  hmap->A_crtc.c3h = (hmap->A_crtc.c3h + 1) & 0xF;
-  r3h = hmap->A_crtc.r[3] & 0xF;
-  if (hmap->A_crtc.c3h == r3h)
+static inline HOSTMAP* videolinestart(HOSTMAP* hmap)
+{
+  uint8_t in_display;
+
+  if (hmap->A_crtc.vs_delayed)
+    videoendvsyncdelay(hmap);
+
+  if (hmap->A_crtc.vs_counting)
+    videocountvsyncline(hmap);
+
+  videoendofline(hmap);
+
+  in_display = hmap->A_crtc.in_vd;
+
+  if (in_display)
   {
-    if (hmap->A_crtc.c0 == hmap->A_crtc.r[2] && 0 < r3h)
-      hmap->A_crtc.c3h = 0;
-    else
+    if (hmap->A_crtc.c4 == hmap->A_crtc.r[6] && !hmap->A_crtc.in_firstline)
     {
-      hmap->B_crtc.step_code &= ~VIDEOSTEPHSYNCFLAG;
-      hmap->peripheral_code |= VIDEODISPLAYSYNCEDGE;
+      videoendvdisplay(hmap);
+      in_display = 0;
+    }
+    else if ((0 == hmap->A_crtc.r[0]) || (0 == hmap->A_crtc.r[1]))
+      in_display = 0;
+  }
+
+  if (in_display)
+  {
+    if (!(hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT))
+      videostarthdisplay(hmap);
+  }
+  else if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+  {
+    videoendhdisplay(hmap);
+  }
+
+  if (hmap->A_crtc.c4 == hmap->A_crtc.r[7] && !hmap->A_crtc.vs_counting && !hmap->A_crtc.vs_thisrow)
+    videostartvsync(hmap);
+
+  if (0 == hmap->A_crtc.r[2])
+    videostarthsync(hmap);
+
+  return hmap;
+}
+
+static inline HOSTMAP* videolineoverflow(HOSTMAP* hmap)
+{
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+  {
+    if ((0 == hmap->A_crtc.r[0]) || (0 == hmap->A_crtc.r[1]))
+      videoendhdisplay(hmap);
+  }
+
+  if (0 == hmap->A_crtc.r[2])
+    videostarthsync(hmap);
+
+  return hmap;
+}
+
+static inline void videocursorcolumnhit(HOSTMAP* hmap)
+{
+  uintptr_t cursorsignal;
+  int cursordisplay;
+  int c9,cstart,cstop;
+
+  cursordisplay = 0;
+  switch (hmap->A_crtc.r[10] & 0x60)
+  {
+    case 0x00:
+      cursordisplay = 1;
+      break;
+    case 0x40:
+      if (!(hmap->A_crtc.displaycounter & 8))
+        cursordisplay = 1;
+      break;
+    case 0x60:
+      if (!(hmap->A_crtc.displaycounter & 16))
+        cursordisplay = 1;
+      break;
+  }
+  if (cursordisplay)
+  {
+    c9 = hmap->A_crtc.c9;
+    cstart = hmap->A_crtc.r[10]&0x1F;
+    cstop = hmap->A_crtc.r[11];
+    if (c9 >= cstart && c9 <= cstop)
+      cursorsignal = VIDEOCURSORSIGNALINPUT;
+    else
+      cursorsignal = 0;
+    if (hmap->A_vidbuf.progressive)
+    {
+      c9 -= 1;
+      if (c9 >= cstart && c9 <= cstop)
+      {
+        cursorsignal |= (VIDEOCURSORSIGNALINPUT<<VIDEOCURSORSIGNALABOVESHIFT);
+      }
+      c9 += 2;
+      if (c9 >= cstart && c9 <= cstop)
+      {
+        cursorsignal |= (VIDEOCURSORSIGNALINPUT<<VIDEOCURSORSIGNALBELOWSHIFT);
+      }
+    }
+    if (cursorsignal != 0)
+    {
+      hmap->B_crtc.cursorbuffer |= cursorsignal;
+      hmap->B_crtc.scan_code |= VIDEOREADCURSORSIGNALFLAG;
     }
   }
-  return hmap;
 }
 
-static inline HOSTMAP* videoupdatenothsync(HOSTMAP* hmap)
+static inline void videolinestarttagcursorcolumn(HOSTMAP* hmap)
 {
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[2])
-    videostarthsync(hmap);
-  return hmap;
-}
+  uintptr_t tags;
+  intptr_t column = hmap->B_crtc.cursorcolumn;
 
-static inline HOSTMAP* videoRDLHSupdate(HOSTMAP* hmap)
-{
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  if (column > 0)
+  {
+    column--;
+    tags = hmap->crtccolumntags[column] & ~CRTCBEFORECURSORCOLUMNTAG;
+    hmap->crtcstep[column] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[column] = tags;
+  }
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0]>>1)
-    videoendvsyncdelay(hmap);
+  column = hmap->B_crtc.cursoraddress - (hmap->B_crtc.scan_code>>18);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolineRstart(hmap);
+  if (column > 0 && column <= 256)
+  {
+    hmap->B_crtc.cursorcolumn = column;
+    column--;
+    tags = hmap->crtccolumntags[column] | CRTCBEFORECURSORCOLUMNTAG;
+    hmap->crtcstep[column] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[column] = tags;
+  }
   else
-    videolineRDcontinue(hmap);
+  {
+    hmap->B_crtc.cursorcolumn = -1;
 
-  videocontinuehsync(hmap);
-
-  return hmap;
+    if (column == 0 && (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT))
+      videocursorcolumnhit(hmap);
+  }
 }
 
-static inline HOSTMAP* videoRDLupdate(HOSTMAP* hmap)
+static inline HOSTMAP* videoreadop(HOSTMAP* hmap)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  uintptr_t scan_code;
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0]>>1)
-    videoendvsyncdelay(hmap);
-
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolineRstart(hmap);
-  else
-    videolineRDcontinue(hmap);
-
-  videoupdatenothsync(hmap);
-
-  return hmap;
+  scan_code = hmap->B_crtc.scan_code;
+  return hmap->videoreads[((scan_code&0x3F)<<2)|(scan_code>>30)](hmap, scan_code);
 }
 
-static inline HOSTMAP* videoRDHSupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTMstep(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolineRstart(hmap);
-  else
-    videolineRDcontinue(hmap);
+  hmap->B_crtc.step_state = &hmap->crtcstep[0];
 
-  videocontinuehsync(hmap);
+  videoincrementscancode(hmap);
+  videolineoverflow(hmap);
+  videotestrowregisters(hmap);
+  videolinestarttagcursorcolumn(hmap);
 
-  return hmap;
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoRDupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTR0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolineRstart(hmap);
-  else
-    videolineRDcontinue(hmap);
+  hmap->B_crtc.step_state = &hmap->crtcstep[0];
 
-  videoupdatenothsync(hmap);
+  videoincrementscancode(hmap);
+  videolinestart(hmap);
+  videolinestarttagcursorcolumn(hmap);
 
-  return hmap;
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoRLHSupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTBCB2H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0]>>1)
-    videoendvsyncdelay(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolineRstart(hmap);
-  else
-    videolineRcontinue(hmap);
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+  videotestrowregisters(hmap);
+  videostarthsync(hmap);
 
-  videocontinuehsync(hmap);
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videocursorcolumnhit(hmap);
 
-  return hmap;
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoRLupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTBCB2step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0]>>1)
-    videoendvsyncdelay(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolineRstart(hmap);
-  else
-    videolineRcontinue(hmap);
+  videoincrementscancode(hmap);
+  videotestrowregisters(hmap);
+  videostarthsync(hmap);
 
-  videoupdatenothsync(hmap);
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videocursorcolumnhit(hmap);
 
-  return hmap;
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoRHSupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTBCH0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolineRstart(hmap);
-  else
-    videolineRcontinue(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  videocontinuehsync(hmap);
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+  videotestrowregisters(hmap);
 
-  return hmap;
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videocursorcolumnhit(hmap);
+
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoRupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTBCstep(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolineRstart(hmap);
-  else
-    videolineRcontinue(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  videoupdatenothsync(hmap);
+  videoincrementscancode(hmap);
+  videotestrowregisters(hmap);
 
-  return hmap;
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videocursorcolumnhit(hmap);
+
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoDLHSupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTB2B1H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0]>>1)
-    videoendvsyncdelay(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolinestart(hmap);
-  else
-    videolineDcontinue(hmap);
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+  videotestrowregisters(hmap);
 
-  videocontinuehsync(hmap);
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplaycheckingforendofrow(hmap);
 
-  return hmap;
+  videostarthsync(hmap);
+
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoDLupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTB2B1step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0]>>1)
-    videoendvsyncdelay(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolinestart(hmap);
-  else
-    videolineDcontinue(hmap);
+  videoincrementscancode(hmap);
+  videotestrowregisters(hmap);
 
-  videoupdatenothsync(hmap);
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplaycheckingforendofrow(hmap);
 
-  return hmap;
+  videostarthsync(hmap);
+
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoDHSupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTB2B0H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolinestart(hmap);
-  else
-    videolineDcontinue(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  videocontinuehsync(hmap);
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+  videotestrowregisters(hmap);
 
-  return hmap;
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplay(hmap);
+
+  videostarthsync(hmap);
+
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoDupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTB2B0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolinestart(hmap);
-  else
-    videolineDcontinue(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  videoupdatenothsync(hmap);
+  videoincrementscancode(hmap);
+  videotestrowregisters(hmap);
 
-  return hmap;
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplay(hmap);
+
+  videostarthsync(hmap);
+
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoLHSupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTB2H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0]>>1)
-    videoendvsyncdelay(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolinestart(hmap);
-  else
-    videolinecontinue(hmap);
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+  videotestrowregisters(hmap);
+  videostarthsync(hmap);
 
-  videocontinuehsync(hmap);
-
-  return hmap;
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoLupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTB2step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0]>>1)
-    videoendvsyncdelay(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolinestart(hmap);
-  else
-    videolinecontinue(hmap);
+  videoincrementscancode(hmap);
+  videotestrowregisters(hmap);
+  videostarthsync(hmap);
 
-  videoupdatenothsync(hmap);
-
-  return hmap;
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoHSupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTB1H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolinestart(hmap);
-  else
-    videolinecontinue(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  videocontinuehsync(hmap);
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+  videotestrowregisters(hmap);
 
-  return hmap;
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplaycheckingforendofrow(hmap);
+
+  return videoreadop(hmap);
 }
 
-static inline HOSTMAP* videoupdate(HOSTMAP* hmap)
+HOSTMAP* videoupdateTB1step(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
-  uintptr_t scan_code = (hmap->B_crtc.scan_code + 0x40000) & 0xFFFFFFFF;
-  hmap->B_crtc.scan_code = scan_code;
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
 
-  if (hmap->A_crtc.c0 == hmap->A_crtc.r[0])
-    videolinestart(hmap);
-  else
-    videolinecontinue(hmap);
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
 
-  videoupdatenothsync(hmap);
+  videoincrementscancode(hmap);
+  videotestrowregisters(hmap);
 
-  return hmap;
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplaycheckingforendofrow(hmap);
+
+  return videoreadop(hmap);
 }
 
-HOSTMAP* videostepSeven(HOSTMAP* hmap, uintptr_t step_code)
+HOSTMAP* videoupdateTB0H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
+
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+  videotestrowregisters(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplay(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateTB0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
+
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videotestrowregisters(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplay(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateTH0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
+
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+  videotestrowregisters(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateTstep(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  videoclearrowtestcolumntag(hmap, incremented_step_state);
+
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videotestrowregisters(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateMstep(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = &hmap->crtcstep[0];
+
+  videoincrementscancode(hmap);
+  videolineoverflow(hmap);
+  videolinestarttagcursorcolumn(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateR0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = &hmap->crtcstep[0];
+
+  videoincrementscancode(hmap);
+  videolinestart(hmap);
+  videolinestarttagcursorcolumn(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateBCB2H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+  videostarthsync(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videocursorcolumnhit(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateBCB2step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videostarthsync(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videocursorcolumnhit(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateBCH0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videocursorcolumnhit(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateBCstep(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videocursorcolumnhit(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateB2B1H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplaycheckingforendofrow(hmap);
+
+  videostarthsync(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateB2B1step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplaycheckingforendofrow(hmap);
+
+  videostarthsync(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateB2B0H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplay(hmap);
+
+  videostarthsync(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateB2B0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplay(hmap);
+
+  videostarthsync(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateB2H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+  videostarthsync(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateB2step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videostarthsync(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateB1H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplaycheckingforendofrow(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateB1step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplaycheckingforendofrow(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateB0H0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplay(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateB0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+
+  if (hmap->A_crtc.displaybuffer & VIDEODISPLAYSIGNALINPUT)
+    videoendhdisplay(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdateH0step(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+  videoendvsyncdelay(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoupdatestep(HOSTMAP* hmap, uintptr_t incremented_step_state)
+{
+  hmap->B_crtc.step_state = (CRTCSTEPOP*)incremented_step_state;
+
+  videoincrementscancode(hmap);
+
+  return videoreadop(hmap);
+}
+
+HOSTMAP* videoidlestep(HOSTMAP* hmap, uintptr_t incremented_step_state)
 {
   uintptr_t scan_code = hmap->B_crtc.scan_code;
-  hmap->B_crtc.step_code |= VIDEOSTEPODDFLAG;
-  return hmap->videoreadseven[((scan_code&0x07)<<2)|(scan_code>>30)](hmap, scan_code);
+  return hmap->videoreads[((scan_code&0x03)<<2)|(scan_code>>30)](hmap, scan_code);
 }
 
-HOSTMAP* videoreadFeven(HOSTMAP* hmap)
+static inline uintptr_t videoupdatedisplaysignal(HOSTMAP* hmap, uintptr_t displaybuffer)
 {
-  uintptr_t scan_code = hmap->B_crtc.scan_code;
-  hmap->B_crtc.step_code |= VIDEOSTEPODDFLAG;
-  return hmap->videoreadseven[((scan_code&0x1F)<<2)|(scan_code>>30)](hmap, scan_code);
+  if (displaybuffer & hmap->B_vidbuf.displayskewmask)
+    hmap->peripheral_code |= VIDEODISPLAYDISPLAY;
+  else
+    hmap->peripheral_code &= ~VIDEODISPLAYDISPLAY;
+  return displaybuffer;
 }
 
-HOSTMAP* videoreadFodd(HOSTMAP* hmap)
+static inline uintptr_t videoupdatecursorsignal(HOSTMAP* hmap, uintptr_t cursorbuffer)
 {
-  uintptr_t scan_code = hmap->B_crtc.scan_code;
-  hmap->B_crtc.step_code &= ~VIDEOSTEPODDFLAG;
-  return hmap->videoreadsodd[((scan_code&0x1F)<<2)|(scan_code>>30)](hmap, scan_code);
+  if (cursorbuffer & hmap->B_vidbuf.cursorskewmask)
+    cursorbuffer = (cursorbuffer&~VIDEOCURSORSIGNALSEGMENTS)|VIDEOCURSORSIGNALSEGMENT0;
+  if (cursorbuffer & VIDEOCURSORSIGNALSEGMENTS)
+    hmap->peripheral_code |= VIDEODISPLAYCURSOR;
+  else
+    hmap->peripheral_code &= ~VIDEODISPLAYCURSOR;
+  return cursorbuffer;
 }
 
-HOSTMAP* videoRDLHSstepFeven(HOSTMAP* hmap, uintptr_t step_code)
+static inline uintptr_t videoupdatepcursorsignal(HOSTMAP* hmap, uintptr_t cursorbuffer)
 {
-  videoRDLHSupdate(hmap);
-  return videoreadFeven(hmap);
+  if (cursorbuffer & hmap->B_vidbuf.cursorskewmask)
+    cursorbuffer = (cursorbuffer&~VIDEOCURSORSIGNALSEGMENTS)|VIDEOCURSORSIGNALSEGMENT0;
+  if ((cursorbuffer>>VIDEOCURSORSIGNALABOVESHIFT) & hmap->B_vidbuf.cursorskewmask)
+    cursorbuffer = (cursorbuffer&~(VIDEOCURSORSIGNALSEGMENTS<<VIDEOCURSORSIGNALABOVESHIFT))|(VIDEOCURSORSIGNALSEGMENT0<<VIDEOCURSORSIGNALABOVESHIFT);
+  if ((cursorbuffer>>VIDEOCURSORSIGNALBELOWSHIFT) & hmap->B_vidbuf.cursorskewmask)
+    cursorbuffer = (cursorbuffer&~(VIDEOCURSORSIGNALSEGMENTS<<VIDEOCURSORSIGNALBELOWSHIFT))|(VIDEOCURSORSIGNALSEGMENT0<<VIDEOCURSORSIGNALBELOWSHIFT);
+  if (cursorbuffer & VIDEOCURSORSIGNALPSEGMENTS)
+    hmap->peripheral_code |= VIDEODISPLAYCURSOR;
+  else
+    hmap->peripheral_code &= ~VIDEODISPLAYCURSOR;
+  return cursorbuffer;
 }
 
-HOSTMAP* videoRDLHSstepodd(HOSTMAP* hmap, uintptr_t step_code)
+static inline HOSTMAP* videosetskewmasks(HOSTMAP* hmap, uint8_t r8)
 {
-  videoRDLHSupdate(hmap);
-  return videoreadFodd(hmap);
+  if ((r8 & 0x30) == 0x30)
+    hmap->B_vidbuf.displayskewmask = 0;
+  else
+    hmap->B_vidbuf.displayskewmask = (VIDEODISPLAYSIGNALSKEW0>>((r8>>4)&0x3));
+  if ((r8 & 0xC0) == 0xC0)
+    hmap->B_vidbuf.cursorskewmask = 0;
+  else
+    hmap->B_vidbuf.cursorskewmask = (VIDEOCURSORSIGNALSKEW0>>((r8>>6)&0x3));
+  return hmap;
 }
 
-HOSTMAP* videoRDLstepFeven(HOSTMAP* hmap, uintptr_t step_code)
+HOSTMAP* videoreadevent(HOSTMAP* hmap, uintptr_t scan_code)
 {
-  videoRDLupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoRDLstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRDLupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoRDHSstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRDHSupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoRDHSstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRDHSupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoRDstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRDupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoRDstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRDupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoRLHSstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRLHSupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoRLHSstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRLHSupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoRLstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRLupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoRLstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRLupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoRHSstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRHSupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoRHSstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRHSupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoRstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoRstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoRupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoDLHSstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoDLHSupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoDLHSstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoDLHSupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoDLstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoDLupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoDLstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoDLupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoDHSstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoDHSupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoDHSstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoDHSupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoDstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoDupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoDstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoDupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoLHSstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoLHSupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoLHSstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoLHSupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoLstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoLupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoLstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoLupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videoHSstepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoHSupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videoHSstepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoHSupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-HOSTMAP* videostepFeven(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoupdate(hmap);
-  return videoreadFeven(hmap);
-}
-
-HOSTMAP* videostepodd(HOSTMAP* hmap, uintptr_t step_code)
-{
-  videoupdate(hmap);
-  return videoreadFodd(hmap);
-}
-
-static inline HOSTMAP* videoreadevent(HOSTMAP* hmap, uintptr_t scan_code)
-{
+  uint8_t r3h;
   uint8_t eventflags = hmap->A_vidbuf.eventflags;
-  uint8_t eventflagsnext = (eventflags>>1) & (VIDEOSTEPEVENT1AFTERR0HIT|VIDEOSTEPEVENT2AFTERR0HIT|VIDEOSTEPEVENT3AFTERR0HIT);
 
-  hmap->A_vidbuf.eventflags = eventflagsnext;
+  if (eventflags & VIDEOSTEPEVENTHSYNC)
+  {
+    hmap->A_crtc.c3h = (hmap->A_crtc.c3h + 1) & 0xF;
+    r3h = hmap->A_crtc.r[3] & 0xF;
+    if (hmap->A_crtc.c3h == r3h)
+    {
+      hmap->peripheral_code |= VIDEODISPLAYSYNCEDGE;
+      eventflags &= ~VIDEOSTEPEVENTHSYNC;
+      hmap->A_vidbuf.eventflags = eventflags;
+    }
+  }
 
   if (eventflags & VIDEOSTEPEVENTLPSTB)
   {
     hmap->A_crtc.lpstbtimer--;
-    if (hmap->A_crtc.lpstbtimer > 0)
-      eventflagsnext |= VIDEOSTEPEVENTLPSTB;
-    else
+    if (hmap->A_crtc.lpstbtimer == 0)
     {
       hmap->A_crtc.r[16] = scan_code>>26;
       hmap->A_crtc.r[17] = (scan_code>>18)&0xFF;
+      eventflags &= ~VIDEOSTEPEVENTLPSTB;
+      hmap->A_vidbuf.eventflags = eventflags;
     }
   }
 
-  if (!eventflagsnext)
-    hmap->B_crtc.scan_code &= ~VIDEOREADEVENTFLAG;
+  if (!eventflags)
+    scan_code &= ~VIDEOREADEVENTFLAG;
 
-  if (eventflags & VIDEOSTEPEVENT3AFTERR0HIT)
+  return hmap->videoreads[((scan_code&0x1F)<<2)|(scan_code>>30)](hmap, scan_code);
+}
+
+HOSTMAP* videoreadlinetest(HOSTMAP* hmap, uintptr_t scan_code)
+{
+  uint8_t linetestflags = hmap->A_vidbuf.linetestflags;
+  uint8_t linetestflagsnext = (linetestflags>>1);
+
+  hmap->A_vidbuf.linetestflags = linetestflagsnext;
+
+  if (!linetestflagsnext)
+    scan_code &= ~VIDEOREADLINETESTFLAG;
+
+  if (linetestflags & VIDEOSTEPLINETEST3)
   {
     if (hmap->A_crtc.endframe == ENDFRAMENOADJUST)
       hmap->A_crtc.endframe = ENDFRAMEADJUSTCOMPLETE;
   }
 
-  if (eventflags & VIDEOSTEPEVENT2AFTERR0HIT)
+  if (linetestflags & VIDEOSTEPLINETEST2)
   {
     if (hmap->A_crtc.endframe == ENDFRAMESOON)
     {
@@ -3291,7 +3480,7 @@ static inline HOSTMAP* videoreadevent(HOSTMAP* hmap, uintptr_t scan_code)
     }
   }
 
-  if (eventflags & VIDEOSTEPEVENT1AFTERR0HIT)
+  if (linetestflags & VIDEOSTEPLINETEST1)
   {
     if (hmap->A_crtc.endframe == ENDFRAMEIDLE)
     {
@@ -3302,124 +3491,51 @@ static inline HOSTMAP* videoreadevent(HOSTMAP* hmap, uintptr_t scan_code)
     }
   }
 
-  if (eventflags & VIDEOSTEPEVENTR0HIT)
+  if (linetestflags & VIDEOSTEPLINETEST0)
   {
     if (hmap->A_vidbuf.skip & BEFOREDISPLAYSKIPFLAG)
       hmap->peripheral_code |= VIDEODISPLAYPOSSIBLESTART;
   }
-  return hmap;
+  return hmap->videoreads[((scan_code&0x0F)<<2)|(scan_code>>30)](hmap, scan_code);
 }
 
-static inline uintptr_t videoupdatedisplaysignal(HOSTMAP* hmap, uintptr_t signalbuffer)
+HOSTMAP* videoreadcursorsignal(HOSTMAP* hmap, uintptr_t scan_code)
 {
-  if (signalbuffer & hmap->B_vidbuf.displayskewmask)
-    hmap->peripheral_code |= VIDEODISPLAYDISPLAY;
-  else
-    hmap->peripheral_code &= ~VIDEODISPLAYDISPLAY;
-  return signalbuffer;
+  uintptr_t cursorbuffer = hmap->B_crtc.cursorbuffer;
+
+  cursorbuffer = (cursorbuffer>>1) & ~VIDEOCURSORSIGNALSTOPS;
+  cursorbuffer = videoupdatecursorsignal(hmap, cursorbuffer);
+
+  if (!cursorbuffer)
+    scan_code &= ~VIDEOREADCURSORSIGNALFLAG;
+  hmap->B_crtc.cursorbuffer = cursorbuffer;
+  return hmap->videoreads[((scan_code&0x07)<<2)|(scan_code>>30)](hmap, scan_code);
 }
 
-static inline uintptr_t videoupdatecursorsignal(HOSTMAP* hmap, uintptr_t signalbuffer)
+HOSTMAP* videoreadpcursorsignal(HOSTMAP* hmap, uintptr_t scan_code)
 {
-  if (signalbuffer & hmap->B_vidbuf.cursorskewmask)
-    signalbuffer = (signalbuffer&~VIDEOSTEPSIGNALSEGMENTMASK)|VIDEOSTEPSIGNALSEGMENT0;
-  if (signalbuffer & VIDEOSTEPSIGNALSEGMENTMASK)
-    hmap->peripheral_code |= VIDEODISPLAYCURSOR;
-  else
-    hmap->peripheral_code &= ~VIDEODISPLAYCURSOR;
-  return signalbuffer;
+  uintptr_t cursorbuffer = hmap->B_crtc.cursorbuffer;
+
+  cursorbuffer = (cursorbuffer>>1) & ~VIDEOCURSORSIGNALPSTOPS;
+  cursorbuffer = videoupdatepcursorsignal(hmap, cursorbuffer);
+
+  if (!cursorbuffer)
+    scan_code &= ~VIDEOREADCURSORSIGNALFLAG;
+  hmap->B_crtc.cursorbuffer = cursorbuffer;
+  return hmap->videoreads[((scan_code&0x07)<<2)|(scan_code>>30)](hmap, scan_code);
 }
 
-static inline uintptr_t videoupdatepcursorsignal(HOSTMAP* hmap, uintptr_t signalbuffer)
+HOSTMAP* videoreaddisplaysignal(HOSTMAP* hmap, uintptr_t scan_code)
 {
-  if (signalbuffer & hmap->B_vidbuf.cursorskewmask)
-    signalbuffer = (signalbuffer&~VIDEOSTEPSIGNALSEGMENTMASK)|VIDEOSTEPSIGNALSEGMENT0;
-  if ((signalbuffer>>VIDEOSTEPSIGNALABOVESHIFT) & hmap->B_vidbuf.cursorskewmask)
-    signalbuffer = (signalbuffer&~(VIDEOSTEPSIGNALSEGMENTMASK<<VIDEOSTEPSIGNALABOVESHIFT))|(VIDEOSTEPSIGNALSEGMENT0<<VIDEOSTEPSIGNALABOVESHIFT);
-  if ((signalbuffer>>VIDEOSTEPSIGNALBELOWSHIFT) & hmap->B_vidbuf.cursorskewmask)
-    signalbuffer = (signalbuffer&~(VIDEOSTEPSIGNALSEGMENTMASK<<VIDEOSTEPSIGNALBELOWSHIFT))|(VIDEOSTEPSIGNALSEGMENT0<<VIDEOSTEPSIGNALBELOWSHIFT);
-  if (signalbuffer & VIDEOSTEPSIGNALPSEGMENTMASK)
-    hmap->peripheral_code |= VIDEODISPLAYCURSOR;
-  else
-    hmap->peripheral_code &= ~VIDEODISPLAYCURSOR;
-  return signalbuffer;
-}
+  uintptr_t displaybuffer = hmap->A_crtc.displaybuffer;
 
-static inline HOSTMAP* videoreadsignal(HOSTMAP* hmap)
-{
-  uintptr_t signalbuffer = hmap->B_crtc.signalbuffer;
+  displaybuffer = (displaybuffer&VIDEODISPLAYSIGNALINPUT) | ((displaybuffer>>1) & ~VIDEOCURSORSIGNALSTOPS);
+  displaybuffer = videoupdatedisplaysignal(hmap, displaybuffer);
 
-  signalbuffer = (signalbuffer>>1) & ~VIDEOSTEPSIGNALSTOPMASK;
-  signalbuffer = videoupdatedisplaysignal(hmap, signalbuffer);
-  signalbuffer = videoupdatecursorsignal(hmap, signalbuffer);
-
-  if (signalbuffer == 0x00000000 || signalbuffer == 0x00000007)
-    hmap->B_crtc.scan_code &= ~VIDEOREADSIGNALFLAG;
-  hmap->B_crtc.signalbuffer = signalbuffer;
-  return hmap;
-}
-
-static inline HOSTMAP* videoreadpsignal(HOSTMAP* hmap)
-{
-  uintptr_t signalbuffer = hmap->B_crtc.signalbuffer;
-
-  signalbuffer = (signalbuffer>>1) & ~VIDEOSTEPSIGNALPSTOPMASK;
-  signalbuffer = videoupdatedisplaysignal(hmap, signalbuffer);
-  signalbuffer = videoupdatepcursorsignal(hmap, signalbuffer);
-
-  if (signalbuffer == 0x00000000 || signalbuffer == 0x00000007)
-    hmap->B_crtc.scan_code &= ~VIDEOREADSIGNALFLAG;
-  hmap->B_crtc.signalbuffer = signalbuffer;
-  return hmap;
-}
-
-static inline HOSTMAP* videosetskewmasks(HOSTMAP* hmap, uint8_t r8)
-{
-  if ((r8 & 0x30) == 0x30)
-    hmap->B_vidbuf.displayskewmask = 0;
-  else
-    hmap->B_vidbuf.displayskewmask = (VIDEOSTEPSIGNALDISPLAY>>((r8>>4)&0x3));
-  if ((r8 & 0xC0) == 0xC0)
-    hmap->B_vidbuf.cursorskewmask = 0;
-  else
-    hmap->B_vidbuf.cursorskewmask = (VIDEOSTEPSIGNALCURSOR>>((r8>>6)&0x3));
-  return hmap;
-}
-
-HOSTMAP* videoreadeventeven(HOSTMAP* hmap, uintptr_t scan_code)
-{
-  videoreadevent(hmap, scan_code);
-  return hmap->videoreadseven[((scan_code&0x0F)<<2)|(scan_code>>30)](hmap, scan_code);
-}
-
-HOSTMAP* videoreadeventodd(HOSTMAP* hmap, uintptr_t scan_code)
-{
-  videoreadevent(hmap, scan_code);
-  return hmap->videoreadsodd[((scan_code&0x0F)<<2)|(scan_code>>30)](hmap, scan_code);
-}
-
-HOSTMAP* videoreadsignaleven(HOSTMAP* hmap, uintptr_t scan_code)
-{
-  videoreadsignal(hmap);
-  return hmap->videoreadseven[((scan_code&0x07)<<2)|(scan_code>>30)](hmap, scan_code);
-}
-
-HOSTMAP* videoreadsignalodd(HOSTMAP* hmap, uintptr_t scan_code)
-{
-  videoreadsignal(hmap);
-  return hmap->videoreadsodd[((scan_code&0x07)<<2)|(scan_code>>30)](hmap, scan_code);
-}
-
-HOSTMAP* videoreadpsignaleven(HOSTMAP* hmap, uintptr_t scan_code)
-{
-  videoreadpsignal(hmap);
-  return hmap->videoreadseven[((scan_code&0x07)<<2)|(scan_code>>30)](hmap, scan_code);
-}
-
-HOSTMAP* videoreadpsignalodd(HOSTMAP* hmap, uintptr_t scan_code)
-{
-  videoreadpsignal(hmap);
-  return hmap->videoreadsodd[((scan_code&0x07)<<2)|(scan_code>>30)](hmap, scan_code);
+  if (displaybuffer == 0x00000000 || displaybuffer == 0x0000000F)
+    scan_code &= ~VIDEOREADDISPLAYSIGNALFLAG;
+  hmap->A_crtc.displaybuffer = displaybuffer;
+  return hmap->videoreads[((scan_code&0x03)<<2)|(scan_code>>30)](hmap, scan_code);
 }
 
 HOSTMAP* videoinactivesetskew(HOSTMAP* hmap, uint8_t r8)
@@ -3429,32 +3545,48 @@ HOSTMAP* videoinactivesetskew(HOSTMAP* hmap, uint8_t r8)
 
 HOSTMAP* videosetskew(HOSTMAP* hmap, uint8_t r8)
 {
-  uintptr_t signalbuffer;
+  uintptr_t displaybuffer;
+  uintptr_t cursorbuffer;
 
   videosetskewmasks(hmap, r8);
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
-  signalbuffer = videoupdatedisplaysignal(hmap, signalbuffer);
-  signalbuffer = videoupdatecursorsignal(hmap, signalbuffer);
+  displaybuffer = hmap->A_crtc.displaybuffer;
+  displaybuffer = videoupdatedisplaysignal(hmap, displaybuffer);
 
-  if (signalbuffer != 0x00000000 && signalbuffer != 0x00000007)
-    hmap->B_crtc.scan_code |= VIDEOREADSIGNALFLAG;
-  hmap->B_crtc.signalbuffer = signalbuffer;
+  if (displaybuffer != 0x00000000 && displaybuffer != 0x00000007)
+    hmap->B_crtc.scan_code |= VIDEOREADDISPLAYSIGNALFLAG;
+  hmap->A_crtc.displaybuffer = displaybuffer;
+
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
+  cursorbuffer = videoupdatecursorsignal(hmap, cursorbuffer);
+
+  if (cursorbuffer)
+    hmap->B_crtc.scan_code |= VIDEOREADCURSORSIGNALFLAG;
+  hmap->B_crtc.cursorbuffer = cursorbuffer;
+
   return hmap;
 }
 
 HOSTMAP* videoprogressivesetskew(HOSTMAP* hmap, uint8_t r8)
 {
-  uintptr_t signalbuffer;
+  uintptr_t displaybuffer;
+  uintptr_t cursorbuffer;
 
   videosetskewmasks(hmap, r8);
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
-  signalbuffer = videoupdatedisplaysignal(hmap, signalbuffer);
-  signalbuffer = videoupdatepcursorsignal(hmap, signalbuffer);
+  displaybuffer = hmap->A_crtc.displaybuffer;
+  displaybuffer = videoupdatedisplaysignal(hmap, displaybuffer);
 
-  if (signalbuffer != 0x00000000 && signalbuffer != 0x00000007)
-    hmap->B_crtc.scan_code |= VIDEOREADSIGNALFLAG;
-  hmap->B_crtc.signalbuffer = signalbuffer;
+  if (displaybuffer != 0x00000000 && displaybuffer != 0x00000007)
+    hmap->B_crtc.scan_code |= VIDEOREADDISPLAYSIGNALFLAG;
+  hmap->A_crtc.displaybuffer = displaybuffer;
+
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
+  cursorbuffer = videoupdatepcursorsignal(hmap, cursorbuffer);
+
+  if (cursorbuffer)
+    hmap->B_crtc.scan_code |= VIDEOREADCURSORSIGNALFLAG;
+  hmap->B_crtc.cursorbuffer = cursorbuffer;
+
   return hmap;
 }
