@@ -882,17 +882,17 @@ static inline void systemviaportbwrite_latchb(HOSTMAP* hmap)
       break;
     case 0x04:
       /*Screen Size hi*/
-      if (lenabled)
-        hmap->B_crtc.scan_code |= (1<<VIDEOREADSTARTSHIFT);
+      if (!lenabled)
+        videosetscreenstartindex(hmap, hmap->screenstartindex & 2);
       else
-        hmap->B_crtc.scan_code &= ~(1<<VIDEOREADSTARTSHIFT);
+        videosetscreenstartindex(hmap, hmap->screenstartindex | 1);
       break;
     case 0x05:
       /*Screen Size lo*/
-      if (lenabled)
-        hmap->B_crtc.scan_code |= (2<<VIDEOREADSTARTSHIFT);
+      if (!lenabled)
+        videosetscreenstartindex(hmap, hmap->screenstartindex & 1);
       else
-        hmap->B_crtc.scan_code &= ~(2<<VIDEOREADSTARTSHIFT);
+        videosetscreenstartindex(hmap, hmap->screenstartindex | 2);
       break;
     case 0x06:
       /*caps lock on/off*/
@@ -985,18 +985,17 @@ static inline void systemviaportbwrite_latchm(HOSTMAP* hmap)
       break;
     case 0x04:
       /*Screen Size hi*/
-      if (lenabled)
-        hmap->B_crtc.scan_code |= (1<<VIDEOREADSTARTSHIFT);
+      if (!lenabled)
+        videosetscreenstartindex(hmap, hmap->screenstartindex & 2);
       else
-        hmap->B_crtc.scan_code &= ~(1<<VIDEOREADSTARTSHIFT);
+        videosetscreenstartindex(hmap, hmap->screenstartindex | 1);
       break;
     case 0x05:
       /*Screen Size lo*/
-      if (lenabled)
-        hmap->B_crtc.scan_code |= (2<<VIDEOREADSTARTSHIFT);
+      if (!lenabled)
+        videosetscreenstartindex(hmap, hmap->screenstartindex & 1);
       else
-        hmap->B_crtc.scan_code &= ~(2<<VIDEOREADSTARTSHIFT);
-      break;
+        videosetscreenstartindex(hmap, hmap->screenstartindex | 2);
     case 0x06:
       /*caps lock on/off*/
       /*get keyboard status*/
@@ -1054,17 +1053,17 @@ static inline void systemviaportbwrite_nosoundlatchb(HOSTMAP* hmap)
       break;
     case 0x04:
       /*Screen Size hi*/
-      if (lenabled)
-        hmap->B_crtc.scan_code |= (1<<VIDEOREADSTARTSHIFT);
+      if (!lenabled)
+        videosetscreenstartindex(hmap, hmap->screenstartindex & 2);
       else
-        hmap->B_crtc.scan_code &= ~(1<<VIDEOREADSTARTSHIFT);
+        videosetscreenstartindex(hmap, hmap->screenstartindex | 1);
       break;
     case 0x05:
       /*Screen Size lo*/
-      if (lenabled)
-        hmap->B_crtc.scan_code |= (2<<VIDEOREADSTARTSHIFT);
+      if (!lenabled)
+        videosetscreenstartindex(hmap, hmap->screenstartindex & 1);
       else
-        hmap->B_crtc.scan_code &= ~(2<<VIDEOREADSTARTSHIFT);
+        videosetscreenstartindex(hmap, hmap->screenstartindex | 2);
       break;
     case 0x06:
       /*caps lock on/off*/
@@ -1151,17 +1150,17 @@ static inline void systemviaportbwrite_nosoundlatchm(HOSTMAP* hmap)
       break;
     case 0x04:
       /*Screen Size hi*/
-      if (lenabled)
-        hmap->B_crtc.scan_code |= (1<<VIDEOREADSTARTSHIFT);
+      if (!lenabled)
+        videosetscreenstartindex(hmap, hmap->screenstartindex & 2);
       else
-        hmap->B_crtc.scan_code &= ~(1<<VIDEOREADSTARTSHIFT);
+        videosetscreenstartindex(hmap, hmap->screenstartindex | 1);
       break;
     case 0x05:
       /*Screen Size lo*/
-      if (lenabled)
-        hmap->B_crtc.scan_code |= (2<<VIDEOREADSTARTSHIFT);
+      if (!lenabled)
+        videosetscreenstartindex(hmap, hmap->screenstartindex & 1);
       else
-        hmap->B_crtc.scan_code &= ~(2<<VIDEOREADSTARTSHIFT);
+        videosetscreenstartindex(hmap, hmap->screenstartindex | 2);
       break;
     case 0x06:
       /*caps lock on/off*/
