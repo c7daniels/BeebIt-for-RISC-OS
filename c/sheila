@@ -29,6 +29,7 @@
 #include "riscos.h"
 /*#include "swis.h"*/
 #include "tube.h"
+#include "video.h"
 #include "videoula.h"
 #include "1770fdc.h"
 
@@ -104,7 +105,7 @@ void sheilareset(void)
       readhigh[i] = hostconstantread00;
       readhigh[i+1] = hostconstantread00;
       writehigh[i] = videoula00write;
-      writehigh[i+1] = videoula01write;
+      writehigh[i+1] = videoula01writenybble;
     }
     /*&FE24 - &FE27 (FDC INTERFACE CONTROL REG)*/
     for (i=0x24; i<0x28; i+=0x01)
@@ -133,7 +134,7 @@ void sheilareset(void)
       readhigh[i] = hostconstantreadFE;
       readhigh[i+1] = hostconstantreadFE;
       writehigh[i] = videoula00write;
-      writehigh[i+1] = videoula01write;
+      writehigh[i+1] = videoula01writenybble;
     }
   }
 
@@ -423,6 +424,31 @@ void sheilareset(void)
   }
 }
 
+void sheilareplacevideoulawrites(HOSTHIGHOP (*writes)[4])
+{
+  int i,limit;
+  HOSTHIGHOP* writehigh = &hostmap.writehigh[0x200];
+
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    /*&FE20 - &FE23 (VIDEOULA)*/
+    limit = 0x24;
+  }
+  else
+  {
+    /*&FE20 - &FE2F (VIDEOULA/INTON)*/
+    limit = 0x30;
+  }
+
+  for (i=0x20; i<limit; i+=0x04)
+  {
+    writehigh[i] = (*writes)[0];
+    writehigh[i+1] = (*writes)[1];
+    writehigh[i+2] = (*writes)[2];
+    writehigh[i+3] = (*writes)[3];
+  }
+}
+
 HOSTMAP* hostconstantread00(HOSTMAP* hmap, uintptr_t address_code)
 {
   hmap->m = 0x00;
@@ -544,6 +570,8 @@ HOSTMAP* accconwrite_bp(HOSTMAP* hmap, uintptr_t address_code)
   if (hmap->m & 0x80)
   {
     /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
+    hmap->B_crtc.scan_code |= VIDEOREADSHADOWFLAG;
+
     if (hmap->romsel & 0x80)
     {
       /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
@@ -566,6 +594,8 @@ HOSTMAP* accconwrite_bp(HOSTMAP* hmap, uintptr_t address_code)
   }
   else
   {
+    hmap->B_crtc.scan_code &= ~VIDEOREADSHADOWFLAG;
+
     cmap->busops[0x07].op = cmap->busops[0x06].op
         = cmap->busops[0x05].op = cmap->busops[0x04].op
         = cmap->busops[0x03].op = hmap->paging.read3000;
@@ -580,6 +610,15 @@ HOSTMAP* accconwrite_bp(HOSTMAP* hmap, uintptr_t address_code)
 HOSTMAP* accconwrite_m(HOSTMAP* hmap, uintptr_t address_code)
 {
   R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+
+  if (hmap->m & 0x01)
+  {
+    /*ACCCON b0 (VDUSEL) (&3000-&7FFF)*/
+    hmap->B_crtc.scan_code |= VIDEOREADSHADOWFLAG;
+  }
+  else
+    hmap->B_crtc.scan_code &= ~VIDEOREADSHADOWFLAG;
+
   switch (hmap->m & 0x06)
   {
     case 0x00:

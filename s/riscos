@@ -2,9 +2,9 @@
 ;
 ; BeebIt - BBC Micro Model B Emulator
 ;
-; (C) Copyright Michael J Foot, 1998-2003
+; (C) Copyright Michael J Foot, 1998-2024
 ;
-; Email: <mjfoot@paradise.net.nz>
+; Email: <mjfoot.nz@gmail.com>
 ;
 
   GET h.6502zmaps
@@ -58,10 +58,15 @@
   EXPORT |keyclaim|
   EXPORT |keyrelease|
 
+  EXPORT |screenstartandlinelength|
+  EXPORT |vsync|
+
   ;EXPORT |quit|
   EXPORT |keylookup|
   EXPORT |keystatus|
   ;EXPORT |lastkey|
+  EXPORT |nhostscreen|
+  EXPORT |nhostscreenlinelength|
 
 ScreenBlanker_Control EQU &43100
 ZeriBeep_Attach EQU &55E40
@@ -505,6 +510,24 @@ keyrelease1
 ;  SWI OS_Byte
   LDMFD sp!,{r0-r2,pc}
 
+|screenstartandlinelength|
+  STMFD sp!,{r0,r1,r11,r12,lr}
+  LDR r0,=vduvar1
+  LDR r1,=vduvar2
+  SWI OS_ReadVduVariables
+  LDR r11,[r1] ;get screen address
+  LDR r12,=nhostscreen
+  STR r11,[r12]
+  LDR r11,[r1,#4] ;get screen line length
+  LDR r12,=nhostscreenlinelength
+  STR r11,[r12]
+  LDMFD sp!,{r0,r1,r11,r12,pc}
+
+|vsync|
+  MOV r0,#19
+  SWI OS_Byte
+  MOV pc,lr
+
 ;Data Area
 
   AREA    |C$$data|, DATA
@@ -566,5 +589,23 @@ old_r12 DCD 0
 ;|lastkey|
 ;  DCB 0,0
 ;  ALIGN
+
+|nhostscreen|
+  DCD 0
+|nhostscreenlinelength|
+  DCD 0
+  ALIGN
+
+vduvar1
+  DCD 148
+  DCD 6
+  DCD -1
+  ALIGN
+
+vduvar2
+  DCD 0
+  DCD 0
+  DCD 0
+  ALIGN
 
   END

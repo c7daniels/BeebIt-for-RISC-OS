@@ -9,6 +9,8 @@
  * Email: <convertedgames@3insdale.me.uk>
  */
 
+#include <assert.h>
+#include <string.h>
 #include "hostmap.h"
 #include "beebit.h"
 #include "kernel.h"
@@ -19,6 +21,8 @@
 #include "videoula.h"
 
 extern _kernel_swi_regs regs;
+
+static_assert(sizeof(HOSTMAPVIDOUTOPMAPAREA) >= 256, "Expecting opmaparea to hold 256 bytes");
 
 char *displayzoomiconarray[13] = {
   NULL,
@@ -37,65 +41,63 @@ char *displayzoomiconarray[13] = {
 };
 char **displayzoomicons = displayzoomiconarray;
 
-#ifdef VIDEOSCALE_WITH_OVERSCALE
-void (*scalegraphics1)(intptr_t bufferaddress, intptr_t hostaddress);
-void (*scaleteletext1)(intptr_t bufferaddress, intptr_t hostaddress);
-int scalelineslimit;
-int scalelengthlimit;
+VIDEOSCALEUPDATEPARAMS videoscale_updateparameters;
+VIDEOSCALELUTPARAMETERS videoscale_lutparameters;
+void (*videoscale_init)(VIDEOSCALELUTPARAMETERS *lutparams);
 
-void limitcallscalegraphics(intptr_t bufferaddress, intptr_t hostaddress)
+static const unsigned char sliceopmap[256] = {
+  /*upper slice*/
+  0, 1, 1, 1, 0, 0, 0, 0,
+  0, 1, 0, 0, 0, 0, 0, 0,
+  3, 3, 3, 3, 2, 2, 2, 2,
+  3, 3, 3, 3, 2, 2, 2, 2,
+  0, 1, 0, 1, 0, 0, 0, 0,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  0, 1, 1, 1, 0, 0, 0, 0,
+  0, 1, 0, 0, 0, 0, 0, 0,
+  4, 4, 4, 4, 2, 2, 2, 2,
+  4, 4, 4, 4, 2, 2, 2, 2,
+  0, 1, 0, 1, 0, 0, 0, 0,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+
+  /*lower slice*/
+  0, 1, 1, 1, 0, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 1, 1, 2, 2, 2, 2,
+  0, 0, 0, 0, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  0, 1, 1, 1, 0, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 1, 1, 2, 2, 2, 2,
+  0, 0, 0, 0, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2,
+  2, 2, 2, 2, 2, 2, 2, 2
+};
+
+
+extern HOSTMAP* videooutskipeven(HOSTMAP* hmap);
+extern HOSTMAP* videooutskipodd(HOSTMAP* hmap);
+extern HOSTMAP* videooutskipinpairs(HOSTMAP* hmap);
+extern HOSTMAP* videooutskip(HOSTMAP* hmap);
+
+extern HOSTMAP* videooutblankeven(HOSTMAP* hmap);
+extern HOSTMAP* videooutblankodd(HOSTMAP* hmap);
+extern HOSTMAP* videooutblankinpairs(HOSTMAP* hmap);
+extern HOSTMAP* videooutblank(HOSTMAP* hmap);
+
+HOSTMAP* videonolineop(HOSTMAP* hmap)
 {
-  if (hostaddress + host_scaledlinelength - nhostscreen > scalelineslimit * nhostscreenlinelength)
-  {
-    return;
-  }
-
-  int length = local_linelengthfloor;
-  if (length > scalelengthlimit) local_linelengthfloor = scalelengthlimit;
-
-  scalegraphics1(bufferaddress, hostaddress);
-
-  local_linelengthfloor = length;
+  return hmap;
 }
-
-void limitcallscaleteletext(intptr_t bufferaddress, intptr_t hostaddress)
-{
-  if (hostaddress + host_scaledlinelength - nhostscreen > scalelineslimit * nhostscreenlinelength)
-  {
-    return;
-  }
-
-  int length = local_linelengthfloor;
-  if (length > scalelengthlimit) local_linelengthfloor = scalelengthlimit;
-
-  scaleteletext1(bufferaddress, hostaddress);
-
-  local_linelengthfloor = length;
-}
-
-void limitedblankrow(intptr_t hostaddress, int length, int mask)
-{
-  if (hostaddress + nhostscreenlinelength - nhostscreen > scalelineslimit * nhostscreenlinelength)
-  {
-    return;
-  }
-
-  if (length > nhostscreenlinelength)
-    length = nhostscreenlinelength;
-
-  blankrow(hostaddress, length, mask);
-}
-
-void limitscale(VIDEOSCALECHOICE *choice, int length, int lines)
-{
-  scalelengthlimit = length;
-  scalelineslimit = lines;
-  scalegraphics1 = choice->scalegraphics;
-  scaleteletext1 = choice->scaleteletext;
-  choice->scalegraphics = limitcallscalegraphics;
-  choice->scaleteletext = limitcallscaleteletext;
-}
-#endif
 
 static void readzoomavailabilitymodevars(intptr_t mode,int* ratioshift,int *xres,int *yres)
 {
@@ -126,7 +128,7 @@ int getoverscalezoomavailabilityformode(intptr_t mode)
 
   readzoomavailabilitymodevars(mode,&ratioshift,&xres,&yres);
   flags = 0;
-  
+
   for (int i=0; displayzoomiconarray[i] != (char*)-1; i++)
   {
     if (!displayzoomiconarray[i])
@@ -135,7 +137,7 @@ int getoverscalezoomavailabilityformode(intptr_t mode)
     if (i & 1)
     {
       integerscale = (i+1)>>1;
-      
+
       if (ratioshift >= 0 || integerscale == ((integerscale >> -ratioshift) << -ratioshift))
       {
         flags |= (1<<i);
@@ -144,8 +146,8 @@ int getoverscalezoomavailabilityformode(intptr_t mode)
     else
     {
       twicescale = i+1;
-      
-      if (ratioshift >= 1 || twicescale == ((twicescale >> 1-ratioshift) << 1-ratioshift))
+
+      if (ratioshift >= 1 || twicescale == ((twicescale >> (1-ratioshift)) << (1-ratioshift)))
       {
         flags |= (1<<i);
       }
@@ -155,16 +157,16 @@ int getoverscalezoomavailabilityformode(intptr_t mode)
   return flags;
 }
 
-static int getfittedzoomavailabilityformode(intptr_t mode,int nlines)
+static int getfittedzoomavailabilityformode(intptr_t mode,int nlines,int minlinescale)
 {
   int xres,yres;
   int ratioshift,flags;
   int scaledx,scaledy;
-  int integerscale,twicescale;
+  int integerscale,twicescale,linescale;
 
   readzoomavailabilitymodevars(mode,&ratioshift,&xres,&yres);
   flags = 0;
-  
+
   for (int i=0; displayzoomiconarray[i] != (char*)-1; i++)
   {
     if (!displayzoomiconarray[i])
@@ -173,35 +175,45 @@ static int getfittedzoomavailabilityformode(intptr_t mode,int nlines)
     if (i & 1)
     {
       integerscale = (i+1)>>1;
-      
+
       if (ratioshift >= 0 || integerscale == ((integerscale >> -ratioshift) << -ratioshift))
       {
         scaledx = 640 * integerscale;
-        
+
         if (ratioshift >= 0)
-          scaledy = (nlines * integerscale << ratioshift);
+          linescale = integerscale << ratioshift;
         else
-          scaledy = (nlines * integerscale >> -ratioshift);
-        
-        if (scaledx <= xres && scaledy <= yres)
-          flags |= (1<<i);
+          linescale = integerscale >> (-ratioshift);
+
+        if (scaledx <= xres && linescale >= minlinescale)
+        {
+          scaledy = nlines * linescale;
+
+          if (scaledy <= yres)
+            flags |= (1<<i);
+        }
       }
     }
     else
     {
       twicescale = i+1;
-      
-      if (ratioshift >= 1 || twicescale == ((twicescale >> 1-ratioshift) << 1-ratioshift))
+
+      if (ratioshift >= 1 || twicescale == ((twicescale >> (1-ratioshift)) << (1-ratioshift)))
       {
-          scaledx = 640 * twicescale >> 1;
-        
-          if (ratioshift >= 1)
-            scaledy = (nlines * twicescale << ratioshift-1);
-          else
-            scaledy = (nlines * twicescale >> 1-ratioshift);
-        
-          if (scaledx <= xres && scaledy <= yres)
+        scaledx = 640 * twicescale >> 1;
+
+        if (ratioshift >= 1)
+          linescale = twicescale << (ratioshift-1);
+        else
+          linescale = twicescale >> (1-ratioshift);
+
+        if (scaledx <= xres && linescale >= minlinescale)
+        {
+          scaledy = nlines * linescale;
+
+          if (scaledy <= yres)
             flags |= (1<<i);
+        }
       }
     }
   }
@@ -209,85 +221,104 @@ static int getfittedzoomavailabilityformode(intptr_t mode,int nlines)
   return flags;
 }
 
-int get256linezoomavailabilityformode(intptr_t mode)
+int get256linezoomavailabilityformode(intptr_t mode, int minlinescale)
 {
-  return getfittedzoomavailabilityformode(mode,256);
+  return getfittedzoomavailabilityformode(mode,256,minlinescale);
 }
 
-int getzoomnumberformode(intptr_t mode)
+static int getzoomnumberformode(intptr_t mode, int displayzoom, int minlinescale)
 {
   int number,i;
 
-  if (beebit_displayzoom >= DISPLAY_ZOOM_FIRST_IN_TABLE)
+  if (displayzoom >= DISPLAY_ZOOM_FIRST_IN_TABLE)
   {
-    i = beebit_displayzoom - DISPLAY_ZOOM_FIRST_IN_TABLE;
+    i = displayzoom - DISPLAY_ZOOM_FIRST_IN_TABLE;
 
 #ifdef VIDEOSCALE_WITH_OVERSCALE
     if (getoverscalezoomavailabilityformode(mode) & (1<<i))
 #else
-    if (get256linezoomavailabilityformode(mode) & (1<<i))
+    if (get256linezoomavailabilityformode(mode,1) & (1<<i))
 #endif
       return i;
   }
   number = 0;
-  i = get256linezoomavailabilityformode(mode);
+  i = get256linezoomavailabilityformode(mode,minlinescale);
+  if (!i)
+    i = get256linezoomavailabilityformode(mode,1);
   for (; i>1; i>>=1)
   {
     number++;
   }
-  
+
   return number;
 }
 
-int hostmode7isexpectedmode7(void)
+static int getscaleselectorformode(intptr_t mode, int displayzoom, int minlinescale)
 {
-  int xres,yres;
+  int zoomnumber = getzoomnumberformode(mode, displayzoom, minlinescale);
 
-  regs.r[0] = 7;
-  regs.r[1] = 3;
-  _kernel_swi(OS_ReadModeVariable,&regs,&regs);
-
-  if (regs.r[2] != 15)
-    return 0; /*not 16 colours*/
-
-  regs.r[1] = 11;
-  _kernel_swi(OS_ReadModeVariable,&regs,&regs);
-  xres = regs.r[2] + 1;
-  regs.r[1] = 12;
-  _kernel_swi(OS_ReadModeVariable,&regs,&regs);
-  yres = regs.r[2] + 1;
-
-  /*accept 320 x 250 Mode 7*/
-  /*and reject 640 x 500 Mode 7, too big for a Mode 12 screen save buffer*/
-  return xres == 320 || yres == 250;
+  if (zoomnumber & 1)
+    return ((zoomnumber+1)>>1)<<8;
+  else
+    return (zoomnumber+1)<<7;
 }
 
-int getentrysizeforbarrelshiftedlookup(VIDEOSCALELUTPARAMETERS *lutparams, int log2bpp)
+static int calculatelinescale(int scaleselector, int ratioshift)
 {
-  int bits,entrysize;
-  bits = lutparams->leftpixel+lutparams->rightpixel<<log2bpp;
-  
-  for (entrysize = 4; bits > (entrysize<<3);)
-    entrysize<<=2;
-  
-  return entrysize;
+  if (ratioshift >= 1)
+    return (scaleselector>>7)<<(ratioshift-1);
+  else
+    return scaleselector>>(7-ratioshift+1);
 }
 
-void video4lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
+static int getlookupsizeinbits(VIDEOSCALELUTPARAMETERS *lutparams, int log2bpp)
 {
+  return (lutparams->leftpixel+lutparams->rightpixel)<<log2bpp;
+}
+
+static int getAArch32constantbarrelshiftfornumberofbits(int nbits)
+{
+  int shift;
+  for (shift = 2; nbits > (8<<shift);)
+    shift += 2;
+  return shift;
+}
+
+static int getlutsizeforparameters(VIDEOSCALELUTPARAMETERS* lutparams, int log2bpp)
+{
+  int nbits, lu_shift;
+
+  nbits = getlookupsizeinbits(lutparams, log2bpp);
+  lu_shift = getAArch32constantbarrelshiftfornumberofbits(nbits);
+
+  return 256<<lu_shift;
+}
+
+void videonolutinit(VIDEOSCALELUTPARAMETERS* lutparams)
+{
+}
+
+void video4to4lutinit(VIDEOSCALELUTPARAMETERS* lutparams)
+{
+  HOSTMAP* hmap = &hostmap;
   int i,j,n,nstop;
-  unsigned int leftmask,rightmask,v;
+  int nbits;
+  uintptr_t leftmask,rightmask,v;
   int shift;
   int *ilut;
 
-  nstop = getentrysizeforbarrelshiftedlookup(lutparams,2)<<1;
+  ilut = (int*)hmap->B_vidout.lut;
 
-  ilut = (int*)((intptr_t)videoscale_workspace+lutparams->offset);
+  nbits = getlookupsizeinbits(lutparams, 2);
+  hmap->B_vidout.nlutbits = nbits;
+  hmap->A_vidout.lutshift = getAArch32constantbarrelshiftfornumberofbits(nbits);
+
+  nstop = 2<<hmap->A_vidout.lutshift;
 
   for (i=0; i<256; i++)
   {
-    leftmask = (unsigned int)host_colourmasks[i&7];
-    rightmask = (unsigned int)host_colourmasks[(i>>4)&7];
+    leftmask = hmap->D_colour.fill[i&7];
+    rightmask = hmap->D_colour.fill[(i>>4)&7];
 
     for (j=0,n=lutparams->leftpixel;j+7<n;j+=8)
     {
@@ -296,14 +327,14 @@ void video4lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
 
     if (j<n)
     {
-      shift = n-j<<2;
-      v = (rightmask<<shift) | (leftmask>>32-shift);
+      shift = (n-j)<<2;
+      v = ((rightmask<<shift)&0xFFFFFFFF) | (leftmask>>(32-shift));
       n+=lutparams->rightpixel;
       j+=8;
       if (j>n)
       {
-        shift = j-n<<2;
-        v = (v<<shift)>>shift;
+        shift = (j-n)<<2;
+        v = ((v<<shift)&0xFFFFFFFF)>>shift;
       }
       *ilut++ = (int)v;
     }
@@ -319,8 +350,8 @@ void video4lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
 
     if (j<n)
     {
-      shift = n-j<<2;
-      v = (rightmask>>32-shift);
+      shift = (n-j)<<2;
+      v = (rightmask>>(32-shift));
       *ilut++ = (int)v;
       j+=8;
     }
@@ -332,20 +363,27 @@ void video4lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
   }
 }
 
-void video8lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
+void video4to8lutinit(VIDEOSCALELUTPARAMETERS* lutparams)
 {
+  HOSTMAP* hmap = &hostmap;
   int i,j,n,nstop;
-  unsigned int leftmask,rightmask,v;
+  int nbits;
+  uintptr_t leftmask,rightmask,v;
   int shift;
   int *ilut;
 
-  nstop = getentrysizeforbarrelshiftedlookup(lutparams,3);
-  ilut = (int*)((intptr_t)videoscale_workspace+lutparams->offset);
+  ilut = (int*)hmap->B_vidout.lut;
+
+  nbits = getlookupsizeinbits(lutparams, 3);
+  hmap->B_vidout.nlutbits = nbits;
+  hmap->A_vidout.lutshift = getAArch32constantbarrelshiftfornumberofbits(nbits);
+
+  nstop = 1<<hmap->A_vidout.lutshift;
 
   for (i=0; i<256; i++)
   {
-    leftmask = (unsigned int)host_colourmasks[i&7];
-    rightmask = (unsigned int)host_colourmasks[(i>>4)&7];
+    leftmask = hmap->D_colour.fill[i&7];
+    rightmask = hmap->D_colour.fill[(i>>4)&7];
 
     for (j=0,n=lutparams->leftpixel;j+3<n;j+=4)
     {
@@ -354,14 +392,14 @@ void video8lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
 
     if (j<n)
     {
-      shift = n-j<<3;
-      v = (rightmask<<shift) | (leftmask>>32-shift);
+      shift = (n-j)<<3;
+      v = ((rightmask<<shift)&0xFFFFFFFF) | (leftmask>>(32-shift));
       n+=lutparams->rightpixel;
       j+=4;
       if (j>n)
       {
-        shift = j-n<<3;
-        v = (v<<shift)>>shift;
+        shift = (j-n)<<3;
+        v = ((v<<shift)&0xFFFFFFFF)>>shift;
       }
       *ilut++ = (int)v;
     }
@@ -377,8 +415,8 @@ void video8lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
 
     if (j<n)
     {
-      shift = n-j<<3;
-      v = (rightmask>>32-shift);
+      shift = (n-j)<<3;
+      v = (rightmask>>(32-shift));
       *ilut++ = (int)v;
       j+=4;
     }
@@ -390,20 +428,27 @@ void video8lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
   }
 }
 
-void video16lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
+void video4to16lutinit(VIDEOSCALELUTPARAMETERS* lutparams)
 {
+  HOSTMAP* hmap = &hostmap;
   int i,j,n,nstop;
-  unsigned int leftmask,rightmask,v;
+  int nbits;
+  uintptr_t leftmask,rightmask,v;
   int shift;
   int *ilut;
 
-  nstop = getentrysizeforbarrelshiftedlookup(lutparams,4)>>1;
-  ilut = (int*)((intptr_t)videoscale_workspace+lutparams->offset);
+  ilut = (int*)hmap->B_vidout.lut;
+
+  nbits = getlookupsizeinbits(lutparams, 4);
+  hmap->B_vidout.nlutbits = nbits;
+  hmap->A_vidout.lutshift = getAArch32constantbarrelshiftfornumberofbits(nbits);
+
+  nstop = 1<<(hmap->A_vidout.lutshift-1);
 
   for (i=0; i<256; i++)
   {
-    leftmask = (unsigned int)host_colourmasks[i&7];
-    rightmask = (unsigned int)host_colourmasks[(i>>4)&7];
+    leftmask = hmap->D_colour.fill[i&7];
+    rightmask = hmap->D_colour.fill[(i>>4)&7];
 
     for (j=0,n=lutparams->leftpixel;j+1<n;j+=2)
     {
@@ -412,14 +457,14 @@ void video16lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
 
     if (j<n)
     {
-      shift = n-j<<4;
-      v = (rightmask<<shift) | (leftmask>>32-shift);
+      shift = (n-j)<<4;
+      v = ((rightmask<<shift)&0xFFFFFFFF) | (leftmask>>(32-shift));
       n+=lutparams->rightpixel;
       j+=2;
       if (j>n)
       {
-        shift = j-n<<4;
-        v = (v<<shift)>>shift;
+        shift = (j-n)<<4;
+        v = ((v<<shift)&0xFFFFFFFF)>>shift;
       }
       *ilut++ = (int)v;
     }
@@ -435,8 +480,8 @@ void video16lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
 
     if (j<n)
     {
-      shift = n-j<<4;
-      v = (rightmask>>32-shift);
+      shift = (n-j)<<4;
+      v = (rightmask>>(32-shift));
       *ilut++ = (int)v;
       j+=2;
     }
@@ -448,19 +493,26 @@ void video16lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
   }
 }
 
-void video32lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
+void video4to32lutinit(VIDEOSCALELUTPARAMETERS* lutparams)
 {
+  HOSTMAP* hmap = &hostmap;
   int i,j,n,nstop;
-  unsigned int leftmask,rightmask;
+  int nbits;
+  uintptr_t leftmask,rightmask;
   int *ilut;
 
-  nstop = getentrysizeforbarrelshiftedlookup(lutparams,5)>>2;
-  ilut = (int*)((intptr_t)videoscale_workspace+lutparams->offset);
+  ilut = (int*)hmap->B_vidout.lut;
+
+  nbits = getlookupsizeinbits(lutparams, 5);
+  hmap->B_vidout.nlutbits = nbits;
+  hmap->A_vidout.lutshift = getAArch32constantbarrelshiftfornumberofbits(nbits);
+
+  nstop = 1<<(hmap->A_vidout.lutshift-2);
 
   for (i=0; i<256; i++)
   {
-    leftmask = (unsigned int)host_colourmasks[i&7];
-    rightmask = (unsigned int)host_colourmasks[(i>>4)&7];
+    leftmask = hmap->D_colour.fill[i&7];
+    rightmask = hmap->D_colour.fill[(i>>4)&7];
 
     for (j=0,n=lutparams->leftpixel;j<n;j++)
     {
@@ -481,56 +533,1443 @@ void video32lutinit(VIDEOSCALELUTPARAMETERS *lutparams)
   }
 }
 
-void setlutparameters(VIDEOSCALELUTPARAMETERS *lutparams, int leftpixel, int rightpixel)
+void setlutparameters(VIDEOSCALELUTPARAMETERS* lutparams, int leftpixel, int rightpixel)
 {
-  lutparams->offset = 0;
   lutparams->leftpixel = leftpixel;
   lutparams->rightpixel = rightpixel;
 }
 
-void setverticalscalesandteletextform(VIDEOSCALECHOICE *choice, int graphicsscale, int horizontalform)
+void setverticalscaleandformat(VIDEOSCALECHOICE *choice, int overallscale, int horizontalform)
 {
-  int partscale;
-
-  choice->verticalscales.graphics = graphicsscale;
-
-  if (graphicsscale & 1)
+  choice->linescale = overallscale;
+  choice->format = horizontalform;
+  if (overallscale > 1)
   {
-    if (graphicsscale == 1)
-    {
-      choice->teletextform = (1<<2) + horizontalform;
-      choice->verticalscales.unroundedteletext = graphicsscale;
-      choice->verticalscales.roundedteletext = graphicsscale;
-    }
+    if (overallscale & 1)
+      choice->teletextslices = 3;
     else
-    {
-      partscale = graphicsscale/3;
-      choice->teletextform = (3<<2) + horizontalform;
-      choice->verticalscales.unroundedteletext = graphicsscale - partscale - partscale;
-      choice->verticalscales.roundedteletext = partscale;
-    }
+      choice->teletextslices = 2;
   }
   else
   {
-    partscale = graphicsscale/2;
-    choice->teletextform = (2<<2) + horizontalform;
-    choice->verticalscales.unroundedteletext = partscale;
-    choice->verticalscales.roundedteletext = partscale;
+    choice->teletextslices = 1;
   }
 }
 
-void videoscalechoose(intptr_t mode, VIDEOSCALECHOICE *choice)
+static HOSTMAP* output8halfdot3sliceintwos(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    ((uint32_t*)buffer)[1] = ((uint32_t*)buffer)[3];
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[128+hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[128+hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* output8halfdot3sliceinones(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    ((uint32_t*)buffer)[1] = ((uint32_t*)buffer)[3];
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* output12quarterdot3sliceintwos(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    ((uint32_t*)buffer)[1] = ((uint32_t*)buffer)[5];
+    ((uint32_t*)buffer)[2] = ((uint32_t*)buffer)[6];
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[128+hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[128+hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* output12quarterdot3sliceinones(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    ((uint32_t*)buffer)[1] = ((uint32_t*)buffer)[5];
+    ((uint32_t*)buffer)[2] = ((uint32_t*)buffer)[6];
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* output24eighthdot3sliceinones(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    ((uint32_t*)buffer)[1] = ((uint32_t*)buffer)[7];
+    ((uint32_t*)buffer)[2] = ((uint32_t*)buffer)[8];
+    ((uint32_t*)buffer)[3] = ((uint32_t*)buffer)[9];
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* output8halfdot2sliceintwos(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    ((uint32_t*)buffer)[1] = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[128+hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[128+hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* output8halfdot2sliceinones(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    ((uint32_t*)buffer)[1] = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* output12quarterdot2sliceintwos(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    ((uint32_t*)buffer)[1] = ((uint32_t*)buffer)[3];
+    ((uint32_t*)buffer)[2] = ((uint32_t*)buffer)[4];
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[128+hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[128+hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* output12quarterdot2sliceinones(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    ((uint32_t*)buffer)[1] = ((uint32_t*)buffer)[3];
+    ((uint32_t*)buffer)[2] = ((uint32_t*)buffer)[4];
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* output24eighthdot2sliceinones(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    ((uint32_t*)buffer)[1] = ((uint32_t*)buffer)[4];
+    ((uint32_t*)buffer)[2] = ((uint32_t*)buffer)[5];
+    ((uint32_t*)buffer)[3] = ((uint32_t*)buffer)[6];
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* scale1sliceinones(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>4);
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* scale1sliceintwos(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>4);
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* scaleemulatedsliceinones(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* scaleemulatedsliceintwos(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int writeflags;
+
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[128+hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[128+hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    *(unsigned char*)buffer = (writeflags>>2)&0xF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* scaleprogressivesliceinones(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  intptr_t altoffset = hmap->B_vidbuf.altoffset;
+  int writeflags,altwriteflags;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    altwriteflags = *(unsigned char*)(buffer+altoffset);
+    switch (writeflags & 0x3C)
+    {
+      default:
+        writeflags &= 0x03;
+        altwriteflags = 0;
+        break;
+      case 0x10: case 0x18:
+        if (altwriteflags & 0x20)
+        {
+          writeflags = 0x10;
+          altwriteflags = 0x20;
+        }
+        else
+        {
+          writeflags &= 0x12;
+          altwriteflags = 0;
+        }
+        break;
+      case 0x20: case 0x24:
+        if (altwriteflags & 0x10)
+        {
+          writeflags = 0x20;
+          altwriteflags = 0x10;
+        }
+        else
+        {
+          writeflags &= 0x21;
+          altwriteflags = 0;
+        }
+        break;
+      case 0x14: case 0x1C: case 0x28: case 0x2C:
+        altwriteflags = 0;
+        break;
+      case 0x30: case 0x34: case 0x38: case 0x3C:
+        writeflags = 0x30;
+        altwriteflags = 0;
+        break;
+    }
+    *(unsigned char*)buffer = writeflags;
+    *(unsigned char*)(buffer+altoffset) = altwriteflags;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)(buffer+altoffset);
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)(buffer+altoffset);
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)(buffer+altoffset);
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)(buffer+altoffset);
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    altwriteflags = *(unsigned char*)(buffer+altoffset);
+    if (writeflags&0xC)
+      *(unsigned char*)buffer = ((writeflags>>2)&0xC) | 0x3;
+    else
+    {
+      *(unsigned char*)buffer = ((writeflags>>2)&0xC) | (((writeflags|altwriteflags)>>4)&0x3);
+    }
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* scaleprogressivesliceintwos(HOSTMAP* hmap)
+{
+  const uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  intptr_t buffer = hmap->B_vidbuf.address;
+  intptr_t altoffset = hmap->B_vidbuf.altoffset;
+  int writeflags,altwriteflags;
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    altwriteflags = *(unsigned char*)(buffer+altoffset);
+    switch (writeflags & 0x3C)
+    {
+      default:
+        writeflags &= 0x03;
+        altwriteflags = 0;
+        break;
+      case 0x10: case 0x18:
+        if (altwriteflags & 0x20)
+        {
+          writeflags = 0x10;
+          altwriteflags = 0x20;
+        }
+        else
+        {
+          writeflags &= 0x12;
+          altwriteflags = 0;
+        }
+        break;
+      case 0x20: case 0x24:
+        if (altwriteflags & 0x10)
+        {
+          writeflags = 0x20;
+          altwriteflags = 0x10;
+        }
+        else
+        {
+          writeflags &= 0x21;
+          altwriteflags = 0;
+        }
+        break;
+      case 0x14: case 0x1C: case 0x28: case 0x2C:
+        altwriteflags = 0;
+        break;
+      case 0x30: case 0x34: case 0x38: case 0x3C:
+        writeflags = 0x30;
+        altwriteflags = 0;
+        break;
+    }
+    *(unsigned char*)buffer = writeflags;
+    *(unsigned char*)(buffer+altoffset) = altwriteflags;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  buffer = hmap->B_vidbuf.address;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = (hmap->A_vidout.linescaletotal+1)>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)(buffer+altoffset);
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1];
+  hmap->A_vidbuf.flags0 = *(unsigned char*)(buffer+altoffset);
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+altoffset+(1<<hmap->A_vidbuf.shift));
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)buffer;
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->A_vidout.linescale = hmap->A_vidout.linescaletotal>>1;
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[128+hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[128+hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  hmap->B_vidbuf.address = (intptr_t)(buffer+altoffset);
+  hmap->B_vidout.address = ((intptr_t*)buffer)[-1] + hmap->B_vidout.lowoffset;
+  hmap->A_vidbuf.flags0 = *(unsigned char*)(buffer+altoffset);
+  hmap->A_vidbuf.flags1 = *(unsigned char*)(buffer+altoffset+(1<<hmap->A_vidbuf.shift));
+
+  while (!(hmap->A_vidbuf.flags0 & 0x80))
+  {
+    if (hmap->A_vidbuf.flags0 == hmap->A_vidbuf.flags1)
+      hmap->D_vidout.opfork[opmap[128+hmap->A_vidbuf.flags0]](hmap);
+    else
+    {
+      hmap->D_vidout.opfork[10+opmap[128+hmap->A_vidbuf.flags0]](hmap);
+      if (hmap->A_vidbuf.flags1 & 0x80)
+        break;
+      hmap->D_vidout.opfork[5+opmap[128+hmap->A_vidbuf.flags1]](hmap);
+    }
+  }
+
+  for (writeflags = *(unsigned char*)buffer; !(writeflags & 0x80); writeflags = *(unsigned char*)buffer)
+  {
+    altwriteflags = *(unsigned char*)(buffer+altoffset);
+    if (writeflags&0xC)
+      *(unsigned char*)buffer = ((writeflags>>2)&0xC) | 0x3;
+    else
+      *(unsigned char*)buffer = ((writeflags>>2)&0xC) | (((writeflags|altwriteflags)>>4)&0x3);
+    *(unsigned char*)(buffer+altoffset) = 0;
+    buffer += (1<<hmap->A_vidbuf.shift);
+  }
+
+  return hmap;
+}
+
+extern VIDEOWRITEINNEROPS video4buf8halfdot1linefunctions;
+extern VIDEOWRITEINNEROPS video4buf8halfdot2linefunctions;
+extern VIDEOWRITEINNEROPS video4buf8halfdot3linefunctions;
+extern VIDEOWRITEINNEROPS video4buf12quarterdot1linefunctions;
+extern VIDEOWRITEINNEROPS video4buf12quarterdot2linefunctions;
+extern VIDEOWRITEINNEROPS video4buf12quarterdot3linefunctions;
+extern VIDEOWRITEINNEROPS video4buf24eighthdot1linefunctions;
+extern VIDEOWRITEINNEROPS video4buf24eighthdot2linefunctions;
+extern VIDEOWRITEINNEROPS video4buf24eighthdot3linefunctions;
+extern HOSTVIDEOOP video4out8halfdotcopyops[5];
+extern HOSTVIDEOOP video4out8halfdotlu8doubleops[5];
+extern HOSTVIDEOOP video4out8halfdotevenlu8for20ops[5];
+extern HOSTVIDEOOP video4out8halfdotoddlu8for20ops[5];
+extern HOSTVIDEOOP video4out8halfdotpairlu8for20ops[5];
+extern HOSTVIDEOOP video4out8halfdotlu8for32Mops[5];
+extern HOSTVIDEOOP video4out8halfdotlu8for40Mops[5];
+extern HOSTVIDEOOP video4out12quarterdotevencopyloopops[5];
+extern HOSTVIDEOOP video4out12quarterdotoddcopyloopops[5];
+extern HOSTVIDEOOP video4out12quarterdotpaircopyloopops[5];
+extern HOSTVIDEOOP video4out12quarterdotlu8doubleops[5];
+extern HOSTVIDEOOP video4out12quarterdotlu8for32Mops[5];
+extern HOSTVIDEOOP video4out24eighthdotcopyops[5];
+extern HOSTVIDEOOP video4out24eighthdotlu8doubleops[5];
+extern HOSTVIDEOOP video4out24eighthdotlu8for32Mops[5];
+
+typedef void (*SETCHOICEOP)(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice);
+
+static void setnslicechoice(SETCHOICEOP op1, SETCHOICEOP op2, SETCHOICEOP op3, const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->teletextslices == 3)
+    op3(uparams, choice);
+  else if (choice->teletextslices == 2)
+    op2(uparams, choice);
+  else
+    op1(uparams, choice);
+}
+
+static void set4out1slice8halfdotcopychoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf8halfdot1linefunctions;
+  choice->ops.line = scale1sliceinones;
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotcopyops;
+}
+
+static void set4out2slice8halfdotcopychoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf8halfdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf8halfdot2linefunctions;
+    choice->ops.line = output8halfdot2sliceinones;
+  }
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotcopyops;
+}
+
+static void set4out3slice8halfdotcopychoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf8halfdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf8halfdot3linefunctions;
+    choice->ops.line = output8halfdot3sliceinones;
+  }
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotcopyops;
+}
+
+static void set4out1slice8halfdotlu8doublechoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf8halfdot1linefunctions;
+  choice->ops.line = scale1sliceinones;
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotlu8doubleops;
+}
+
+static void set4out2slice8halfdotlu8doublechoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf8halfdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf8halfdot2linefunctions;
+    choice->ops.line = output8halfdot2sliceinones;
+  }
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotlu8doubleops;
+}
+
+static void set4out3slice8halfdotlu8doublechoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf8halfdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf8halfdot3linefunctions;
+    choice->ops.line = output8halfdot3sliceinones;
+  }
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotlu8doubleops;
+}
+
+static void set4out1slice8halfdotlu8for20choice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf8halfdot1linefunctions;
+  choice->ops.line = scale1sliceintwos;
+  choice->buffershift = 4;
+  choice->ops.even = video4out8halfdotevenlu8for20ops;
+  choice->ops.odd = video4out8halfdotoddlu8for20ops;
+  choice->ops.loop = video4out8halfdotpairlu8for20ops;
+}
+
+static void set4out2slice8halfdotlu8for20choice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf8halfdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceintwos : scaleemulatedsliceintwos;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf8halfdot2linefunctions;
+    choice->ops.line = output8halfdot2sliceintwos;
+  }
+  choice->buffershift = 4;
+  choice->ops.even = video4out8halfdotevenlu8for20ops;
+  choice->ops.odd = video4out8halfdotoddlu8for20ops;
+  choice->ops.loop = video4out8halfdotpairlu8for20ops;
+}
+
+static void set4out3slice8halfdotlu8for20choice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf8halfdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceintwos : scaleemulatedsliceintwos;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf8halfdot3linefunctions;
+    choice->ops.line = output8halfdot3sliceintwos;
+  }
+  choice->buffershift = 4;
+  choice->ops.even = video4out8halfdotevenlu8for20ops;
+  choice->ops.odd = video4out8halfdotoddlu8for20ops;
+  choice->ops.loop = video4out8halfdotpairlu8for20ops;
+}
+
+static void set4out1slice8halfdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf8halfdot1linefunctions;
+  choice->ops.line = scale1sliceinones;
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotlu8for32Mops;
+}
+
+static void set4out2slice8halfdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf8halfdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf8halfdot2linefunctions;
+    choice->ops.line = output8halfdot2sliceinones;
+  }
+  choice->ops.loop = video4out8halfdotlu8for32Mops;
+  choice->buffershift = 4;
+}
+
+static void set4out3slice8halfdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf8halfdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf8halfdot3linefunctions;
+    choice->ops.line = output8halfdot3sliceinones;
+  }
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotlu8for32Mops;
+}
+
+static void set4outslice8halfdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  setnslicechoice(set4out1slice8halfdotlu8for32Mchoice, set4out2slice8halfdotlu8for32Mchoice, set4out3slice8halfdotlu8for32Mchoice, uparams, choice);
+}
+
+static void set4out1slice8halfdotlu8for40Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf8halfdot1linefunctions;
+  choice->ops.line = scale1sliceinones;
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotlu8for40Mops;
+}
+
+static void set4out2slice8halfdotlu8for40Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf8halfdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf8halfdot2linefunctions;
+    choice->ops.line = output8halfdot2sliceinones;
+  }
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotlu8for40Mops;
+}
+
+static void set4out3slice8halfdotlu8for40Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf8halfdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf8halfdot3linefunctions;
+    choice->ops.line = output8halfdot3sliceinones;
+  }
+  choice->buffershift = 4;
+  choice->ops.loop = video4out8halfdotlu8for40Mops;
+}
+
+static void set4outslice8halfdotlu8for40Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  setnslicechoice(set4out1slice8halfdotlu8for40Mchoice, set4out2slice8halfdotlu8for40Mchoice, set4out3slice8halfdotlu8for40Mchoice, uparams, choice);
+}
+
+static void set4out1slice12quarterdotcopychoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf12quarterdot1linefunctions;
+  choice->ops.line = scale1sliceintwos;
+  choice->buffershift = 4;
+  choice->ops.even = video4out12quarterdotevencopyloopops;
+  choice->ops.odd = video4out12quarterdotoddcopyloopops;
+  choice->ops.loop = video4out12quarterdotpaircopyloopops;
+}
+
+static void set4out2slice12quarterdotcopychoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf12quarterdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceintwos : scaleemulatedsliceintwos;
+    choice->buffershift = 4;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf12quarterdot2linefunctions;
+    choice->ops.line = output12quarterdot2sliceintwos;
+    choice->buffershift = 6;
+  }
+  choice->ops.even = video4out12quarterdotevencopyloopops;
+  choice->ops.odd = video4out12quarterdotoddcopyloopops;
+  choice->ops.loop = video4out12quarterdotpaircopyloopops;
+}
+
+static void set4out3slice12quarterdotcopychoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf12quarterdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceintwos : scaleemulatedsliceintwos;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf12quarterdot3linefunctions;
+    choice->ops.line = output12quarterdot3sliceintwos;
+  }
+  choice->buffershift = 6;
+  choice->ops.even = video4out12quarterdotevencopyloopops;
+  choice->ops.odd = video4out12quarterdotoddcopyloopops;
+  choice->ops.loop = video4out12quarterdotpaircopyloopops;
+}
+
+static void set4out1slice12quarterdotlu8doublechoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf12quarterdot1linefunctions;
+  choice->ops.line = scale1sliceinones;
+  choice->buffershift = 4;
+  choice->ops.loop = video4out12quarterdotlu8doubleops;
+}
+
+static void set4out2slice12quarterdotlu8doublechoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf12quarterdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+    choice->buffershift = 4;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf12quarterdot2linefunctions;
+    choice->ops.line = output12quarterdot2sliceinones;
+    choice->buffershift = 6;
+  }
+  choice->ops.loop = video4out12quarterdotlu8doubleops;
+}
+
+static void set4out3slice12quarterdotlu8doublechoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf12quarterdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf12quarterdot3linefunctions;
+    choice->ops.line = output12quarterdot3sliceinones;
+  }
+  choice->buffershift = 6;
+  choice->ops.loop = video4out12quarterdotlu8doubleops;
+}
+
+static void set4out1slice24eighthdotcopychoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf24eighthdot1linefunctions;
+  choice->ops.line = scale1sliceinones;
+  choice->buffershift = 4;
+  choice->ops.loop = video4out24eighthdotcopyops;
+}
+
+static void set4out2slice24eighthdotcopychoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf24eighthdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+    choice->buffershift = 4;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf24eighthdot2linefunctions;
+    choice->ops.line = output24eighthdot2sliceinones;
+    choice->buffershift = 6;
+  }
+  choice->ops.loop = video4out24eighthdotcopyops;
+}
+
+static void set4out3slice24eighthdotcopychoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf24eighthdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf24eighthdot3linefunctions;
+    choice->ops.line = output24eighthdot3sliceinones;
+  }
+  choice->buffershift = 6;
+  choice->ops.loop = video4out24eighthdotcopyops;
+}
+
+static void set4out1slice24eighthdotlu8doublechoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf24eighthdot1linefunctions;
+  choice->ops.line = scale1sliceinones;
+  choice->buffershift = 4;
+  choice->ops.loop = video4out24eighthdotlu8doubleops;
+}
+
+static void set4out2slice24eighthdotlu8doublechoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf24eighthdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+    choice->buffershift = 4;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf24eighthdot2linefunctions;
+    choice->ops.line = output24eighthdot2sliceinones;
+    choice->buffershift = 6;
+  }
+  choice->ops.loop = video4out24eighthdotlu8doubleops;
+}
+
+static void set4out3slice24eighthdotlu8doublechoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf24eighthdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf24eighthdot3linefunctions;
+    choice->ops.line = output24eighthdot3sliceinones;
+  }
+  choice->buffershift = 6;
+  choice->ops.loop = video4out24eighthdotlu8doubleops;
+}
+
+static void set4out1slice24eighthdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf24eighthdot1linefunctions;
+  choice->ops.line = scale1sliceinones;
+  choice->buffershift = 4;
+  choice->ops.loop = video4out24eighthdotlu8for32Mops;
+}
+
+static void set4out2slice24eighthdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf24eighthdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+    choice->buffershift = 4;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf24eighthdot2linefunctions;
+    choice->ops.line = output24eighthdot2sliceinones;
+    choice->buffershift = 6;
+  }
+  choice->ops.loop = video4out24eighthdotlu8for32Mops;
+}
+
+static void set4out3slice24eighthdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf24eighthdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+    choice->buffershift = 6;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf24eighthdot3linefunctions;
+    choice->ops.line = output24eighthdot3sliceinones;
+    choice->buffershift = 6;
+  }
+  choice->ops.loop = video4out24eighthdotlu8for32Mops;
+}
+
+static void set4outslice24eighthdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  setnslicechoice(set4out1slice24eighthdotlu8for32Mchoice, set4out2slice24eighthdotlu8for32Mchoice, set4out3slice24eighthdotlu8for32Mchoice, uparams, choice);
+}
+
+static void set4out1slice12quarterdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  choice->writeinnerops = video4buf12quarterdot1linefunctions;
+  choice->ops.line = scale1sliceinones;
+  choice->buffershift = 4;
+  choice->ops.loop = video4out12quarterdotlu8for32Mops;
+}
+
+static void set4out2slice12quarterdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf12quarterdot1linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+    choice->buffershift = 4;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf12quarterdot2linefunctions;
+    choice->ops.line = output12quarterdot2sliceinones;
+    choice->buffershift = 6;
+  }
+  choice->ops.loop = video4out12quarterdotlu8for32Mops;
+}
+
+static void set4out3slice12quarterdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  if (choice->format&8)
+  {
+    choice->writeinnerops = video4buf12quarterdot2linefunctions;
+    choice->ops.line = uparams->videospeed == VIDEO_PROGRESSIVE_SLOW ? scaleprogressivesliceinones : scaleemulatedsliceinones;
+    choice->buffershift = 6;
+    choice->ops.loop = video4out12quarterdotlu8for32Mops;
+  }
+  else
+  {
+    choice->writeinnerops = video4buf12quarterdot3linefunctions;
+    choice->ops.line = output12quarterdot3sliceinones;
+    choice->buffershift = 6;
+    choice->ops.loop = video4out12quarterdotlu8for32Mops;
+  }
+}
+
+static void set4outslice12quarterdotlu8for32Mchoice(const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
+{
+  setnslicechoice(set4out1slice12quarterdotlu8for32Mchoice, set4out2slice12quarterdotlu8for32Mchoice, set4out3slice12quarterdotlu8for32Mchoice, uparams, choice);
+}
+
+void videoscalechoose(intptr_t mode, const VIDEOSCALEUPDATEPARAMS *uparams, VIDEOSCALECHOICE *choice)
 {
   int modeflags,ncolour;
   int log2bpp,xres,yres;
-  int xresbeforescale,xresafterscale,xresremainder,yresremainder;
-  int c,zoomnumber,scaleselector,es;
+  int scaleselector;
   int xeig,yeig,ratioshift;
-  int linelengthmask;
-#ifdef VIDEOSCALE_WITH_OVERSCALE
-  int xlimit,ylimit;
-#endif
-  const int xresbeforescalemax = 1024; /*the limit at standard line frequency*/
 
   regs.r[0] = mode;
   regs.r[1] = 0;
@@ -558,397 +1997,317 @@ void videoscalechoose(intptr_t mode, VIDEOSCALECHOICE *choice)
   scaleselector = 0;
   ratioshift = 1 + xeig - yeig;
 
-  choice->mode = -1;
-  choice->alignmentmask = ~3;
-  choice->linelengthfloor = (xres >> 3) << log2bpp;
   choice->lutsize = 0;
-  choice->screenoffsetlines = 0;
-  choice->screenoffsetremainder = 0;
-  setlutparameters(&choice->graphicslutparameters,1,1);
-  setlutparameters(&choice->teletextlutparameters,1,1);
-  choice->initgraphics = NULL;
-  choice->initteletext = NULL;
-  choice->scalegraphics = NULL;
-  choice->scaleteletext = NULL;
 
-  zoomnumber = getzoomnumberformode(mode);
-
-  if (zoomnumber & 1)
+  if (uparams->videospeed == VIDEO_FAST || uparams->videospeed == VIDEO_SLOW)
   {
-    scaleselector = ((zoomnumber+1)>>1)<<8;
+    scaleselector = getscaleselectorformode(mode, beebit_displayzoom, 1);
   }
   else
   {
-    scaleselector = (zoomnumber+1)<<7;
+    scaleselector = getscaleselectorformode(mode, beebit_displayzoom, 2);
   }
 
   scaleselector |= log2bpp;
 
-  //check whether the mode is directly supported
-  if (modeflags == 0 || modeflags == 0x80)
+  setlutparameters(&choice->lutparameters,(scaleselector+0x80)>>8,scaleselector>>8);
+  setverticalscaleandformat(choice, calculatelinescale(scaleselector, ratioshift), 0);
+
+  if (uparams->videospeed == VIDEO_FAST || uparams->videospeed == VIDEO_SLOW)
+    choice->teletextslices = 1;
+
+  if (choice->teletextslices > 1)
   {
-    switch (scaleselector)
-    {
-      case 0x0102:
-        if (modeflags == 0x80)
-          break;
-
-        if (ratioshift == 0)
-        {
-          choice->mode = 12;
-          setverticalscalesandteletextform(choice, 1, 1);
-        }
-        else if (ratioshift == 1)
-        {
-          choice->mode = 20;
-          setverticalscalesandteletextform(choice, 2, 1);
-        }
-        break;
-      case 0x0103:
-        if (modeflags == 0x80)
-        {
-          if (ncolour != 255)
-            break;
-        }
-        else
-        {
-          if (ncolour != 63)
-            break;
-        }
-
-        if (ratioshift == 0)
-        {
-          choice->mode = 15;
-          setverticalscalesandteletextform(choice, 1, 3);
-        }
-        else if (ratioshift == 1)
-        {
-          choice->mode = 21;
-          setverticalscalesandteletextform(choice, 2, 3);
-        }
-        break;
-    }
+    if (uparams->videospeed == VIDEO_EMULATED_SLOW || uparams->videospeed == VIDEO_PROGRESSIVE_SLOW)
+        choice->format |= 8;
   }
 
-#ifdef VIDEOSCALE_WITH_OVERSCALE
-  if (xres < 640 || yres < (256<<ratioshift))
+  choice->columnpixels = 4*((scaleselector+0x80+scaleselector)>>8);
+
+  choice->init = NULL;
+  choice->ops.line = videonolineop;
+  choice->buffershift = 0;
+  choice->ops.even = NULL;
+  choice->ops.odd = NULL;
+  choice->ops.loop = NULL;
+
+  if (choice->format & 8)
   {
-    choice->mode = -1;
-  }
-#endif
-
-  if (choice->mode != -1)
-  {
-    if (mode == 12)
+    if (uparams->videospeed == VIDEO_PROGRESSIVE_SLOW)
     {
-      /*check to see if we can use 16 colour mode 7*/
-      regs.r[0] = 7;
-      if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) == NULL && c == 0)
-      {
-        if (hostmode7isexpectedmode7())
-        {
-          choice->teletextform = 0;
-        }
-      }
+      choice->writeops.graphics = videowritepgraphics;
+      choice->writeops.teletext = videowritepteletext;
+      choice->writeops.teletextb = videowritepteletext;
+      choice->writeops.cursorblank = videowritepcursorblank;
+      choice->writeops.cursorgraphics = videowritepcursorgraphics;
+      choice->writeops.cursorteletext = videowritepcursorteletext;
+      choice->writeops.cursorteletextb = videowritepcursorteletext;
+
     }
-    if (xres > xresbeforescalemax)
+    else
     {
-      choice->linelengthfloor = (xresbeforescalemax >> 3) << log2bpp;
+      choice->writeops.graphics = videowriteegraphics;
+      choice->writeops.teletext = videowriteeteletext;
+      choice->writeops.teletextb = videowriteeteletext;
+      choice->writeops.cursorblank = videowriteecursorblank;
+      choice->writeops.cursorgraphics = videowriteecursorgraphics;
+      choice->writeops.cursorteletext = videowriteecursorteletext;
+      choice->writeops.cursorteletextb = videowriteecursorteletext;
     }
-    xresremainder = xres - ((choice->linelengthfloor>>log2bpp)<<3);
-    yresremainder = yres - (256<<ratioshift);
-    
-    choice->scaledlinelengthfloor = choice->linelengthfloor;
-    choice->screenoffsetlines = yresremainder>>1;
-    choice->screenoffsetremainder = ((xresremainder << log2bpp-1)>>5)<<2;
-    return;
   }
-
-  choice->mode = 12;
-  setverticalscalesandteletextform(choice, 1, 1);
-
-  setlutparameters(&choice->graphicslutparameters,(scaleselector+0x80)>>8,scaleselector>>8);
-  choice->teletextlutparameters = choice->graphicslutparameters;
-  if (ratioshift >= 1)
-    setverticalscalesandteletextform(choice, (scaleselector>>7)<<ratioshift-1, 1);
   else
-    setverticalscalesandteletextform(choice, scaleselector>>7-ratioshift+1, 1);
+  {
+    choice->writeops.graphics = videowritegraphics;
+    choice->writeops.teletext = videowriteteletext;
+    choice->writeops.teletextb = videowriteteletext;
+    choice->writeops.cursorblank = videowritecursorblank;
+    choice->writeops.cursorgraphics = videowritecursorgraphics;
+    choice->writeops.cursorteletext = videowritecursorteletext;
+    choice->writeops.cursorteletextb = videowritecursorteletext;
+  }
+
+  choice->blacklevelops.blank = videoulablankblacklevel;
+  choice->blacklevelops.graphics = videoulagraphicsblacklevel;
+  choice->blacklevelops.teletext = videoulateletextblacklevel;
+  choice->blacklevelops.teletextb = videoulateletextbblacklevel;
+  choice->blacklevelops.cursorblank = videoulacursorblacklevel;
+  choice->blacklevelops.cursorgraphics = videoulacursorgraphicsblacklevel;
+  choice->blacklevelops.cursorteletext = videoulacursorteletextblacklevel;
+  choice->blacklevelops.cursorteletextb = videoulacursorteletextbblacklevel;
 
   switch (scaleselector)
   {
-    default:
-      choice->scalegraphics = video4copyscale;
-      choice->scaleteletext = video4copyscale;
+    case 0x0102:
+      setnslicechoice(set4out1slice8halfdotcopychoice, set4out2slice8halfdotcopychoice, set4out3slice8halfdotcopychoice, uparams, choice);
       break;
-      
     case 0x0182:
-      setlutparameters(&choice->teletextlutparameters,2,2);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video4lutinit;
-      choice->initteletext = video4lutinit;
-      choice->scalegraphics = video6lutscale;
-      choice->scaleteletext = video8lutsixdotscale;
+      choice->format |= 1;
+      setnslicechoice(set4out1slice12quarterdotcopychoice, set4out2slice12quarterdotcopychoice, set4out3slice12quarterdotcopychoice, uparams, choice);
       break;
     case 0x0202:
-      choice->initgraphics = video4lutinit;
-      choice->scalegraphics = video8lutscale;
-      choice->scaleteletext = video8lutscale;
+      setlutparameters(&choice->lutparameters,2,2);
+      choice->init = video4to4lutinit;
+      setnslicechoice(set4out1slice8halfdotlu8doublechoice, set4out2slice8halfdotlu8doublechoice, set4out3slice8halfdotlu8doublechoice, uparams, choice);
       break;
     case 0x0282:
-      choice->initgraphics = video4lutinit;
-      choice->scalegraphics = video10lutscale;
-      choice->scaleteletext = video10lutscale;
+      choice->init = video4to4lutinit;
+      setnslicechoice(set4out1slice8halfdotlu8for20choice, set4out2slice8halfdotlu8for20choice, set4out3slice8halfdotlu8for20choice, uparams, choice);
       break;
     case 0x0302:
-      setlutparameters(&choice->teletextlutparameters,4,4);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video4lutinit;
-      choice->initteletext = video4lutinit;
-      choice->scalegraphics = video12lutscale;
-      choice->scaleteletext = video16lutsixdotscale;
+      choice->format |= 6;
+      setnslicechoice(set4out1slice24eighthdotcopychoice, set4out2slice24eighthdotcopychoice, set4out3slice24eighthdotcopychoice, uparams, choice);
       break;
     case 0x0402:
-      choice->initgraphics = video4lutinit;
-      choice->scalegraphics = video16lutscale;
-      choice->scaleteletext = video16lutscale;
+      choice->init = video4to4lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0502:
-      choice->initgraphics = video4lutinit;
-      choice->scalegraphics = video20lutscale;
-      choice->scaleteletext = video20lutscale;
+      choice->init = video4to4lutinit;
+      set4outslice8halfdotlu8for40Mchoice(uparams, choice);
       break;
     case 0x0602:
-      setlutparameters(&choice->teletextlutparameters,8,8);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video4lutinit;
-      choice->initteletext = video4lutinit;
-      choice->scalegraphics = video24lutscale;
-      choice->scaleteletext = video32lutsixdotscale;
+      setlutparameters(&choice->lutparameters,2,2);
+      choice->init = video4to4lutinit;
+      choice->format |= 6;
+      setnslicechoice(set4out1slice24eighthdotlu8doublechoice, set4out2slice24eighthdotlu8doublechoice, set4out3slice24eighthdotlu8doublechoice, uparams, choice);
       break;
 
     case 0x0103:
-      choice->initgraphics = video8lutinit;
-      choice->scalegraphics = video8lutscale;
-      choice->scaleteletext = video8lutscale;
+      choice->init = video4to8lutinit;
+      setnslicechoice(set4out1slice8halfdotlu8doublechoice, set4out2slice8halfdotlu8doublechoice, set4out3slice8halfdotlu8doublechoice, uparams, choice);
       break;
     case 0x0183:
-      setlutparameters(&choice->teletextlutparameters,2,2);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video8lutinit;
-      choice->initteletext = video8lutinit;
-      choice->scalegraphics = video12lutscale;
-      choice->scaleteletext = video16lutsixdotscale;
+      setlutparameters(&choice->lutparameters,1,1);
+      choice->init = video4to8lutinit;
+      choice->format |= 1;
+      setnslicechoice(set4out1slice12quarterdotlu8doublechoice, set4out2slice12quarterdotlu8doublechoice, set4out3slice12quarterdotlu8doublechoice, uparams, choice);
       break;
     case 0x0203:
-      choice->initgraphics = video8lutinit;
-      choice->scalegraphics = video16lutscale;
-      choice->scaleteletext = video16lutscale;
+      choice->init = video4to8lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0283:
-      choice->initgraphics = video8lutinit;
-      choice->scalegraphics = video20lutscale;
-      choice->scaleteletext = video20lutscale;
+      choice->init = video4to8lutinit;
+      set4outslice8halfdotlu8for40Mchoice(uparams, choice);
       break;
     case 0x0303:
-      setlutparameters(&choice->teletextlutparameters,4,4);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video8lutinit;
-      choice->initteletext = video8lutinit;
-      choice->scalegraphics = video24lutscale;
-      choice->scaleteletext = video32lutsixdotscale;
+      setlutparameters(&choice->lutparameters,1,1);
+      choice->init = video4to8lutinit;
+      choice->format |= 6;
+      setnslicechoice(set4out1slice24eighthdotlu8doublechoice, set4out2slice24eighthdotlu8doublechoice, set4out3slice24eighthdotlu8doublechoice, uparams, choice);
       break;
     case 0x0403:
-      choice->initgraphics = video8lutinit;
-      choice->scalegraphics = video32lutscale;
-      choice->scaleteletext = video32lutscale;
+      choice->init = video4to8lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0503:
-      choice->initgraphics = video8lutinit;
-      choice->scalegraphics = video40lutscale;
-      choice->scaleteletext = video40lutscale;
+      choice->init = video4to8lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0603:
-      setlutparameters(&choice->teletextlutparameters,8,8);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video8lutinit;
-      choice->initteletext = video8lutinit;
-      choice->scalegraphics = video48lutscale;
-      choice->scaleteletext = video64lutsixdotscale;
+      setlutparameters(&choice->lutparameters,2,2);
+      choice->init = video4to8lutinit;
+      choice->format |= 6;
+      set4outslice24eighthdotlu8for32Mchoice(uparams, choice);
       break;
 
     case 0x0104:
-      choice->initgraphics = video16lutinit;
-      choice->scalegraphics = video16lutscale;
-      choice->scaleteletext = video16lutscale;
+      choice->init = video4to16lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0184:
-      setlutparameters(&choice->teletextlutparameters,2,2);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video16lutinit;
-      choice->initteletext = video16lutinit;
-      choice->scalegraphics = video24lutscale;
-      choice->scaleteletext = video32lutsixdotscale;
+      setlutparameters(&choice->lutparameters,1,1);
+      choice->init = video4to16lutinit;
+      choice->format |= 1;
+      set4outslice12quarterdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0204:
-      choice->initgraphics = video16lutinit;
-      choice->scalegraphics = video32lutscale;
-      choice->scaleteletext = video32lutscale;
+      choice->init = video4to16lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0284:
-      choice->initgraphics = video16lutinit;
-      choice->scalegraphics = video40lutscale;
-      choice->scaleteletext = video40lutscale;
+      choice->init = video4to16lutinit;
+      set4outslice8halfdotlu8for40Mchoice(uparams, choice);
       break;
     case 0x0304:
-      setlutparameters(&choice->teletextlutparameters,4,4);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video16lutinit;
-      choice->initteletext = video16lutinit;
-      choice->scalegraphics = video48lutscale;
-      choice->scaleteletext = video64lutsixdotscale;
+      setlutparameters(&choice->lutparameters,1,1);
+      choice->init = video4to16lutinit;
+      choice->format |= 6;
+      set4outslice24eighthdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0404:
-      choice->initgraphics = video16lutinit;
-      choice->scalegraphics = video64lutscale;
-      choice->scaleteletext = video64lutscale;
+      choice->init = video4to16lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0504:
-      choice->graphicslutparameters.leftpixel = 3;
-      choice->graphicslutparameters.rightpixel = 3;
-      choice->initgraphics = video16lutinit;
-      choice->scalegraphics = video80from48lutscale;
-      choice->scaleteletext = video80from48lutscale;
+      choice->init = video4to16lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0604:
-      choice->graphicslutparameters.leftpixel = 2;
-      choice->graphicslutparameters.rightpixel = 2;
-      setlutparameters(&choice->teletextlutparameters,2,2);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video16lutinit;
-      choice->initteletext = video16lutinit;
-      choice->scalegraphics = video96from32lutscale;
-      choice->scaleteletext = video128from32lutsixdotscale;
+      setlutparameters(&choice->lutparameters,2,2);
+      choice->init = video4to16lutinit;
+      choice->format |= 6;
+      set4outslice24eighthdotlu8for32Mchoice(uparams, choice);
       break;
 
     case 0x0105:
-      choice->initgraphics = video32lutinit;
-      choice->scalegraphics = video32lutscale;
-      choice->scaleteletext = video32lutscale;
+      choice->init = video4to32lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0185:
-      setlutparameters(&choice->teletextlutparameters,2,2);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video32lutinit;
-      choice->initteletext = video32lutinit;
-      choice->scalegraphics = video48lutscale;
-      choice->scaleteletext = video64lutsixdotscale;
+      setlutparameters(&choice->lutparameters,1,1);
+      choice->init = video4to32lutinit;
+      choice->format |= 1;
+      set4outslice12quarterdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0205:
-      choice->initgraphics = video32lutinit;
-      choice->scalegraphics = video64lutscale;
-      choice->scaleteletext = video64lutscale;
+      choice->init = video4to32lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0285:
-      choice->graphicslutparameters.leftpixel = 2;
-      choice->graphicslutparameters.rightpixel = 1;
-      choice->initgraphics = video32lutinit;
-      choice->scalegraphics = video80from48lutscale;
-      choice->scaleteletext = video80from48lutscale;
+      choice->init = video4to32lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0305:
-      choice->graphicslutparameters.leftpixel = 1;
-      choice->graphicslutparameters.rightpixel = 1;
-      setlutparameters(&choice->teletextlutparameters,1,1);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video32lutinit;
-      choice->initteletext = video32lutinit;
-      choice->scalegraphics = video96from32lutscale;
-      choice->scaleteletext = video128from32lutsixdotscale;
+      setlutparameters(&choice->lutparameters,1,1);
+      choice->init = video4to32lutinit;
+      choice->format |= 6;
+      set4outslice24eighthdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0405:
-      choice->graphicslutparameters.leftpixel = 1;
-      choice->graphicslutparameters.rightpixel = 1;
-      choice->initgraphics = video32lutinit;
-      choice->scalegraphics = video128from32lutscale;
-      choice->scaleteletext = video128from32lutscale;
+      choice->init = video4to32lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0505:
-      choice->graphicslutparameters.leftpixel = 1;
-      choice->graphicslutparameters.rightpixel = 1;
-      choice->initgraphics = video32lutinit;
-      choice->scalegraphics = video160from32lutscale;
-      choice->scaleteletext = video160from32lutscale;
+      choice->init = video4to32lutinit;
+      set4outslice8halfdotlu8for32Mchoice(uparams, choice);
       break;
     case 0x0605:
-      choice->graphicslutparameters.leftpixel = 1;
-      choice->graphicslutparameters.rightpixel = 1;
-      setlutparameters(&choice->teletextlutparameters,1,1);
-      choice->teletextform &= ~1;
-      choice->initgraphics = video32lutinit;
-      choice->initteletext = video32lutinit;
-      choice->scalegraphics = video192from32lutscale;
-      choice->scaleteletext = video256from32lutsixdotscale;
+      setlutparameters(&choice->lutparameters,2,2);
+      choice->init = video4to32lutinit;
+      choice->format |= 6;
+      set4outslice24eighthdotlu8for32Mchoice(uparams, choice);
       break;
   }
 
-  linelengthmask = ~3;
-
-  if ((choice->teletextform & 1) == 0)
+  if (choice->init)
   {
-    //six dot scaling spans 2 words
-    linelengthmask &= ~7;
-    choice->alignmentmask &= ~7;
+    choice->lutsize = getlutsizeforparameters(&choice->lutparameters,log2bpp);
   }
-  if (log2bpp == 2 && (scaleselector & 0x80))
+  else
   {
-    //the 4-bit half-integer scale functions step by 2 words
-    linelengthmask &= ~7;
+    choice->init = videonolutinit;
   }
+}
 
-  xresbeforescale = (xres<<1)/(scaleselector>>7);
-
-  if (xresbeforescale > xresbeforescalemax)
+static void videoscalesetopsgroup(HOSTVIDEOOP* dst, const HOSTVIDEOOP* src1, const HOSTVIDEOOP* src2, int withmiddle)
+{
+  if (src1)
   {
-    xresbeforescale = xresbeforescalemax;
+    dst[0] = src1[0] ? src1[0] : src2[0];
+    dst[1] = src1[1] ? src1[1] : src2[1];
+    dst[2] = src1[2];
+    dst[3] = withmiddle ? src1[3] : src1[2];
+    dst[4] = withmiddle ? src1[4] : src1[2];
   }
-
-  xresbeforescale &= (linelengthmask<<1);
-  xresafterscale = (xresbeforescale*(scaleselector>>7))>>1;
-  xresremainder = xres - xresafterscale;
-  yresremainder = yres - ((256<<ratioshift)>>1)*(scaleselector>>7);
-
-#ifdef VIDEOSCALE_WITH_OVERSCALE
-  if (xresremainder < 0)
-    xresremainder = 0;
-  if (yresremainder < 0)
-    yresremainder = 0;
-#endif
-
-  choice->linelengthfloor = xresbeforescale>>1;
-  choice->scaledlinelengthfloor = (((xresafterscale << log2bpp)+31)>>5)<<2;
-  choice->screenoffsetlines = yresremainder>>1;
-  choice->screenoffsetremainder = ((xresremainder << log2bpp-1)>>5)<<2;
-
-  if (choice->initgraphics)
+  else
   {
-    es = getentrysizeforbarrelshiftedlookup(&choice->graphicslutparameters,log2bpp);
-    choice->graphicslutparameters.offset = choice->lutsize;
-    choice->lutsize = choice->lutsize + 256*es;
+    dst[0] = NULL;
+    dst[1] = NULL;
+    dst[2] = NULL;
+    dst[3] = NULL;
+    dst[4] = NULL;
   }
-  if (choice->initteletext)
+}
+
+void videoscalesetops(VIDEOSCALECHOICE* choice)
+{
+  HOSTMAP* hmap = &hostmap;
+  uint8_t* opmap = (uint8_t*)&hmap->D_vidout.opmaparea;
+  const HOSTVIDEOOP evenops2[2] = {
+    videooutskipeven, videooutblankeven
+  };
+  const HOSTVIDEOOP oddops2[2] = {
+    videooutskipodd, videooutblankodd
+  };
+  const HOSTVIDEOOP loopinpairsops2[2] = {
+    videooutskipinpairs, videooutblankinpairs
+  };
+  const HOSTVIDEOOP loopops2[2] = {
+    videooutskip, videooutblank
+  };
+  int includewithmiddleops;
+  int i;
+
+  memcpy(opmap, sliceopmap, 256);
+
+  if (choice->format&8)
   {
-    es = getentrysizeforbarrelshiftedlookup(&choice->teletextlutparameters,log2bpp);
-    choice->teletextlutparameters.offset = choice->lutsize;
-    choice->lutsize = choice->lutsize + 256*es;
+    includewithmiddleops = choice->teletextslices >= 3;
+  }
+  else
+  {
+    includewithmiddleops = choice->teletextslices >= 2;
+    for (i=1; i<15; i++)
+    {
+      opmap[i] = 1;
+    }
+    if (choice->teletextslices == 3)
+    {
+      for (i=16; i<128; i++)
+      {
+        if (opmap[i] == 2)
+          opmap[i] = 3;
+      }
+    }
   }
 
-#ifdef VIDEOSCALE_WITH_OVERSCALE
-  xlimit = choice->linelengthfloor;
-  if (choice->linelengthfloor < 320)
-  {
-    choice->linelengthfloor = 320;
-  }
-  ylimit = yres;
-  limitscale(choice, xlimit, ylimit);
-#endif
+  if (choice->ops.odd && choice->ops.even)
+    videoscalesetopsgroup(hmap->D_vidout.opfork, choice->ops.loop, loopinpairsops2, includewithmiddleops);
+  else
+    videoscalesetopsgroup(hmap->D_vidout.opfork, choice->ops.loop, loopops2, includewithmiddleops);
+  videoscalesetopsgroup(hmap->D_vidout.opfork+5, choice->ops.odd, oddops2, includewithmiddleops);
+  videoscalesetopsgroup(hmap->D_vidout.opfork+10, choice->ops.even, evenops2, includewithmiddleops);
+
+  hmap->B_vidout.lineop = choice->ops.line;
 }

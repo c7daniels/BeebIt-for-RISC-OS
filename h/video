@@ -2,90 +2,115 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2024
+ * Cycle-level video emulation
  *
- * Email: <mjfoot.nz@gmail.com>
- *
- * Enhanced host screen mode compatibility (and more)
- *   contributed by Crispian Daniels in 2024
+ * (C) Copyright Crispian Daniels, 2024-2025
  *
  * Email: <convertedgames@3insdale.me.uk>
+
  */
 
-#define MODE12_X 320 /*mode 12 is 640 pixels x 4 bits wide */
-#define MODE12_Y 256
-#define MODE15_X 640 /*mode 15 is 640 pixels x 8 bits wide */
-#define MODE15_Y 256
+#define VIDEODISPLAYSYNCEDGE 0x80
+#define VIDEODISPLAYPOSSIBLESTART 0x40
+#define VIDEODISPLAYADVANCEMASK 0x30
+#define VIDEODISPLAYSKIP 0x08
+#define VIDEODISPLAYCURSOR 0x04
+#define VIDEODISPLAYTELETEXT 0x02
+#define VIDEODISPLAYDISPLAY 0x01
 
-typedef struct {
-  int graphics;
-  int unroundedteletext;
-  int roundedteletext;
-} VERTICALLYSCALEDLINELENGTHS;
+#define VIDEODISPLAYOUTRIGHT 0x10
+#define VIDEODISPLAYSTOP 0x20
+#define VIDEODISPLAYOUTLEFT 0x30
+
+#define CLIPPEDBELOWSKIPFLAG 0x80
+#define CLIPPEDSKIPFLAG 0x40
+#define CLIPPEDABOVESKIPFLAG 0x20
+#define FRAMETIMESKIPFLAG 0x10
+#define VSYNCSKIPFLAG 0x08
+#define HSYNCSKIPFLAG 0x04
+#define BEFOREDISPLAYSKIPFLAG 0x02
+#define FASTSKIPFLAG 0x01
+
+#define VIDEOSTEPEVENTR0HIT 0x80
+#define VIDEOSTEPEVENT1AFTERR0HIT 0x40
+#define VIDEOSTEPEVENT2AFTERR0HIT 0x20
+#define VIDEOSTEPEVENT3AFTERR0HIT 0x10
+#define VIDEOSTEPEVENTLPSTB 0x08
+
+#define VIDEOSTEPSIGNALSEGMENT0 0x8000U
+#define VIDEOSTEPSIGNALSEGMENT1 0x4000U
+#define VIDEOSTEPSIGNALSEGMENT2 0x2000U
+#define VIDEOSTEPSIGNALSEGMENT3 0x1000U
+#define VIDEOSTEPSIGNALCURSOR 0x400U
+#define VIDEOSTEPSIGNALSKEW1CURSOR 0x200U
+#define VIDEOSTEPSIGNALSKEW2CURSOR 0x100U
+#define VIDEOSTEPSIGNALDISPLAY 0x04U
+#define VIDEOSTEPSIGNALSKEW1DISPLAY 0x02U
+#define VIDEOSTEPSIGNALSKEW2DISPLAY 0x01U
+
+#define VIDEOSTEPSIGNALSEGMENTSHIFT 12
+#define VIDEOSTEPSIGNALABOVESHIFT 16
+#define VIDEOSTEPSIGNALBELOWSHIFT 8
+
+#define VIDEOSTEPSIGNALSEGMENTMASK (VIDEOSTEPSIGNALSEGMENT0|VIDEOSTEPSIGNALSEGMENT1|VIDEOSTEPSIGNALSEGMENT2|VIDEOSTEPSIGNALSEGMENT3)
+#define VIDEOSTEPSIGNALPSEGMENTMASK ((VIDEOSTEPSIGNALSEGMENTMASK<<VIDEOSTEPSIGNALABOVESHIFT)|(VIDEOSTEPSIGNALSEGMENTMASK<<VIDEOSTEPSIGNALBELOWSHIFT)|VIDEOSTEPSIGNALSEGMENTMASK)
+
+#define VIDEOSTEPSIGNALSTOPMASK ((VIDEOSTEPSIGNALSEGMENT3|VIDEOSTEPSIGNALSKEW2CURSOR)>>1)
+#define VIDEOSTEPSIGNALPSTOPMASK ((VIDEOSTEPSIGNALSTOPMASK<<VIDEOSTEPSIGNALABOVESHIFT)|(VIDEOSTEPSIGNALSTOPMASK<<VIDEOSTEPSIGNALBELOWSHIFT)|VIDEOSTEPSIGNALSTOPMASK)
+
+#define VIDEOSTEPROWREGISTERFLAG 0x20
+#define VIDEOSTEPHDISPLAYFLAG 0x10
+#define VIDEOSTEPVSYNCDELAYFLAG 0x08
+#define VIDEOSTEPHSYNCFLAG 0x04
+#define VIDEOSTEPFASTFLAG 0x02
+#define VIDEOSTEPODDFLAG 0x01
+
+#define VIDEOREADEVENTFLAG 0x10
+#define VIDEOREADSIGNALFLAG 0x08
+#define VIDEOREADSHADOWFLAG 0x04
+
+#define VIDEOREADSTARTSHIFT 0
+
+typedef HOSTVIDEOREADOP VIDEOREADFOUR[4]; //screen start 0x4000, 0x6000, 0x3000, 0x5800
+
+typedef VIDEOREADFOUR* VIDEOREADSIXTEEN[4]; //MA13-MA12 0x0, 0x1, 0x2, 0x3
+
+typedef VIDEOREADSIXTEEN* VIDEOREADSET[6]; //memory with 2k teletext, memory, shadow
+                                           //even sixteens then odd sixteens
+
+extern VIDEOREADSET videoreadset;
+extern VIDEOREADSET videoreadpset;
 
 /*palette*/
 extern const unsigned int palette_rgb[8];
 extern unsigned int palette_specified[8];
 
-/*teletext*/
-extern int teletext_screenwidth;
-extern int teletext_leftoffscreen;
-extern int teletext_leftextra;
-extern int teletext_rightextra;
+extern int videospeed_specified;
+extern int framerate_specified;
 
-/*video*/
-/*extern int video_vsync0;*/ /*start of vertical sync scan line*/
-/*extern int video_vsync1;*/ /*end of vertical sync scan line*/
-extern int video_mode; /*screen mode*/
-extern int video_timer; /*scanline timer*/
-
-/*extern int video_phase;*/
-extern int video_currentrow; /*current row being drawn on local screen*/
-extern int video_synchold;
-
-extern int video_address; /*current address in bbc memory*/
-extern char video_charrowcounter; /*whole part of character row*/
-extern char video_scanlinecounter; /*fraction part of character row*/
-extern int video_offset;
-extern int video_width;
-extern int video_displaywidth;
-extern int video_field;
-extern int video_drawline; /*draw a line on this pass*/
-extern int video_onscreen;
-extern int video_de;
-extern int video_scanline;
-extern int video_display;
-extern int video_framerate;
-extern int *videoscale_workspace;
-extern intptr_t nlocalscreen;
-extern int nlocalscreenlinelength;
-extern int local_linelengthfloor; /*line length compatible with optimised blank, plot and scale routines*/
-extern int local_teletextform; /*line ratio, pixel depth and graphics separation*/
-extern int local_teletextlinelength;
-extern int host_colournumbers[8];
-extern int host_colourmasks[8];
-extern int host_scaledlinelengthfloor;
-extern int host_scaledlinelength;
-extern int host_scaledteletextrowlength;
-extern int host_screenoffsetlines;
-extern int host_screenoffsetremainder;
-extern unsigned int cursor_bitmap;
+extern R6502ZONEMAP* videodisplayskip(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowritecursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowritegraphics(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowritecursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowriteteletext(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowritecursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowriteecursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowriteegraphics(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowriteecursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowriteeteletext(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowriteecursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowritepcursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowritepgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowritepteletext(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videowritepcursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
 
 extern void videoinit(void);
 extern void videosetpalette(void);
 extern void videosetscale(void);
-extern void videosetplot(void);
 extern void videohostmodevars(void);
 extern int writeusedcolours(void);
+extern HOSTMAP* videoloadteletext(HOSTMAP* hmap, uintptr_t queue);
+extern HOSTMAP* videoshiftteletext(HOSTMAP* hmap);
 extern void videofreeworkspace(void);
 extern void videoreset(void);
-extern void videomodechange(void);
-/*extern void videoupdate(void);*/
-extern void videoscanline(void);
-extern void videoteletextrelay(void);
-extern void videoteletextdrawrow(void);
-extern HOSTMAP* videoatzerocycles(HOSTMAP* hmap);
-
-extern void (*videoteletext)(void);
-extern void (*videographicsscale)(intptr_t bufferaddress, intptr_t hostaddress);
-extern void (*videoteletextscale)(intptr_t bufferaddress, intptr_t hostaddress);

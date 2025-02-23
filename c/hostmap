@@ -29,8 +29,10 @@
 #include "videoula.h"
 #include "beebit.h"
 
+static_assert(offsetof(HOSTMAP, peripheral_code) == offsetof(R6502ZONEMAP, peripheral_code), "Expecting consistent peripheral code offsets");
 static_assert(offsetof(HOSTMAP, m_shift) == offsetof(R6502ZONEMAP, m_shift), "Expecting consistent data bus value offsets");
 static_assert(offsetof(HOSTMAP, m) == offsetof(R6502ZONEMAP, m), "Expecting data bus value offsets");
+static_assert(offsetof(HOSTMAP, peripheralops) == offsetof(R6502ZONEMAP, peripheralops), "Expecting consistent peripheral op table offsets");
 
 static_assert(offsetof(HOSTMAP, AC) == offsetof(R6502ZONEMAP, AC), "Expecting consistent zone offsets");
 static_assert(offsetof(HOSTMAP, BC) == offsetof(R6502ZONEMAP, BC), "Expecting consistent zone offsets");
@@ -1305,6 +1307,8 @@ void hostmapresetperipherals(void)
     hmap->stretchedwritehigh[0x300+i] = h6502writeFF00;
   }
 
+  hmap->peripheral_code = PERIPHERAL_BASEFLAG;
+
   sheilareset();
   aciareset();
   adcreset();
@@ -1402,19 +1406,6 @@ HOSTMAP* hostmapadvancetimers(HOSTMAP* hmap)
     {
       aciapoll(hmap);
       cyclestogo = hmap->cycles.m6850_togo;
-    }
-    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
-      fewestcyclestogo = cyclestogo;
-  }
-
-  cyclestogo = hmap->cycles.video_togo - cyclesoriginal;
-  if (cyclestogo >= 0)
-  {
-    hmap->cycles.video_togo = cyclestogo;
-    if (cyclestogo == 0)
-    {
-      videoatzerocycles(hmap);
-      cyclestogo = hmap->cycles.video_togo;
     }
     if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
       fewestcyclestogo = cyclestogo;

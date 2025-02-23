@@ -29,7 +29,7 @@
 #define NOTCFLAG 0xFE
 
 #define BUS_WRITEFLAG 0x01
-#define BUS_BASEFLAG 0x05
+#define BUS_BASEFLAG 0x09
 
 #define IRQ_6522SYSVIA 0x01
 #define IRQ_6522USRVIA 0x02
@@ -72,32 +72,32 @@
 #define R6502_JUMP_TO_ZPG_READ_OP(MAP, ADDRCODE) \
   { \
     MAP->m = MAP->pagezero[(ADDRCODE)>>24]; \
-    return MAP; \
+    return (R6502CPUMAP*)MAP->peripheralops[MAP->peripheral_code&0xFF]((R6502ZONEMAP*)MAP, MAP->peripheral_code); \
   }
 
 #define R6502_JUMP_TO_ZPG_WRITE_OP(MAP, ADDRCODE) \
   { \
     MAP->pagezero[(ADDRCODE)>>24] = MAP->m; \
-    return MAP; \
+    return (R6502CPUMAP*)MAP->peripheralops[MAP->peripheral_code&0xFF]((R6502ZONEMAP*)MAP, MAP->peripheral_code); \
   }
 
 #define R6502_JUMP_TO_STACK_READ_OP(MAP, SPCODE) \
   { \
     MAP->m = MAP->pageone[(SPCODE)>>24]; \
-    return MAP; \
+    return (R6502CPUMAP*)MAP->peripheralops[MAP->peripheral_code&0xFF]((R6502ZONEMAP*)MAP, MAP->peripheral_code); \
   }
 
 #define R6502_JUMP_TO_STACK_WRITE_OP(MAP, SPCODE) \
   { \
     MAP->pageone[(SPCODE)>>24] = MAP->m; \
-    return MAP; \
+    return (R6502CPUMAP*)MAP->peripheralops[MAP->peripheral_code&0xFF]((R6502ZONEMAP*)MAP, MAP->peripheral_code); \
   }
 
 #define R6502_JUMP_WITHOUT_BUS_OP(MAP) \
-  return MAP;
+  return (R6502CPUMAP*)MAP->peripheralops[MAP->peripheral_code&0xFF]((R6502ZONEMAP*)MAP, MAP->peripheral_code);
 
 #define R6502_JUMP_FROM_BUS_OP(ZMAP) \
-  return ZMAP;
+  return ZMAP->peripheralops[ZMAP->peripheral_code&0xFF](ZMAP, ZMAP->peripheral_code);
 
 #define R6502_NEXT_INSTRUCTION(MAP, PCCODE) \
   return MAP->transition1action(MAP, PCCODE);

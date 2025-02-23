@@ -42,9 +42,10 @@ RunImage = @.o.main @.o.beebit \
   @.o.6522sysvia @.o.6522usrvia @.o.6845crtc @.o.6850acia \
   @.o.76489sound @.o.tube @.o.hostmap @.o.hostmaps \
   @.o.8271fdc @.o.1770fdc @.o.adc @.o.keyboard @.o.sheila  \
-  @.o.scrmode @.o.video @.o.videoscale @.o.videoula @.o.riscos \
-  @.o.riscosvid1 @.o.riscosvid2 @.o.riscosvid3 @.o.riscosvid4 \
-  @.o.scrsave @.o.snapshots
+  @.o.video @.o.videoscale @.o.videoula \
+	@.o.videobuf @.o.videoout @.o.videoread \
+  @.o.riscos \
+  @.o.scrmode @.o.scrsave @.o.snapshots
 RipRoms = @.o.RipROMs
 
 # $@ name of target ie o.main
@@ -72,6 +73,40 @@ RipRoms = @.o.RipROMs
 # Static dependencies:
 
 # Dynamic dependencies:
+o.main:	c.main
+o.main:	h.hostmap
+o.main:	h.6502zmap
+o.main:	h.6850acia
+o.main:	h.8271fdc
+o.main:	h.main
+o.main:	h.beebit
+o.main:	h.sheila
+o.main:	h.swis
+o.main:	C:h.kernel
+o.main:	h.riscos
+o.main:	h.scrmode
+o.main:	h.scrsave
+o.main:	h.snapshots
+o.main:	h.video
+o.main:	h.videoscale
+o.beebit:	c.beebit
+o.beebit:	h.hostmap
+o.beebit:	h.6502zmap
+o.beebit:	h.1770fdc
+o.beebit:	h.8271fdc
+o.beebit:	h.6845crtc
+o.beebit:	h.6850acia
+o.beebit:	h.adc
+o.beebit:	h.beebit
+o.beebit:	C:h.kernel
+o.beebit:	h.keyboard
+o.beebit:	h.main
+o.beebit:	h.riscos
+o.beebit:	h.scrmode
+o.beebit:	h.scrsave
+o.beebit:	h.sheila
+o.beebit:	h.swis
+o.beebit:	h.video
 o.6502cpu:	c.6502cpu
 o.6502cpu:	h.6502cpu
 o.6502cpu:	h.6502cmap
@@ -191,8 +226,8 @@ o.6522sysvia:	h.6502zmap
 o.6522sysvia:	h.6502cpu
 o.6522sysvia:	h.6502cmap
 o.6522sysvia:	h.6502zmap
+o.6522sysvia:	h.video
 o.6522sysvia:	h.6522sysvia
-o.6522sysvia:	h.76489sound
 o.6522sysvia:	h.beebit
 o.6522sysvia:	C:h.kernel
 o.6522sysvia:	h.keyboard
@@ -217,10 +252,7 @@ o.6845crtc:	h.hostmap
 o.6845crtc:	h.6502zmap
 o.6845crtc:	h.6845crtc
 o.6845crtc:	h.beebit
-o.6845crtc:	h.main
 o.6845crtc:	h.video
-o.6845crtc:	h.videoula
-o.6845crtc:	h.riscos
 o.6850acia:	c.6850acia
 o.6850acia:	h.hostmap
 o.6850acia:	h.6502zmap
@@ -322,14 +354,9 @@ o.sheila:	h.beebit
 o.sheila:	h.main
 o.sheila:	h.riscos
 o.sheila:	h.tube
+o.sheila:	h.video
 o.sheila:	h.videoula
 o.sheila:	h.1770fdc
-o.scrmode:	c.scrmode
-o.scrmode:	h.main
-o.scrmode:	C:h.kernel
-o.scrmode:	h.swis
-o.scrmode:	h.scrmode
-o.scrmode:	h.videoscale
 o.video:	c.video
 o.video:	h.hostmap
 o.video:	h.6502zmap
@@ -337,7 +364,6 @@ o.video:	h.beebit
 o.video:	C:h.kernel
 o.video:	h.main
 o.video:	h.riscos
-o.video:	h.scrmode
 o.video:	h.swis
 o.video:	h.6502cmap
 o.video:	h.6502zmap
@@ -348,7 +374,6 @@ o.video:	h.6845crtc
 o.video:	h.video
 o.video:	h.videoscale
 o.video:	h.videoula
-o.video:	h.adc
 o.videoscale:	c.videoscale
 o.videoscale:	h.hostmap
 o.videoscale:	h.6502zmap
@@ -362,38 +387,39 @@ o.videoscale:	h.videoula
 o.videoula:	c.videoula
 o.videoula:	h.hostmap
 o.videoula:	h.6502zmap
-o.videoula:	h.6522sysvia
-o.videoula:	h.6845crtc
-o.videoula:	h.beebit
-o.videoula:	C:h.kernel
-o.videoula:	h.main
-o.videoula:	h.riscos
-o.videoula:	h.scrmode
-o.videoula:	h.swis
-o.videoula:	h.adc
+o.videoula:	h.videoula
 o.videoula:	h.video
+o.videoula:	h.sheila
+o.videoula:	h.beebit
+o.videobuf:	c.videobuf
+o.videobuf:	h.hostmap
+o.videobuf:	h.6502zmap
+o.videobuf:	h.video
+o.videobuf:	h.videoscale
+o.videoout:	c.videoout
+o.videoout:	h.hostmap
+o.videoout:	h.6502zmap
+o.videoout:	h.videoscale
+o.videoread:	c.videoread
+o.videoread:	h.hostmap
+o.videoread:	h.6502zmap
+o.videoread:	h.beebit
+o.videoread:	h.video
 o.riscos: s.riscos
 o.riscos: h.6502zmaps
 o.riscos: h.hostmaps
 o.riscos: h.6502cmaps
 o.riscos: h.RegNames
 o.riscos: h.SWInames
-o.riscosvid1: s.riscosvid1
-o.riscosvid1: h.6502zmaps
-o.riscosvid1: h.hostmaps
-o.riscosvid1: h.RegNames
-o.riscosvid1: h.SWInames
-o.riscosvid2: s.riscosvid2
-o.riscosvid2: h.6502zmaps
-o.riscosvid2: h.hostmaps
-o.riscosvid2: h.RegNames
-o.riscosvid2: h.SWInames
-o.riscosvid3: s.riscosvid3
-o.riscosvid3: h.RegNames
-o.riscosvid3: h.SWInames
-o.riscosvid4: s.riscosvid4
-o.riscosvid4: h.RegNames
-o.riscosvid4: h.SWInames
+o.scrmode:	c.scrmode
+o.scrmode:	h.hostmap
+o.scrmode:	h.6502zmap
+o.scrmode:	h.beebit
+o.scrmode:	h.main
+o.scrmode:	C:h.kernel
+o.scrmode:	h.swis
+o.scrmode:	h.scrmode
+o.scrmode:	h.videoscale
 o.scrsave:	c.scrsave
 o.scrsave:	h.hostmap
 o.scrsave:	h.6502zmap
@@ -419,37 +445,3 @@ o.snapshots:	h.sheila
 o.RipROMs:	c.RipROMs
 o.RipROMs:	C:h.kernel
 o.RipROMs:	h.swis
-o.main:	c.main
-o.main:	h.hostmap
-o.main:	h.6502zmap
-o.main:	h.6850acia
-o.main:	h.8271fdc
-o.main:	h.main
-o.main:	h.beebit
-o.main:	h.sheila
-o.main:	h.swis
-o.main:	C:h.kernel
-o.main:	h.riscos
-o.main:	h.scrmode
-o.main:	h.scrsave
-o.main:	h.snapshots
-o.main:	h.video
-o.main:	h.videoscale
-o.beebit:	c.beebit
-o.beebit:	h.hostmap
-o.beebit:	h.6502zmap
-o.beebit:	h.1770fdc
-o.beebit:	h.8271fdc
-o.beebit:	h.6845crtc
-o.beebit:	h.6850acia
-o.beebit:	h.adc
-o.beebit:	h.beebit
-o.beebit:	C:h.kernel
-o.beebit:	h.keyboard
-o.beebit:	h.main
-o.beebit:	h.riscos
-o.beebit:	h.scrmode
-o.beebit:	h.scrsave
-o.beebit:	h.sheila
-o.beebit:	h.swis
-o.beebit:	h.video
