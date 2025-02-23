@@ -40,7 +40,6 @@ static inline void selectinversegraphicscolour(HOSTMAP* hmap)
 static inline R6502ZONEMAP* videodisplayadvance(R6502ZONEMAP* zmap)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t step_code;
   intptr_t column = hmap->B_vidbuf.column + 1;
   hmap->B_vidbuf.column = column;
 
@@ -51,8 +50,7 @@ static inline R6502ZONEMAP* videodisplayadvance(R6502ZONEMAP* zmap)
     else
       hmap->peripheral_code |= VIDEODISPLAYOUTRIGHT;
   }
-  step_code = hmap->B_crtc.step_code;
-  return (R6502ZONEMAP*)hmap->videostepops[step_code&0xFF](hmap, step_code);
+  return (R6502ZONEMAP*)(*hmap->B_crtc.step_state)(hmap, (uintptr_t)(hmap->B_crtc.step_state+1));
 }
 
 R6502ZONEMAP* videodisplayskip(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
@@ -63,12 +61,12 @@ R6502ZONEMAP* videodisplayskip(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 R6502ZONEMAP* videowritecursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
-  if (cursorflags & signalbuffer)
+  if (cursorflags & cursorbuffer)
   {
     hmap->B_vidbuf.cursorinnerop(hmap);
   }
@@ -92,12 +90,12 @@ R6502ZONEMAP* videowritecursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral_
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
   int cursoron;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
-  cursoron = (cursorflags & signalbuffer) != 0;
+  cursoron = (cursorflags & cursorbuffer) != 0;
 
   if (!(hmap->A_crtc.c9 & 8))
   {
@@ -128,12 +126,12 @@ R6502ZONEMAP* videowritecursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral_
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
   int cursoron;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
-  cursoron = (cursorflags & signalbuffer) != 0;
+  cursoron = (cursorflags & cursorbuffer) != 0;
 
   if (cursoron)
     selectinverseteletextcolour(hmap);
@@ -146,12 +144,12 @@ R6502ZONEMAP* videowritecursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral_
 R6502ZONEMAP* videowriteecursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
-  if (cursorflags & signalbuffer)
+  if (cursorflags & cursorbuffer)
   {
     if (hmap->B_vidbuf.linelevel >= 64)
       hmap->A_vidbuf.writecode = 0x20;
@@ -185,12 +183,12 @@ R6502ZONEMAP* videowriteecursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
   int cursoron;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
-  cursoron = (cursorflags & signalbuffer) != 0;
+  cursoron = (cursorflags & cursorbuffer) != 0;
 
   if (hmap->B_vidbuf.linelevel >= 64)
     hmap->A_vidbuf.writecode = 0x20;
@@ -233,12 +231,12 @@ R6502ZONEMAP* videowriteecursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
   int cursoron;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
-  cursoron = (cursorflags & signalbuffer) != 0;
+  cursoron = (cursorflags & cursorbuffer) != 0;
 
   if (hmap->B_vidbuf.linelevel >= 64)
     hmap->A_vidbuf.writecode = 0x20;
@@ -259,12 +257,12 @@ R6502ZONEMAP* videowritepcursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_co
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
   int clipped,altwritten;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
   intptr_t lineaddresscopy;
   uint8_t skip;
 
   altwritten = 0;
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
   clipped = 0;
@@ -274,7 +272,7 @@ R6502ZONEMAP* videowritepcursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_co
 
   if (hmap->A_crtc.r[9] == hmap->A_crtc.r9image)
   {
-    if (hmap->A_crtc.fieldnumber && (cursorflags & signalbuffer))
+    if (hmap->A_crtc.fieldnumber && (cursorflags & cursorbuffer))
     {
       if (hmap->B_vidbuf.linelevel >= 64)
       {
@@ -300,7 +298,7 @@ R6502ZONEMAP* videowritepcursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_co
     else
       clipped = 1;
   }
-  else if (hmap->A_crtc.c9 > 0 && (cursorflags & (signalbuffer>>VIDEOSTEPSIGNALABOVESHIFT)))
+  else if (hmap->A_crtc.c9 > 0 && (cursorflags & (cursorbuffer>>VIDEOCURSORSIGNALABOVESHIFT)))
   {
     if (hmap->B_vidbuf.linelevel >= 64)
     {
@@ -340,7 +338,7 @@ R6502ZONEMAP* videowritepcursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_co
 
   if (hmap->A_crtc.r[9] == hmap->A_crtc.r9image)
   {
-    if (!hmap->A_crtc.fieldnumber && (cursorflags & signalbuffer))
+    if (!hmap->A_crtc.fieldnumber && (cursorflags & cursorbuffer))
     {
       if (hmap->B_vidbuf.linelevel >= 64)
       {
@@ -366,7 +364,7 @@ R6502ZONEMAP* videowritepcursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_co
     else
       clipped = 1;
   }
-  else if (hmap->A_crtc.c9 < hmap->A_crtc.r[9]+1 && (cursorflags & (signalbuffer>>VIDEOSTEPSIGNALBELOWSHIFT)))
+  else if (hmap->A_crtc.c9 < hmap->A_crtc.r[9]+1 && (cursorflags & (cursorbuffer>>VIDEOCURSORSIGNALBELOWSHIFT)))
   {
     if (hmap->B_vidbuf.linelevel >= 64)
     {
@@ -409,7 +407,7 @@ R6502ZONEMAP* videowritepcursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_co
     else
       hmap->A_vidbuf.writecode = 0x10;
 
-    if (cursorflags & signalbuffer)
+    if (cursorflags & cursorbuffer)
     {
       hmap->B_vidbuf.cursorinnerop(hmap);
     }
@@ -613,12 +611,12 @@ R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
   int clipped,cursoron,c9alt,altwritten;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
   intptr_t lineaddresscopy;
   uint8_t skip;
 
   altwritten = 0;
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
   cursoron = 0;
@@ -637,7 +635,7 @@ R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
       {
         if (!(skip & CLIPPEDSKIPFLAG))
         {
-          cursoron = (cursorflags & signalbuffer) != 0;
+          cursoron = (cursorflags & cursorbuffer) != 0;
           hmap->B_videoula.bytecolours = hmap->B_videoula.bytelut[hmap->A_videoula.shiftregister&0xFF];
           hmap->B_vidbuf.lineaddress += hmap->B_vidbuf.altoffset;
           hmap->A_vidbuf.writecode = 0x10;
@@ -649,7 +647,7 @@ R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
       {
         if (!(skip & CLIPPEDABOVESKIPFLAG))
         {
-          cursoron = (cursorflags & signalbuffer) != 0;
+          cursoron = (cursorflags & cursorbuffer) != 0;
           hmap->B_videoula.bytecolours = hmap->B_videoula.bytelut[hmap->A_videoula.shiftregister&0xFF];
           hmap->B_vidbuf.lineaddress -= hmap->B_vidbuf.stride - hmap->B_vidbuf.altoffset;
           hmap->A_vidbuf.writecode = 0x20;
@@ -668,7 +666,7 @@ R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
       if (!(skip & CLIPPEDSKIPFLAG))
       {
         c9alt = hmap->A_crtc.c9 - 1;
-        cursoron = (cursorflags & (signalbuffer>>VIDEOSTEPSIGNALABOVESHIFT)) != 0;
+        cursoron = (cursorflags & (cursorbuffer>>VIDEOCURSORSIGNALABOVESHIFT)) != 0;
         hmap->B_videoula.bytecolours = hmap->B_videoula.bytelut[(hmap->A_videoula.shiftregister>>24)&0xFF];
         hmap->B_vidbuf.lineaddress += hmap->B_vidbuf.altoffset;
         hmap->A_vidbuf.writecode = 0x10;
@@ -681,7 +679,7 @@ R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
       if (!(skip & CLIPPEDABOVESKIPFLAG))
       {
         c9alt = hmap->A_crtc.c9 - 1;
-        cursoron = (cursorflags & (signalbuffer>>VIDEOSTEPSIGNALABOVESHIFT)) != 0;
+        cursoron = (cursorflags & (cursorbuffer>>VIDEOCURSORSIGNALABOVESHIFT)) != 0;
         hmap->B_videoula.bytecolours = hmap->B_videoula.bytelut[(hmap->A_videoula.shiftregister>>24)&0xFF];
         hmap->B_vidbuf.lineaddress -= hmap->B_vidbuf.stride - hmap->B_vidbuf.altoffset;
         hmap->A_vidbuf.writecode = 0x20;
@@ -723,7 +721,7 @@ R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
       {
         if (!(skip & CLIPPEDBELOWSKIPFLAG))
         {
-          cursoron = (cursorflags & signalbuffer) != 0;
+          cursoron = (cursorflags & cursorbuffer) != 0;
           hmap->B_videoula.bytecolours = hmap->B_videoula.bytelut[hmap->A_videoula.shiftregister&0xFF];
           hmap->B_vidbuf.lineaddress += hmap->B_vidbuf.stride + hmap->B_vidbuf.altoffset;
           hmap->A_vidbuf.writecode = 0x10;
@@ -735,7 +733,7 @@ R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
       {
         if (!(skip & CLIPPEDSKIPFLAG))
         {
-          cursoron = (cursorflags & signalbuffer) != 0;
+          cursoron = (cursorflags & cursorbuffer) != 0;
           hmap->B_videoula.bytecolours = hmap->B_videoula.bytelut[hmap->A_videoula.shiftregister&0xFF];
           hmap->B_vidbuf.lineaddress += hmap->B_vidbuf.altoffset;
           hmap->A_vidbuf.writecode = 0x20;
@@ -754,7 +752,7 @@ R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
       if (!(skip & CLIPPEDBELOWSKIPFLAG))
       {
         c9alt = hmap->A_crtc.c9 + 1;
-        cursoron = (cursorflags & (signalbuffer>>VIDEOSTEPSIGNALBELOWSHIFT)) != 0;
+        cursoron = (cursorflags & (cursorbuffer>>VIDEOCURSORSIGNALBELOWSHIFT)) != 0;
         hmap->B_videoula.bytecolours = hmap->B_videoula.bytelut[(hmap->A_videoula.shiftregister>>8)&0xFF];
         hmap->B_vidbuf.lineaddress += hmap->B_vidbuf.stride + hmap->B_vidbuf.altoffset;
         hmap->A_vidbuf.writecode = 0x10;
@@ -767,7 +765,7 @@ R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
       if (!(skip & CLIPPEDSKIPFLAG))
       {
         c9alt = hmap->A_crtc.c9 + 1;
-        cursoron = (cursorflags & (signalbuffer>>VIDEOSTEPSIGNALBELOWSHIFT)) != 0;
+        cursoron = (cursorflags & (cursorbuffer>>VIDEOCURSORSIGNALBELOWSHIFT)) != 0;
         hmap->B_videoula.bytecolours = hmap->B_videoula.bytelut[(hmap->A_videoula.shiftregister>>8)&0xFF];
         hmap->B_vidbuf.lineaddress += hmap->B_vidbuf.altoffset;
         hmap->A_vidbuf.writecode = 0x20;
@@ -802,7 +800,7 @@ R6502ZONEMAP* videowritepcursorgraphics(R6502ZONEMAP* zmap, uintptr_t peripheral
 
   if (!clipped)
   {
-    cursoron = (cursorflags & signalbuffer) != 0;
+    cursoron = (cursorflags & cursorbuffer) != 0;
 
     if (hmap->B_vidbuf.linelevel >= 64)
       hmap->A_vidbuf.writecode = 0x20;
@@ -945,12 +943,12 @@ R6502ZONEMAP* videowritepcursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
   int clipped,cursoron,altwritten;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
   intptr_t lineaddresscopy;
   uint8_t skip;
 
   altwritten = 0;
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
   cursoron = 0;
@@ -965,7 +963,7 @@ R6502ZONEMAP* videowritepcursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral
     {
       if (!(skip & CLIPPEDSKIPFLAG))
       {
-        cursoron = (cursorflags & (signalbuffer>>VIDEOSTEPSIGNALABOVESHIFT)) != 0;
+        cursoron = (cursorflags & (cursorbuffer>>VIDEOCURSORSIGNALABOVESHIFT)) != 0;
         hmap->B_vidbuf.lineaddress += hmap->B_vidbuf.altoffset;
         hmap->A_vidbuf.writecode = 0x10;
       }
@@ -976,7 +974,7 @@ R6502ZONEMAP* videowritepcursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral
     {
       if (!(skip & CLIPPEDBELOWSKIPFLAG))
       {
-        cursoron = (cursorflags & (signalbuffer>>VIDEOSTEPSIGNALBELOWSHIFT)) != 0;
+        cursoron = (cursorflags & (cursorbuffer>>VIDEOCURSORSIGNALBELOWSHIFT)) != 0;
         hmap->B_vidbuf.lineaddress += hmap->B_vidbuf.stride + hmap->B_vidbuf.altoffset;
         hmap->A_vidbuf.writecode = 0x50;
       }
@@ -990,7 +988,7 @@ R6502ZONEMAP* videowritepcursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral
     {
       if (!(skip & CLIPPEDABOVESKIPFLAG))
       {
-        cursoron = (cursorflags & (signalbuffer>>VIDEOSTEPSIGNALABOVESHIFT)) != 0;
+        cursoron = (cursorflags & (cursorbuffer>>VIDEOCURSORSIGNALABOVESHIFT)) != 0;
         hmap->B_vidbuf.lineaddress -= hmap->B_vidbuf.stride - hmap->B_vidbuf.altoffset;
         hmap->A_vidbuf.writecode = 0x20;
       }
@@ -1001,7 +999,7 @@ R6502ZONEMAP* videowritepcursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral
     {
       if (!(skip & CLIPPEDSKIPFLAG))
       {
-        cursoron = (cursorflags & (signalbuffer>>VIDEOSTEPSIGNALBELOWSHIFT)) != 0;
+        cursoron = (cursorflags & (cursorbuffer>>VIDEOCURSORSIGNALBELOWSHIFT)) != 0;
         hmap->B_vidbuf.lineaddress += hmap->B_vidbuf.altoffset;
         hmap->A_vidbuf.writecode = 0x20;
       }
@@ -1049,7 +1047,7 @@ R6502ZONEMAP* videowritepcursorteletext(R6502ZONEMAP* zmap, uintptr_t peripheral
 
   if (!clipped)
   {
-    cursoron = (cursorflags & signalbuffer) != 0;
+    cursoron = (cursorflags & cursorbuffer) != 0;
 
     if (hmap->B_vidbuf.linelevel >= 64)
       hmap->A_vidbuf.writecode = 0x20;

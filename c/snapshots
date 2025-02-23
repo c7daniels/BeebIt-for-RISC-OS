@@ -240,7 +240,7 @@ void snapshotload(FILE *hfile)
   hmap->A_crtc.r[0x11] =readhdr.crtc[0x11];
       /*register 19*/
 //      hmap->screenstartindex = cbuffer[2];
-  hmap->B_crtc.scan_code = (hmap->B_crtc.scan_code&~(3<<VIDEOREADSTARTSHIFT)) | (readhdr.crtc[0x12]<<VIDEOREADSTARTSHIFT);
+  hmap->screenstartindex =readhdr.crtc[0x12];
 
       /*unused*/
 //      fread(cbuffer,1,4,hfile); /*140*/
@@ -491,7 +491,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[2] = hmap->screenstartindex;
 //  cbuffer[3] = 0;
 //  wimpwrite(cbuffer,1,4); /*136*/
-  phdr ->crtc[0x12] =(hmap->B_crtc.scan_code>>VIDEOREADSTARTSHIFT)&3;
+  phdr ->crtc[0x12] =hmap->screenstartindex;
 //  /*unused*/
 //  setword(cbuffer,0);
 //  wimpwrite(cbuffer,1,4); /*140*/
