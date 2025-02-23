@@ -1,0 +1,2694 @@
+/*>videoout.c
+ *
+ * BeebIt - BBC Micro Model B Emulator
+ *
+ * Cycle-level video emulation
+ *
+ * (C) Copyright Crispian Daniels, 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
+ */
+
+#include "hostmap.h"
+#include "videoscale.h"
+
+HOSTMAP* videooutskipeven(HOSTMAP* hmap)
+{
+  return hmap;
+}
+
+HOSTMAP* videooutskipodd(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+
+  buffer += (2<<hmap->A_vidbuf.shift);
+  hmap->B_vidout.address += (hmap->B_vidout.nbits>>2);
+  hmap->A_vidbuf.flags0 = *(uint8_t*)buffer;
+  hmap->A_vidbuf.flags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  return hmap;
+}
+
+HOSTMAP* videooutskipinpairs(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int writeflags0,writeflags1;
+
+  do
+  {
+    buffer += (2<<hmap->A_vidbuf.shift);
+    hmap->B_vidout.address += (hmap->B_vidout.nbits>>2);
+    writeflags0 = *(uint8_t*)buffer;
+    writeflags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  } while (writeflags0 == initialflags && writeflags1 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  hmap->A_vidbuf.flags1 = writeflags1;
+  return hmap;
+}
+
+HOSTMAP* videooutskip(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int writeflags0;
+
+  do
+  {
+    buffer += (1<<hmap->A_vidbuf.shift);
+    hmap->B_vidout.address += (hmap->B_vidout.nbits>>3);
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* videooutblankeven(HOSTMAP* hmap)
+{
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t nwholewords = (hmap->B_vidout.nbits>>5);
+  uint32_t* line = (uint32_t*)hmap->B_vidout.address;
+  int m,n;
+
+  for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    for (m=0; m < nwholewords; m++)
+      line[m] = 0;
+    line[m] &= 0xFFFF0000;
+  }
+  return hmap;
+}
+
+HOSTMAP* videooutblankodd(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t pairnwords = (hmap->B_vidout.nbits>>4);
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  intptr_t m,n;
+
+  buffer += (2<<hmap->A_vidbuf.shift);
+  line = screen;
+  screen += pairnwords;
+  for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    m = pairnwords>>1;
+    line[m] &= 0x0000FFFF;
+    for (m++; m < pairnwords; m++)
+      line[m] = 0;
+  }
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = *(uint8_t*)buffer;
+  hmap->A_vidbuf.flags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  return hmap;
+}
+
+HOSTMAP* videooutblankinpairs(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t pairnwords = (hmap->B_vidout.nbits>>4);
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  int writeflags0,writeflags1,m,n;
+
+  do
+  {
+    buffer += (2<<hmap->A_vidbuf.shift);
+    line = screen;
+    screen += pairnwords;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      for (m = 0; m < pairnwords; m++)
+        line[m] = 0;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+    writeflags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  } while (writeflags0 == initialflags && writeflags1 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  hmap->A_vidbuf.flags1 = writeflags1;
+  return hmap;
+}
+
+HOSTMAP* videooutblank(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t nwords = (hmap->B_vidout.nbits>>5);
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  int writeflags0,m,n;
+
+  do
+  {
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line = screen;
+    screen += nwords;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      for (m = 0; m < nwords; m++)
+        line[m] = 0;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* videooutskip4(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int writeflags0;
+
+  do
+  {
+    buffer += (1<<hmap->A_vidbuf.shift);
+    hmap->B_vidout.address += 4;
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* videooutblank4(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  int writeflags0,n;
+
+  do
+  {
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line = screen;
+    screen += 1;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = 0;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* videooutskip8(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int writeflags0;
+
+  do
+  {
+    buffer += (1<<hmap->A_vidbuf.shift);
+    hmap->B_vidout.address += 8;
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* videooutblank8(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  int writeflags0,n;
+
+  do
+  {
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line = screen;
+    screen += 2;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[1] = line[0] = 0;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotcopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0;
+  int writeflags0,n;
+
+  do
+  {
+    v0 = ((uint32_t*)buffer)[1];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line = screen;
+    screen += 1;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotmiddleaftercopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0;
+  int writeflags0,n;
+
+  do
+  {
+    v0 = ((uint32_t*)buffer)[1];
+    line = screen;
+    screen += 1;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    line[0] = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotmiddlebeforecopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0;
+  int writeflags0,n;
+
+  do
+  {
+    line = screen;
+    screen += 1;
+    line[0] = ((uint32_t*)buffer)[2];
+    line += (hmap->B_vidout.linelength>>2);
+    v0 = ((uint32_t*)buffer)[1];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotlu8double(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1;
+  int writeflags0,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line = screen;
+    screen += 2;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotmiddleafterlu8double(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1;
+  int writeflags0,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    line = screen;
+    screen += 2;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1;
+    }
+    b = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    line[0] = v0; line[1] = v1;
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotmiddlebeforelu8double(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1;
+  int writeflags0,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[2];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    line = screen;
+    screen += 2;
+    line[0] = v0; line[1] = v1;
+    line += (hmap->B_vidout.linelength>>2);
+    b = ((uint32_t*)buffer)[1];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotevenlu8for20(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1;
+  int n;
+
+  b = ((uint32_t*)buffer)[1];
+  v0 = lut[b&0xFF];
+  v1 = lut[(b>>8)&0xFF];
+  v0 |= v1 << 20;
+  line = screen++;
+  for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0;
+  }
+  v0 = lut[(b>>16)&0xFF];
+  v1 = (v0 << 8) | (v1 >> 12);
+  v0 = lut[(b>>24)&0xFF];
+  v1 |= (v0 << 28);
+  line = screen++;
+  for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v1;
+  }
+  v0 >>= 4;
+  for (n = nlines; n > 0; n--, screen += (hmap->B_vidout.linelength>>2))
+  {
+    screen[0] = (screen[0] & 0xFFFF0000) | v0;
+  }
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotoddlu8for20(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address + 2;
+  uint32_t* line;
+  uint32_t b,v0,v1;
+  int n;
+
+  buffer += (1<<hmap->A_vidbuf.shift);
+  b = ((uint32_t*)buffer)[1];
+  buffer += (1<<hmap->A_vidbuf.shift);
+  v1 = lut[b&0xFF];
+  v0 = (v1 << 16);
+  line = screen++;
+  for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0 | (line[0] & 0x0000FFFF);
+  }
+  v0 = lut[(b>>8)&0xFF];
+  v1 = (v0 << 4) | (v1 >> 16);
+  v0 = lut[(b>>16)&0xFF];
+  v1 = (v0 << 24) | v1;
+  line = screen++;
+  for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v1;
+  }
+  v1 = lut[(b>>24)&0xFF];
+  v0 = (v1 << 12) | (v0 >> 8);
+  line = screen++;
+  for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0;
+  }
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = *(uint8_t*)buffer;
+  hmap->A_vidbuf.flags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotevenmiddleafterlu8for20(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,bm,v0,v1,v0m,v1m;
+  int n;
+
+  b = ((uint32_t*)buffer)[1];
+  bm = ((uint32_t*)buffer)[2];
+  v0 = lut[b&0xFF];
+  v1 = lut[(b>>8)&0xFF];
+  v0 |= v1 << 20;
+  line = screen++;
+  for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0;
+  }
+  v0m = lut[bm&0xFF];
+  v1m = lut[(bm>>8)&0xFF];
+  line[0] = v0m | (v1m << 20);
+  v0 = lut[(b>>16)&0xFF];
+  v1 = (v0 << 8) | (v1 >> 12);
+  v0 = lut[(b>>24)&0xFF];
+  v1 |= (v0 << 28);
+  line = screen++;
+  for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v1;
+  }
+  v0m = lut[(bm>>16)&0xFF];
+  v1m = (v0m << 8) | (v1m >> 12);
+  v0m = lut[(bm>>24)&0xFF];
+  line[0] = (v0m << 28) | v1m;
+  v0 >>= 4;
+  for (n = nlines-1; n > 0; n--, screen += (hmap->B_vidout.linelength>>2))
+  {
+    screen[0] = (screen[0] & 0xFFFF0000) | v0;
+  }
+  screen[0] = (screen[0] & 0xFFFF0000) | (v0m >> 4);
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotoddmiddleafterlu8for20(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address + 2;
+  uint32_t* line;
+  uint32_t b,bm,v0,v1,v0m,v1m;
+  int n;
+
+  buffer += (1<<hmap->A_vidbuf.shift);
+  b = ((uint32_t*)buffer)[1];
+  bm = ((uint32_t*)buffer)[2];
+  buffer += (1<<hmap->A_vidbuf.shift);
+  v1 = lut[b&0xFF];
+  v0 = (v1 << 16);
+  line = screen++;
+  for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0 | (line[0] & 0x0000FFFF);
+  }
+  v1m = lut[bm&0xFF];
+  line[0] = (v1m << 16) | (line[0] & 0x0000FFFF);
+  v0 = lut[(b>>8)&0xFF];
+  v1 = (v0 << 4) | (v1 >> 16);
+  v0 = lut[(b>>16)&0xFF];
+  v1 = (v0 << 24) | v1;
+  line = screen++;
+  for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v1;
+  }
+  v0m = lut[(bm>>8)&0xFF];
+  v1m = (v0m << 4) | (v1m >> 16);
+  v0m = lut[(bm>>16)&0xFF];
+  line[0] = (v0m << 24) | v1m;
+  v1 = lut[(b>>24)&0xFF];
+  v0 = (v1 << 12) | (v0 >> 8);
+  line = screen++;
+  for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0;
+  }
+  v1m = lut[(bm>>24)&0xFF];
+  line[0] = (v1m << 12) | (v0m >> 8);
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = *(uint8_t*)buffer;
+  hmap->A_vidbuf.flags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotevenmiddlebeforelu8for20(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,bm,v0,v1,v0m,v1m;
+  int n;
+
+  b = ((uint32_t*)buffer)[1];
+  bm = ((uint32_t*)buffer)[2];
+  v0m = lut[bm&0xFF];
+  v1m = lut[(bm>>8)&0xFF];
+  line = screen++;
+  line[0] = v0m | (v1m << 20);
+  v0 = lut[b&0xFF];
+  v1 = lut[(b>>8)&0xFF];
+  v0 |= v1 << 20;
+  for (n = nlines-1; n > 0; n--)
+  {
+    line += (hmap->B_vidout.linelength>>2);
+    line[0] = v0;
+  }
+  v0m = lut[(bm>>16)&0xFF];
+  v1m = (v0m << 8) | (v1m >> 12);
+  v0m = lut[(bm>>24)&0xFF];
+  line = screen++;
+  line[0] = (v0m << 28) | v1m;
+  v0 = lut[(b>>16)&0xFF];
+  v1 = (v0 << 8) | (v1 >> 12);
+  v0 = lut[(b>>24)&0xFF];
+  v1 |= (v0 << 28);
+  for (n = nlines-1; n > 0; n--)
+  {
+    line += (hmap->B_vidout.linelength>>2);
+    line[0] = v1;
+  }
+  screen[0] = (screen[0] & 0xFFFF0000) | (v0m >> 4);
+  v0 >>= 4;
+  for (n = nlines-1; n > 0; n--)
+  {
+    screen += (hmap->B_vidout.linelength>>2);
+    screen[0] = (screen[0] & 0xFFFF0000) | v0;
+  }
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotoddmiddlebeforelu8for20(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address + 2;
+  uint32_t* line;
+  uint32_t b,bm,v0,v1,v0m,v1m;
+  int n;
+
+  buffer += (1<<hmap->A_vidbuf.shift);
+  b = ((uint32_t*)buffer)[1];
+  bm = ((uint32_t*)buffer)[2];
+  buffer += (1<<hmap->A_vidbuf.shift);
+  v1m = lut[bm&0xFF];
+  line = screen++;
+  line[0] = (v1m << 16) | (line[0] & 0x0000FFFF);
+  v1 = lut[b&0xFF];
+  v0 = (v1 << 16);
+  for (n = nlines-1; n > 0; n--)
+  {
+    line += (hmap->B_vidout.linelength>>2);
+    line[0] = v0 | (line[0] & 0x0000FFFF);
+  }
+  v0m = lut[(bm>>8)&0xFF];
+  v1m = (v0m << 4) | (v1m >> 16);
+  v0m = lut[(bm>>16)&0xFF];
+  line = screen++;
+  line[0] = (v0m << 24) | v1m;
+  v0 = lut[(b>>8)&0xFF];
+  v1 = (v0 << 4) | (v1 >> 16);
+  v0 = lut[(b>>16)&0xFF];
+  v1 = (v0 << 24) | v1;
+  for (n = nlines-1; n > 0; n--)
+  {
+    line += (hmap->B_vidout.linelength>>2);
+    line[0] = v1;
+  }
+  v1m = lut[(bm>>24)&0xFF];
+  line = screen++;
+  line[0] = (v1m << 12) | (v0m >> 8);
+  v1 = lut[(b>>24)&0xFF];
+  v0 = (v1 << 12) | (v0 >> 8);
+  for (n = nlines-1; n > 0; n--)
+  {
+    line += (hmap->B_vidout.linelength>>2);
+    line[0] = v0;
+  }
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = *(uint8_t*)buffer;
+  hmap->A_vidbuf.flags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotpairlu8for20(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1;
+  int writeflags0,writeflags1,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    v0 = lut[b&0xFF];
+    v1 = lut[(b>>8)&0xFF];
+    v0 |= v1 << 20;
+    line = screen++;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    v0 = lut[(b>>16)&0xFF];
+    v1 = (v0 << 8) | (v1 >> 12);
+    v0 = lut[(b>>24)&0xFF];
+    v1 |= (v0 << 28);
+    b = ((uint32_t*)buffer)[1];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line = screen++;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v1;
+    }
+    v1 = lut[b&0xFF];
+    v0 = (v1 << 16) | (v0 >> 4);
+    line = screen++;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    v0 = lut[(b>>8)&0xFF];
+    v1 = (v0 << 4) | (v1 >> 16);
+    v0 = lut[(b>>16)&0xFF];
+    v1 = (v0 << 24) | v1;
+    line = screen++;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v1;
+    }
+    v1 = lut[(b>>24)&0xFF];
+    v0 = (v1 << 12) | (v0 >> 8);
+    line = screen++;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+    writeflags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  } while (writeflags0 == initialflags && writeflags1 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  hmap->A_vidbuf.flags1 = writeflags1;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotpairmiddleafterlu8for20(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,bm,v0,v1,v0m,v1m;
+  int writeflags0,writeflags1,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    v0 = lut[b&0xFF];
+    v1 = lut[(b>>8)&0xFF];
+    v0 |= v1 << 20;
+    line = screen++;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    v0m = lut[bm&0xFF];
+    v1m = lut[(bm>>8)&0xFF];
+    line[0] = v0m | (v1m << 20);
+    v0 = lut[(b>>16)&0xFF];
+    v1 = (v0 << 8) | (v1 >> 12);
+    v0 = lut[(b>>24)&0xFF];
+    v1 |= (v0 << 28);
+    line = screen++;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v1;
+    }
+    v0m = lut[(bm>>16)&0xFF];
+    v1m = (v0m << 8) | (v1m >> 12);
+    v0m = lut[(bm>>24)&0xFF];
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line[0] = (v0m << 28) | v1m;
+    v1 = lut[b&0xFF];
+    v0 = (v1 << 16) | (v0 >> 4);
+    line = screen++;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    v1m = lut[bm&0xFF];
+    line[0] = (v1m << 16) | (v0m >> 4);
+    v0 = lut[(b>>8)&0xFF];
+    v1 = (v0 << 4) | (v1 >> 16);
+    v0 = lut[(b>>16)&0xFF];
+    v1 = (v0 << 24) | v1;
+    line = screen++;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v1;
+    }
+    v0m = lut[(bm>>8)&0xFF];
+    v1m = (v0m << 4) | (v1m >> 16);
+    v0m = lut[(bm>>16)&0xFF];
+    line[0] = (v0m << 24) | v1m;
+    v1 = lut[(b>>24)&0xFF];
+    v0 = (v1 << 12) | (v0 >> 8);
+    line = screen++;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    v1m = lut[(bm>>24)&0xFF];
+    line[0] = (v1m << 12) | (v0m >> 8);
+    writeflags0 = *(uint8_t*)buffer;
+    writeflags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  } while (writeflags0 == initialflags && writeflags1 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  hmap->A_vidbuf.flags1 = writeflags1;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotpairmiddlebeforelu8for20(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,bm,v0,v1,v0m,v1m;
+  int writeflags0,writeflags1,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    v0m = lut[bm&0xFF];
+    v1m = lut[(bm>>8)&0xFF];
+    line = screen++;
+    line[0] = v0m | (v1m << 20);
+    v0 = lut[b&0xFF];
+    v1 = lut[(b>>8)&0xFF];
+    v0 |= v1 << 20;
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0;
+    }
+    v0m = lut[(bm>>16)&0xFF];
+    v1m = (v0m << 8) | (v1m >> 12);
+    v0m = lut[(bm>>24)&0xFF];
+    line = screen++;
+    line[0] = (v0m << 28) | v1m;
+    v0 = lut[(b>>16)&0xFF];
+    v1 = (v0 << 8) | (v1 >> 12);
+    v0 = lut[(b>>24)&0xFF];
+    v1 |= (v0 << 28);
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v1;
+    }
+    v1m = lut[bm&0xFF];
+    line = screen++;
+    line[0] = (v1m << 16) | (v0m >> 4);
+    v1 = lut[b&0xFF];
+    v0 = (v1 << 16) | (v0 >> 4);
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0;
+    }
+    v0m = lut[(bm>>8)&0xFF];
+    v1m = (v0m << 4) | (v1m >> 16);
+    v0m = lut[(bm>>16)&0xFF];
+    line = screen++;
+    line[0] = (v0m << 24) | v1m;
+    v0 = lut[(b>>8)&0xFF];
+    v1 = (v0 << 4) | (v1 >> 16);
+    v0 = lut[(b>>16)&0xFF];
+    v1 = (v0 << 24) | v1;
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v1;
+    }
+    v1m = lut[(bm>>24)&0xFF];
+    line = screen++;
+    line[0] = (v1m << 12) | (v0m >> 8);
+    v1 = lut[(b>>24)&0xFF];
+    v0 = (v1 << 12) | (v0 >> 8);
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+    writeflags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  } while (writeflags0 == initialflags && writeflags1 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  hmap->A_vidbuf.flags1 = writeflags1;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotlu8for32M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t multiple = hmap->B_vidout.nlutbits>>5;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue;
+  uint32_t b,v0;
+  int writeflags0,i,n;
+  intptr_t m;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (i=0; i<4; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      b >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+      }
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotmiddleafterlu8for32M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t multiple = hmap->B_vidout.nlutbits>>5;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue,* luem;
+  uint32_t b,bm,v0;
+  int writeflags0,i,n;
+  intptr_t m;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (i=0; i<4; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+        line[0] = *luem++;
+      }
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotmiddlebeforelu8for32M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t multiple = hmap->B_vidout.nlutbits>>5;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue,* luem;
+  uint32_t b,bm,v0;
+  int writeflags0,i,n;
+  intptr_t m;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (i=0; i<4; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        line[0] = *luem++;
+        for (n = nlines-1; n > 0; n--)
+        {
+          line += (hmap->B_vidout.linelength>>2);
+          line[0] = v0;
+        }
+      }
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotlu8for40M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue;
+  uint32_t b,v0,v1;
+  int writeflags0,n,shift;
+  intptr_t m;
+  intptr_t stop1 = hmap->B_vidout.nlutbits;
+  intptr_t stop2 = stop1+stop1;
+  intptr_t stop3 = stop2+stop1;
+  intptr_t stop4 = stop3+stop1;
+
+  v0 = 0;
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    lue = &lut[(b&0xFF)<<lus];
+    b >>= 8;
+    for (m = (stop1>>5); m > 0; m--)
+    {
+      v0 = *lue++;
+      line = screen++;
+      for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+      {
+        line[0] = v0;
+      }
+    }
+    v0 = *lue++;
+    lue = &lut[(b&0xFF)<<lus];
+    b >>= 8;
+    shift = stop1&0x1F;
+    for (m = (stop2>>5)-(stop1>>5); m > 0; m--)
+    {
+      v1 = *lue++;
+      v0 |= v1<<shift;
+      line = screen++;
+      for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+      {
+        line[0] = v0;
+      }
+      v0 = v1>>(32-shift);
+    }
+    v1 = *lue++;
+    v0 |= v1<<shift;
+    lue = &lut[(b&0xFF)<<lus];
+    b >>= 8;
+    shift = stop2&0x1F;
+    for (m = (stop3>>5)-(stop2>>5); m > 0; m--)
+    {
+      v1 = *lue++;
+      v0 |= v1<<shift;
+      line = screen++;
+      for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+      {
+        line[0] = v0;
+      }
+      v0 = v1>>(32-shift);
+    }
+    v1 = *lue++;
+    v0 |= v1<<shift;
+    lue = &lut[(b&0xFF)<<lus];
+    shift = stop3&0x1F;
+    for (m = (stop4>>5)-(stop3>>5); m > 0; m--)
+    {
+      v1 = *lue++;
+      v0 |= v1<<shift;
+      line = screen++;
+      for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+      {
+        line[0] = v0;
+      }
+      v0 = v1>>(32-shift);
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotmiddleafterlu8for40M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue,* luem;
+  uint32_t b,bm,v0,v1,v0m,v1m;
+  int writeflags0,n,shift;
+  intptr_t m;
+  intptr_t stop1 = hmap->B_vidout.nlutbits;
+  intptr_t stop2 = stop1+stop1;
+  intptr_t stop3 = stop2+stop1;
+  intptr_t stop4 = stop3+stop1;
+
+  v0 = 0; v0m = 0;
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    lue = &lut[(b&0xFF)<<lus];
+    luem = &lut[(bm&0xFF)<<lus];
+    b >>= 8; bm >>= 8;
+    for (m = (stop1>>5); m > 0; m--)
+    {
+      v0 = *lue++; v0m = *luem++;
+      line = screen++;
+      for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+      {
+        line[0] = v0;
+      }
+      line[0] = v0m;
+    }
+    v0 = *lue++; v0m = *luem++;
+    lue = &lut[(b&0xFF)<<lus];
+    luem = &lut[(bm&0xFF)<<lus];
+    b >>= 8; bm >>= 8;
+    shift = stop1&0x1F;
+    for (m = (stop2>>5)-(stop1>>5); m > 0; m--)
+    {
+      v1 = *lue++; v1m = *luem++;
+      v0 |= v1<<shift;
+      v0m |= v1m<<shift;
+      line = screen++;
+      for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+      {
+        line[0] = v0;
+      }
+      line[0] = v0m;
+      v0 = v1>>(32-shift);
+      v0m = v1m>>(32-shift);
+    }
+    v1 = *lue++; v1m = *luem++;
+    v0 |= v1<<shift;
+    v0m |= v1m<<shift;
+    lue = &lut[(b&0xFF)<<lus];
+    luem = &lut[(bm&0xFF)<<lus];
+    b >>= 8; bm >>= 8;
+    shift = stop2&0x1F;
+    for (m = (stop3>>5)-(stop2>>5); m > 0; m--)
+    {
+      v1 = *lue++; v1m = *luem++;
+      v0 |= v1<<shift;
+      v0m |= v1m<<shift;
+      line = screen++;
+      for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+      {
+        line[0] = v0;
+      }
+      line[0] = v0m;
+      v0 = v1>>(32-shift);
+      v0m = v1m>>(32-shift);
+    }
+    v1 = *lue++; v1m = *luem++;
+    v0 |= v1<<shift;
+    v0m |= v1m<<shift;
+    lue = &lut[(b&0xFF)<<lus];
+    luem = &lut[(bm&0xFF)<<lus];
+    shift = stop3&0x1F;
+    for (m = (stop4>>5)-(stop3>>5); m > 0; m--)
+    {
+      v1 = *lue++; v1m = *luem++;
+      v0 |= v1<<shift;
+      v0m |= v1m<<shift;
+      line = screen++;
+      for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+      {
+        line[0] = v0;
+      }
+      line[0] = v0m;
+      v0 = v1>>(32-shift);
+      v0m = v1m>>(32-shift);
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out8halfdotmiddlebeforelu8for40M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue,* luem;
+  uint32_t b,bm,v0,v1,v0m,v1m;
+  int writeflags0,n,shift;
+  intptr_t m;
+  intptr_t stop1 = hmap->B_vidout.nlutbits;
+  intptr_t stop2 = stop1+stop1;
+  intptr_t stop3 = stop2+stop1;
+  intptr_t stop4 = stop3+stop1;
+
+  v0 = 0; v0m = 0;
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    lue = &lut[(b&0xFF)<<lus];
+    luem = &lut[(bm&0xFF)<<lus];
+    b >>= 8; bm >>= 8;
+    for (m = (stop1>>5); m > 0; m--)
+    {
+      v0 = *lue++; v0m = *luem++;
+      line = screen++;
+      line[0] = v0m;
+      for (n = nlines-1; n > 0; n--)
+      {
+        line += (hmap->B_vidout.linelength>>2);
+        line[0] = v0;
+      }
+    }
+    v0 = *lue++; v0m = *luem++;
+    lue = &lut[(b&0xFF)<<lus];
+    luem = &lut[(bm&0xFF)<<lus];
+    b >>= 8; bm >>= 8;
+    shift = stop1&0x1F;
+    for (m = (stop2>>5)-(stop1>>5); m > 0; m--)
+    {
+      v1 = *lue++; v1m = *luem++;
+      v0 |= v1<<shift;
+      v0m |= v1m<<shift;
+      line = screen++;
+      line[0] = v0m;
+      for (n = nlines-1; n > 0; n--)
+      {
+        line += (hmap->B_vidout.linelength>>2);
+        line[0] = v0;
+      }
+      v0 = v1>>(32-shift);
+      v0m = v1m>>(32-shift);
+    }
+    v1 = *lue++; v1m = *luem++;
+    v0 |= v1<<shift;
+    v0m |= v1m<<shift;
+    lue = &lut[(b&0xFF)<<lus];
+    luem = &lut[(bm&0xFF)<<lus];
+    b >>= 8; bm >>= 8;
+    shift = stop2&0x1F;
+    for (m = (stop3>>5)-(stop2>>5); m > 0; m--)
+    {
+      v1 = *lue++; v1m = *luem++;
+      v0 |= v1<<shift;
+      v0m |= v1m<<shift;
+      line = screen++;
+      line[0] = v0m;
+      for (n = nlines-1; n > 0; n--)
+      {
+        line += (hmap->B_vidout.linelength>>2);
+        line[0] = v0;
+      }
+      v0 = v1>>(32-shift);
+      v0m = v1m>>(32-shift);
+    }
+    v1 = *lue++; v1m = *luem++;
+    v0 |= v1<<shift;
+    v0m |= v1m<<shift;
+    lue = &lut[(b&0xFF)<<lus];
+    luem = &lut[(bm&0xFF)<<lus];
+    shift = stop3&0x1F;
+    for (m = (stop4>>5)-(stop3>>5); m > 0; m--)
+    {
+      v1 = *lue++; v1m = *luem++;
+      v0 |= v1<<shift;
+      v0m |= v1m<<shift;
+      line = screen++;
+      line[0] = v0m;
+      for (n = nlines-1; n > 0; n--)
+      {
+        line += (hmap->B_vidout.linelength>>2);
+        line[0] = v0;
+      }
+      v0 = v1>>(32-shift);
+      v0m = v1m>>(32-shift);
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotevencopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0;
+  int n;
+
+  v0 = ((uint32_t*)buffer)[1];
+  line = screen++;
+  for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0;
+  }
+  v0 = ((uint32_t*)buffer)[2] & 0x0000FFFF;
+  for (n = nlines; n > 0; n--, screen += (hmap->B_vidout.linelength>>2))
+  {
+    screen[0] = (screen[0] & 0xFFFF0000) | v0;
+  }
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotoddcopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address + 1;
+  uint32_t* line;
+  uint32_t v0,v1;
+  int n;
+
+  buffer += (1<<hmap->A_vidbuf.shift);
+  v1 = ((uint32_t*)buffer)[1];
+  v0 = (v1<<16);
+  line = screen++;
+  for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0 | (line[0] & 0x0000FFFF);
+  }
+  v0 = (((uint32_t*)buffer)[2]<<16)|(v1>>16);
+  buffer += (1<<hmap->A_vidbuf.shift);
+  line = screen++;
+  for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0;
+  }
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = *(uint8_t*)buffer;
+  hmap->A_vidbuf.flags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotevenmiddleaftercopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0;
+  int n;
+
+  v0 = ((uint32_t*)buffer)[1];
+  line = screen++;
+  for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0;
+  }
+  line[0] = ((uint32_t*)buffer)[3];
+  v0 = ((uint32_t*)buffer)[2] & 0x0000FFFF;
+  for (n = nlines-1; n > 0; n--, screen += (hmap->B_vidout.linelength>>2))
+  {
+    screen[0] = (screen[0] & 0xFFFF0000) | v0;
+  }
+  screen[0] = (screen[0] & 0xFFFF0000) | (((uint32_t*)buffer)[4] & 0x0000FFFF);
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotoddmiddleaftercopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address + 1;
+  uint32_t* line;
+  uint32_t v0,v1,v1m;
+  int n;
+
+  buffer += (1<<hmap->A_vidbuf.shift);
+  v1 = ((uint32_t*)buffer)[1];
+  v0 = (v1<<16);
+  line = screen++;
+  for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0 | (line[0] & 0x0000FFFF);
+  }
+  v1m = ((uint32_t*)buffer)[3];
+  line[0] = (v1m<<16) | (line[0] & 0x0000FFFF);
+  v0 = (((uint32_t*)buffer)[2]<<16)|(v1>>16);
+  line = screen++;
+  for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+  {
+    line[0] = v0;
+  }
+  line[0] = (((uint32_t*)buffer)[4]<<16)|(v1m>>16);
+  buffer += (1<<hmap->A_vidbuf.shift);
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = *(uint8_t*)buffer;
+  hmap->A_vidbuf.flags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotevenmiddlebeforecopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0;
+  int n;
+
+  line = screen++;
+  line[0] = ((uint32_t*)buffer)[3];
+  v0 = ((uint32_t*)buffer)[1];
+  for (n = nlines-1; n > 0; n--)
+  {
+    line += (hmap->B_vidout.linelength>>2);
+    line[0] = v0;
+  }
+  screen[0] = (screen[0] & 0xFFFF0000) | (((uint32_t*)buffer)[4] & 0x0000FFFF);
+  v0 = ((uint32_t*)buffer)[2] & 0x0000FFFF;
+  for (n = nlines-1; n > 0; n--)
+  {
+    screen += (hmap->B_vidout.linelength>>2);
+    screen[0] = (screen[0] & 0xFFFF0000) | v0;
+  }
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotoddmiddlebeforecopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address + 1;
+  uint32_t* line;
+  uint32_t v0,v1,v1m;
+  int n;
+
+  buffer += (1<<hmap->A_vidbuf.shift);
+  v1m = ((uint32_t*)buffer)[3];
+  line = screen++;
+  line[0] = (v1m<<16) | (line[0] & 0x0000FFFF);
+  v1 = ((uint32_t*)buffer)[1];
+  v0 = (v1<<16);
+  for (n = nlines-1; n > 0; n--)
+  {
+    line += (hmap->B_vidout.linelength>>2);
+    line[0] = v0 | (line[0] & 0x0000FFFF);
+  }
+  line = screen++;
+  line[0] = (((uint32_t*)buffer)[4]<<16)|(v1m>>16);
+  v0 = (((uint32_t*)buffer)[2]<<16)|(v1>>16);
+  buffer += (1<<hmap->A_vidbuf.shift);
+  for (n = nlines-1; n > 0; n--)
+  {
+    line += (hmap->B_vidout.linelength>>2);
+    line[0] = v0;
+  }
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = *(uint8_t*)buffer;
+  hmap->A_vidbuf.flags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotpaircopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0,v1;
+  int writeflags0,writeflags1,n;
+
+  do
+  {
+    v0 = ((uint32_t*)buffer)[1];
+    line = screen++;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    v0 = ((uint32_t*)buffer)[2] & 0x0000FFFF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+    v1 = ((uint32_t*)buffer)[1];
+    v0 |= (v1<<16);
+    line = screen++;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    v0 = (((uint32_t*)buffer)[2]<<16)|(v1>>16);
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line = screen++;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+    writeflags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  } while (writeflags0 == initialflags && writeflags1 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  hmap->A_vidbuf.flags1 = writeflags1;
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotpairmiddleaftercopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0,v0m,v1,v1m;
+  int writeflags0,writeflags1,n;
+
+  do
+  {
+    v0 = ((uint32_t*)buffer)[1];
+    line = screen++;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    v0 = ((uint32_t*)buffer)[2] & 0x0000FFFF;
+    line[0] = ((uint32_t*)buffer)[3];
+    v0m = ((uint32_t*)buffer)[4] & 0x0000FFFF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+    v1 = ((uint32_t*)buffer)[1];
+    v0 |= (v1<<16);
+    v1m = ((uint32_t*)buffer)[3];
+    line = screen++;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    line[0] = (v1m<<16) | v0m;
+    v0 = (((uint32_t*)buffer)[2]<<16)|(v1>>16);
+    line = screen++;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0;
+    }
+    line[0] = (((uint32_t*)buffer)[4]<<16)|(v1m>>16);
+    buffer += (1<<hmap->A_vidbuf.shift);
+    writeflags0 = *(uint8_t*)buffer;
+    writeflags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  } while (writeflags0 == initialflags && writeflags1 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  hmap->A_vidbuf.flags1 = writeflags1;
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotpairmiddlebeforecopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0,v0m,v1,v1m;
+  int writeflags0,writeflags1,n;
+
+  do
+  {
+    line = screen++;
+    line[0] = ((uint32_t*)buffer)[3];
+    v0 = ((uint32_t*)buffer)[1];
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0;
+    }
+    v0 = ((uint32_t*)buffer)[2] & 0x0000FFFF;
+    v0m = ((uint32_t*)buffer)[4] & 0x0000FFFF;
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line = screen++;
+    v1m = ((uint32_t*)buffer)[3];
+    line[0] = (v1m<<16) | v0m;
+    v1 = ((uint32_t*)buffer)[1];
+    v0 |= (v1<<16);
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0;
+    }
+    line = screen++;
+    v0 = (((uint32_t*)buffer)[2]<<16)|(v1>>16);
+    line[0] = (((uint32_t*)buffer)[4]<<16)|(v1m>>16);
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+    writeflags1 = *(uint8_t*)(buffer+(1<<hmap->A_vidbuf.shift));
+  } while (writeflags0 == initialflags && writeflags1 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  hmap->A_vidbuf.flags1 = writeflags1;
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotlu8double(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1,v2;
+  int writeflags0,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[b>>24]<<16) | lut[(b>>16)&0xFF];
+    b = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    v2 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    line = screen;
+    screen += 3;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1; line[2] = v2;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotmiddleafterlu8double(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1,v2;
+  int writeflags0,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[b>>24]<<16) | lut[(b>>16)&0xFF];
+    b = ((uint32_t*)buffer)[2];
+    v2 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    line = screen;
+    screen += 3;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1; line[2] = v2;
+    }
+    b = ((uint32_t*)buffer)[3];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[b>>24]<<16) | lut[(b>>16)&0xFF];
+    b = ((uint32_t*)buffer)[4];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    v2 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    line[0] = v0; line[1] = v1; line[2] = v2;
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotmiddlebeforelu8double(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1,v2;
+  int writeflags0,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[3];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[b>>24]<<16) | lut[(b>>16)&0xFF];
+    b = ((uint32_t*)buffer)[4];
+    v2 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    line = screen;
+    screen += 3;
+    line[0] = v0; line[1] = v1; line[2] = v2;
+    b = ((uint32_t*)buffer)[1];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[b>>24]<<16) | lut[(b>>16)&0xFF];
+    b = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    v2 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0; line[1] = v1; line[2] = v2;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotlu8for32M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t multiple = hmap->B_vidout.nlutbits>>5;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue;
+  uint32_t b,v0;
+  int writeflags0,i,n;
+  intptr_t m;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    for (i=0; i<4; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      b >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+      }
+    }
+    b = ((uint32_t*)buffer)[2];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (; i<6; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      b >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+      }
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotmiddleafterlu8for32M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t multiple = hmap->B_vidout.nlutbits>>5;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue,* luem;
+  uint32_t b,bm,v0;
+  int writeflags0,i,n;
+  intptr_t m;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[3];
+    for (i=0; i<4; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+        line[0] = *luem++;
+      }
+    }
+    b = ((uint32_t*)buffer)[2];
+    bm = ((uint32_t*)buffer)[4];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (; i<6; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+        line[0] = *luem++;
+      }
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out12quarterdotmiddlebeforelu8for32M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t multiple = hmap->B_vidout.nlutbits>>5;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue,* luem;
+  uint32_t b,bm,v0;
+  int writeflags0,i,n;
+  intptr_t m;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[3];
+    for (i=0; i<4; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        line[0] = *luem++;
+        for (n = nlines-1; n > 0; n--)
+        {
+          line += (hmap->B_vidout.linelength>>2);
+          line[0] = v0;
+        }
+      }
+    }
+    b = ((uint32_t*)buffer)[2];
+    bm = ((uint32_t*)buffer)[4];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (; i<6; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        line[0] = *luem++;
+        for (n = nlines-1; n > 0; n--)
+        {
+          line += (hmap->B_vidout.linelength>>2);
+          line[0] = v0;
+        }
+      }
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out24eighthdotcopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0,v1,v2;
+  int writeflags0,n;
+
+  do
+  {
+    v0 = ((uint32_t*)buffer)[1];
+    v1 = ((uint32_t*)buffer)[2];
+    v2 = ((uint32_t*)buffer)[3];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line = screen;
+    screen += 3;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1; line[2] = v2;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out24eighthdotmiddleaftercopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0,v1,v2;
+  int writeflags0,n;
+
+  do
+  {
+    v0 = ((uint32_t*)buffer)[1];
+    v1 = ((uint32_t*)buffer)[2];
+    v2 = ((uint32_t*)buffer)[3];
+    line = screen;
+    screen += 3;
+    for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1; line[2] = v2;
+    }
+    line[0] = ((uint32_t*)buffer)[4];
+    line[1] = ((uint32_t*)buffer)[5];
+    line[2] = ((uint32_t*)buffer)[6];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out24eighthdotmiddlebeforecopy(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t v0,v1,v2;
+  int writeflags0,n;
+
+  do
+  {
+    line = screen;
+    screen += 3;
+    line[0] = ((uint32_t*)buffer)[4];
+    line[1] = ((uint32_t*)buffer)[5];
+    line[2] = ((uint32_t*)buffer)[6];
+    v0 = ((uint32_t*)buffer)[1];
+    v1 = ((uint32_t*)buffer)[2];
+    v2 = ((uint32_t*)buffer)[3];
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0; line[1] = v1; line[2] = v2;
+    }
+    buffer += (1<<hmap->A_vidbuf.shift);
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out24eighthdotlu8double(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1;
+  int writeflags0,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    line = screen;
+    screen += 2;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1;
+    }
+    b = ((uint32_t*)buffer)[2];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    line = screen;
+    screen += 2;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1;
+    }
+    b = ((uint32_t*)buffer)[3];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    line = screen;
+    screen += 2;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out24eighthdotmiddleafterlu8double(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1;
+  int writeflags0,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    line = screen;
+    screen += 2;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1;
+    }
+    b = ((uint32_t*)buffer)[4];
+    line[0] = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    line[1] = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    b = ((uint32_t*)buffer)[2];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    line = screen;
+    screen += 2;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1;
+    }
+    b = ((uint32_t*)buffer)[5];
+    line[0] = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    line[1] = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    b = ((uint32_t*)buffer)[3];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    line = screen;
+    screen += 2;
+    for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+    {
+      line[0] = v0; line[1] = v1;
+    }
+    b = ((uint32_t*)buffer)[6];
+    line[0] = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    line[1] = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out24eighthdotmiddlebeforelu8double(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  uint32_t b,v0,v1;
+  int writeflags0,n;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[4];
+    line = screen;
+    screen += 2;
+    line[0] = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    line[1] = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    b = ((uint32_t*)buffer)[1];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0; line[1] = v1;
+    }
+    b = ((uint32_t*)buffer)[5];
+    line = screen;
+    screen += 2;
+    line[0] = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    line[1] = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    b = ((uint32_t*)buffer)[2];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0; line[1] = v1;
+    }
+    b = ((uint32_t*)buffer)[6];
+    line = screen;
+    screen += 2;
+    line[0] = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    line[1] = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    b = ((uint32_t*)buffer)[3];
+    v0 = (lut[(b>>8)&0xFF]<<16) | lut[b&0xFF];
+    v1 = (lut[(b>>24)&0xFF]<<16) | lut[(b>>16)&0xFF];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (n = nlines-1; n > 0; n--)
+    {
+      line += (hmap->B_vidout.linelength>>2);
+      line[0] = v0; line[1] = v1;
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out24eighthdotlu8for32M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t multiple = hmap->B_vidout.nlutbits>>5;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue;
+  uint32_t b,v0;
+  int writeflags0,i,n;
+  intptr_t m;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    for (i=0; i<4; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      b >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+      }
+    }
+    b = ((uint32_t*)buffer)[2];
+    for (; i<8; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      b >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+      }
+    }
+    b = ((uint32_t*)buffer)[3];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (; i<12; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      b >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+      }
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out24eighthdotmiddleafterlu8for32M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t multiple = hmap->B_vidout.nlutbits>>5;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue,* luem;
+  uint32_t b,bm,v0;
+  int writeflags0,i,n;
+  intptr_t m;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[4];
+    for (i=0; i<4; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+        line[0] = *luem++;
+      }
+    }
+    b = ((uint32_t*)buffer)[2];
+    bm = ((uint32_t*)buffer)[5];
+    for (; i<8; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+        line[0] = *luem++;
+      }
+    }
+    b = ((uint32_t*)buffer)[3];
+    bm = ((uint32_t*)buffer)[6];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (; i<12; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        for (n = nlines-1; n > 0; n--, line += (hmap->B_vidout.linelength>>2))
+        {
+          line[0] = v0;
+        }
+        line[0] = *luem++;
+      }
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTMAP* video4out24eighthdotmiddlebeforelu8for32M(HOSTMAP* hmap)
+{
+  intptr_t buffer = hmap->B_vidbuf.address;
+  int initialflags = hmap->A_vidbuf.flags0;
+  int nlines = hmap->A_vidout.linescale;
+  intptr_t multiple = hmap->B_vidout.nlutbits>>5;
+  int lus = hmap->A_vidout.lutshift-2;
+  const uint32_t* lut = (const uint32_t*)hmap->B_vidout.lut;
+  uint32_t* screen = (uint32_t*)hmap->B_vidout.address;
+  uint32_t* line;
+  const uint32_t* lue,* luem;
+  uint32_t b,bm,v0;
+  int writeflags0,i,n;
+  intptr_t m;
+
+  do
+  {
+    b = ((uint32_t*)buffer)[1];
+    bm = ((uint32_t*)buffer)[4];
+    for (i=0; i<4; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        line[0] = *luem++;
+        for (n = nlines-1; n > 0; n--)
+        {
+          line += (hmap->B_vidout.linelength>>2);
+          line[0] = v0;
+        }
+      }
+    }
+    b = ((uint32_t*)buffer)[2];
+    bm = ((uint32_t*)buffer)[5];
+    for (; i<8; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        line[0] = *luem++;
+        for (n = nlines-1; n > 0; n--)
+        {
+          line += (hmap->B_vidout.linelength>>2);
+          line[0] = v0;
+        }
+      }
+    }
+    b = ((uint32_t*)buffer)[3];
+    bm = ((uint32_t*)buffer)[6];
+    buffer += (1<<hmap->A_vidbuf.shift);
+    for (; i<12; i++)
+    {
+      lue = &lut[(b&0xFF)<<lus];
+      luem = &lut[(bm&0xFF)<<lus];
+      b >>= 8;
+      bm >>= 8;
+      for (m = multiple; m > 0; m--)
+      {
+        v0 = *lue++;
+        line = screen++;
+        line[0] = *luem++;
+        for (n = nlines-1; n > 0; n--)
+        {
+          line += (hmap->B_vidout.linelength>>2);
+          line[0] = v0;
+        }
+      }
+    }
+    writeflags0 = *(uint8_t*)buffer;
+  } while (writeflags0 == initialflags);
+
+  hmap->B_vidbuf.address = (intptr_t)buffer;
+  hmap->B_vidout.address = (intptr_t)screen;
+  hmap->A_vidbuf.flags0 = writeflags0;
+  return hmap;
+}
+
+HOSTVIDEOOP video4out8halfdotcopyops[5] =
+{
+  videooutskip4,
+  videooutblank4,
+  video4out8halfdotcopy,
+  video4out8halfdotmiddleaftercopy,
+  video4out8halfdotmiddlebeforecopy
+};
+
+HOSTVIDEOOP video4out8halfdotlu8doubleops[5] =
+{
+  videooutskip8,
+  videooutblank8,
+  video4out8halfdotlu8double,
+  video4out8halfdotmiddleafterlu8double,
+  video4out8halfdotmiddlebeforelu8double
+};
+
+HOSTVIDEOOP video4out8halfdotevenlu8for20ops[5] =
+{
+  0,
+  0,
+  video4out8halfdotevenlu8for20,
+  video4out8halfdotevenmiddleafterlu8for20,
+  video4out8halfdotevenmiddlebeforelu8for20
+};
+
+HOSTVIDEOOP video4out8halfdotoddlu8for20ops[5] =
+{
+  0,
+  0,
+  video4out8halfdotoddlu8for20,
+  video4out8halfdotoddmiddleafterlu8for20,
+  video4out8halfdotoddmiddlebeforelu8for20
+};
+
+HOSTVIDEOOP video4out8halfdotpairlu8for20ops[5] =
+{
+  0,
+  0,
+  video4out8halfdotpairlu8for20,
+  video4out8halfdotpairmiddleafterlu8for20,
+  video4out8halfdotpairmiddlebeforelu8for20
+};
+
+HOSTVIDEOOP video4out8halfdotlu8for32Mops[5] =
+{
+  0,
+  0,
+  video4out8halfdotlu8for32M,
+  video4out8halfdotmiddleafterlu8for32M,
+  video4out8halfdotmiddlebeforelu8for32M
+};
+
+HOSTVIDEOOP video4out8halfdotlu8for40Mops[5] =
+{
+  0,
+  0,
+  video4out8halfdotlu8for40M,
+  video4out8halfdotmiddleafterlu8for40M,
+  video4out8halfdotmiddlebeforelu8for40M
+};
+
+HOSTVIDEOOP video4out12quarterdotevencopyloopops[5] =
+{
+  0,
+  0,
+  video4out12quarterdotevencopy,
+  video4out12quarterdotevenmiddleaftercopy,
+  video4out12quarterdotevenmiddlebeforecopy
+};
+
+HOSTVIDEOOP video4out12quarterdotoddcopyloopops[5] =
+{
+  0,
+  0,
+  video4out12quarterdotoddcopy,
+  video4out12quarterdotoddmiddleaftercopy,
+  video4out12quarterdotoddmiddlebeforecopy
+};
+
+HOSTVIDEOOP video4out12quarterdotpaircopyloopops[5] =
+{
+  0,
+  0,
+  video4out12quarterdotpaircopy,
+  video4out12quarterdotpairmiddleaftercopy,
+  video4out12quarterdotpairmiddlebeforecopy
+};
+
+HOSTVIDEOOP video4out12quarterdotlu8doubleops[5] =
+{
+  0,
+  0,
+  video4out12quarterdotlu8double,
+  video4out12quarterdotmiddleafterlu8double,
+  video4out12quarterdotmiddlebeforelu8double
+};
+
+HOSTVIDEOOP video4out12quarterdotlu8for32Mops[5] =
+{
+  0,
+  0,
+  video4out12quarterdotlu8for32M,
+  video4out12quarterdotmiddleafterlu8for32M,
+  video4out12quarterdotmiddlebeforelu8for32M
+};
+
+HOSTVIDEOOP video4out24eighthdotcopyops[5] =
+{
+  0,
+  0,
+  video4out24eighthdotcopy,
+  video4out24eighthdotmiddleaftercopy,
+  video4out24eighthdotmiddlebeforecopy
+};
+
+HOSTVIDEOOP video4out24eighthdotlu8doubleops[5] =
+{
+  0,
+  0,
+  video4out24eighthdotlu8double,
+  video4out24eighthdotmiddleafterlu8double,
+  video4out24eighthdotmiddlebeforelu8double
+};
+
+HOSTVIDEOOP video4out24eighthdotlu8for32Mops[5] =
+{
+  0,
+  0,
+  video4out24eighthdotlu8for32M,
+  video4out24eighthdotmiddleafterlu8for32M,
+  video4out24eighthdotmiddlebeforelu8for32M
+};
