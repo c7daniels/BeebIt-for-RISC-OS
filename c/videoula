@@ -283,12 +283,12 @@ R6502ZONEMAP* videoulateletextbblacklevel(R6502ZONEMAP* zmap, uintptr_t peripher
 R6502ZONEMAP* videoulacursorblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
-  if (cursorflags & signalbuffer)
+  if (cursorflags & cursorbuffer)
   {
     if (hmap->A_videoula.blacklevelnphys != 7)
       videoulasetblacklevelnphys(hmap, 7);
@@ -306,9 +306,9 @@ R6502ZONEMAP* videoulacursorgraphicsblacklevel(R6502ZONEMAP* zmap, uintptr_t per
   HOSTMAP* hmap = (HOSTMAP*)zmap;
   int nphys;
   uintptr_t bc;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
   if (!(hmap->A_crtc.c9 & 8))
@@ -316,13 +316,13 @@ R6502ZONEMAP* videoulacursorgraphicsblacklevel(R6502ZONEMAP* zmap, uintptr_t per
     bc = hmap->B_videoula.bytelut[hmap->A_videoula.shiftregister&0xFF];
     nphys = getnphys(hmap, (bc>>28)&0xF);
 
-    if (cursorflags & signalbuffer)
+    if (cursorflags & cursorbuffer)
       nphys ^= 7;
 
     if (hmap->A_videoula.blacklevelnphys != nphys)
       videoulasetblacklevelnphys(hmap, nphys);
   }
-  else if (cursorflags & signalbuffer)
+  else if (cursorflags & cursorbuffer)
   {
     if (hmap->A_videoula.blacklevelnphys != 7)
       videoulasetblacklevelnphys(hmap, 7);
@@ -339,10 +339,10 @@ R6502ZONEMAP* videoulacursorteletextblacklevel(R6502ZONEMAP* zmap, uintptr_t per
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
   int nphys;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
   const uint8_t* p = (const uint8_t*)hmap->B_teletext.lue2;
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
   if (p[0] & 1)
@@ -350,7 +350,7 @@ R6502ZONEMAP* videoulacursorteletextblacklevel(R6502ZONEMAP* zmap, uintptr_t per
   else
     nphys = (hmap->B_teletext.colours>>24)&7;
 
-  if (cursorflags & signalbuffer)
+  if (cursorflags & cursorbuffer)
     nphys ^= 7;
 
   if (hmap->A_videoula.blacklevelnphys != nphys)
@@ -362,10 +362,10 @@ R6502ZONEMAP* videoulacursorteletextbblacklevel(R6502ZONEMAP* zmap, uintptr_t pe
 {
   HOSTMAP* hmap = (HOSTMAP*)zmap;
   int nphys;
-  uintptr_t signalbuffer,cursorflags;
+  uintptr_t cursorbuffer,cursorflags;
   const uint32_t* p = (const uint32_t*)hmap->B_teletext.lue2;
 
-  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorbuffer = hmap->B_crtc.cursorbuffer;
   cursorflags = hmap->B_videoula.cursorflags;
 
   if (p[hmap->B_teletext.bblevelbit>>5] & (1<<(hmap->B_teletext.bblevelbit&31)))
@@ -373,7 +373,7 @@ R6502ZONEMAP* videoulacursorteletextbblacklevel(R6502ZONEMAP* zmap, uintptr_t pe
   else
     nphys = (hmap->B_teletext.colours>>24)&7;
 
-  if (cursorflags & signalbuffer)
+  if (cursorflags & cursorbuffer)
     nphys ^= 7;
 
   if (hmap->A_videoula.blacklevelnphys != nphys)
@@ -385,17 +385,19 @@ HOSTMAP* videoula00write(HOSTMAP* hmap, uintptr_t address_code)
 {
   int toggleflash;
   VIDEOULALOADOP *loadopgroup;
+  unsigned int step_state_index;
 
   toggleflash = (hmap->A_videoula.control ^ hmap->m) & 1;
 
   hmap->B_videoula.bytelut = &hmap->shiftedbytecolours[(hmap->m&0xC)<<6];
-  hmap->B_videoula.cursorflags = ((hmap->m&0xE0)<<(VIDEOSTEPSIGNALSEGMENTSHIFT-4))|((hmap->m&0x20)<<(VIDEOSTEPSIGNALSEGMENTSHIFT-5));
+  hmap->B_videoula.cursorflags = ((hmap->m&0xE0)<<(VIDEOCURSORSIGNALSEGMENTSHIFT-4))|((hmap->m&0x20)>>(5-VIDEOCURSORSIGNALSEGMENTSHIFT));
   hmap->A_videoula.control = hmap->m;
 
-  if (hmap->m & 0x10)
-    hmap->B_crtc.step_code |= VIDEOSTEPFASTFLAG;
+  step_state_index = (unsigned int)(hmap->B_crtc.step_state - hmap->crtcstep);
+  if ((hmap->m & 0x10) || (hmap->B_crtc.scan_code & VIDEOREADODDFLAG))
+    hmap->B_crtc.step_state = hmap->crtcstep + (~VIDEOSTEPIDLEFLAG & step_state_index);
   else
-    hmap->B_crtc.step_code &= ~VIDEOSTEPFASTFLAG;
+    hmap->B_crtc.step_state = hmap->crtcstep + (VIDEOSTEPIDLEFLAG | step_state_index);
 
   loadopgroup = &hmap->videoulaloads[hmap->m & 0x1C];
 

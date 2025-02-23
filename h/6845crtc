@@ -13,6 +13,15 @@
  * Email: <convertedgames@3insdale.me.uk>
  */
 
+#define CRTCROWTESTCOLUMNTAG 0x80U
+#define CRTCMAXCOLUMNTAG 0x40U
+#define CRTCONR0COLUMNTAG 0x20U
+#define CRTCBEFORECURSORCOLUMNTAG 0x10U
+#define CRTCBEFORER2COLUMNTAG 0x08U
+#define CRTCBEFORER1COLUMNTAG 0x04U
+#define CRTCBEFORER0COLUMNTAG 0x02U
+#define CRTCONHALFR0COLUMNTAG 0x01U
+
 /*Motorola 6845 CRTC*/
 void crtcreset(void);
 HOSTMAP* crtc00read(HOSTMAP* hmap, uintptr_t address_code);

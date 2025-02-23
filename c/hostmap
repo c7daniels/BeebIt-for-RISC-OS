@@ -1427,7 +1427,7 @@ void hostmapexecute(void)
   hmap->yield = 0;
   while (1)
   {
-    (*cmap->cpu_state)(cmap, (intptr_t)(cmap->cpu_state+1));
+    (*cmap->cpu_state)(cmap, (uintptr_t)(cmap->cpu_state+1));
     if (--hmap->cycles.togo == 0)
     {
       hostmapadvancetimers(hmap);

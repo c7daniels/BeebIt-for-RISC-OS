@@ -82,7 +82,7 @@ typedef struct HOSTMAP* (*HOSTSWAPOP)(struct HOSTMAP *hmap); /*returning the fir
 
 typedef struct HOSTMAP* (*HOSTVIDEOOP)(struct HOSTMAP *hmap); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
 
-typedef struct HOSTMAP* (*HOSTVIDEOSTEPOP)(struct HOSTMAP *hmap, uintptr_t step_code);
+typedef struct HOSTMAP* (*CRTCSTEPOP)(struct HOSTMAP *hmap, uintptr_t incremented_step_state);
 
 typedef struct HOSTMAP* (*HOSTVIDEOREADOP)(struct HOSTMAP *hmap, uintptr_t scan_code);
 
@@ -299,7 +299,6 @@ typedef struct
   uint8_t r[18]; /*18 registers*/
   uint8_t addressreg;
   uint8_t r9image;
-  uint8_t c0;
   uint8_t c3h;
   uint8_t c3v;
   uint8_t c4;
@@ -313,19 +312,23 @@ typedef struct
   uint8_t delayvs;
   uint8_t vs_thisrow;
   uint8_t vs_counting;
+  uint8_t vs_delayed;
   uint8_t endframe;
   uint8_t lpstbtimer;
+  uint8_t displaybuffer;
+  uint8_t padding[3];
 } HOSTMAPACRTC;
 
 typedef struct
 {
+  CRTCSTEPOP *step_state;
   HOSTVIDEOOP endoflineactions[7];
   uintptr_t start_code;
   uintptr_t row_code;
-  uintptr_t step_code;
   uintptr_t scan_code;
   uintptr_t cursoraddress;
-  uintptr_t signalbuffer;
+  intptr_t cursorcolumn;
+  uintptr_t cursorbuffer;
 } HOSTMAPBCRTC;
 
 typedef struct
@@ -386,13 +389,13 @@ typedef struct
   uint8_t flags0,flags1;
   uint8_t writecode;
   uint8_t eventflags;
+  uint8_t linetestflags;
   uint8_t skip;
   uint8_t distinctfields;
   uint8_t progressive;
   uint8_t updateframecounter;
   uint8_t updateframenumber;
   uint8_t fastskipflipflop;
-  uint8_t padding[1];
 } HOSTMAPAVIDBUF;
 
 typedef struct
@@ -458,7 +461,9 @@ typedef struct HOSTMAP
   uint8_t romsel; /*ROMSELect*/
   uint8_t acccon;  /*ACCCON*/
   uint8_t lsoundlatch;
+  uint8_t screenstartindex; /*screen start index (system via)*/
   uint8_t yield; /*yield control on a vsync*/
+  uint8_t yield_unused[3];
   HOSTMAPAVIA A_sysvia;
   HOSTMAPAVIA A_usrvia;
   HOSTMAPRTC rtc;
@@ -471,7 +476,7 @@ typedef struct HOSTMAP
   HOSTMAPATELETEXT A_teletext;
   HOSTMAPAVIDBUF A_vidbuf;
   HOSTMAPAVIDOUT A_vidout;
-  uint8_t AP_unused[63*sizeof(uintptr_t)-212];
+  uint8_t AP_unused[63*sizeof(uintptr_t)-220];
 
   // AArch32 offsets &100 - &3FF
   uintptr_t peripheral_code;
@@ -493,16 +498,16 @@ typedef struct HOSTMAP
   HOSTMAPBTELETEXT B_teletext;
   HOSTMAPBVIDBUF B_vidbuf;
   HOSTMAPBVIDOUT B_vidout;
-  uintptr_t B_unused[6];
+  uintptr_t B_unused[5];
 
   // AArch32 offsets &400 - &FFF
   R6502PERIPHERALOPTABLE peripheralops;
   R6502_CC_ZONE CC;
-  HOSTVIDEOREADOP videoreadseven[128];
-  HOSTVIDEOREADOP videoreadsodd[128];
+  HOSTVIDEOREADOP videoreads[256];
   VIDEOULALOADOP videoulaloads[32];
-  uintptr_t C_unused[32];
-  HOSTVIDEOSTEPOP videostepops[64];
+  HOSTVIDEOREADOP videographicswrapreads[16];
+  HOSTVIDEOREADOP videoteletextwrapreads[16];
+  uintptr_t CP_unused[64];
 
   // AArch32 offsets &1000 - &1BFF
   R6502_DC_ZONE DC;
@@ -524,7 +529,12 @@ typedef struct HOSTMAP
   // AArch32 offsets &8000 - &FFFF
   HOSTHIGHOP bridgedreadhigh[1024];
   HOSTHIGHOP bridgedwritehigh[1024];
-  uintptr_t high_unused[6144];
+  CRTCSTEPOP crtcstep[512];
+  uintptr_t crtcstep_unused[512];
+  uintptr_t crtccolumntags[256];
+  uintptr_t crtccolumntags_unused[768];
+  CRTCSTEPOP crtctaggedops[256];
+  uintptr_t crtctaggedops_unused[3840];
 
   // AArch32 offsets &10000 - &1FFFF
   uint8_t memory[0x10000];

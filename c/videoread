@@ -13,10 +13,12 @@
 #include "beebit.h"
 #include "video.h"
 
-extern HOSTMAP* videoulaloadeven(HOSTMAP* hmap, uintptr_t value);
-extern HOSTMAP* videoulaloadevenR(HOSTMAP* hmap, uintptr_t value);
-extern HOSTMAP* videoulaloadodd(HOSTMAP* hmap, uintptr_t value);
-extern HOSTMAP* videoulaloadoddR(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaloadfasteven(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaloadfastevenR(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaloadfastodd(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaloadfastoddR(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaloadslowodd(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaloadslowoddR(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoularate0shift(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoularate0shiftR(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoularate1shift(HOSTMAP* hmap, uintptr_t value);
@@ -35,24 +37,24 @@ extern HOSTMAP* videoularate3pshift(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoularate3pshiftR(HOSTMAP* hmap, uintptr_t value);
 
 const VIDEOULALOADOP videoulaloadset[32] = {
-  videoularate0shift, videoulaloadodd, videoularate0shiftR, videoulaloadoddR,
-  videoularate1shift, videoulaloadodd, videoularate1shiftR, videoulaloadoddR,
-  videoularate2shift, videoulaloadodd, videoularate2shiftR, videoulaloadoddR,
-  videoularate3shift, videoulaloadodd, videoularate3shiftR, videoulaloadoddR,
-  videoulaloadeven, videoulaloadodd, videoulaloadevenR, videoulaloadoddR,
-  videoulaloadeven, videoulaloadodd, videoulaloadevenR, videoulaloadoddR,
-  videoulaloadeven, videoulaloadodd, videoulaloadevenR, videoulaloadoddR,
-  videoulaloadeven, videoulaloadodd, videoulaloadevenR, videoulaloadoddR
+  videoularate0shift, videoulaloadslowodd, videoularate0shiftR, videoulaloadslowoddR,
+  videoularate1shift, videoulaloadslowodd, videoularate1shiftR, videoulaloadslowoddR,
+  videoularate2shift, videoulaloadslowodd, videoularate2shiftR, videoulaloadslowoddR,
+  videoularate3shift, videoulaloadslowodd, videoularate3shiftR, videoulaloadslowoddR,
+  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR
 };
 const VIDEOULALOADOP videoulaploadset[32] = {
-  videoularate0pshift, videoulaloadodd, videoularate0pshiftR, videoulaloadoddR,
-  videoularate1pshift, videoulaloadodd, videoularate1pshiftR, videoulaloadoddR,
-  videoularate2pshift, videoulaloadodd, videoularate2pshiftR, videoulaloadoddR,
-  videoularate3pshift, videoulaloadodd, videoularate3pshiftR, videoulaloadoddR,
-  videoulaloadeven, videoulaloadodd, videoulaloadevenR, videoulaloadoddR,
-  videoulaloadeven, videoulaloadodd, videoulaloadevenR, videoulaloadoddR,
-  videoulaloadeven, videoulaloadodd, videoulaloadevenR, videoulaloadoddR,
-  videoulaloadeven, videoulaloadodd, videoulaloadevenR, videoulaloadoddR
+  videoularate0pshift, videoulaloadslowodd, videoularate0pshiftR, videoulaloadslowoddR,
+  videoularate1pshift, videoulaloadslowodd, videoularate1pshiftR, videoulaloadslowoddR,
+  videoularate2pshift, videoulaloadslowodd, videoularate2pshiftR, videoulaloadslowoddR,
+  videoularate3pshift, videoulaloadslowodd, videoularate3pshiftR, videoulaloadslowoddR,
+  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR
 };
 
 static inline HOSTMAP* teletextloadeven(HOSTMAP* hmap, uintptr_t value)
@@ -106,122 +108,152 @@ static inline HOSTMAP* teletextloadoddR(HOSTMAP* hmap, uintptr_t value)
     return hmap;
 }
 
-HOSTMAP* videoulaloadeven(HOSTMAP* hmap, uintptr_t value)
+HOSTMAP* videoulaloadfasteven(HOSTMAP* hmap, uintptr_t value)
 {
   hmap->A_videoula.shiftregister = (uint32_t)value;
   return teletextloadeven(hmap, value);
 }
 
-HOSTMAP* videoulaloadevenR(HOSTMAP* hmap, uintptr_t value)
+HOSTMAP* videoulaloadfastevenR(HOSTMAP* hmap, uintptr_t value)
 {
   hmap->A_videoula.shiftregister = (uint32_t)value;
   return teletextloadevenR(hmap, value);
 }
 
-HOSTMAP* videoulaloadodd(HOSTMAP* hmap, uintptr_t value)
+HOSTMAP* videoulaloadfastodd(HOSTMAP* hmap, uintptr_t value)
 {
   hmap->A_videoula.shiftregister = (uint32_t)value;
   return teletextloadodd(hmap, value);
 }
 
-HOSTMAP* videoulaloadoddR(HOSTMAP* hmap, uintptr_t value)
+HOSTMAP* videoulaloadfastoddR(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->A_videoula.shiftregister = (uint32_t)value;
+  return teletextloadoddR(hmap, value);
+}
+
+HOSTMAP* videoulaloadslowodd(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state += VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = (uint32_t)value;
+  return teletextloadodd(hmap, value);
+}
+
+HOSTMAP* videoulaloadslowoddR(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state += VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (uint32_t)value;
   return teletextloadoddR(hmap, value);
 }
 
 HOSTMAP* videoularate0shift(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<1)|0x01;
   return teletextloadeven(hmap, value);
 }
 
 HOSTMAP* videoularate0shiftR(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<1)|0x01;
   return teletextloadevenR(hmap, value);
 }
 
 HOSTMAP* videoularate1shift(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<2)|0x03;
   return teletextloadeven(hmap, value);
 }
 
 HOSTMAP* videoularate1shiftR(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<2)|0x03;
   return teletextloadevenR(hmap, value);
 }
 
 HOSTMAP* videoularate2shift(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<4)|0x0F;
   return teletextloadeven(hmap, value);
 }
 
 HOSTMAP* videoularate2shiftR(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<4)|0x0F;
   return teletextloadevenR(hmap, value);
 }
 
 HOSTMAP* videoularate3shift(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = 0xFF;
   return teletextloadeven(hmap, value);
 }
 
 HOSTMAP* videoularate3shiftR(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = 0xFF;
   return teletextloadevenR(hmap, value);
 }
 
 HOSTMAP* videoularate0pshift(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<1)|0x01010101;
   return teletextloadeven(hmap, value);
 }
 
 HOSTMAP* videoularate0pshiftR(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<1)|0x01010101;
   return teletextloadevenR(hmap, value);
 }
 
 HOSTMAP* videoularate1pshift(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<2)|0x03030303;
   return teletextloadeven(hmap, value);
 }
 
 HOSTMAP* videoularate1pshiftR(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<2)|0x03030303;
   return teletextloadevenR(hmap, value);
 }
 
 HOSTMAP* videoularate2pshift(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<4)|0x0F0F0F0F;
   return teletextloadeven(hmap, value);
 }
 
 HOSTMAP* videoularate2pshiftR(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<4)|0x0F0F0F0F;
   return teletextloadevenR(hmap, value);
 }
 
 HOSTMAP* videoularate3pshift(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = 0xFFFFFFFF;
   return teletextloadeven(hmap, value);
 }
 
 HOSTMAP* videoularate3pshiftR(HOSTMAP* hmap, uintptr_t value)
 {
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = 0xFFFFFFFF;
   return teletextloadevenR(hmap, value);
 }
@@ -288,6 +320,7 @@ HOSTMAP* videoreadM0even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->memory[scan_code>>15];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.evenRloadop(hmap, p[line]);
 }
@@ -297,6 +330,7 @@ HOSTMAP* videoreadM0odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->memory[scan_code>>15];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.oddRloadop(hmap, p[line]);
 }
@@ -306,6 +340,7 @@ HOSTMAP* videoreadS0even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->shadow[scan_code>>15];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.evenRloadop(hmap, p[line]);
 }
@@ -315,6 +350,7 @@ HOSTMAP* videoreadS0odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->shadow[scan_code>>15];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.oddRloadop(hmap, p[line]);
 }
@@ -324,6 +360,7 @@ HOSTMAP* videoreadM10even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x4000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.evenRloadop(hmap, p[line]);
 }
@@ -333,6 +370,7 @@ HOSTMAP* videoreadM10odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x4000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.oddRloadop(hmap, p[line]);
 }
@@ -342,6 +380,7 @@ HOSTMAP* videoreadS10even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x4000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.evenRloadop(hmap, p[line]);
 }
@@ -351,6 +390,7 @@ HOSTMAP* videoreadS10odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x4000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.oddRloadop(hmap, p[line]);
 }
@@ -360,6 +400,7 @@ HOSTMAP* videoreadM11even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x6000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.evenRloadop(hmap, p[line]);
 }
@@ -369,6 +410,7 @@ HOSTMAP* videoreadM11odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x6000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.oddRloadop(hmap, p[line]);
 }
@@ -378,6 +420,7 @@ HOSTMAP* videoreadS11even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x6000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.evenRloadop(hmap, p[line]);
 }
@@ -387,6 +430,7 @@ HOSTMAP* videoreadS11odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x6000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.oddRloadop(hmap, p[line]);
 }
@@ -396,6 +440,7 @@ HOSTMAP* videoreadM12even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x3000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.evenRloadop(hmap, p[line]);
 }
@@ -405,6 +450,7 @@ HOSTMAP* videoreadM12odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x3000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.oddRloadop(hmap, p[line]);
 }
@@ -414,6 +460,7 @@ HOSTMAP* videoreadS12even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x3000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.evenRloadop(hmap, p[line]);
 }
@@ -423,6 +470,7 @@ HOSTMAP* videoreadS12odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x3000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.oddRloadop(hmap, p[line]);
 }
@@ -432,6 +480,7 @@ HOSTMAP* videoreadM13even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x5800)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.evenRloadop(hmap, p[line]);
 }
@@ -441,6 +490,7 @@ HOSTMAP* videoreadM13odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x5800)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.oddRloadop(hmap, p[line]);
 }
@@ -450,6 +500,7 @@ HOSTMAP* videoreadS13even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x5800)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.evenRloadop(hmap, p[line]);
 }
@@ -459,6 +510,7 @@ HOSTMAP* videoreadS13odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x5800)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   return hmap->B_videoula.oddRloadop(hmap, p[line]);
 }
@@ -467,6 +519,7 @@ HOSTMAP* videoreadM2evenb(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   characteraddress = ((scan_code>>15) & 0x4000) | 0x3C00 | (scan_code>>18);
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.evenloadop(hmap, value);
@@ -476,6 +529,7 @@ HOSTMAP* videoreadM2oddb(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   characteraddress = (((scan_code>>15) & 0x4000) | 0x3C00 | (scan_code>>18)) ^ 0x40;
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.oddloadop(hmap, value);
@@ -485,6 +539,7 @@ HOSTMAP* videoreadM2even(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   characteraddress = 0x7C00 | (scan_code>>18);
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.evenloadop(hmap, value);
@@ -494,6 +549,7 @@ HOSTMAP* videoreadM2odd(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   characteraddress = (0x7C00 | (scan_code>>18)) ^ 0x40;
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.oddloadop(hmap, value);
@@ -503,6 +559,7 @@ HOSTMAP* videoreadS2even(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   characteraddress = 0x7C00 | (scan_code>>18);
   value = hmap->shadow[characteraddress];
   return hmap->B_videoula.evenloadop(hmap, value);
@@ -512,6 +569,7 @@ HOSTMAP* videoreadS2odd(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   characteraddress = (0x7C00 | (scan_code>>18)) ^ 0x40;
   value = hmap->shadow[characteraddress];
   return hmap->B_videoula.oddloadop(hmap, value);
@@ -521,6 +579,7 @@ HOSTMAP* videoreadM30evenb(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   characteraddress = ((~scan_code>>15) & 0x4000) | 0x3C00 | (scan_code>>18);
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.evenloadop(hmap, value);
@@ -530,6 +589,7 @@ HOSTMAP* videoreadM30oddb(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   characteraddress = ((~scan_code>>15) & 0x4000) | 0x3C00 | (scan_code>>18);
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.oddloadop(hmap, value);
@@ -540,6 +600,7 @@ HOSTMAP* videoreadpM0even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->memory[scan_code>>15];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.evenloadop(hmap, value);
@@ -550,6 +611,7 @@ HOSTMAP* videoreadpM0odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->memory[scan_code>>15];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.oddRloadop(hmap, value);
@@ -560,6 +622,7 @@ HOSTMAP* videoreadpS0even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->shadow[scan_code>>15];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.evenRloadop(hmap, value);
@@ -570,6 +633,7 @@ HOSTMAP* videoreadpS0odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->shadow[scan_code>>15];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.oddRloadop(hmap, value);
@@ -580,6 +644,7 @@ HOSTMAP* videoreadpM10even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x4000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.evenRloadop(hmap, value);
@@ -590,6 +655,7 @@ HOSTMAP* videoreadpM10odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x4000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.oddRloadop(hmap, value);
@@ -600,6 +666,7 @@ HOSTMAP* videoreadpS10even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x4000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.evenRloadop(hmap, value);
@@ -610,6 +677,7 @@ HOSTMAP* videoreadpS10odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x4000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.oddRloadop(hmap, value);
@@ -620,6 +688,7 @@ HOSTMAP* videoreadpM11even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x6000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.evenRloadop(hmap, value);
@@ -630,6 +699,7 @@ HOSTMAP* videoreadpM11odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x6000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.oddRloadop(hmap, value);
@@ -640,6 +710,7 @@ HOSTMAP* videoreadpS11even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x6000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.evenRloadop(hmap, value);
@@ -650,6 +721,7 @@ HOSTMAP* videoreadpS11odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x6000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.oddRloadop(hmap, value);
@@ -660,6 +732,7 @@ HOSTMAP* videoreadpM12even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x3000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.evenRloadop(hmap, value);
@@ -670,6 +743,7 @@ HOSTMAP* videoreadpM12odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x3000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.oddRloadop(hmap, value);
@@ -680,6 +754,7 @@ HOSTMAP* videoreadpS12even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x3000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.evenRloadop(hmap, value);
@@ -690,6 +765,7 @@ HOSTMAP* videoreadpS12odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x3000)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.oddRloadop(hmap, value);
@@ -700,6 +776,7 @@ HOSTMAP* videoreadpM13even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x5800)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.evenRloadop(hmap, value);
@@ -710,6 +787,7 @@ HOSTMAP* videoreadpM13odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->memory[((scan_code>>15)+0x5800)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.oddRloadop(hmap, value);
@@ -720,6 +798,7 @@ HOSTMAP* videoreadpS13even(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x5800)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.evenRloadop(hmap, value);
@@ -730,6 +809,7 @@ HOSTMAP* videoreadpS13odd(HOSTMAP* hmap, uintptr_t scan_code)
   uintptr_t line,value;
   uint8_t* p = &hmap->shadow[((scan_code>>15)+0x5800)&0x7FFF];
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   line = hmap->A_crtc.c9low;
   value = (p[(line-1)&7]<<24) | (p[(line+1)&7]<<8) | p[line];
   return hmap->B_videoula.oddRloadop(hmap, value);
@@ -739,6 +819,7 @@ HOSTMAP* videoreadpM2evenb(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   characteraddress = ((scan_code>>15) & 0x4000) | 0x3C00 | (scan_code>>18);
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.evenloadop(hmap, (value<<24) | (value<<8) | value);
@@ -748,6 +829,7 @@ HOSTMAP* videoreadpM2oddb(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   characteraddress = (((scan_code>>15) & 0x4000) | 0x3C00 | (scan_code>>18)) ^ 0x40;
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.oddloadop(hmap, (value<<24) | (value<<8) | value);
@@ -757,6 +839,7 @@ HOSTMAP* videoreadpM2even(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   characteraddress = 0x7C00 | (scan_code>>18);
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.evenloadop(hmap, (value<<24) | (value<<8) | value);
@@ -766,6 +849,7 @@ HOSTMAP* videoreadpM2odd(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   characteraddress = (0x7C00 | (scan_code>>18)) ^ 0x40;
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.oddloadop(hmap, (value<<24) | (value<<8) | value);
@@ -775,6 +859,7 @@ HOSTMAP* videoreadpS2even(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   characteraddress = 0x7C00 | (scan_code>>18);
   value = hmap->shadow[characteraddress];
   return hmap->B_videoula.evenloadop(hmap, (value<<24) | (value<<8) | value);
@@ -784,6 +869,7 @@ HOSTMAP* videoreadpS2odd(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   characteraddress = (0x7C00 | (scan_code>>18)) ^ 0x40;
   value = hmap->shadow[characteraddress];
   return hmap->B_videoula.oddloadop(hmap, (value<<24) | (value<<8) | value);
@@ -793,6 +879,7 @@ HOSTMAP* videoreadpM30evenb(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code | VIDEOREADODDFLAG;
   characteraddress = ((~scan_code>>15) & 0x4000) | 0x3C00 | (scan_code>>18);
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.evenloadop(hmap, (value<<24) | (value<<8) | value);
@@ -802,261 +889,104 @@ HOSTMAP* videoreadpM30oddb(HOSTMAP* hmap, uintptr_t scan_code)
 {
   uintptr_t characteraddress,value;
 
+  hmap->B_crtc.scan_code = scan_code & ~VIDEOREADODDFLAG;
   characteraddress = ((~scan_code>>15) & 0x4000) | 0x3C00 | (scan_code>>18);
   value = hmap->memory[characteraddress];
   return hmap->B_videoula.oddloadop(hmap, (value<<24) | (value<<8) | value);
 }
 
-VIDEOREADFOUR videoread0memory4even = {
-  videoreadM0even, videoreadM0even,
-  videoreadM0even, videoreadM0even
+VIDEOREADFOUR videoread0four = {
+  videoreadM0even, videoreadS0even, videoreadM0odd, videoreadS0odd
 };
 
-VIDEOREADFOUR videoread0memory4odd = {
-  videoreadM0odd, videoreadM0odd,
-  videoreadM0odd, videoreadM0odd
+VIDEOREADFOUR videoread10four = {
+  videoreadM10even, videoreadS10even, videoreadM10odd, videoreadS10odd
 };
 
-VIDEOREADFOUR videoread0shadow4even = {
-  videoreadS0even, videoreadS0even,
-  videoreadS0even, videoreadS0even
+VIDEOREADFOUR videoread11four = {
+  videoreadM11even, videoreadS11even, videoreadM11odd, videoreadS11odd
 };
 
-VIDEOREADFOUR videoread0shadow4odd = {
-  videoreadS0odd, videoreadS0odd,
-  videoreadS0odd, videoreadS0odd
+VIDEOREADFOUR videoread12four = {
+  videoreadM12even, videoreadS12even, videoreadM12odd, videoreadS12odd
 };
 
-VIDEOREADFOUR videoread1memory4even = {
-  videoreadM10even, videoreadM11even,
-  videoreadM12even, videoreadM13even
+VIDEOREADFOUR videoread13four = {
+  videoreadM13even, videoreadS13even, videoreadM13odd, videoreadS13odd
 };
 
-VIDEOREADFOUR videoread1memory4odd = {
-  videoreadM10odd, videoreadM11odd,
-  videoreadM12odd, videoreadM13odd
+VIDEOREADFOUR videoread2four = {
+  videoreadM2even, videoreadS2even, videoreadM2odd, videoreadS2odd
 };
 
-VIDEOREADFOUR videoread1shadow4even = {
-  videoreadS10even, videoreadS11even,
-  videoreadS12even, videoreadS13even
+VIDEOREADFOUR videoread2fourb = {
+  videoreadM2evenb, videoreadM2evenb, videoreadM2oddb, videoreadM2oddb
 };
 
-VIDEOREADFOUR videoread1shadow4odd = {
-  videoreadS10odd, videoreadS11odd,
-  videoreadS12odd, videoreadS13odd
+VIDEOREADFOUR videoread30fourb = {
+  videoreadM30evenb, videoreadM30evenb, videoreadM30oddb, videoreadM30oddb
 };
 
-VIDEOREADFOUR videoread2bmemory4even = {
-  videoreadM2evenb, videoreadM2evenb,
-  videoreadM2evenb, videoreadM2evenb
+VIDEOREADTWENTY videoread0twenty = {
+  &videoread0four, &videoread10four, &videoread11four, &videoread12four, &videoread13four
 };
 
-VIDEOREADFOUR videoread2bmemory4odd = {
-  videoreadM2oddb, videoreadM2oddb,
-  videoreadM2oddb, videoreadM2oddb
+VIDEOREADTWENTY videoread2twenty = {
+  &videoread2four, &videoread2four, &videoread2four, &videoread2four, &videoread2four
 };
 
-VIDEOREADFOUR videoread2memory4even = {
-  videoreadM2even, videoreadM2even,
-  videoreadM2even, videoreadM2even
+VIDEOREADTWENTY videoread2twentyb = {
+  &videoread2fourb, &videoread30fourb, &videoread30fourb, &videoread2fourb, &videoread30fourb
 };
 
-VIDEOREADFOUR videoread2memory4odd = {
-  videoreadM2odd, videoreadM2odd,
-  videoreadM2odd, videoreadM2odd
+VIDEOREADFOUR videoreadp0four = {
+  videoreadpM0even, videoreadpS0even, videoreadpM0odd, videoreadpS0odd
 };
 
-VIDEOREADFOUR videoread2shadow4even = {
-  videoreadS2even, videoreadS2even,
-  videoreadS2even, videoreadS2even
+VIDEOREADFOUR videoreadp10four = {
+  videoreadpM10even, videoreadpS10even, videoreadpM10odd, videoreadpS10odd
 };
 
-VIDEOREADFOUR videoread2shadow4odd = {
-  videoreadS2odd, videoreadS2odd,
-  videoreadS2odd, videoreadS2odd
+VIDEOREADFOUR videoreadp11four = {
+  videoreadpM11even, videoreadpS11even, videoreadpM11odd, videoreadpS11odd
 };
 
-VIDEOREADFOUR videoread3bmemory4even = {
-  videoreadM30evenb, videoreadM30evenb,
-  videoreadM2evenb, videoreadM30evenb
+VIDEOREADFOUR videoreadp12four = {
+  videoreadpM12even, videoreadpS12even, videoreadpM12odd, videoreadpS12odd
 };
 
-VIDEOREADFOUR videoread3bmemory4odd = {
-  videoreadM30oddb, videoreadM30oddb,
-  videoreadM2oddb, videoreadM30oddb
+VIDEOREADFOUR videoreadp13four = {
+  videoreadpM13even, videoreadpS13even, videoreadpM13odd, videoreadpS13odd
 };
 
-VIDEOREADSIXTEEN videoreadmemoryb16even = {
-  &videoread0memory4even,
-  &videoread1memory4even,
-  &videoread2bmemory4even,
-  &videoread3bmemory4even
+VIDEOREADFOUR videoreadp2four = {
+  videoreadpM2even, videoreadpS2even, videoreadpM2odd, videoreadpS2odd
 };
 
-VIDEOREADSIXTEEN videoreadmemoryb16odd = {
-  &videoread0memory4odd,
-  &videoread1memory4odd,
-  &videoread2bmemory4odd,
-  &videoread3bmemory4odd
+VIDEOREADFOUR videoreadp2fourb = {
+  videoreadpM2evenb, videoreadpM2evenb, videoreadpM2oddb, videoreadpM2oddb
 };
 
-VIDEOREADSIXTEEN videoreadmemory16even = {
-  &videoread0memory4even,
-  &videoread1memory4even,
-  &videoread2memory4even,
-  &videoread2memory4even
+VIDEOREADFOUR videoreadp30fourb = {
+  videoreadpM30evenb, videoreadpM30evenb, videoreadpM30oddb, videoreadpM30oddb
 };
 
-VIDEOREADSIXTEEN videoreadmemory16odd = {
-  &videoread0memory4odd,
-  &videoread1memory4odd,
-  &videoread2memory4odd,
-  &videoread2memory4odd
+VIDEOREADTWENTY videoreadp0twenty = {
+  &videoreadp0four, &videoreadp10four, &videoreadp11four, &videoreadp12four, &videoreadp13four
 };
 
-VIDEOREADSIXTEEN videoreadshadow16even = {
-  &videoread0shadow4even,
-  &videoread1shadow4even,
-  &videoread2shadow4even,
-  &videoread2shadow4even
+VIDEOREADTWENTY videoreadp2twenty = {
+  &videoreadp2four, &videoreadp2four, &videoreadp2four, &videoreadp2four, &videoreadp2four
 };
 
-VIDEOREADSIXTEEN videoreadshadow16odd = {
-  &videoread0shadow4odd,
-  &videoread1shadow4odd,
-  &videoread2shadow4odd,
-  &videoread2shadow4odd
-};
-
-VIDEOREADFOUR videoreadp0memory4even = {
-  videoreadpM0even, videoreadpM0even,
-  videoreadpM0even, videoreadpM0even
-};
-
-VIDEOREADFOUR videoreadp0memory4odd = {
-  videoreadpM0odd, videoreadpM0odd,
-  videoreadpM0odd, videoreadpM0odd
-};
-
-VIDEOREADFOUR videoreadp0shadow4even = {
-  videoreadpS0even, videoreadpS0even,
-  videoreadpS0even, videoreadpS0even
-};
-
-VIDEOREADFOUR videoreadp0shadow4odd = {
-  videoreadpS0odd, videoreadpS0odd,
-  videoreadpS0odd, videoreadpS0odd
-};
-
-VIDEOREADFOUR videoreadp1memory4even = {
-  videoreadpM10even, videoreadpM11even,
-  videoreadpM12even, videoreadpM13even
-};
-
-VIDEOREADFOUR videoreadp1memory4odd = {
-  videoreadpM10odd, videoreadpM11odd,
-  videoreadpM12odd, videoreadpM13odd
-};
-
-VIDEOREADFOUR videoreadp1shadow4even = {
-  videoreadpS10even, videoreadpS11even,
-  videoreadpS12even, videoreadpS13even
-};
-
-VIDEOREADFOUR videoreadp1shadow4odd = {
-  videoreadpS10odd, videoreadpS11odd,
-  videoreadpS12odd, videoreadpS13odd
-};
-
-VIDEOREADFOUR videoreadp2bmemory4even = {
-  videoreadpM2evenb, videoreadpM2evenb,
-  videoreadpM2evenb, videoreadpM2evenb
-};
-
-VIDEOREADFOUR videoreadp2bmemory4odd = {
-  videoreadpM2oddb, videoreadpM2oddb,
-  videoreadpM2oddb, videoreadpM2oddb
-};
-
-VIDEOREADFOUR videoreadp2memory4even = {
-  videoreadpM2even, videoreadpM2even,
-  videoreadpM2even, videoreadpM2even
-};
-
-VIDEOREADFOUR videoreadp2memory4odd = {
-  videoreadpM2odd, videoreadpM2odd,
-  videoreadpM2odd, videoreadpM2odd
-};
-
-VIDEOREADFOUR videoreadp2shadow4even = {
-  videoreadpS2even, videoreadpS2even,
-  videoreadpS2even, videoreadpS2even
-};
-
-VIDEOREADFOUR videoreadp2shadow4odd = {
-  videoreadpS2odd, videoreadpS2odd,
-  videoreadpS2odd, videoreadpS2odd
-};
-
-VIDEOREADFOUR videoreadp3bmemory4even = {
-  videoreadpM30evenb, videoreadpM30evenb,
-  videoreadpM2evenb, videoreadpM30evenb
-};
-
-VIDEOREADFOUR videoreadp3bmemory4odd = {
-  videoreadpM30oddb, videoreadpM30oddb,
-  videoreadpM2oddb, videoreadpM30oddb
-};
-
-VIDEOREADSIXTEEN videoreadpmemoryb16even = {
-  &videoreadp0memory4even,
-  &videoreadp1memory4even,
-  &videoreadp2bmemory4even,
-  &videoreadp3bmemory4even
-};
-
-VIDEOREADSIXTEEN videoreadpmemoryb16odd = {
-  &videoreadp0memory4odd,
-  &videoreadp1memory4odd,
-  &videoreadp2bmemory4odd,
-  &videoreadp3bmemory4odd
-};
-
-VIDEOREADSIXTEEN videoreadpmemory16even = {
-  &videoreadp0memory4even,
-  &videoreadp1memory4even,
-  &videoreadp2memory4even,
-  &videoreadp2memory4even
-};
-
-VIDEOREADSIXTEEN videoreadpmemory16odd = {
-  &videoreadp0memory4odd,
-  &videoreadp1memory4odd,
-  &videoreadp2memory4odd,
-  &videoreadp2memory4odd
-};
-
-VIDEOREADSIXTEEN videoreadpshadow16even = {
-  &videoreadp0shadow4even,
-  &videoreadp1shadow4even,
-  &videoreadp2shadow4even,
-  &videoreadp2shadow4even
-};
-
-VIDEOREADSIXTEEN videoreadpshadow16odd = {
-  &videoreadp0shadow4odd,
-  &videoreadp1shadow4odd,
-  &videoreadp2shadow4odd,
-  &videoreadp2shadow4odd
+VIDEOREADTWENTY videoreadp2twentyb = {
+  &videoreadp2fourb, &videoreadp30fourb, &videoreadp30fourb, &videoreadp2fourb, &videoreadp30fourb
 };
 
 VIDEOREADSET videoreadset = {
-  &videoreadmemoryb16even, &videoreadmemory16even, &videoreadshadow16even,
-  &videoreadmemoryb16odd, &videoreadmemory16odd, &videoreadshadow16odd
+  &videoread0twenty, &videoread2twentyb, &videoread2twenty
 };
 
 VIDEOREADSET videoreadpset = {
-  &videoreadpmemoryb16even, &videoreadpmemory16even, &videoreadpshadow16even,
-  &videoreadpmemoryb16odd, &videoreadpmemory16odd, &videoreadpshadow16odd
+  &videoreadp0twenty, &videoreadp2twentyb, &videoreadp2twenty
 };

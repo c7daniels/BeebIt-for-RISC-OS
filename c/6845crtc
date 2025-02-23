@@ -28,10 +28,9 @@ void crtcreset(void)
   HOSTMAP* hmap = &hostmap;
   hmap->B_crtc.start_code = 0;
   hmap->B_crtc.row_code = 0;
-  hmap->B_crtc.step_code = 0;
   hmap->B_crtc.scan_code = 0;
   hmap->B_crtc.cursoraddress = 0;
-  hmap->B_crtc.signalbuffer = 0;
+  hmap->B_crtc.cursorbuffer = 0;
   memset(&hmap->A_crtc,0,sizeof(hmap->A_crtc));
 }
 
@@ -58,6 +57,144 @@ HOSTMAP* crtc00write(HOSTMAP* hmap, uintptr_t address_code)
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
 
+static inline void crtcwriter0(HOSTMAP* hmap)
+{
+  uintptr_t tags;
+  uint8_t value = hmap->A_crtc.r[0];
+
+  tags = hmap->crtccolumntags[value] & ~CRTCONR0COLUMNTAG;
+  hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+  hmap->crtccolumntags[value] = tags;
+  if (value > 0)
+  {
+    value--;
+    tags = hmap->crtccolumntags[value] & ~CRTCBEFORER0COLUMNTAG;
+    hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[value] = tags;
+    value = (value+1)>>1;
+  }
+  if (hmap->A_crtc.vs_delayed)
+  {
+    tags = hmap->crtccolumntags[value] & ~CRTCONHALFR0COLUMNTAG;
+    hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[value] = tags;
+  }
+
+  value = hmap->m;
+  hmap->A_crtc.r[0] = value;
+
+  tags = hmap->crtccolumntags[value] |= CRTCONR0COLUMNTAG;
+  hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+  hmap->crtccolumntags[value] = tags;
+  if (value > 0)
+  {
+    value--;
+    tags = hmap->crtccolumntags[value] |= CRTCBEFORER0COLUMNTAG;
+    hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[value] = tags;
+    value = (value+1)>>1;
+  }
+  if (hmap->A_crtc.vs_delayed)
+  {
+    tags = hmap->crtccolumntags[value] |= CRTCONHALFR0COLUMNTAG;
+    hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[value] = tags;
+  }
+}
+
+static inline void crtcwriter1(HOSTMAP* hmap)
+{
+  uintptr_t tags;
+  uint8_t value = hmap->A_crtc.r[1];
+
+  if (value > 0)
+  {
+    value--;
+    tags = hmap->crtccolumntags[value] & ~CRTCBEFORER1COLUMNTAG;
+    hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[value] = tags;
+  }
+
+  value = hmap->m;
+  hmap->A_crtc.r[1] = value;
+
+  if (value > 0)
+  {
+    value--;
+    tags = hmap->crtccolumntags[value] |= CRTCBEFORER1COLUMNTAG;
+    hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[value] = tags;
+  }
+}
+
+static inline void crtcwriter2(HOSTMAP* hmap)
+{
+  uintptr_t tags;
+  uint8_t value = hmap->A_crtc.r[2];
+
+  if (value > 0)
+  {
+    value--;
+    tags = hmap->crtccolumntags[value] & ~CRTCBEFORER2COLUMNTAG;
+    hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[value] = tags;
+  }
+
+  value = hmap->m;
+  hmap->A_crtc.r[2] = value;
+
+  if (value > 0)
+  {
+    value--;
+    tags = hmap->crtccolumntags[value] |= CRTCBEFORER2COLUMNTAG;
+    hmap->crtcstep[value] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[value] = tags;
+  }
+}
+
+static inline void crtcsignalrowregisterchange(HOSTMAP* hmap)
+{
+  uintptr_t tags;
+  uint8_t column = (uint8_t)(hmap->B_crtc.step_state - hmap->crtcstep);
+
+  tags = hmap->crtccolumntags[column] | CRTCROWTESTCOLUMNTAG;
+  hmap->crtcstep[column] = hmap->crtctaggedops[tags];
+  hmap->crtccolumntags[column] = tags;
+}
+
+static inline void crtctagcursorcolumn(HOSTMAP* hmap)
+{
+  uintptr_t tags;
+  intptr_t column = hmap->B_crtc.cursorcolumn;
+
+  if (column > 0)
+  {
+    column--;
+    tags = hmap->crtccolumntags[column] & ~CRTCBEFORECURSORCOLUMNTAG;
+    hmap->crtcstep[column] = hmap->crtctaggedops[tags];
+    hmap->crtccolumntags[column] = tags;
+  }
+
+  column = hmap->B_crtc.cursoraddress - (hmap->B_crtc.scan_code>>18);
+
+  if (column > 0 && column <= 256)
+  {
+    column += (uint8_t)(hmap->B_crtc.step_state - hmap->crtcstep);
+    if (column <= 256)
+    {
+      hmap->B_crtc.cursorcolumn = column;
+      column--;
+      tags = hmap->crtccolumntags[column] | CRTCBEFORECURSORCOLUMNTAG;
+      hmap->crtcstep[column] = hmap->crtctaggedops[tags];
+      hmap->crtccolumntags[column] = tags;
+    }
+    else
+      hmap->B_crtc.cursorcolumn = -1;
+  }
+  else
+    hmap->B_crtc.cursorcolumn = -1;
+}
+
 HOSTMAP* crtc01write(HOSTMAP* hmap, uintptr_t address_code)
 {
   switch (hmap->A_crtc.addressreg)
@@ -66,19 +203,19 @@ HOSTMAP* crtc01write(HOSTMAP* hmap, uintptr_t address_code)
       /*total of displayed and non-displayed characters,*/
       /*minus 1, per horizontal line in milliseconds*/
       /*frequency of HSYNC is determined by this register*/
-      hmap->A_crtc.r[0] = hmap->m;
+      crtcwriter0(hmap);
       break;
     case 1:
       /*number of characters displayed per horizontal line*/
       /*mode 0,1,2,3 = 80 (fast clock)*/
       /*mode 4,5,6,7 = 40 (slow clock)*/
-      hmap->A_crtc.r[1] = hmap->m;
+      crtcwriter1(hmap);
       break;
     case 2:
       /*position of the HSYNC on the horizonal line*/
       /*in terms of the character location number on the line*/
       /*determines the left-to-right location of the displayed text*/
-      hmap->A_crtc.r[2] = hmap->m;
+      crtcwriter2(hmap);
       break;
     case 3:
       /*width of HSYNC = b0-b3*/
@@ -96,12 +233,12 @@ HOSTMAP* crtc01write(HOSTMAP* hmap, uintptr_t address_code)
     case 6:
       /*displayed vertical size of the screen in rows*/
       hmap->A_crtc.r[6] = (hmap->m & 0x7F);
-      hmap->B_crtc.step_code |= VIDEOSTEPROWREGISTERFLAG;
+      crtcsignalrowregisterchange(hmap);
       break;
     case 7:
       /*position of VSYNC*/
       hmap->A_crtc.r[7] = (hmap->m & 0x7F);
-      hmap->B_crtc.step_code |= VIDEOSTEPROWREGISTERFLAG;
+      crtcsignalrowregisterchange(hmap);
       break;
     case 8:
       /*interlace mode and skew*/
@@ -164,11 +301,13 @@ HOSTMAP* crtc01write(HOSTMAP* hmap, uintptr_t address_code)
       /*cursor address hi (b0-b5)*/
       hmap->A_crtc.r[14] = (hmap->m & 0x3F);
       hmap->B_crtc.cursoraddress = ((hmap->m<<8)&0x3F00) | (hmap->B_crtc.cursoraddress&0xFF);
+      crtctagcursorcolumn(hmap);
       break;
     case 15:
       /*cursor address lo*/
       hmap->A_crtc.r[15] = hmap->m;
       hmap->B_crtc.cursoraddress = (hmap->B_crtc.cursoraddress&0x3F00) | hmap->m;
+      crtctagcursorcolumn(hmap);
       break;
     default:
       /*cannot write R16-R17*/
