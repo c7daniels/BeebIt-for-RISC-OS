@@ -2,37 +2,31 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2024
+ * Cycle-level video emulation
  *
- * Email: <mjfoot.nz@gmail.com>
- *
- * Addressing optimization contributed by Crispian Daniels in 2024
+ * (C) Copyright Crispian Daniels, 2024-2025
  *
  * Email: <convertedgames@3insdale.me.uk>
  */
 
 /*Video ULA*/
-/*extern char videoula_colours[0x10];*/
-/*colour lookup table for modes 0, 3, 4 and 6*/
-extern int video_colourlookup1[0x10];
-/*colour lookup table for modes 1 and 5*/
-extern int video_colourlookup2[0x10];
-extern char videoula_physical0[0x10];
-extern char videoula_physical1[0x10];
-extern char videoula_palette0[0x10];
-extern char videoula_palette1[0x10];
-extern char videoula_palette[0x10];
-/*colour map to 8bpp modes*/
-extern char videoula_colourmap8[0x08];
-extern int videoula_palettevalue;
-extern int videoula_clockrate;
-extern int videoula_flashcolour;
 
-extern int ncurrentmode,lteletextmode;
+extern const VIDEOULALOADOP videoulaloadset[32];
+extern const VIDEOULALOADOP videoulaploadset[32];
 
+extern void videoulainit(void);
 extern void videoulareset(void);
-extern void videoulasetpalette(void);
-extern int videoularead(unsigned int naddress);
+extern void videoulasetloads(void);
+extern void videoulasetcolours(void);
+extern R6502ZONEMAP* videoulablankblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videoulablacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videoulagraphicsblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videoulateletextblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videoulateletextbblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videoulacursorblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videoulacursorgraphicsblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videoulacursorteletextblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
+extern R6502ZONEMAP* videoulacursorteletextbblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
 extern HOSTMAP* videoula00write(HOSTMAP* hmap, uintptr_t address_code);
-extern HOSTMAP* videoula01write(HOSTMAP* hmap, uintptr_t address_code);
-extern void videoulasetcursor(void);
+extern HOSTMAP* videoula01writenybble(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* videoula01writebyte(HOSTMAP* hmap, uintptr_t address_code);
