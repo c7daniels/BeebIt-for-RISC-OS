@@ -340,12 +340,13 @@ typedef struct
 
 typedef struct
 {
-  R6502PERIPHERALOP blacklevelops[8];
   VIDEOULAFRAGMENTREFRESHOP fragmentrefreshaction;
   VIDEOULALOADOP evenloadop;
-  VIDEOULALOADOP oddloadop;
   VIDEOULALOADOP evenRloadop;
+  VIDEOULALOADOP oddloadop;
   VIDEOULALOADOP oddRloadop;
+  VIDEOULALOADOP selectedoddloadop;
+  VIDEOULALOADOP selectedoddRloadop;
   const uint32_t* bytelut;
   uintptr_t bytecolours;
   uintptr_t flashing;
@@ -369,6 +370,10 @@ typedef struct
 
 typedef struct
 {
+  uintptr_t fg1fill;
+  uintptr_t bg1fill;
+  uintptr_t fg2fill;
+  uintptr_t bg2fill;
   uintptr_t rightoffset;
   uintptr_t lowoffset;
   uintptr_t lookupoffset;
@@ -494,7 +499,7 @@ typedef struct HOSTMAP
   HOSTMAPBTELETEXT B_teletext;
   HOSTMAPBVIDBUF B_vidbuf;
   HOSTMAPBVIDOUT B_vidout;
-  uintptr_t B_unused[4];
+  uintptr_t B_unused[6];
 
   // AArch32 offsets &400 - &FFF
   R6502PERIPHERALOPTABLE peripheralops;
@@ -528,7 +533,9 @@ typedef struct HOSTMAP
   uintptr_t crtccolumntags[256];
   uintptr_t crtccolumntags_unused[768];
   CRTCSTEPOP crtctaggedops[256];
-  uintptr_t crtctaggedops_unused[5888];
+  uintptr_t crtctaggedops_unused[768];
+  R6502PERIPHERALOP blacklevelops[8];
+  uintptr_t blacklevelops_unused[5112];
 
   // AArch32 offsets &10000 - &1FFFF
   uint8_t memory[0x10000];

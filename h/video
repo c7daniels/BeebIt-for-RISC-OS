@@ -89,6 +89,8 @@ extern unsigned int palette_specified[8];
 extern int videospeed_specified;
 extern int framerate_specified;
 
+extern void refreshteletextcolourfill(HOSTMAP* hmap);
+
 extern R6502ZONEMAP* videodisplayskip(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
 extern R6502ZONEMAP* videowritecursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
 extern R6502ZONEMAP* videowritegraphics(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
@@ -111,8 +113,6 @@ extern void videosetpalette(void);
 extern void videosetscale(void);
 extern void videohostmodevars(void);
 extern int writeusedcolours(void);
-extern HOSTMAP* videoloadteletext(HOSTMAP* hmap, uintptr_t queue);
-extern HOSTMAP* videoshiftteletext(HOSTMAP* hmap);
 extern HOSTMAP* videosetscreenstartindex(HOSTMAP* hmap, uint8_t index);
 extern void videofreeworkspace(void);
 extern void videoreset(void);

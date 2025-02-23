@@ -42,18 +42,6 @@ extern _kernel_swi_regs regs;
 
 #define TIME_25HZ 4 /*CLK_TCK/25*/ /*25 times per second*/
 #define TIME_50HZ 2 /*CLK_TCK/50*/ /*50 times per second*/
-#define CONCEALFLAG 0x80
-#define FLASHFLAG 0x40
-#define HOLDFLAG 0x20
-#define DOUBLEHEIGHTFLAG 0x08
-#define SEPARATEDFLAG 0x02
-#define GRAPHICSFLAG 0x01
-#define NOTCONCEALFLAG 0x7F
-#define NOTFLASHFLAG 0xBF
-#define NOTHOLDFLAG 0xDF
-#define NOTDOUBLEHEIGHTFLAG 0xF7
-#define NOTSEPARATEDFLAG 0xFD
-#define NOTGRAPHICSFLAG 0xFE
 
 #define PROGRESSIVECLIPPEDSKIPFLAGS (CLIPPEDBELOWSKIPFLAG|CLIPPEDSKIPFLAG|CLIPPEDABOVESKIPFLAG)
 #define TIMINGSKIPFLAGS (FRAMETIMESKIPFLAG|VSYNCSKIPFLAG|HSYNCSKIPFLAG|BEFOREDISPLAYSKIPFLAG|FASTSKIPFLAG)
@@ -683,14 +671,14 @@ static inline void videosetdisplayfunctions(VIDEOSCALECHOICE* choice)
     cursorteletextop = choice->writeops.cursorteletext;
   }
 
-  hmap->B_videoula.blacklevelops[0] = choice->blacklevelops.blank;
-  hmap->B_videoula.blacklevelops[1] = choice->blacklevelops.graphics;
-  hmap->B_videoula.blacklevelops[2] = teletextblacklevelop;
-  hmap->B_videoula.blacklevelops[3] = teletextblacklevelop;
-  hmap->B_videoula.blacklevelops[4] = choice->blacklevelops.cursorblank;
-  hmap->B_videoula.blacklevelops[5] = choice->blacklevelops.cursorgraphics;
-  hmap->B_videoula.blacklevelops[6] = cursorteletextblacklevelop;
-  hmap->B_videoula.blacklevelops[7] = cursorteletextblacklevelop;
+  hmap->blacklevelops[0] = choice->blacklevelops.blank;
+  hmap->blacklevelops[1] = choice->blacklevelops.graphics;
+  hmap->blacklevelops[2] = teletextblacklevelop;
+  hmap->blacklevelops[3] = teletextblacklevelop;
+  hmap->blacklevelops[4] = choice->blacklevelops.cursorblank;
+  hmap->blacklevelops[5] = choice->blacklevelops.cursorgraphics;
+  hmap->blacklevelops[6] = cursorteletextblacklevelop;
+  hmap->blacklevelops[7] = cursorteletextblacklevelop;
 
   hmap->B_vidbuf.graphicsinnerop = choice->writeinnerops.graphics;
   hmap->B_vidbuf.cursorinnerop = choice->writeinnerops.cursor;
@@ -1262,7 +1250,7 @@ void videosetscale(void)
 
   hmap->B_crtc.cursorbuffer = 0;
 
-  videoulasetloads();
+  videoulasetloads(nteletextslices == 1);
   videosetdisplayfunctions(&choice);
   videosetreadfunctions();
   if (hmap->A_vidbuf.progressive)
@@ -1349,6 +1337,7 @@ void videohostmodevars(void)
 
   videoscale_init(&videoscale_lutparameters);
   videoulasetcolours();
+  refreshteletextcolourfill(hmap);
 
   nlineaddress = nhostscreen;
   nlineaddress += video_screenstartoffset;
@@ -1405,6 +1394,8 @@ void videofreeworkspace(void)
   hmap->B_vidbuf.column -= hmap->B_vidbuf.offsetsynccolumn;
   hmap->B_vidbuf.line -= hmap->B_vidbuf.syncline;
   hmap->B_vidbuf.setskewop = videoinactivesetskew;
+
+  videoulaclearloads();
 
   free(video_workspace);
   video_workspace = NULL;
@@ -1533,7 +1524,7 @@ void videoreset(void)
   hmap->B_teletext.lookupoffset = 0;
   hmap->B_teletext.holdoffset = 0;
   hmap->B_teletext.queue = 0;
-  hmap->B_teletext.colours = 0x00070007;
+  hmap->B_teletext.colours = 0x0707;
 
   hmap->B_vidbuf.displayskewmask = 0x01;
   hmap->B_vidbuf.cursorskewmask = 0x01;
@@ -2033,213 +2024,6 @@ HOSTMAP* videoendframedummy(HOSTMAP* hmap)
   return hmap;
 }
 
-HOSTMAP* teletextafter(HOSTMAP* hmap)
-{
-  int code = (hmap->B_teletext.queue>>24)&127;
-
-  switch (code)
-  {
-    case 0x01:
-    case 0x02:
-    case 0x03:
-    case 0x04:
-    case 0x05:
-    case 0x06:
-    case 0x07:
-      /*alpha*/
-      hmap->A_teletext.flipflops &= NOTCONCEALFLAG;
-      if (hmap->A_teletext.flipflops&GRAPHICSFLAG)
-      {
-        hmap->B_teletext.holdoffset = 0;
-        if (hmap->A_teletext.flipflops&SEPARATEDFLAG)
-          hmap->B_teletext.lookupoffset -= 40;
-        else
-          hmap->B_teletext.lookupoffset -= 20;
-        hmap->A_teletext.flipflops &= NOTGRAPHICSFLAG;
-      }
-      hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0xFF)|(code&7);
-      break;
-    case 0x08:
-      /*flash*/
-      hmap->A_teletext.flipflops |= FLASHFLAG;
-      break;
-    case 0x0D:
-      /*double height*/
-      if (!(hmap->A_teletext.flipflops&DOUBLEHEIGHTFLAG))
-      {
-        hmap->B_teletext.holdoffset = 0;
-        hmap->A_teletext.lastline = 19;
-        hmap->B_teletext.lookupoffset += 60;
-        hmap->A_teletext.flipflops |= DOUBLEHEIGHTFLAG;
-      }
-      break;
-    case 0x11:
-    case 0x12:
-    case 0x13:
-    case 0x14:
-    case 0x15:
-    case 0x16:
-    case 0x17:
-      /*graphic*/
-      hmap->A_teletext.flipflops &= NOTCONCEALFLAG;
-      if (!(hmap->A_teletext.flipflops&GRAPHICSFLAG))
-      {
-        hmap->B_teletext.holdoffset = 0;
-        if (hmap->A_teletext.flipflops&SEPARATEDFLAG)
-          hmap->B_teletext.lookupoffset += 40;
-        else
-          hmap->B_teletext.lookupoffset += 20;
-        hmap->A_teletext.flipflops |= GRAPHICSFLAG;
-      }
-      hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0xFF)|(code&7);
-      break;
-    case 0x1F:
-      /*release graphics*/
-      hmap->A_teletext.flipflops &= NOTHOLDFLAG;
-      break;
-  }
-
-  return hmap;
-}
-
-HOSTMAP* teletextat(HOSTMAP* hmap)
-{
-  int code = (hmap->B_teletext.queue>>16)&127;
-  intptr_t teletextoffset;
-
-  if (code < 32)
-  {
-    switch (code)
-    {
-      case 0x09:
-        /*steady*/
-        hmap->A_teletext.flipflops &= NOTFLASHFLAG;
-        break;
-      case 0x0C:
-        /*normal height*/
-        if (hmap->A_teletext.flipflops&DOUBLEHEIGHTFLAG)
-        {
-          hmap->B_teletext.holdoffset = 0;
-          hmap->B_teletext.lookupoffset -= 60;
-          hmap->A_teletext.flipflops &= NOTDOUBLEHEIGHTFLAG;
-        }
-        break;
-      case 0x18:
-        /*conceal*/
-        hmap->A_teletext.flipflops |= CONCEALFLAG;
-        break;
-      case 0x19:
-        /*contiguous*/
-        if (hmap->A_teletext.flipflops & SEPARATEDFLAG)
-        {
-          hmap->B_teletext.lookupoffset -= 20;
-          hmap->A_teletext.flipflops &= NOTSEPARATEDFLAG;
-        }
-        break;
-      case 0x1A:
-        /*separated*/
-        if (!(hmap->A_teletext.flipflops & SEPARATEDFLAG))
-        {
-          hmap->B_teletext.lookupoffset += 20;
-          hmap->A_teletext.flipflops |= SEPARATEDFLAG;
-        }
-        break;
-      case 0x1C:
-        hmap->B_teletext.colours &= ~0xFF00;
-        break;
-      case 0x1D:
-        hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0xFF00)|((hmap->B_teletext.colours&7)<<8);
-        break;
-      case 0x1E:
-        /*hold graphics*/
-        /*hold/release graphics actually affects the way colour-change*/
-        /*codes are displayed. normally they are blank; when hold graphics*/
-        /*is set, the previous character is displayed again. This allows*/
-        /*contiguous blocks of colour.*/
-        /*Thanks to Tom Seddon for that bit of information...*/
-        hmap->A_teletext.flipflops |= HOLDFLAG;
-        break;
-    }
-
-    if (!(hmap->A_teletext.flipflops & HOLDFLAG))
-      hmap->B_teletext.holdoffset = 0;
-
-    teletextoffset = hmap->B_teletext.holdoffset;
-  }
-  else
-  {
-    teletextoffset = hmap->B_teletext.lookupoffset + ((code-32)<<7);
-
-    if ((code & 0x20) && (hmap->A_teletext.flipflops&GRAPHICSFLAG))
-      hmap->B_teletext.holdoffset = teletextoffset;
-  }
-
-  if ((hmap->A_teletext.flipflops & CONCEALFLAG) || ((hmap->A_teletext.flipflops & FLASHFLAG) && hmap->A_teletext.flash))
-    teletextoffset = 0;
-
-  hmap->B_teletext.lue1 = hmap->teletextlinelut[teletextoffset+hmap->A_teletext.line];
-
-  return hmap;
-}
-
-HOSTMAP* videoloadteletext(HOSTMAP* hmap, uintptr_t queue)
-{
-  hmap->B_teletext.lue2 = hmap->B_teletext.lue1;
-
-  if (queue&0x8000)
-  {
-    if (queue&0x800000)
-    {
-      teletextafter(hmap);
-    }
-    else
-    {
-      hmap->B_teletext.colours &= 0xFFFF0000;
-      hmap->B_teletext.colours |= 0x00000007;
-    }
-    teletextat(hmap);
-  }
-  else
-  {
-    hmap->B_teletext.lue1 = hmap->teletextlinelut[0];
-
-    if (queue&0x800000)
-    {
-      hmap->B_teletext.colours &= 0xFFFF0000;
-      hmap->A_teletext.flipflops = 0;
-      hmap->B_teletext.holdoffset = 0;
-      hmap->B_teletext.lookupoffset = 0;
-
-      if (hmap->A_teletext.line < hmap->A_teletext.lastline)
-        hmap->A_teletext.line++;
-      else
-      {
-        hmap->A_teletext.line = 0;
-        hmap->A_teletext.lastline = 9;
-      }
-    }
-  }
-
-  if (hmap->A_crtc.c9low & 1)
-  {
-    hmap->A_teletext.roundingdirection1 = 1;
-    hmap->B_teletext.lue1 += hmap->B_teletext.lowoffset;
-  }
-  else
-    hmap->A_teletext.roundingdirection1 = 0;
-  return hmap;
-}
-
-HOSTMAP* videoshiftteletext(HOSTMAP* hmap)
-{
-  hmap->B_teletext.colours &= 0xFFFF;
-  hmap->B_teletext.colours |= (hmap->B_teletext.colours << 16);
-  hmap->B_teletext.lue2 = hmap->B_teletext.lue1;
-  hmap->A_teletext.roundingdirection2 = hmap->A_teletext.roundingdirection1;
-  hmap->B_teletext.lue1 += hmap->B_teletext.rightoffset;
-  return hmap;
-}
-
 HOSTMAP* videosetscreenstartindex(HOSTMAP* hmap, uint8_t index)
 {
   hmap->screenstartindex = index;
@@ -2487,7 +2271,7 @@ R6502ZONEMAP* videodisplaysyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_code
     {
       skip &= ~HSYNCSKIPFLAG;
       hmap->A_vidbuf.skip = skip;
-      hmap->B_videoula.blacklevelops[peripheral_code&7](zmap, peripheral_code);
+      hmap->blacklevelops[peripheral_code&7](zmap, peripheral_code);
     }
   }
   else
@@ -2534,7 +2318,7 @@ R6502ZONEMAP* videodisplaypsyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_cod
     {
       skip &= ~HSYNCSKIPFLAG;
       hmap->A_vidbuf.skip = skip;
-      hmap->B_videoula.blacklevelops[peripheral_code&7](zmap, peripheral_code);
+      hmap->blacklevelops[peripheral_code&7](zmap, peripheral_code);
     }
   }
   else

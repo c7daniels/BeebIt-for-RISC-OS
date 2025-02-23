@@ -13,12 +13,39 @@
 #include "beebit.h"
 #include "video.h"
 
+#define CONCEALFLAG 0x80
+#define FLASHFLAG 0x40
+#define HOLDFLAG 0x20
+#define DOUBLEHEIGHTFLAG 0x08
+#define SEPARATEDFLAG 0x02
+#define GRAPHICSFLAG 0x01
+#define NOTCONCEALFLAG 0x7F
+#define NOTFLASHFLAG 0xBF
+#define NOTHOLDFLAG 0xDF
+#define NOTDOUBLEHEIGHTFLAG 0xF7
+#define NOTSEPARATEDFLAG 0xFD
+#define NOTGRAPHICSFLAG 0xFE
+
+extern HOSTMAP* videoulaoloadfasteven(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaoloadfastevenR(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaoloadfastodd(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaoloadfastoddR(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaoloadslowodd(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoulaoloadslowoddR(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoulaloadfasteven(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoulaloadfastevenR(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoulaloadfastodd(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoulaloadfastoddR(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoulaloadslowodd(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoulaloadslowoddR(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoularate0oshift(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoularate0oshiftR(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoularate1oshift(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoularate1oshiftR(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoularate2oshift(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoularate2oshiftR(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoularate3oshift(HOSTMAP* hmap, uintptr_t value);
+extern HOSTMAP* videoularate3oshiftR(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoularate0shift(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoularate0shiftR(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoularate1shift(HOSTMAP* hmap, uintptr_t value);
@@ -36,26 +63,492 @@ extern HOSTMAP* videoularate2pshiftR(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoularate3pshift(HOSTMAP* hmap, uintptr_t value);
 extern HOSTMAP* videoularate3pshiftR(HOSTMAP* hmap, uintptr_t value);
 
+const VIDEOULALOADOP videoulaoloadset[32] = {
+  videoularate0oshift, videoularate0oshiftR, videoulaoloadslowodd, videoulaoloadslowoddR,
+  videoularate1oshift, videoularate1oshiftR, videoulaoloadslowodd, videoulaoloadslowoddR,
+  videoularate2oshift, videoularate2oshiftR, videoulaoloadslowodd, videoulaoloadslowoddR,
+  videoularate3oshift, videoularate3oshiftR, videoulaoloadslowodd, videoulaoloadslowoddR,
+  videoulaoloadfasteven, videoulaoloadfastevenR, videoulaoloadfastodd, videoulaoloadfastoddR,
+  videoulaoloadfasteven, videoulaoloadfastevenR, videoulaoloadfastodd, videoulaoloadfastoddR,
+  videoulaoloadfasteven, videoulaoloadfastevenR, videoulaoloadfastodd, videoulaoloadfastoddR,
+  videoulaoloadfasteven, videoulaoloadfastevenR, videoulaoloadfastodd, videoulaoloadfastoddR
+};
 const VIDEOULALOADOP videoulaloadset[32] = {
-  videoularate0shift, videoulaloadslowodd, videoularate0shiftR, videoulaloadslowoddR,
-  videoularate1shift, videoulaloadslowodd, videoularate1shiftR, videoulaloadslowoddR,
-  videoularate2shift, videoulaloadslowodd, videoularate2shiftR, videoulaloadslowoddR,
-  videoularate3shift, videoulaloadslowodd, videoularate3shiftR, videoulaloadslowoddR,
-  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
-  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
-  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
-  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR
+  videoularate0shift, videoularate0shiftR, videoulaloadslowodd, videoulaloadslowoddR,
+  videoularate1shift, videoularate1shiftR, videoulaloadslowodd, videoulaloadslowoddR,
+  videoularate2shift, videoularate2shiftR, videoulaloadslowodd, videoulaloadslowoddR,
+  videoularate3shift, videoularate3shiftR, videoulaloadslowodd, videoulaloadslowoddR,
+  videoulaloadfasteven, videoulaloadfastevenR, videoulaloadfastodd, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastevenR, videoulaloadfastodd, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastevenR, videoulaloadfastodd, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastevenR, videoulaloadfastodd, videoulaloadfastoddR
 };
 const VIDEOULALOADOP videoulaploadset[32] = {
   videoularate0pshift, videoulaloadslowodd, videoularate0pshiftR, videoulaloadslowoddR,
   videoularate1pshift, videoulaloadslowodd, videoularate1pshiftR, videoulaloadslowoddR,
   videoularate2pshift, videoulaloadslowodd, videoularate2pshiftR, videoulaloadslowoddR,
   videoularate3pshift, videoulaloadslowodd, videoularate3pshiftR, videoulaloadslowoddR,
-  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
-  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
-  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR,
-  videoulaloadfasteven, videoulaloadfastodd, videoulaloadfastevenR, videoulaloadfastoddR
+  videoulaloadfasteven, videoulaloadfastevenR, videoulaloadfastodd, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastevenR, videoulaloadfastodd, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastevenR, videoulaloadfastodd, videoulaloadfastoddR,
+  videoulaloadfasteven, videoulaloadfastevenR, videoulaloadfastodd, videoulaloadfastoddR
 };
+
+static HOSTMAP* videooddRloadintercept(HOSTMAP* hmap, uintptr_t value)
+{
+  VIDEOULALOADOP oddloadop = hmap->B_videoula.selectedoddloadop;
+  VIDEOULALOADOP oddRloadop = hmap->B_videoula.selectedoddRloadop;
+
+  hmap->B_videoula.selectedoddloadop = oddRloadop;
+  hmap->B_videoula.oddloadop(hmap, value);
+  hmap->B_videoula.oddloadop = hmap->B_videoula.selectedoddloadop = oddloadop;
+  return hmap;
+}
+
+static inline void videoapplyoddloadintercept(HOSTMAP* hmap, VIDEOULALOADOP intercept)
+{
+  hmap->B_videoula.oddloadop = intercept;
+  hmap->B_videoula.oddRloadop = videooddRloadintercept;
+}
+
+static inline HOSTMAP* videocallinterceptedoddload(HOSTMAP* hmap, uintptr_t value)
+{
+  VIDEOULALOADOP oddloadop = hmap->B_videoula.selectedoddloadop;
+  VIDEOULALOADOP oddRloadop = hmap->B_videoula.selectedoddRloadop;
+
+  hmap->B_videoula.oddloadop = oddloadop;
+  hmap->B_videoula.oddRloadop = oddRloadop;
+  return oddloadop(hmap, value);
+}
+
+static inline void teletextafteralpha(HOSTMAP* hmap, const int colour)
+{
+  hmap->A_teletext.flipflops &= NOTCONCEALFLAG;
+  if (hmap->A_teletext.flipflops&GRAPHICSFLAG)
+  {
+    hmap->B_teletext.holdoffset = 0;
+    if (hmap->A_teletext.flipflops&SEPARATEDFLAG)
+      hmap->B_teletext.lookupoffset -= 40;
+    else
+      hmap->B_teletext.lookupoffset -= 20;
+    hmap->A_teletext.flipflops &= NOTGRAPHICSFLAG;
+  }
+
+  hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0x07) | colour;
+  hmap->B_teletext.fg1fill = hmap->D_colour.normalfill[colour];
+}
+
+static inline void teletextaftergraphic(HOSTMAP* hmap, const int colour)
+{
+  hmap->A_teletext.flipflops &= NOTCONCEALFLAG;
+  if (!(hmap->A_teletext.flipflops&GRAPHICSFLAG))
+  {
+    hmap->B_teletext.holdoffset = 0;
+    if (hmap->A_teletext.flipflops&SEPARATEDFLAG)
+      hmap->B_teletext.lookupoffset += 40;
+    else
+      hmap->B_teletext.lookupoffset += 20;
+    hmap->A_teletext.flipflops |= GRAPHICSFLAG;
+  }
+
+  hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0x07) | colour;
+  hmap->B_teletext.fg1fill = hmap->D_colour.normalfill[colour];
+}
+
+HOSTMAP* teletextafteralphared(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 1);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextafteralphagreen(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 2);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextafteralphayellow(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 3);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextafteralphablue(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 4);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextafteralphamagenta(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 5);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextafteralphacyan(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 6);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextafteralphawhite(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 7);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextaftergraphicred(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 1);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextaftergraphicgreen(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 2);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextaftergraphicyellow(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 3);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextaftergraphicblue(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 4);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextaftergraphicmagenta(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 5);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextaftergraphiccyan(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 6);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextaftergraphicwhite(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 7);
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextafterflash(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->A_teletext.flipflops |= FLASHFLAG;
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextafterdoubleheight(HOSTMAP* hmap, uintptr_t value)
+{
+  if (!(hmap->A_teletext.flipflops&DOUBLEHEIGHTFLAG))
+  {
+    hmap->B_teletext.holdoffset = 0;
+    hmap->A_teletext.lastline = 19;
+    hmap->B_teletext.lookupoffset += 60;
+    hmap->A_teletext.flipflops |= DOUBLEHEIGHTFLAG;
+  }
+  return videocallinterceptedoddload(hmap, value);
+}
+
+HOSTMAP* teletextafterreleasegraphics(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->A_teletext.flipflops &= NOTHOLDFLAG;
+  return videocallinterceptedoddload(hmap, value);
+}
+
+static inline HOSTMAP* teletextat(HOSTMAP* hmap)
+{
+  int code = (hmap->B_teletext.queue>>16)&127;
+  intptr_t teletextoffset;
+
+  if (code < 32)
+  {
+    switch (code)
+    {
+      /*alpha*/
+      case 0x01:
+        videoapplyoddloadintercept(hmap, teletextafteralphared);
+        break;
+      case 0x02:
+        videoapplyoddloadintercept(hmap, teletextafteralphagreen);
+        break;
+      case 0x03:
+        videoapplyoddloadintercept(hmap, teletextafteralphayellow);
+        break;
+      case 0x04:
+        videoapplyoddloadintercept(hmap, teletextafteralphablue);
+        break;
+      case 0x05:
+        videoapplyoddloadintercept(hmap, teletextafteralphamagenta);
+        break;
+      case 0x06:
+        videoapplyoddloadintercept(hmap, teletextafteralphacyan);
+        break;
+      case 0x07:
+        videoapplyoddloadintercept(hmap, teletextafteralphawhite);
+        break;
+      case 0x08:
+        videoapplyoddloadintercept(hmap, teletextafterflash);
+        break;
+      case 0x09:
+        /*steady*/
+        hmap->A_teletext.flipflops &= NOTFLASHFLAG;
+        break;
+      case 0x0C:
+        /*normal height*/
+        if (hmap->A_teletext.flipflops&DOUBLEHEIGHTFLAG)
+        {
+          hmap->B_teletext.holdoffset = 0;
+          hmap->B_teletext.lookupoffset -= 60;
+          hmap->A_teletext.flipflops &= NOTDOUBLEHEIGHTFLAG;
+        }
+        break;
+      case 0x0D:
+        /*double height*/
+        videoapplyoddloadintercept(hmap, teletextafterdoubleheight);
+        break;
+      /*graphic*/
+      case 0x11:
+        videoapplyoddloadintercept(hmap, teletextaftergraphicred);
+        break;
+      case 0x12:
+        videoapplyoddloadintercept(hmap, teletextaftergraphicgreen);
+        break;
+      case 0x13:
+        videoapplyoddloadintercept(hmap, teletextaftergraphicyellow);
+        break;
+      case 0x14:
+        videoapplyoddloadintercept(hmap, teletextaftergraphicblue);
+        break;
+      case 0x15:
+        videoapplyoddloadintercept(hmap, teletextaftergraphicmagenta);
+        break;
+      case 0x16:
+        videoapplyoddloadintercept(hmap, teletextaftergraphiccyan);
+        break;
+      case 0x17:
+        videoapplyoddloadintercept(hmap, teletextaftergraphicwhite);
+        break;
+      case 0x18:
+        /*conceal*/
+        hmap->A_teletext.flipflops |= CONCEALFLAG;
+        break;
+      case 0x19:
+        /*contiguous*/
+        if (hmap->A_teletext.flipflops & SEPARATEDFLAG)
+        {
+          hmap->B_teletext.lookupoffset -= 20;
+          hmap->A_teletext.flipflops &= NOTSEPARATEDFLAG;
+        }
+        break;
+      case 0x1A:
+        /*separated*/
+        if (!(hmap->A_teletext.flipflops & SEPARATEDFLAG))
+        {
+          hmap->B_teletext.lookupoffset += 20;
+          hmap->A_teletext.flipflops |= SEPARATEDFLAG;
+        }
+        break;
+      case 0x1C:
+        hmap->B_teletext.colours &= ~0x70;
+        hmap->B_teletext.bg1fill = hmap->D_colour.normalfill[0];
+        break;
+      case 0x1D:
+        hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0x70)|((hmap->B_teletext.colours&0x07)<<4);
+        hmap->B_teletext.bg1fill = hmap->B_teletext.fg1fill;
+        break;
+      case 0x1E:
+        /*hold graphics*/
+        /*hold/release graphics actually affects the way colour-change*/
+        /*codes are displayed. normally they are blank; when hold graphics*/
+        /*is set, the previous character is displayed again. This allows*/
+        /*contiguous blocks of colour.*/
+        /*Thanks to Tom Seddon for that bit of information...*/
+        hmap->A_teletext.flipflops |= HOLDFLAG;
+        break;
+      case 0x1F:
+        /*release graphics*/
+        videoapplyoddloadintercept(hmap, teletextafterreleasegraphics);
+        break;
+    }
+
+    if (!(hmap->A_teletext.flipflops & HOLDFLAG))
+      hmap->B_teletext.holdoffset = 0;
+
+    teletextoffset = hmap->B_teletext.holdoffset;
+  }
+  else
+  {
+    teletextoffset = hmap->B_teletext.lookupoffset + ((code-32)<<7);
+
+    if ((code & 0x20) && (hmap->A_teletext.flipflops&GRAPHICSFLAG))
+      hmap->B_teletext.holdoffset = teletextoffset;
+  }
+
+  if ((hmap->A_teletext.flipflops & CONCEALFLAG) || ((hmap->A_teletext.flipflops & FLASHFLAG) && hmap->A_teletext.flash))
+    teletextoffset = 0;
+
+  hmap->B_teletext.lue1 = hmap->teletextlinelut[teletextoffset+hmap->A_teletext.line];
+
+  return hmap;
+}
+
+static inline HOSTMAP* teletextloadcommon(HOSTMAP* hmap, uintptr_t queue)
+{
+  uintptr_t colours;
+
+  hmap->B_teletext.lue2 = hmap->B_teletext.lue1;
+
+  if (queue&0x8000)
+  {
+    if (!(queue&0x800000))
+    {
+      colours = hmap->B_teletext.colours;
+
+      if ((colours & 0xFF) != 0x07)
+      {
+        hmap->B_teletext.colours = (colours&0xFF00) | 0x07;
+        hmap->B_teletext.fg1fill = hmap->D_colour.normalfill[7];
+        hmap->B_teletext.bg1fill = hmap->D_colour.normalfill[0];
+      }
+    }
+    teletextat(hmap);
+  }
+  else
+  {
+    hmap->B_teletext.lue1 = hmap->teletextlinelut[0];
+
+    if (queue&0x800000)
+    {
+      colours = hmap->B_teletext.colours;
+      if (colours & 0xFF)
+      {
+        hmap->B_teletext.colours = (colours&0xFF00);
+        hmap->B_teletext.bg1fill = hmap->B_teletext.fg1fill = hmap->D_colour.normalfill[0];
+      }
+
+      hmap->A_teletext.flipflops = 0;
+      hmap->B_teletext.holdoffset = 0;
+      hmap->B_teletext.lookupoffset = 0;
+
+      if (hmap->A_teletext.line < hmap->A_teletext.lastline)
+        hmap->A_teletext.line++;
+      else
+      {
+        hmap->A_teletext.line = 0;
+        hmap->A_teletext.lastline = 9;
+      }
+    }
+  }
+  return hmap;
+}
+
+HOSTMAP* teletextloadoneslice(HOSTMAP* hmap, uintptr_t queue)
+{
+  return teletextloadcommon(hmap, queue);
+}
+
+HOSTMAP* teletextloadrounding(HOSTMAP* hmap, uintptr_t queue)
+{
+  teletextloadcommon(hmap, queue);
+
+  if (hmap->A_crtc.c9low & 1)
+  {
+    hmap->A_teletext.roundingdirection1 = 1;
+    hmap->B_teletext.lue1 += hmap->B_teletext.lowoffset;
+  }
+  else
+    hmap->A_teletext.roundingdirection1 = 0;
+  return hmap;
+}
+
+static inline HOSTMAP* teletextshiftcommon(HOSTMAP* hmap)
+{
+  uintptr_t colours, colours1;
+
+  hmap->B_teletext.lue2 = hmap->B_teletext.lue1;
+  hmap->B_teletext.lue1 += hmap->B_teletext.rightoffset;
+
+  colours = hmap->B_teletext.colours;
+  colours1 = colours & 0xFF;
+
+  if ((colours >> 8) != colours1)
+  {
+    hmap->B_teletext.colours = (colours1<<8) | colours1;
+    hmap->B_teletext.fg2fill = hmap->B_teletext.fg1fill;
+    hmap->B_teletext.bg2fill = hmap->B_teletext.bg1fill;
+  }
+  return hmap;
+}
+
+static inline HOSTMAP* teletextshiftoneslice(HOSTMAP* hmap)
+{
+  return teletextshiftcommon(hmap);
+}
+
+static inline HOSTMAP* teletextshiftrounding(HOSTMAP* hmap)
+{
+  hmap->A_teletext.roundingdirection2 = hmap->A_teletext.roundingdirection1;
+  return teletextshiftcommon(hmap);
+}
+
+static inline HOSTMAP* teletextonesliceloadeven(HOSTMAP* hmap, uintptr_t value)
+{
+  uintptr_t queue = ((hmap->B_teletext.queue<<8)&0xFFFFFF00) | (value&127);
+  if (hmap->peripheral_code&VIDEODISPLAYDISPLAY)
+    queue |= 128;
+  hmap->B_teletext.queue = queue;
+
+  if (queue)
+    return teletextloadoneslice(hmap, queue);
+  else
+    return hmap;
+}
+
+static inline HOSTMAP* teletextonesliceloadevenR(HOSTMAP* hmap, uintptr_t value)
+{
+  uintptr_t queue = ((hmap->B_teletext.queue<<8)&0xFFFFFF00);
+  hmap->B_teletext.queue = queue;
+
+  if (queue)
+    return teletextloadoneslice(hmap, queue);
+  else
+    return hmap;
+}
+
+static inline HOSTMAP* teletextonesliceloadodd(HOSTMAP* hmap, uintptr_t value)
+{
+  uintptr_t queue = hmap->B_teletext.queue;
+
+  if (!(hmap->peripheral_code&VIDEODISPLAYDISPLAY))
+  {
+    queue |= 64;
+    hmap->B_teletext.queue = queue;
+  }
+
+  if (queue)
+    return teletextshiftcommon(hmap);
+  else
+    return hmap;
+}
+
+static inline HOSTMAP* teletextonesliceloadoddR(HOSTMAP* hmap, uintptr_t value)
+{
+  uintptr_t queue = hmap->B_teletext.queue & ~0xFF;
+  hmap->B_teletext.queue = queue;
+
+  if (queue)
+    return teletextshiftcommon(hmap);
+  else
+    return hmap;
+}
 
 static inline HOSTMAP* teletextloadeven(HOSTMAP* hmap, uintptr_t value)
 {
@@ -65,7 +558,7 @@ static inline HOSTMAP* teletextloadeven(HOSTMAP* hmap, uintptr_t value)
   hmap->B_teletext.queue = queue;
 
   if (queue)
-    return videoloadteletext(hmap, queue);
+    return teletextloadrounding(hmap, queue);
   else
     return hmap;
 }
@@ -76,7 +569,7 @@ static inline HOSTMAP* teletextloadevenR(HOSTMAP* hmap, uintptr_t value)
   hmap->B_teletext.queue = queue;
 
   if (queue)
-    return videoloadteletext(hmap, queue);
+    return teletextloadrounding(hmap, queue);
   else
     return hmap;
 }
@@ -92,7 +585,7 @@ static inline HOSTMAP* teletextloadodd(HOSTMAP* hmap, uintptr_t value)
   }
 
   if (queue)
-    return videoshiftteletext(hmap);
+    return teletextshiftrounding(hmap);
   else
     return hmap;
 }
@@ -103,9 +596,47 @@ static inline HOSTMAP* teletextloadoddR(HOSTMAP* hmap, uintptr_t value)
   hmap->B_teletext.queue = queue;
 
   if (queue)
-    return videoshiftteletext(hmap);
+    return teletextshiftrounding(hmap);
   else
     return hmap;
+}
+
+HOSTMAP* videoulaoloadfasteven(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->A_videoula.shiftregister = (uint32_t)value;
+  return teletextonesliceloadeven(hmap, value);
+}
+
+HOSTMAP* videoulaoloadfastevenR(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->A_videoula.shiftregister = (uint32_t)value;
+  return teletextonesliceloadevenR(hmap, value);
+}
+
+HOSTMAP* videoulaoloadfastodd(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->A_videoula.shiftregister = (uint32_t)value;
+  return teletextonesliceloadodd(hmap, value);
+}
+
+HOSTMAP* videoulaoloadfastoddR(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->A_videoula.shiftregister = (uint32_t)value;
+  return teletextonesliceloadoddR(hmap, value);
+}
+
+HOSTMAP* videoulaoloadslowodd(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state += VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = (uint32_t)value;
+  return teletextonesliceloadodd(hmap, value);
+}
+
+HOSTMAP* videoulaoloadslowoddR(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state += VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = (uint32_t)value;
+  return teletextonesliceloadoddR(hmap, value);
 }
 
 HOSTMAP* videoulaloadfasteven(HOSTMAP* hmap, uintptr_t value)
@@ -144,6 +675,62 @@ HOSTMAP* videoulaloadslowoddR(HOSTMAP* hmap, uintptr_t value)
   hmap->B_crtc.step_state += VIDEOSTEPIDLEFLAG;
   hmap->A_videoula.shiftregister = (uint32_t)value;
   return teletextloadoddR(hmap, value);
+}
+
+HOSTMAP* videoularate0oshift(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<1)|0x01;
+  return teletextonesliceloadeven(hmap, value);
+}
+
+HOSTMAP* videoularate0oshiftR(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<1)|0x01;
+  return teletextonesliceloadevenR(hmap, value);
+}
+
+HOSTMAP* videoularate1oshift(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<2)|0x03;
+  return teletextonesliceloadeven(hmap, value);
+}
+
+HOSTMAP* videoularate1oshiftR(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<2)|0x03;
+  return teletextonesliceloadevenR(hmap, value);
+}
+
+HOSTMAP* videoularate2oshift(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<4)|0x0F;
+  return teletextonesliceloadeven(hmap, value);
+}
+
+HOSTMAP* videoularate2oshiftR(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = (hmap->A_videoula.shiftregister<<4)|0x0F;
+  return teletextonesliceloadevenR(hmap, value);
+}
+
+HOSTMAP* videoularate3oshift(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = 0xFF;
+  return teletextonesliceloadeven(hmap, value);
+}
+
+HOSTMAP* videoularate3oshiftR(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->B_crtc.step_state -= VIDEOSTEPIDLEFLAG;
+  hmap->A_videoula.shiftregister = 0xFF;
+  return teletextonesliceloadevenR(hmap, value);
 }
 
 HOSTMAP* videoularate0shift(HOSTMAP* hmap, uintptr_t value)
