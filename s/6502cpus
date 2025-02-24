@@ -353,11 +353,11 @@
 |r6502read|
   ;IN: r0=address
   ;OUT:r0=value
-  STMFD sp!,{r1-r9,r11-r12,lr}
+  STMFD sp!,{r1-r3,r11-r12,lr}
   AND r1,r0,#&F000
   LDR r11,=r6502readoffset
   LDR pc,[r11,r1,LSR#10]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 ;
 ;rockwell 6502 cpu
@@ -366,121 +366,121 @@ r6502read0000
   ;&0000 - &2FFF
   ;LDR r12,=memory
   LDRB r0,[r12,r0]  ;r0 = memory[address]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read3000
   ;&3000 - &7FFF
   ;LDR r12,=memory
   LDRB r0,[r12,r0]  ;r0 = memory[address]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000
   ;&8000 - &BFFF
   ;LDR r12,=memory
   LDRB r0,[r12,r0]  ;r0 = memory[address]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_0
   ;&8000 - &BFFF
   LDR r12,=roms-&8000
   LDRB r0,[r12,r0]  ;r0 = roms[0][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_1
   ;&8000 - &BFFF
   LDR r12,=roms-&4000
   LDRB r0,[r12,r0]  ;r0 = roms[1][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_2
   ;&8000 - &BFFF
   LDR r12,=roms
   LDRB r0,[r12,r0]  ;r0 = roms[2][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_3
   ;&8000 - &BFFF
   LDR r12,=roms+&4000
   LDRB r0,[r12,r0]  ;r0 = roms[3][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_4
   ;&8000 - &BFFF
   LDR r12,=roms+&8000
   LDRB r0,[r12,r0]  ;r0 = roms[4][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_5
   ;&8000 - &BFFF
   LDR r12,=roms+&C000
   LDRB r0,[r12,r0]  ;r0 = roms[5][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_6
   ;&8000 - &BFFF
   LDR r12,=roms+&10000
   LDRB r0,[r12,r0]  ;r0 = roms[6][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_7
   ;&8000 - &BFFF
   LDR r12,=roms+&14000
   LDRB r0,[r12,r0]  ;r0 = roms[7][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_8
   ;&8000 - &BFFF
   LDR r12,=roms+&18000
   LDRB r0,[r12,r0]  ;r0 = roms[8][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_9
   ;&8000 - &BFFF
   LDR r12,=roms+&1C000
   LDRB r0,[r12,r0]  ;r0 = roms[9][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_A
   ;&8000 - &BFFF
   LDR r12,=roms+&20000
   LDRB r0,[r12,r0]  ;r0 = roms[10][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_B
   ;&8000 - &BFFF
   LDR r12,=roms+&24000
   LDRB r0,[r12,r0]  ;r0 = roms[11][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_C
   ;&8000 - &BFFF
   LDR r12,=roms+&28000
   LDRB r0,[r12,r0]  ;r0 = roms[12][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_D
   ;&8000 - &BFFF
   LDR r12,=roms+&2C000
   LDRB r0,[r12,r0]  ;r0 = roms[13][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_E
   ;&8000 - &BFFF
   LDR r12,=roms+&30000
   LDRB r0,[r12,r0]  ;r0 = roms[14][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502read8000_F
   ;&8000 - &BFFF
   LDR r12,=roms+&34000
   LDRB r0,[r12,r0]  ;r0 = roms[15][address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readC000
   ;&C000 - &FBFF (ROM)
   ;LDR r12,=memory
   LDRB r0,[r12,r0]  ;r0 = memory[address]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 ;
 ;rockwell 6502 cpu
@@ -490,7 +490,7 @@ r6502readbF000
   CMP r1,#&0C00 ;<&FC00
   ;BLT r6502readC000
   LDRLTB r0,[r12,r0]  ;r0=memory[address]
-  LDMLTFD sp!,{r1-r9,r11-r12,pc}
+  LDMLTFD sp!,{r1-r3,r11-r12,pc}
   CMP r1,#&0D00 ;<&FD00
   BLT r6502readbFC00
   CMP r1,#&0E00 ;<&FE00
@@ -499,7 +499,7 @@ r6502readbF000
   BLT r6502readbFE00
   ;LDR r12,=memory
   LDRB r0,[r12,r0]  ;r0=memory[address]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readbFC00
   ;&FC00 - &FCFF (FRED)
@@ -514,7 +514,7 @@ r6502readbFC00
   SUB rcycles,rcycles,#2
   ;STR r0,[r11] ;r6502_cyclestogo -= 2
   ;MOV r0,#&FE
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readbFD00
   ;&FD00 - &FDFF (JIM)
@@ -529,7 +529,7 @@ r6502readbFD00
   SUB rcycles,rcycles,#2
   ;STR r0,[r11] ;r6502_cyclestogo -= 2
   ;MOV r0,#&FE
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readbFE00
   ;FE00 - &FEFF (SHEILA)
@@ -538,7 +538,7 @@ r6502readbFE00
   BL sheilaread_b
   LDR r11,=r6502_cyclestogo
   LDR rcycles,[r11]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 ;
 ;rockwell 6502 cpu
@@ -554,41 +554,41 @@ r6502readbp3000_ram
 
   LDR r12,=shadow
   LDRB r0,[r12,r0] ;r0=shadow[r0]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readbp3000_ram2
   LDR r11,=beebit_romsel ;acccon
   LDR r2,[r11] ;romsel
   ANDS r2,r2,#&80
   LDREQB r0,[r12,r0] ;r0=memory[r0]
-  LDMEQFD sp!,{r1-r9,r11-r12,pc}
+  LDMEQFD sp!,{r1-r3,r11-r12,pc}
 
   ;romsel AND &80
   CMP rpc,#&A000 ;if r6502_pc < &A000
   ;;BLT r6502read3000
   LDRLTB r0,[r12,r0] ;r0=memory[r0]
-  LDMLTFD sp!,{r1-r9,r11-r12,pc}
+  LDMLTFD sp!,{r1-r3,r11-r12,pc}
   CMP rpc,#&B000 ;if r6502_pc >= &B000
   ;;BGE r6502read3000
   LDRGEB r0,[r12,r0] ;r0=memory[r0]
-  LDMGEFD sp!,{r1-r9,r11-r12,pc}
+  LDMGEFD sp!,{r1-r3,r11-r12,pc}
 
   LDR r12,=shadow
   LDRB r0,[r12,r0] ;r0=shadow[r0]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readbp8000_ram
   ;&8000 - &AFFF (SHADOW RAM)
   LDR r12,=shadow-&8000
   LDRB r0,[r12,r0]  ;r0=shadow[address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readbpF000
   AND r1,r0,#&0F00
   CMP r1,#&0C00 ;<&FC00
   ;BLT r6502readC000
   LDRLTB r0,[r12,r0]  ;r0=memory[address]
-  LDMLTFD sp!,{r1-r9,r11-r12,pc}
+  LDMLTFD sp!,{r1-r3,r11-r12,pc}
   CMP r1,#&0D00 ;<&FD00
   BLT r6502readbpFC00
   CMP r1,#&0E00 ;<&FE00
@@ -597,7 +597,7 @@ r6502readbpF000
   BLT r6502readbpFE00
   ;LDR r12,=memory
   LDRB r0,[r12,r0]  ;r0 = memory[address]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readbpFC00
   ;&FC00 - &FCFF (FRED)
@@ -612,7 +612,7 @@ r6502readbpFC00
   SUB rcycles,rcycles,#2
   ;STR r0,[r11] ;r6502_cyclestogo -= 2
   ;MOV r0,#&FE
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readbpFD00
   ;&FD00 - &FDFF (JIM)
@@ -627,7 +627,7 @@ r6502readbpFD00
   SUB rcycles,rcycles,#2
   ;STR r0,[r11] ;r6502_cyclestogo -= 2
   ;MOV r0,#&FE
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readbpFE00
   ;FE00 - &FEFF (SHEILA)
@@ -636,7 +636,7 @@ r6502readbpFE00
   BL sheilaread_bp
   LDR r11,=r6502_cyclestogo
   LDR rcycles,[r11]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 ;
 ;rockwell 6502 cpu
@@ -668,7 +668,7 @@ r6502readm3000_x
 
   LDR r12,=shadow
   LDRB r0,[r12,r0]  ;r0=shadow[address]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readm3000_e
   ;&3000 - &7FFF (ACCCON b1) (E) (RAM)
@@ -680,26 +680,26 @@ r6502readm3000_e
 
   LDR r12,=shadow
   LDRB r0,[r12,r0]  ;r0=shadow[address]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readm8000_ram
   ;&8000 - &8FFF (ROMSEL b7) (RAM)
   LDR r12,=shadow-&8000
   LDRB r0,[r12,r0]  ;r0=shadow[address-&8000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readmC000_y
   ;&C000 - &DFFF (ACCCON b3) (RAM)
   LDR r12,=shadow-&B000
   LDRB r0,[r12,r0]  ;r0=shadow[address-&B000]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readmF000
   AND r1,r0,#&0F00
   CMP r1,#&0C00 ;<&FC00
   ;BLT r6502readC000
   LDRLTB r0,[r12,r0]  ;r0=memory[address]
-  LDMLTFD sp!,{r1-r9,r11-r12,pc}
+  LDMLTFD sp!,{r1-r3,r11-r12,pc}
   CMP r1,#&0D00 ;<&FD00
   BLT r6502readmFC00
   CMP r1,#&0E00 ;<&FE00
@@ -708,7 +708,7 @@ r6502readmF000
   BLT r6502readmFE00
   ;LDR r12,=memory
   LDRB r0,[r12,r0] ;r0=memory[address]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readmFC00
   ;&FC00 - &FCFF (FRED)
@@ -716,11 +716,11 @@ r6502readmFC00
   LDR r3,[r11] ;acccon
   ANDS r2,r3,#&40 ;TST
   LDRNEB r0,[r12,r0] ;r0=memory[address]
-  LDMNEFD sp!,{r1-r9,r11-r12,pc}
+  LDMNEFD sp!,{r1-r3,r11-r12,pc}
 
   ANDS r2,r3,#&20 ;IFJ
   MOVNE r0,#0 ;cartridge
-  LDMNEFD sp!,{r1-r9,r11-r12,pc}
+  LDMNEFD sp!,{r1-r3,r11-r12,pc}
 
   ;1MHz bus
   AND r1,r0,#255 ; low 8 bits in R1
@@ -730,7 +730,7 @@ r6502readmFC00
   MOVS r0,r2 ; result in R0 (clearing V!)
 
   SUB rcycles,rcycles,#2
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readmFD00
   ;&FD00 - &FDFF (JIM)
@@ -738,11 +738,11 @@ r6502readmFD00
   LDR r3,[r11] ;acccon
   ANDS r2,r3,#&40 ;TST
   LDRNEB r0,[r12,r0] ;r0=memory[address]
-  LDMNEFD sp!,{r1-r9,r11-r12,pc}
+  LDMNEFD sp!,{r1-r3,r11-r12,pc}
 
   ANDS r2,r3,#&20 ;IFJ
   MOVNE r0,#0 ;cartridge
-  LDMNEFD sp!,{r1-r9,r11-r12,pc}
+  LDMNEFD sp!,{r1-r3,r11-r12,pc}
 
   ;1MHz bus
   AND r1,r0,#255 ; low 8 bits in R1
@@ -752,7 +752,7 @@ r6502readmFD00
   MOVS r0,r2 ; result in R0 (clearing V!)
 
   SUB rcycles,rcycles,#2
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 r6502readmFE00
   ;FE00 - &FEFF (SHEILA)
@@ -768,7 +768,7 @@ r6502readmFE00
   LDR r3,[r11] ;acccon
   ANDS r2,r3,#&40 ;TST
   LDRNEB r0,[r12,r0] ;r0=memory[address]
-  LDMNEFD sp!,{r1-r9,r11-r12,pc}
+  LDMNEFD sp!,{r1-r3,r11-r12,pc}
 
   LDR r11,=r6502_cyclestogo
   STR rcycles,[r11]
@@ -777,7 +777,7 @@ r6502readmFE00
   ;LDMFD sp!,{r1-r12,pc}
   LDR r11,=r6502_cyclestogo
   LDR rcycles,[r11]
-  LDMFD sp!,{r1-r9,r11-r12,pc}
+  LDMFD sp!,{r1-r3,r11-r12,pc}
 
 ;buffer2
 ;  DCD 0
@@ -791,11 +791,11 @@ r6502readmFE00
 |r6502write|
   ;r0=address
   ;r1=value
-  STMFD sp!,{r0-r9,r11-r12,lr}
+  STMFD sp!,{r0-r3,r11-r12,lr}
   AND r2,r0,#&F000
   LDR r11,=r6502writeoffset
   LDR pc,[r11,r2,LSR#10]
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 ;
 ;rockwell 6502 cpu
@@ -804,193 +804,193 @@ r6502write0000
   ;&0000 - &2FFF (RAM)
   ;LDR r12,=memory
   STRB r1,[r12,r0] ;memory[address] = r1;
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write3000
   ;&3000 - &7FFF (RAM)
   ;LDR r12,=memory
   STRB r1,[r12,r0] ;memory[address] = r1;
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000
   ;&8000 - &BFFF (SIDEWAYS RAM)
-  LDR r5,=beebit_romselected
-  LDR r4,=beebit_romwritable
-  LDR r3,[r5]
-  LDR r2,[r4,r3,LSL#2] ;r2 = beebit_romwritable[beebit_romselected]
+  LDR r2,=beebit_romselected
+  LDR r3,=beebit_romwritable
+  LDR r2,[r2]
+  LDR r2,[r3,r2,LSL#2] ;r2 = beebit_romwritable[beebit_romselected]
   CMP r2,#&00 ;if beebit_romwritable[beebit_romselected]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
 
   ;LDR r12,=memory
   STRB r1,[r12,r0] ;memory[address] = r1;
-  MOV r3,#&FF
-  LDR r4,=beebit_rommodified
-  STR r3,[r4] ;beebit_rommodifed = TRUE
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  MOV r2,#&FF
+  LDR r3,=beebit_rommodified
+  STR r2,[r3] ;beebit_rommodifed = TRUE
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_0
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4] ;r2 = beebit_romwritable[0]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3] ;r2 = beebit_romwritable[0]
   TST r2,r2 ;if beebit_romwritable[0]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms-&8000
   STRB r1,[r12,r0] ;roms[0][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_1
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#1:SHL:2] ;r2 = beebit_romwritable[1]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#1:SHL:2] ;r2 = beebit_romwritable[1]
   TST r2,r2 ;if beebit_romwritable[1]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms-&4000
   STRB r1,[r12,r0] ;roms[1][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_2
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#2:SHL:2] ;r2 = beebit_romwritable[2]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#2:SHL:2] ;r2 = beebit_romwritable[2]
   TST r2,r2 ;if beebit_romwritable[2]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms
   STRB r1,[r12,r0] ;roms[2][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_3
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#3:SHL:2] ;r2 = beebit_romwritable[3]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#3:SHL:2] ;r2 = beebit_romwritable[3]
   TST r2,r2 ;if beebit_romwritable[3]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&4000
   STRB r1,[r12,r0] ;roms[3][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_4
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#4:SHL:2] ;r2 = beebit_romwritable[4]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#4:SHL:2] ;r2 = beebit_romwritable[4]
   TST r2,r2 ;if beebit_romwritable[4]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&8000
   STRB r1,[r12,r0] ;roms[4][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_5
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#5:SHL:2] ;r2 = beebit_romwritable[5]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#5:SHL:2] ;r2 = beebit_romwritable[5]
   TST r2,r2 ;if beebit_romwritable[5]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&C000
   STRB r1,[r12,r0] ;roms[5][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_6
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#6:SHL:2] ;r2 = beebit_romwritable[6]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#6:SHL:2] ;r2 = beebit_romwritable[6]
   TST r2,r2 ;if beebit_romwritable[6]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&10000
   STRB r1,[r12,r0] ;roms[6][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_7
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#7:SHL:2] ;r2 = beebit_romwritable[7]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#7:SHL:2] ;r2 = beebit_romwritable[7]
   TST r2,r2 ;if beebit_romwritable[7]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&14000
   STRB r1,[r12,r0] ;roms[7][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_8
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#8:SHL:2] ;r2 = beebit_romwritable[8]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#8:SHL:2] ;r2 = beebit_romwritable[8]
   TST r2,r2 ;if beebit_romwritable[8]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&18000
   STRB r1,[r12,r0] ;roms[8][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_9
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#9:SHL:2] ;r2 = beebit_romwritable[9]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#9:SHL:2] ;r2 = beebit_romwritable[9]
   TST r2,r2 ;if beebit_romwritable[9]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&1C000
   STRB r1,[r12,r0] ;roms[9][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_A
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#10:SHL:2] ;r2 = beebit_romwritable[10]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#10:SHL:2] ;r2 = beebit_romwritable[10]
   TST r2,r2 ;if beebit_romwritable[10]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&20000
   STRB r1,[r12,r0] ;roms[10][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_B
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#11:SHL:2] ;r2 = beebit_romwritable[11]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#11:SHL:2] ;r2 = beebit_romwritable[11]
   TST r2,r2 ;if beebit_romwritable[11]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&24000
   STRB r1,[r12,r0] ;roms[11][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_C
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#12:SHL:2] ;r2 = beebit_romwritable[12]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#12:SHL:2] ;r2 = beebit_romwritable[12]
   TST r2,r2 ;if beebit_romwritable[12]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&28000
   STRB r1,[r12,r0] ;roms[12][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_D
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#13:SHL:2] ;r2 = beebit_romwritable[13]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#13:SHL:2] ;r2 = beebit_romwritable[13]
   TST r2,r2 ;if beebit_romwritable[13]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&2C000
   STRB r1,[r12,r0] ;roms[13][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_E
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#14:SHL:2] ;r2 = beebit_romwritable[14]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#14:SHL:2] ;r2 = beebit_romwritable[14]
   TST r2,r2 ;if beebit_romwritable[14]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&30000
   STRB r1,[r12,r0] ;roms[14][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502write8000_F
   ;&8000 - &BFFF
-  LDR r4,=beebit_romwritable
-  LDR r2,[r4,#15:SHL:2] ;r2 = beebit_romwritable[15]
+  LDR r3,=beebit_romwritable
+  LDR r2,[r3,#15:SHL:2] ;r2 = beebit_romwritable[15]
   TST r2,r2 ;if beebit_romwritable[15]
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
   LDR r12,=roms+&34000
   STRB r1,[r12,r0] ;roms[15][address-&8000] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writeC000
   ;&C000 - &FBFF (OS - should not be allowed!)
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 ;
 ;rockwell 6502 cpu
@@ -1000,7 +1000,7 @@ r6502writebF000
   AND r2,r0,#&0F00
   CMP r2,#&0C00 ;<&FC00
   ;BLT r6502writebC000
-  LDMLTFD sp!,{r0-r9,r11-r12,pc}
+  LDMLTFD sp!,{r0-r3,r11-r12,pc}
   CMP r2,#&0D00 ;<&FD00
   BLT r6502writebFC00
   CMP r2,#&0E00 ;<&FE00
@@ -1010,7 +1010,7 @@ r6502writebF000
   ;FF00 - &FFFF (OS - should not be allowed!)
   ;LDR r12,=memory
   ;STRB r1,[r12,r0] ;memory[r12+r0] = r1;
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writebFC00
   ;&FC00 - &FCFF (FRED)
@@ -1024,7 +1024,7 @@ r6502writebFC00
   ;SUB r4,r4,#2
   SUB rcycles,rcycles,#2
   ;STR r4,[r11] ;r6502_cyclestogo -= 2
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writebFD00
   ;&FD00 - &FDFF (JIM)
@@ -1038,7 +1038,7 @@ r6502writebFD00
   ;SUB r4,r4,#2
   SUB rcycles,rcycles,#2
   ;STR r4,[r11] ;r6502_cyclestogo -= 2
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writebFE00
   ;FE00 - &FEFF (SHEILA)
@@ -1047,7 +1047,7 @@ r6502writebFE00
   BL sheilawrite_b
   LDR r11,=r6502_cyclestogo
   LDR rcycles,[r11]
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 ;
 ;rockwell 6502 cpu
@@ -1063,41 +1063,41 @@ r6502writebp3000_ram
 
   LDR r12,=shadow
   STRB r1,[r12,r0] ;shadow[r0] = r1;
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writebp3000_ram2
   LDR r11,=beebit_romsel ;acccon
   LDR r2,[r11] ;romsel
   ANDS r2,r2,#&80
   STREQB r1,[r12,r0] ;memory[r0] = r1
-  LDMEQFD sp!,{r0-r9,r11-r12,pc}
+  LDMEQFD sp!,{r0-r3,r11-r12,pc}
 
   ;romsel AND &80
   CMP rpc,#&A000 ;if r6502_pc < &A000
   ;;BLT r6502write3000
   STRLTB r1,[r12,r0] ;memory[r12] = r1;
-  LDMLTFD sp!,{r0-r9,r11-r12,pc}
+  LDMLTFD sp!,{r0-r3,r11-r12,pc}
   CMP rpc,#&B000 ;if r6502_pc >= &B000
   ;;BGE r6502write3000
   STRGEB r1,[r12,r0] ;memory[r12] = r1;
-  LDMGEFD sp!,{r0-r9,r11-r12,pc}
+  LDMGEFD sp!,{r0-r3,r11-r12,pc}
 
   LDR r12,=shadow
   STRB r1,[r12,r0] ;shadow[r0] = r1;
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writebp8000_ram
   ;&8000 - &AFFF (SHADOW RAM)
   LDR r12,=shadow-&8000
   STRB r1,[r12,r0] ;shadow[address-&8000] = r1;
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writebpF000
   ;&F000 - &FFFF (OS - should not be allowed!)
   AND r2,r0,#&0F00
   CMP r2,#&0C00 ;<&FC00
   ;BLT r6502writeC000
-  LDMLTFD sp!,{r0-r9,r11-r12,pc}
+  LDMLTFD sp!,{r0-r3,r11-r12,pc}
   CMP r2,#&0D00 ;<&FD00
   BLT r6502writebpFC00
   CMP r2,#&0E00 ;<&FE00
@@ -1107,7 +1107,7 @@ r6502writebpF000
   ;FF00 - &FFFF (OS - should not be allowed!)
   ;LDR r12,=memory
   ;STRB r1,[r12,r0]  ;r0 = memory[address]
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writebpFC00
   ;&FC00 - &FCFF (FRED)
@@ -1121,7 +1121,7 @@ r6502writebpFC00
   ;SUB r4,r4,#2
   SUB rcycles,rcycles,#2
   ;STR r4,[r11] ;r6502_cyclestogo -= 2
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writebpFD00
   ;&FD00 - &FDFF (JIM)
@@ -1135,7 +1135,7 @@ r6502writebpFD00
   ;SUB r4,r4,#2
   SUB rcycles,rcycles,#2
   ;STR r4,[r11] ;r6502_cyclestogo -= 2
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writebpFE00
   ;FE00 - &FEFF (SHEILA)
@@ -1144,7 +1144,7 @@ r6502writebpFE00
   BL sheilawrite_bp
   LDR r11,=r6502_cyclestogo
   LDR rcycles,[r11]
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 ;
 ;rockwell 6502 cpu
@@ -1185,7 +1185,7 @@ r6502writem3000_x
 
   LDR r12,=shadow
   STRB r1,[r12,r0]  ;shadow[r12] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writem3000_e
   ;&3000 - &7FFF (ACCCON b1) (E) (RAM)
@@ -1228,26 +1228,26 @@ r6502writem3000_e
 
   LDR r12,=shadow
   STRB r1,[r12,r0] ;shadow[r0] = r1
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writem8000_ram
   ;&8000 - &8FFF (ROMSEL b7) (RAM)
   LDR r12,=shadow-&8000
   STRB r1,[r12,r0] ;shadow[address-&8000] = r1;
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writemC000_y
   ;&C000 - &DFFF (ACCCON b3) (RAM)
   LDR r12,=shadow-&B000
   STRB r1,[r12,r0] ;shadow[address-&B000] = r1;
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writemF000
   ;&F000 - &FFFF (OS - should not be allowed!)
   AND r2,r0,#&0F00
   CMP r2,#&0C00 ;<&FC00
   ;BLT r6502writeC000
-  LDMLTFD sp!,{r0-r9,r11-r12,pc}
+  LDMLTFD sp!,{r0-r3,r11-r12,pc}
   CMP r2,#&0D00 ;<&FD00
   BLT r6502writemFC00
   CMP r2,#&0E00 ;<&FE00
@@ -1257,14 +1257,14 @@ r6502writemF000
   ;FF00 - &FFFF (OS - should not be allowed!)
   ;LDR r12,=memory
   ;STRB r1,[r12,r0] ;memory[r12+r0] = r1;
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writemFC00
   ;&FC00 - &FCFF (FRED)
   LDR r11,=beebit_acccon
   LDR r3,[r11] ;acccon
   ANDS r2,r3,#&20 ;IFJ
-  LDMNEFD sp!,{r1-r9,r11-r12,pc} ;cartridge
+  LDMNEFD sp!,{r0-r3,r11-r12,pc} ;cartridge
 
   ;1MHz bus
   AND r2,r1,#255
@@ -1277,14 +1277,14 @@ r6502writemFC00
   ;SUB r4,r4,#2
   SUB rcycles,rcycles,#2
   ;STR r4,[r11] ;r6502_cyclestogo -= 2
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writemFD00
   ;&FD00 - &FDFF (JIM)
   LDR r11,=beebit_acccon
   LDR r3,[r11] ;acccon
   ANDS r2,r3,#&20 ;IFJ
-  LDMNEFD sp!,{r1-r9,r11-r12,pc} ;cartridge
+  LDMNEFD sp!,{r0-r3,r11-r12,pc} ;cartridge
 
   ;1MHz bus
   AND r2,r1,#255
@@ -1297,7 +1297,7 @@ r6502writemFD00
   ;SUB r4,r4,#2
   SUB rcycles,rcycles,#2
   ;STR r4,[r11] ;r6502_cyclestogo -= 2
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 r6502writemFE00
   ;FE00 - &FEFF (SHEILA)
@@ -1386,7 +1386,7 @@ r6502writemFE00
   ;SWI OS_Byte
   ;MOV r0,r3
 
-  LDMFD sp!,{r0-r9,r11-r12,pc}
+  LDMFD sp!,{r0-r3,r11-r12,pc}
 
 |swappages|
 ;r0=first address
