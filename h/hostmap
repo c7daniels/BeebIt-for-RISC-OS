@@ -287,12 +287,12 @@ typedef struct
 typedef struct
 {
   uintptr_t numbers[16];
+  uintptr_t outputfill[16];
   uintptr_t absolutefill[16];
   uintptr_t normalfill[16];
   uintptr_t inversefill[16];
   uintptr_t normalfragment[16];
   uintptr_t inversefragment[16];
-  uintptr_t fill[16];
   uintptr_t fragment[16];
 } HOSTMAPDCOLOUR;
 
@@ -324,7 +324,6 @@ typedef struct
 typedef struct
 {
   CRTCSTEPOP *step_state;
-  HOSTVIDEOOP endoflineactions[7];
   uintptr_t start_code;
   uintptr_t row_code;
   uintptr_t scan_code;
@@ -345,12 +344,13 @@ typedef struct
 
 typedef struct
 {
-  R6502PERIPHERALOP blacklevelops[8];
   VIDEOULAFRAGMENTREFRESHOP fragmentrefreshaction;
   VIDEOULALOADOP evenloadop;
-  VIDEOULALOADOP oddloadop;
   VIDEOULALOADOP evenRloadop;
+  VIDEOULALOADOP oddloadop;
   VIDEOULALOADOP oddRloadop;
+  VIDEOULALOADOP selectedevenloadop;
+  VIDEOULALOADOP selectedevenRloadop;
   const uint32_t* bytelut;
   uintptr_t bytecolours;
   uintptr_t flashing;
@@ -367,20 +367,25 @@ typedef struct
   uint8_t line;
   uint8_t lastline;
   uint8_t flipflops;
-  uint8_t flash;
   uint8_t flashstage;
   uint8_t flashcounter;
+  uint8_t padding[1];
 } HOSTMAPATELETEXT;
 
 typedef struct
 {
+  uintptr_t colourfill[8];
+  uintptr_t fg1fill;
+  uintptr_t bg1fill;
+  uintptr_t fg2fill;
+  uintptr_t bg2fill;
   uintptr_t rightoffset;
   uintptr_t lowoffset;
-  uintptr_t lookupoffset;
-  uintptr_t holdoffset;
   uintptr_t bblevelbit;
   uintptr_t queue;
   uintptr_t colours;
+  intptr_t* lutslice;
+  intptr_t holdlue;
   intptr_t lue1;
   intptr_t lue2;
 } HOSTMAPBTELETEXT;
@@ -502,7 +507,7 @@ typedef struct HOSTMAP
   HOSTMAPBTELETEXT B_teletext;
   HOSTMAPBVIDBUF B_vidbuf;
   HOSTMAPBVIDOUT B_vidout;
-  uintptr_t B_unused[4];
+  uintptr_t B_unused[5];
 
   // AArch32 offsets &400 - &FFF
   R6502PERIPHERALOPTABLE peripheralops;
@@ -534,12 +539,14 @@ typedef struct HOSTMAP
   HOSTHIGHOP bridgedreadhigh[1024];
   HOSTHIGHOP bridgedwritehigh[1024];
   HOSTKEYBOARDOP keyboardops[1024];
+  HOSTVIDEOOP teletextops[512];
   CRTCSTEPOP crtcstep[512];
-  uintptr_t crtcstep_unused[512];
   uintptr_t crtccolumntags[256];
-  uintptr_t crtccolumntags_unused[768];
   CRTCSTEPOP crtctaggedops[256];
-  uintptr_t high_unused[2816];
+  HOSTVIDEOOP endoflineactions[7];
+  uintptr_t endoflineactions_unused[249];
+  R6502PERIPHERALOP blacklevelops[8];
+  uintptr_t high_unused[3320];
 
   // AArch32 offsets &10000 - &1FFFF
   uint8_t memory[0x10000];

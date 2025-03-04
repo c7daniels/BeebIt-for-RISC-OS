@@ -73,6 +73,23 @@
 #define VIDEOREADODDFLAG 0x02
 #define VIDEOREADSHADOWFLAG 0x01
 
+#define TELETEXTCONCEALFLAG 0x80
+#define TELETEXTFLASHFLAG 0x40
+#define TELETEXTFLASHTIMEFLAG 0x20
+#define TELETEXTHOLDFLAG 0x10
+#define TELETEXTDOUBLEHEIGHTFLAG 0x08
+#define TELETEXTSEPARATEDFLAG 0x02
+#define TELETEXTGRAPHICFLAG 0x01
+#define NOTTELETEXTCONCEALFLAG 0x7F
+#define NOTTELETEXTFLASHFLAG 0xBF
+#define NOTTELETEXTFLASHTIMEFLAG 0xDF
+#define NOTTELETEXTHOLDFLAG 0xEF
+#define NOTTELETEXTDOUBLEHEIGHTFLAG 0xF7
+#define NOTTELETEXTSEPARATEDFLAG 0xFD
+#define NOTTELETEXTGRAPHICFLAG 0xFE
+
+#define TELETEXTCONCEALTHRESHOLD (0xFF-TELETEXTCONCEALFLAG-TELETEXTFLASHTIMEFLAG)
+
 typedef HOSTVIDEOREADOP VIDEOREADFOUR[4]; //even main, even shadow, odd main, odd shadow
 
 typedef VIDEOREADFOUR* VIDEOREADTWENTY[5]; //no wrap then screen start 0x4000, 0x6000, 0x3000, 0x5800
@@ -88,6 +105,8 @@ extern unsigned int palette_specified[8];
 
 extern int videospeed_specified;
 extern int framerate_specified;
+
+extern void refreshteletextcolourfill(HOSTMAP* hmap);
 
 extern R6502ZONEMAP* videodisplayskip(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
 extern R6502ZONEMAP* videowritecursorblank(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
@@ -111,8 +130,6 @@ extern void videosetpalette(void);
 extern void videosetscale(void);
 extern void videohostmodevars(void);
 extern int writeusedcolours(void);
-extern HOSTMAP* videoloadteletext(HOSTMAP* hmap, uintptr_t queue);
-extern HOSTMAP* videoshiftteletext(HOSTMAP* hmap);
 extern HOSTMAP* videosetscreenstartindex(HOSTMAP* hmap, uint8_t index);
 extern void videofreeworkspace(void);
 extern void videoreset(void);

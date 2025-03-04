@@ -42,18 +42,6 @@ extern _kernel_swi_regs regs;
 
 #define TIME_25HZ 4 /*CLK_TCK/25*/ /*25 times per second*/
 #define TIME_50HZ 2 /*CLK_TCK/50*/ /*50 times per second*/
-#define CONCEALFLAG 0x80
-#define FLASHFLAG 0x40
-#define HOLDFLAG 0x20
-#define DOUBLEHEIGHTFLAG 0x08
-#define SEPARATEDFLAG 0x02
-#define GRAPHICSFLAG 0x01
-#define NOTCONCEALFLAG 0x7F
-#define NOTFLASHFLAG 0xBF
-#define NOTHOLDFLAG 0xDF
-#define NOTDOUBLEHEIGHTFLAG 0xF7
-#define NOTSEPARATEDFLAG 0xFD
-#define NOTGRAPHICSFLAG 0xFE
 
 #define PROGRESSIVECLIPPEDSKIPFLAGS (CLIPPEDBELOWSKIPFLAG|CLIPPEDSKIPFLAG|CLIPPEDABOVESKIPFLAG)
 #define TIMINGSKIPFLAGS (FRAMETIMESKIPFLAG|VSYNCSKIPFLAG|HSYNCSKIPFLAG|BEFOREDISPLAYSKIPFLAG|FASTSKIPFLAG)
@@ -144,6 +132,248 @@ HOSTMAP* videoreaddisplaysignal(HOSTMAP* hmap, uintptr_t scan_code);
 HOSTMAP* videoinactivesetskew(HOSTMAP* hmap, uint8_t r8);
 HOSTMAP* videosetskew(HOSTMAP* hmap, uint8_t r8);
 HOSTMAP* videoprogressivesetskew(HOSTMAP* hmap, uint8_t r8);
+
+HOSTMAP* teletextnoponeslice(HOSTMAP* hmap);
+HOSTMAP* teletextnoprounding(HOSTMAP* hmap);
+HOSTMAP* teletextendofline(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline00(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline01(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline02(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline03(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline04(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline05(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline06(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline08(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline0D(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline11(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline12(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline13(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline14(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline15(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline16(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline17(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline18(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline1A(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline1D(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline1E(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline20(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline21(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline22(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline23(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline24(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline25(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline26(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline27(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline28(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline29(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline2A(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline2B(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline2C(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline2D(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline2E(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline2F(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline30(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline31(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline32(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline33(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline34(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline35(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline36(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline37(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline38(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline39(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline3A(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline3B(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline3C(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline3D(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline3E(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline3F(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline40(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline41(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline42(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline43(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline44(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline45(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline46(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline47(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline48(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline49(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline4A(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline4B(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline4C(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline4D(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline4E(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline4F(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline50(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline51(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline52(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline53(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline54(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline55(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline56(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline57(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline58(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline59(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline5A(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline5B(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline5C(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline5D(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline5E(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline5F(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline60(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline61(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline62(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline63(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline64(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline65(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline66(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline67(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline68(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline69(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline6A(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline6B(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline6C(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline6D(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline6E(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline6F(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline70(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline71(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline72(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline73(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline74(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline75(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline76(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline77(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline78(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline79(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline7A(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline7B(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline7C(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline7D(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline7E(HOSTMAP* hmap);
+HOSTMAP* teletextcodestartofline7F(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline00(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline01(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline02(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline03(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline04(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline05(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline06(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline07(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline08(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline09(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline0C(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline0D(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline11(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline12(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline13(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline14(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline15(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline16(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline17(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline18(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline19(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline1A(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline1C(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline1D(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline1E(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline1F(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline20(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline21(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline22(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline23(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline24(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline25(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline26(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline27(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline28(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline29(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline2A(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline2B(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline2C(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline2D(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline2E(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline2F(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline30(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline31(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline32(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline33(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline34(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline35(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline36(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline37(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline38(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline39(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline3A(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline3B(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline3C(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline3D(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline3E(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline3F(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline40(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline41(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline42(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline43(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline44(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline45(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline46(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline47(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline48(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline49(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline4A(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline4B(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline4C(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline4D(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline4E(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline4F(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline50(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline51(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline52(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline53(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline54(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline55(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline56(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline57(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline58(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline59(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline5A(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline5B(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline5C(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline5D(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline5E(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline5F(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline60(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline61(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline62(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline63(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline64(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline65(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline66(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline67(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline68(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline69(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline6A(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline6B(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline6C(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline6D(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline6E(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline6F(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline70(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline71(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline72(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline73(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline74(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline75(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline76(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline77(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline78(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline79(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline7A(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline7B(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline7C(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline7D(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline7E(HOSTMAP* hmap);
+HOSTMAP* teletextcodemidline7F(HOSTMAP* hmap);
 
 /*palette*/
 const unsigned int palette_rgb[8] =
@@ -319,13 +549,13 @@ void videoinit(void)
   nteletextlinepatterns = number;
   teletextlinepatterns = realloc(patterns, number * sizeof(int));
 
-  hmap->B_crtc.endoflineactions[0] = videoendframeidle;
-  hmap->B_crtc.endoflineactions[1] = videoendframesoon;
-  hmap->B_crtc.endoflineactions[2] = videoendframenoadjust;
-  hmap->B_crtc.endoflineactions[3] = videoendframeadjust;
-  hmap->B_crtc.endoflineactions[4] = videoendframeadjusting;
-  hmap->B_crtc.endoflineactions[5] = videoendframeadjustcomplete;
-  hmap->B_crtc.endoflineactions[6] = videoendframedummy;
+  hmap->endoflineactions[0] = videoendframeidle;
+  hmap->endoflineactions[1] = videoendframesoon;
+  hmap->endoflineactions[2] = videoendframenoadjust;
+  hmap->endoflineactions[3] = videoendframeadjust;
+  hmap->endoflineactions[4] = videoendframeadjusting;
+  hmap->endoflineactions[5] = videoendframeadjustcomplete;
+  hmap->endoflineactions[6] = videoendframedummy;
 
   hmap->B_vidbuf.setskewop = videoinactivesetskew;
 
@@ -683,14 +913,14 @@ static inline void videosetdisplayfunctions(VIDEOSCALECHOICE* choice)
     cursorteletextop = choice->writeops.cursorteletext;
   }
 
-  hmap->B_videoula.blacklevelops[0] = choice->blacklevelops.blank;
-  hmap->B_videoula.blacklevelops[1] = choice->blacklevelops.graphics;
-  hmap->B_videoula.blacklevelops[2] = teletextblacklevelop;
-  hmap->B_videoula.blacklevelops[3] = teletextblacklevelop;
-  hmap->B_videoula.blacklevelops[4] = choice->blacklevelops.cursorblank;
-  hmap->B_videoula.blacklevelops[5] = choice->blacklevelops.cursorgraphics;
-  hmap->B_videoula.blacklevelops[6] = cursorteletextblacklevelop;
-  hmap->B_videoula.blacklevelops[7] = cursorteletextblacklevelop;
+  hmap->blacklevelops[0] = choice->blacklevelops.blank;
+  hmap->blacklevelops[1] = choice->blacklevelops.graphics;
+  hmap->blacklevelops[2] = teletextblacklevelop;
+  hmap->blacklevelops[3] = teletextblacklevelop;
+  hmap->blacklevelops[4] = choice->blacklevelops.cursorblank;
+  hmap->blacklevelops[5] = choice->blacklevelops.cursorgraphics;
+  hmap->blacklevelops[6] = cursorteletextblacklevelop;
+  hmap->blacklevelops[7] = cursorteletextblacklevelop;
 
   hmap->B_vidbuf.graphicsinnerop = choice->writeinnerops.graphics;
   hmap->B_vidbuf.cursorinnerop = choice->writeinnerops.cursor;
@@ -1252,7 +1482,22 @@ void videosetscale(void)
 
   hmap->B_crtc.cursorbuffer = 0;
 
-  videoulasetloads();
+  if (nteletextslices == 1)
+  {
+    for (i=0; i<128; i++)
+    {
+      hmap->teletextops[0x000+(i<<1)] = teletextnoponeslice;
+    }
+  }
+  else
+  {
+    for (i=0; i<128; i++)
+    {
+      hmap->teletextops[0x000+(i<<1)] = teletextnoprounding;
+    }
+  }
+
+  videoulasetloads(nteletextslices == 1);
   videosetdisplayfunctions(&choice);
   videosetreadfunctions();
   if (hmap->A_vidbuf.progressive)
@@ -1278,7 +1523,7 @@ void videohostmodevars(void)
   int linescale, steplinelength;
   intptr_t bufferaddress;
   uintptr_t* colournumbers = hmap->D_colour.numbers;
-  uintptr_t* colourfill = hmap->D_colour.fill;
+  uintptr_t* outputfill = hmap->D_colour.outputfill;
 
   screenstartandlinelength();
 
@@ -1334,11 +1579,12 @@ void videohostmodevars(void)
       u |= (u<<8);
     if (log2bpp < 5)
       u |= (u<<16);
-    colourfill[i] = u;
+    outputfill[i+8] = outputfill[i] = u;
   }
 
   videoscale_init(&videoscale_lutparameters);
   videoulasetcolours();
+  refreshteletextcolourfill(hmap);
 
   nlineaddress = nhostscreen;
   nlineaddress += video_screenstartoffset;
@@ -1373,14 +1619,14 @@ int writeusedcolours(void)
   const char *columnnames = "\n COLOUR    FILL      VALUE\n";
   int i;
   char buffer[128];
-  const unsigned int* colourfill = hmap->D_colour.fill;
+  const unsigned int* outputfill = hmap->D_colour.outputfill;
 
   wimpwrite(columnnames,1,strlen(columnnames));
 
   for (i=0; i<8; i++)
   {
     snprintf(buffer,sizeof(buffer),"%7s  &%08X  &%08X\n",
-      names[i],colourfill[i],
+      names[i],outputfill[i],
       palette_specified[i]);
     wimpwrite(buffer,1,strlen(buffer));
   }
@@ -1395,6 +1641,8 @@ void videofreeworkspace(void)
   hmap->B_vidbuf.column -= hmap->B_vidbuf.offsetsynccolumn;
   hmap->B_vidbuf.line -= hmap->B_vidbuf.syncline;
   hmap->B_vidbuf.setskewop = videoinactivesetskew;
+
+  videoulaclearloads();
 
   free(video_workspace);
   video_workspace = NULL;
@@ -1485,8 +1733,275 @@ void videoreset(void)
     videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step,
     videoupdateTR0step, videoupdateTR0step, videoupdateTR0step, videoupdateTR0step
   };
+  HOSTVIDEOOP teletextstartoflineops[128] = {
+    teletextcodestartofline00,
+    teletextcodestartofline01,
+    teletextcodestartofline02,
+    teletextcodestartofline03,
+    teletextcodestartofline04,
+    teletextcodestartofline05,
+    teletextcodestartofline06,
+    teletextcodestartofline00,
+    teletextcodestartofline08,
+    teletextcodestartofline00,
+    teletextcodestartofline00,
+    teletextcodestartofline00,
+    teletextcodestartofline00,
+    teletextcodestartofline0D,
+    teletextcodestartofline00,
+    teletextcodestartofline00,
+    teletextcodestartofline00,
+    teletextcodestartofline11,
+    teletextcodestartofline12,
+    teletextcodestartofline13,
+    teletextcodestartofline14,
+    teletextcodestartofline15,
+    teletextcodestartofline16,
+    teletextcodestartofline17,
+    teletextcodestartofline18,
+    teletextcodestartofline00,
+    teletextcodestartofline1A,
+    teletextcodestartofline00,
+    teletextcodestartofline00,
+    teletextcodestartofline1D,
+    teletextcodestartofline1E,
+    teletextcodestartofline00,
+    teletextcodestartofline20,
+    teletextcodestartofline21,
+    teletextcodestartofline22,
+    teletextcodestartofline23,
+    teletextcodestartofline24,
+    teletextcodestartofline25,
+    teletextcodestartofline26,
+    teletextcodestartofline27,
+    teletextcodestartofline28,
+    teletextcodestartofline29,
+    teletextcodestartofline2A,
+    teletextcodestartofline2B,
+    teletextcodestartofline2C,
+    teletextcodestartofline2D,
+    teletextcodestartofline2E,
+    teletextcodestartofline2F,
+    teletextcodestartofline30,
+    teletextcodestartofline31,
+    teletextcodestartofline32,
+    teletextcodestartofline33,
+    teletextcodestartofline34,
+    teletextcodestartofline35,
+    teletextcodestartofline36,
+    teletextcodestartofline37,
+    teletextcodestartofline38,
+    teletextcodestartofline39,
+    teletextcodestartofline3A,
+    teletextcodestartofline3B,
+    teletextcodestartofline3C,
+    teletextcodestartofline3D,
+    teletextcodestartofline3E,
+    teletextcodestartofline3F,
+    teletextcodestartofline40,
+    teletextcodestartofline41,
+    teletextcodestartofline42,
+    teletextcodestartofline43,
+    teletextcodestartofline44,
+    teletextcodestartofline45,
+    teletextcodestartofline46,
+    teletextcodestartofline47,
+    teletextcodestartofline48,
+    teletextcodestartofline49,
+    teletextcodestartofline4A,
+    teletextcodestartofline4B,
+    teletextcodestartofline4C,
+    teletextcodestartofline4D,
+    teletextcodestartofline4E,
+    teletextcodestartofline4F,
+    teletextcodestartofline50,
+    teletextcodestartofline51,
+    teletextcodestartofline52,
+    teletextcodestartofline53,
+    teletextcodestartofline54,
+    teletextcodestartofline55,
+    teletextcodestartofline56,
+    teletextcodestartofline57,
+    teletextcodestartofline58,
+    teletextcodestartofline59,
+    teletextcodestartofline5A,
+    teletextcodestartofline5B,
+    teletextcodestartofline5C,
+    teletextcodestartofline5D,
+    teletextcodestartofline5E,
+    teletextcodestartofline5F,
+    teletextcodestartofline60,
+    teletextcodestartofline61,
+    teletextcodestartofline62,
+    teletextcodestartofline63,
+    teletextcodestartofline64,
+    teletextcodestartofline65,
+    teletextcodestartofline66,
+    teletextcodestartofline67,
+    teletextcodestartofline68,
+    teletextcodestartofline69,
+    teletextcodestartofline6A,
+    teletextcodestartofline6B,
+    teletextcodestartofline6C,
+    teletextcodestartofline6D,
+    teletextcodestartofline6E,
+    teletextcodestartofline6F,
+    teletextcodestartofline70,
+    teletextcodestartofline71,
+    teletextcodestartofline72,
+    teletextcodestartofline73,
+    teletextcodestartofline74,
+    teletextcodestartofline75,
+    teletextcodestartofline76,
+    teletextcodestartofline77,
+    teletextcodestartofline78,
+    teletextcodestartofline79,
+    teletextcodestartofline7A,
+    teletextcodestartofline7B,
+    teletextcodestartofline7C,
+    teletextcodestartofline7D,
+    teletextcodestartofline7E,
+    teletextcodestartofline7F
+  };
+  HOSTVIDEOOP teletextmidlineops[128] = {
+    teletextcodemidline00,
+    teletextcodemidline01,
+    teletextcodemidline02,
+    teletextcodemidline03,
+    teletextcodemidline04,
+    teletextcodemidline05,
+    teletextcodemidline06,
+    teletextcodemidline07,
+    teletextcodemidline08,
+    teletextcodemidline09,
+    teletextcodemidline00,
+    teletextcodemidline00,
+    teletextcodemidline0C,
+    teletextcodemidline0D,
+    teletextcodemidline00,
+    teletextcodemidline00,
+    teletextcodemidline00,
+    teletextcodemidline11,
+    teletextcodemidline12,
+    teletextcodemidline13,
+    teletextcodemidline14,
+    teletextcodemidline15,
+    teletextcodemidline16,
+    teletextcodemidline17,
+    teletextcodemidline18,
+    teletextcodemidline19,
+    teletextcodemidline1A,
+    teletextcodemidline00,
+    teletextcodemidline1C,
+    teletextcodemidline1D,
+    teletextcodemidline1E,
+    teletextcodemidline1F,
+    teletextcodemidline20,
+    teletextcodemidline21,
+    teletextcodemidline22,
+    teletextcodemidline23,
+    teletextcodemidline24,
+    teletextcodemidline25,
+    teletextcodemidline26,
+    teletextcodemidline27,
+    teletextcodemidline28,
+    teletextcodemidline29,
+    teletextcodemidline2A,
+    teletextcodemidline2B,
+    teletextcodemidline2C,
+    teletextcodemidline2D,
+    teletextcodemidline2E,
+    teletextcodemidline2F,
+    teletextcodemidline30,
+    teletextcodemidline31,
+    teletextcodemidline32,
+    teletextcodemidline33,
+    teletextcodemidline34,
+    teletextcodemidline35,
+    teletextcodemidline36,
+    teletextcodemidline37,
+    teletextcodemidline38,
+    teletextcodemidline39,
+    teletextcodemidline3A,
+    teletextcodemidline3B,
+    teletextcodemidline3C,
+    teletextcodemidline3D,
+    teletextcodemidline3E,
+    teletextcodemidline3F,
+    teletextcodemidline40,
+    teletextcodemidline41,
+    teletextcodemidline42,
+    teletextcodemidline43,
+    teletextcodemidline44,
+    teletextcodemidline45,
+    teletextcodemidline46,
+    teletextcodemidline47,
+    teletextcodemidline48,
+    teletextcodemidline49,
+    teletextcodemidline4A,
+    teletextcodemidline4B,
+    teletextcodemidline4C,
+    teletextcodemidline4D,
+    teletextcodemidline4E,
+    teletextcodemidline4F,
+    teletextcodemidline50,
+    teletextcodemidline51,
+    teletextcodemidline52,
+    teletextcodemidline53,
+    teletextcodemidline54,
+    teletextcodemidline55,
+    teletextcodemidline56,
+    teletextcodemidline57,
+    teletextcodemidline58,
+    teletextcodemidline59,
+    teletextcodemidline5A,
+    teletextcodemidline5B,
+    teletextcodemidline5C,
+    teletextcodemidline5D,
+    teletextcodemidline5E,
+    teletextcodemidline5F,
+    teletextcodemidline60,
+    teletextcodemidline61,
+    teletextcodemidline62,
+    teletextcodemidline63,
+    teletextcodemidline64,
+    teletextcodemidline65,
+    teletextcodemidline66,
+    teletextcodemidline67,
+    teletextcodemidline68,
+    teletextcodemidline69,
+    teletextcodemidline6A,
+    teletextcodemidline6B,
+    teletextcodemidline6C,
+    teletextcodemidline6D,
+    teletextcodemidline6E,
+    teletextcodemidline6F,
+    teletextcodemidline70,
+    teletextcodemidline71,
+    teletextcodemidline72,
+    teletextcodemidline73,
+    teletextcodemidline74,
+    teletextcodemidline75,
+    teletextcodemidline76,
+    teletextcodemidline77,
+    teletextcodemidline78,
+    teletextcodemidline79,
+    teletextcodemidline7A,
+    teletextcodemidline7B,
+    teletextcodemidline7C,
+    teletextcodemidline7D,
+    teletextcodemidline7E,
+    teletextcodemidline7F
+  };
 
   memcpy(hmap->crtctaggedops, crtctaggedops, 256*sizeof(CRTCSTEPOP));
+
+  for (i=0; i<128; i++)
+  {
+    hmap->teletextops[0x001+(i<<1)] = teletextstartoflineops[i];
+    hmap->teletextops[0x100+(i<<1)] = teletextendofline;
+    hmap->teletextops[0x101+(i<<1)] = teletextmidlineops[i];
+  }
 
   nclock = clock()+TIME_50HZ;
 
@@ -1511,7 +2026,6 @@ void videoreset(void)
   hmap->A_teletext.line = 0;
   hmap->A_teletext.lastline = 9;
   hmap->A_teletext.flipflops = 0;
-  hmap->A_teletext.flash = 0;
   hmap->A_teletext.flashstage = 0;
   hmap->A_teletext.flashcounter = 50;
 
@@ -1520,10 +2034,10 @@ void videoreset(void)
 
   hmap->B_videoula.cursorflags = 0;
 
-  hmap->B_teletext.lookupoffset = 0;
-  hmap->B_teletext.holdoffset = 0;
+  hmap->B_teletext.lutslice = &hmap->teletextlinelut[0];
+  hmap->B_teletext.holdlue = hmap->teletextlinelut[0];
   hmap->B_teletext.queue = 0;
-  hmap->B_teletext.colours = 0x00070007;
+  hmap->B_teletext.colours = 0x0707;
 
   hmap->B_vidbuf.displayskewmask = 0x01;
   hmap->B_vidbuf.cursorskewmask = 0x01;
@@ -1764,12 +2278,12 @@ static inline HOSTMAP* videoenteringvsynctail(HOSTMAP* hmap)
   {
     if (hmap->A_teletext.flashstage & 1)
     {
-      hmap->A_teletext.flash = 0;
+      hmap->A_teletext.flipflops &= NOTTELETEXTFLASHTIMEFLAG;
       hmap->A_teletext.flashcounter = 50;
     }
     else
     {
-      hmap->A_teletext.flash = 1;
+      hmap->A_teletext.flipflops |= TELETEXTFLASHTIMEFLAG;
       if (hmap->A_teletext.flashstage)
         hmap->A_teletext.flashcounter = 17;
       else
@@ -2023,222 +2537,6 @@ HOSTMAP* videoendframedummy(HOSTMAP* hmap)
   return hmap;
 }
 
-HOSTMAP* teletextafter(HOSTMAP* hmap)
-{
-  int code = (hmap->B_teletext.queue>>24)&127;
-
-  switch (code)
-  {
-    case 0x01:
-    case 0x02:
-    case 0x03:
-    case 0x04:
-    case 0x05:
-    case 0x06:
-    case 0x07:
-      /*alpha*/
-      hmap->A_teletext.flipflops &= NOTCONCEALFLAG;
-      if (hmap->A_teletext.flipflops&GRAPHICSFLAG)
-      {
-        hmap->B_teletext.holdoffset = 0;
-        if (hmap->A_teletext.flipflops&SEPARATEDFLAG)
-          hmap->B_teletext.lookupoffset -= 40;
-        else
-          hmap->B_teletext.lookupoffset -= 20;
-        hmap->A_teletext.flipflops &= NOTGRAPHICSFLAG;
-      }
-      hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0xFF)|(code&7);
-      break;
-    case 0x08:
-      /*flash*/
-      hmap->A_teletext.flipflops |= FLASHFLAG;
-      break;
-    case 0x0D:
-      /*double height*/
-      if (!(hmap->A_teletext.flipflops&DOUBLEHEIGHTFLAG))
-      {
-        hmap->B_teletext.holdoffset = 0;
-        hmap->A_teletext.lastline = 19;
-        hmap->B_teletext.lookupoffset += 60;
-        hmap->A_teletext.flipflops |= DOUBLEHEIGHTFLAG;
-      }
-      break;
-    case 0x11:
-    case 0x12:
-    case 0x13:
-    case 0x14:
-    case 0x15:
-    case 0x16:
-    case 0x17:
-      /*graphic*/
-      hmap->A_teletext.flipflops &= NOTCONCEALFLAG;
-      if (!(hmap->A_teletext.flipflops&GRAPHICSFLAG))
-      {
-        hmap->B_teletext.holdoffset = 0;
-        if (hmap->A_teletext.flipflops&SEPARATEDFLAG)
-          hmap->B_teletext.lookupoffset += 40;
-        else
-          hmap->B_teletext.lookupoffset += 20;
-        hmap->A_teletext.flipflops |= GRAPHICSFLAG;
-      }
-      hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0xFF)|(code&7);
-      break;
-    case 0x1F:
-      /*release graphics*/
-      hmap->A_teletext.flipflops &= NOTHOLDFLAG;
-      break;
-  }
-
-  return hmap;
-}
-
-HOSTMAP* teletextat(HOSTMAP* hmap)
-{
-  int code = (hmap->B_teletext.queue>>16)&127;
-  intptr_t teletextoffset;
-
-  if (code < 32)
-  {
-    switch (code)
-    {
-      case 0x09:
-        /*steady*/
-        hmap->A_teletext.flipflops &= NOTFLASHFLAG;
-        break;
-      case 0x0C:
-        /*normal height*/
-        if (hmap->A_teletext.flipflops&DOUBLEHEIGHTFLAG)
-        {
-          hmap->B_teletext.holdoffset = 0;
-          hmap->B_teletext.lookupoffset -= 60;
-          hmap->A_teletext.flipflops &= NOTDOUBLEHEIGHTFLAG;
-        }
-        break;
-      case 0x18:
-        /*conceal*/
-        hmap->A_teletext.flipflops |= CONCEALFLAG;
-        break;
-      case 0x19:
-        /*contiguous*/
-        if (hmap->A_teletext.flipflops & SEPARATEDFLAG)
-        {
-          if (hmap->A_teletext.flipflops & GRAPHICSFLAG)
-            hmap->B_teletext.lookupoffset -= 20;
-          hmap->A_teletext.flipflops &= NOTSEPARATEDFLAG;
-        }
-        break;
-      case 0x1A:
-        /*separated*/
-        if (!(hmap->A_teletext.flipflops & SEPARATEDFLAG))
-        {
-          if (hmap->A_teletext.flipflops & GRAPHICSFLAG)
-            hmap->B_teletext.lookupoffset += 20;
-          hmap->A_teletext.flipflops |= SEPARATEDFLAG;
-        }
-        break;
-      case 0x1C:
-        hmap->B_teletext.colours &= ~0xFF00;
-        break;
-      case 0x1D:
-        hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0xFF00)|((hmap->B_teletext.colours&7)<<8);
-        break;
-      case 0x1E:
-        /*hold graphics*/
-        /*hold/release graphics actually affects the way colour-change*/
-        /*codes are displayed. normally they are blank; when hold graphics*/
-        /*is set, the previous character is displayed again. This allows*/
-        /*contiguous blocks of colour.*/
-        /*Thanks to Tom Seddon for that bit of information...*/
-        hmap->A_teletext.flipflops |= HOLDFLAG;
-        break;
-    }
-
-    if (!(hmap->A_teletext.flipflops & HOLDFLAG))
-      hmap->B_teletext.holdoffset = 0;
-
-    teletextoffset = hmap->B_teletext.holdoffset;
-  }
-  else
-  {
-    teletextoffset = hmap->B_teletext.lookupoffset + ((code-32)<<7);
-
-    if ((code & 0x20) && (hmap->A_teletext.flipflops&GRAPHICSFLAG))
-      hmap->B_teletext.holdoffset = teletextoffset;
-  }
-
-  if ((hmap->A_teletext.flipflops & CONCEALFLAG) || ((hmap->A_teletext.flipflops & FLASHFLAG) && hmap->A_teletext.flash))
-    teletextoffset = 0;
-
-  hmap->B_teletext.lue1 = hmap->teletextlinelut[teletextoffset+hmap->A_teletext.line];
-
-  return hmap;
-}
-
-static inline HOSTMAP* callkeyboardop(HOSTMAP* hmap)
-{
-  (*hmap->keyboard_state)(hmap, (intptr_t)(hmap->keyboard_state+1));
-  return hmap;
-}
-
-HOSTMAP* videoloadteletext(HOSTMAP* hmap, uintptr_t queue)
-{
-  hmap->B_teletext.queue = queue;
-  hmap->B_teletext.lue2 = hmap->B_teletext.lue1;
-
-  if (queue&0x8000)
-  {
-    if (queue&0x800000)
-    {
-      teletextafter(hmap);
-    }
-    else
-    {
-      hmap->B_teletext.colours &= 0xFFFF0000;
-      hmap->B_teletext.colours |= 0x00000007;
-    }
-    teletextat(hmap);
-  }
-  else
-  {
-    hmap->B_teletext.lue1 = hmap->teletextlinelut[0];
-
-    if (queue&0x800000)
-    {
-      hmap->B_teletext.colours &= 0xFFFF0000;
-      hmap->A_teletext.flipflops = 0;
-      hmap->B_teletext.holdoffset = 0;
-      hmap->B_teletext.lookupoffset = 0;
-
-      if (hmap->A_teletext.line < hmap->A_teletext.lastline)
-        hmap->A_teletext.line++;
-      else
-      {
-        hmap->A_teletext.line = 0;
-        hmap->A_teletext.lastline = 9;
-      }
-    }
-  }
-
-  if (hmap->A_crtc.c9low & 1)
-  {
-    hmap->A_teletext.roundingdirection1 = 1;
-    hmap->B_teletext.lue1 += hmap->B_teletext.lowoffset;
-  }
-  else
-    hmap->A_teletext.roundingdirection1 = 0;
-  return callkeyboardop(hmap);
-}
-
-HOSTMAP* videoshiftteletext(HOSTMAP* hmap)
-{
-  hmap->B_teletext.colours &= 0xFFFF;
-  hmap->B_teletext.colours |= (hmap->B_teletext.colours << 16);
-  hmap->B_teletext.lue2 = hmap->B_teletext.lue1;
-  hmap->A_teletext.roundingdirection2 = hmap->A_teletext.roundingdirection1;
-  hmap->B_teletext.lue1 += hmap->B_teletext.rightoffset;
-  return hmap;
-}
-
 HOSTMAP* videosetscreenstartindex(HOSTMAP* hmap, uint8_t index)
 {
   hmap->screenstartindex = index;
@@ -2486,7 +2784,7 @@ R6502ZONEMAP* videodisplaysyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_code
     {
       skip &= ~HSYNCSKIPFLAG;
       hmap->A_vidbuf.skip = skip;
-      hmap->B_videoula.blacklevelops[peripheral_code&7](zmap, peripheral_code);
+      hmap->blacklevelops[peripheral_code&7](zmap, peripheral_code);
     }
   }
   else
@@ -2533,7 +2831,7 @@ R6502ZONEMAP* videodisplaypsyncedge(R6502ZONEMAP* zmap, uintptr_t peripheral_cod
     {
       skip &= ~HSYNCSKIPFLAG;
       hmap->A_vidbuf.skip = skip;
-      hmap->B_videoula.blacklevelops[peripheral_code&7](zmap, peripheral_code);
+      hmap->blacklevelops[peripheral_code&7](zmap, peripheral_code);
     }
   }
   else
@@ -2692,7 +2990,7 @@ static inline HOSTMAP* videocountvsyncline(HOSTMAP* hmap)
 
 static inline HOSTMAP* videoendofline(HOSTMAP* hmap)
 {
-  hmap->B_crtc.endoflineactions[hmap->A_crtc.endframe](hmap);
+  hmap->endoflineactions[hmap->A_crtc.endframe](hmap);
   hmap->A_vidbuf.linetestflags |= VIDEOSTEPLINETEST0;
   hmap->B_crtc.scan_code |= VIDEOREADLINETESTFLAG;
   return hmap;
@@ -3367,8 +3665,18 @@ HOSTMAP* videoidlestep(HOSTMAP* hmap, uintptr_t incremented_step_state)
 
 static inline uintptr_t videoupdatedisplaysignal(HOSTMAP* hmap, uintptr_t displaybuffer)
 {
+  uintptr_t peripheral_code;
+
   if (displaybuffer & hmap->B_vidbuf.displayskewmask)
-    hmap->peripheral_code |= VIDEODISPLAYDISPLAY;
+  {
+    peripheral_code = hmap->peripheral_code;
+    if (!(peripheral_code & VIDEODISPLAYDISPLAY))
+    {
+      hmap->peripheral_code = peripheral_code | VIDEODISPLAYDISPLAY;
+      if (!(hmap->B_crtc.scan_code & VIDEOREADODDFLAG))
+        hmap->B_teletext.queue |= (64<<8);
+    }
+  }
   else
     hmap->peripheral_code &= ~VIDEODISPLAYDISPLAY;
   return displaybuffer;
@@ -3589,4 +3897,1672 @@ HOSTMAP* videoprogressivesetskew(HOSTMAP* hmap, uint8_t r8)
   hmap->B_crtc.cursorbuffer = cursorbuffer;
 
   return hmap;
+}
+
+static HOSTMAP* videoevenRloadintercept(HOSTMAP* hmap, uintptr_t value)
+{
+  VIDEOULALOADOP evenloadop = hmap->B_videoula.selectedevenloadop;
+  VIDEOULALOADOP evenRloadop = hmap->B_videoula.selectedevenRloadop;
+
+  hmap->B_videoula.selectedevenloadop = evenRloadop;
+  hmap->B_videoula.evenloadop(hmap, value);
+  hmap->B_videoula.evenloadop = hmap->B_videoula.selectedevenloadop = evenloadop;
+  return hmap;
+}
+
+static inline void videoapplyevenloadintercept(HOSTMAP* hmap, VIDEOULALOADOP intercept)
+{
+  hmap->B_videoula.evenloadop = intercept;
+  hmap->B_videoula.evenRloadop = videoevenRloadintercept;
+}
+
+static inline HOSTMAP* videocallinterceptedevenload(HOSTMAP* hmap, uintptr_t value)
+{
+  VIDEOULALOADOP evenloadop = hmap->B_videoula.selectedevenloadop;
+  VIDEOULALOADOP evenRloadop = hmap->B_videoula.selectedevenRloadop;
+
+  hmap->B_videoula.evenloadop = evenloadop;
+  hmap->B_videoula.evenRloadop = evenRloadop;
+  return evenloadop(hmap, value);
+}
+
+static inline void teletextlinestart(HOSTMAP* hmap)
+{
+  hmap->B_teletext.colours |= 0x07;
+  hmap->B_teletext.fg1fill = hmap->B_teletext.colourfill[7];
+}
+
+static inline void teletextafteralpha(HOSTMAP* hmap, const int colour)
+{
+  intptr_t* lutslice;
+  uint8_t flipflops = hmap->A_teletext.flipflops;
+
+  if (flipflops&TELETEXTGRAPHICFLAG)
+  {
+    lutslice = hmap->B_teletext.lutslice;
+    if (flipflops&TELETEXTSEPARATEDFLAG)
+      lutslice -= 40;
+    else
+      lutslice -= 20;
+    hmap->B_teletext.lutslice = lutslice;
+    hmap->B_teletext.holdlue = hmap->teletextlinelut[0];
+  }
+  flipflops &= (NOTTELETEXTCONCEALFLAG&NOTTELETEXTGRAPHICFLAG);
+  hmap->A_teletext.flipflops = flipflops;
+  hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0x07) | colour;
+
+  if (flipflops <= TELETEXTCONCEALTHRESHOLD)
+    hmap->B_teletext.fg1fill = hmap->B_teletext.colourfill[colour];
+}
+
+static inline void teletextaftergraphic(HOSTMAP* hmap, const int colour)
+{
+  intptr_t* lutslice;
+  uint8_t flipflops = hmap->A_teletext.flipflops;
+
+  if (!(flipflops&TELETEXTGRAPHICFLAG))
+  {
+    lutslice = hmap->B_teletext.lutslice;
+    if (flipflops&TELETEXTSEPARATEDFLAG)
+      lutslice += 40;
+    else
+      lutslice += 20;
+    hmap->B_teletext.lutslice = lutslice;
+    hmap->B_teletext.holdlue = hmap->B_teletext.lutslice[0];
+    flipflops |= TELETEXTGRAPHICFLAG;
+  }
+  flipflops &= NOTTELETEXTCONCEALFLAG;
+  hmap->A_teletext.flipflops = flipflops;
+  hmap->B_teletext.colours = (hmap->B_teletext.colours & ~0x07) | colour;
+
+  if (flipflops <= TELETEXTCONCEALTHRESHOLD)
+    hmap->B_teletext.fg1fill = hmap->B_teletext.colourfill[colour];
+}
+
+static HOSTMAP* teletextafteralphared(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 1);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextafteralphagreen(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 2);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextafteralphayellow(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 3);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextafteralphablue(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 4);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextafteralphamagenta(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 5);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextafteralphacyan(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 6);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextafteralphawhite(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextafteralpha(hmap, 7);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextaftergraphicred(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 1);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextaftergraphicgreen(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 2);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextaftergraphicyellow(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 3);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextaftergraphicblue(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 4);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextaftergraphicmagenta(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 5);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextaftergraphiccyan(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 6);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextaftergraphicwhite(HOSTMAP* hmap, uintptr_t value)
+{
+  teletextaftergraphic(hmap, 7);
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextafterflash(HOSTMAP* hmap, uintptr_t value)
+{
+  uint8_t flipflops = hmap->A_teletext.flipflops | TELETEXTFLASHFLAG;
+  hmap->A_teletext.flipflops = flipflops;
+  if (flipflops > TELETEXTCONCEALTHRESHOLD)
+    hmap->B_teletext.fg1fill = hmap->B_teletext.bg1fill;
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextafterdoubleheight(HOSTMAP* hmap, uintptr_t value)
+{
+  uint8_t flipflops = hmap->A_teletext.flipflops;
+
+  if (!(flipflops&TELETEXTDOUBLEHEIGHTFLAG))
+  {
+    hmap->A_teletext.flipflops = flipflops | TELETEXTDOUBLEHEIGHTFLAG;
+    hmap->B_teletext.lutslice += 60;
+    hmap->B_teletext.holdlue = hmap->teletextlinelut[0];
+    hmap->A_teletext.lastline = 19;
+  }
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static HOSTMAP* teletextafterreleasegraphics(HOSTMAP* hmap, uintptr_t value)
+{
+  hmap->A_teletext.flipflops &= NOTTELETEXTHOLDFLAG;
+  return videocallinterceptedevenload(hmap, value);
+}
+
+static inline HOSTMAP* callkeyboardop(HOSTMAP* hmap)
+{
+  (*hmap->keyboard_state)(hmap, (intptr_t)(hmap->keyboard_state+1));
+  return hmap;
+}
+
+static inline HOSTMAP* teletextcontrolcommon(HOSTMAP* hmap)
+{
+  intptr_t holdlue;
+
+  hmap->B_teletext.lue2 = hmap->B_teletext.lue1;
+  if (hmap->A_teletext.flipflops & TELETEXTHOLDFLAG)
+    holdlue = hmap->B_teletext.holdlue;
+  else
+  {
+    holdlue = hmap->teletextlinelut[0];
+    hmap->B_teletext.holdlue = holdlue;
+  }
+  hmap->B_teletext.lue1 = holdlue;
+  return callkeyboardop(hmap);
+}
+
+static inline HOSTMAP* teletextdisplaypossiblegraphic(HOSTMAP* hmap, const int index)
+{
+  intptr_t lue;
+
+  hmap->B_teletext.lue2 = hmap->B_teletext.lue1;
+  lue = hmap->B_teletext.lutslice[(index<<7)+hmap->A_teletext.line];
+  hmap->B_teletext.lue1 = lue;
+  if (hmap->A_teletext.flipflops&TELETEXTGRAPHICFLAG)
+    hmap->B_teletext.holdlue = lue;
+  return callkeyboardop(hmap);
+}
+
+static inline HOSTMAP* teletextdisplaynotgraphic(HOSTMAP* hmap, const int index)
+{
+  hmap->B_teletext.lue2 = hmap->B_teletext.lue1;
+  hmap->B_teletext.lue1 = hmap->B_teletext.lutslice[(index<<7)+hmap->A_teletext.line];
+  return callkeyboardop(hmap);
+}
+
+HOSTMAP* teletextnoponeslice(HOSTMAP* hmap)
+{
+  return callkeyboardop(hmap);
+}
+
+HOSTMAP* teletextnoprounding(HOSTMAP* hmap)
+{
+  hmap->B_teletext.lue1 = hmap->teletextlinelut[0];
+  return callkeyboardop(hmap);
+}
+
+HOSTMAP* teletextendofline(HOSTMAP* hmap)
+{
+  hmap->B_teletext.lue2 = hmap->B_teletext.lue1;
+  hmap->B_teletext.lue1 = hmap->teletextlinelut[0];
+  hmap->B_teletext.holdlue = hmap->teletextlinelut[0];
+  hmap->B_teletext.colours &= 0xFF00;
+  hmap->B_teletext.bg1fill = hmap->B_teletext.fg1fill = hmap->B_teletext.colourfill[0];
+
+  hmap->A_teletext.flipflops &= TELETEXTFLASHTIMEFLAG;
+  hmap->B_teletext.lutslice = &hmap->teletextlinelut[0];
+
+  if (hmap->A_teletext.line < hmap->A_teletext.lastline)
+    hmap->A_teletext.line++;
+  else
+  {
+    hmap->A_teletext.line = 0;
+    hmap->A_teletext.lastline = 9;
+  }
+  return callkeyboardop(hmap);
+}
+
+HOSTMAP* teletextcodestartofline00(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline01(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextafteralphared);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline02(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextafteralphagreen);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline03(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextafteralphayellow);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline04(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextafteralphablue);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline05(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextafteralphamagenta);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline06(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextafteralphacyan);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline08(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextafterflash);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline0D(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextafterdoubleheight);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline11(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextaftergraphicred);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline12(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextaftergraphicgreen);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline13(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextaftergraphicyellow);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline14(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextaftergraphicblue);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline15(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextaftergraphicmagenta);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline16(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextaftergraphiccyan);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline17(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  videoapplyevenloadintercept(hmap, teletextaftergraphicwhite);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline18(HOSTMAP* hmap)
+{
+  /*conceal*/
+  hmap->B_teletext.colours |= 0x07;
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline1A(HOSTMAP* hmap)
+{
+  /*separated*/
+  uint8_t flipflops;
+  teletextlinestart(hmap);
+  flipflops = hmap->A_teletext.flipflops;
+  if (!(flipflops & TELETEXTSEPARATEDFLAG))
+  {
+    hmap->A_teletext.flipflops = flipflops | TELETEXTSEPARATEDFLAG;
+    if (flipflops & TELETEXTGRAPHICFLAG)
+      hmap->B_teletext.lutslice += 20;
+  }
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline1D(HOSTMAP* hmap)
+{
+  hmap->B_teletext.colours |= 0x77;
+  hmap->B_teletext.fg1fill = hmap->B_teletext.colourfill[7];
+  hmap->B_teletext.bg1fill = hmap->B_teletext.colourfill[7];
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline1E(HOSTMAP* hmap)
+{
+  /*hold graphics*/
+  /*hold/release graphics actually affects the way colour-change*/
+  /*codes are displayed. normally they are blank; when hold graphics*/
+  /*is set, the previous character is displayed again. This allows*/
+  /*contiguous blocks of colour.*/
+  /*Thanks to Tom Seddon for that bit of information...*/
+  teletextlinestart(hmap);
+  hmap->A_teletext.flipflops |= TELETEXTHOLDFLAG;
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodestartofline20(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x00);
+}
+
+HOSTMAP* teletextcodestartofline21(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x01);
+}
+
+HOSTMAP* teletextcodestartofline22(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x02);
+}
+
+HOSTMAP* teletextcodestartofline23(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x03);
+}
+
+HOSTMAP* teletextcodestartofline24(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x04);
+}
+
+HOSTMAP* teletextcodestartofline25(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x05);
+}
+
+HOSTMAP* teletextcodestartofline26(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x06);
+}
+
+HOSTMAP* teletextcodestartofline27(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x07);
+}
+
+HOSTMAP* teletextcodestartofline28(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x08);
+}
+
+HOSTMAP* teletextcodestartofline29(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x09);
+}
+
+HOSTMAP* teletextcodestartofline2A(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x0A);
+}
+
+HOSTMAP* teletextcodestartofline2B(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x0B);
+}
+
+HOSTMAP* teletextcodestartofline2C(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x0C);
+}
+
+HOSTMAP* teletextcodestartofline2D(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x0D);
+}
+
+HOSTMAP* teletextcodestartofline2E(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x0E);
+}
+
+HOSTMAP* teletextcodestartofline2F(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x0F);
+}
+
+HOSTMAP* teletextcodestartofline30(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x10);
+}
+
+HOSTMAP* teletextcodestartofline31(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x11);
+}
+
+HOSTMAP* teletextcodestartofline32(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x12);
+}
+
+HOSTMAP* teletextcodestartofline33(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x13);
+}
+
+HOSTMAP* teletextcodestartofline34(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x14);
+}
+
+HOSTMAP* teletextcodestartofline35(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x15);
+}
+
+HOSTMAP* teletextcodestartofline36(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x16);
+}
+
+HOSTMAP* teletextcodestartofline37(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x17);
+}
+
+HOSTMAP* teletextcodestartofline38(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x18);
+}
+
+HOSTMAP* teletextcodestartofline39(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x19);
+}
+
+HOSTMAP* teletextcodestartofline3A(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x1A);
+}
+
+HOSTMAP* teletextcodestartofline3B(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x1B);
+}
+
+HOSTMAP* teletextcodestartofline3C(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x1C);
+}
+
+HOSTMAP* teletextcodestartofline3D(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x1D);
+}
+
+HOSTMAP* teletextcodestartofline3E(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x1E);
+}
+
+HOSTMAP* teletextcodestartofline3F(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x1F);
+}
+
+HOSTMAP* teletextcodestartofline40(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x20);
+}
+
+HOSTMAP* teletextcodestartofline41(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x21);
+}
+
+HOSTMAP* teletextcodestartofline42(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x22);
+}
+
+HOSTMAP* teletextcodestartofline43(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x23);
+}
+
+HOSTMAP* teletextcodestartofline44(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x24);
+}
+
+HOSTMAP* teletextcodestartofline45(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x25);
+}
+
+HOSTMAP* teletextcodestartofline46(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x26);
+}
+
+HOSTMAP* teletextcodestartofline47(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x27);
+}
+
+HOSTMAP* teletextcodestartofline48(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x28);
+}
+
+HOSTMAP* teletextcodestartofline49(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x29);
+}
+
+HOSTMAP* teletextcodestartofline4A(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x2A);
+}
+
+HOSTMAP* teletextcodestartofline4B(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x2B);
+}
+
+HOSTMAP* teletextcodestartofline4C(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x2C);
+}
+
+HOSTMAP* teletextcodestartofline4D(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x2D);
+}
+
+HOSTMAP* teletextcodestartofline4E(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x2E);
+}
+
+HOSTMAP* teletextcodestartofline4F(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x2F);
+}
+
+HOSTMAP* teletextcodestartofline50(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x30);
+}
+
+HOSTMAP* teletextcodestartofline51(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x31);
+}
+
+HOSTMAP* teletextcodestartofline52(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x32);
+}
+
+HOSTMAP* teletextcodestartofline53(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x33);
+}
+
+HOSTMAP* teletextcodestartofline54(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x34);
+}
+
+HOSTMAP* teletextcodestartofline55(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x35);
+}
+
+HOSTMAP* teletextcodestartofline56(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x36);
+}
+
+HOSTMAP* teletextcodestartofline57(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x37);
+}
+
+HOSTMAP* teletextcodestartofline58(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x38);
+}
+
+HOSTMAP* teletextcodestartofline59(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x39);
+}
+
+HOSTMAP* teletextcodestartofline5A(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x3A);
+}
+
+HOSTMAP* teletextcodestartofline5B(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x3B);
+}
+
+HOSTMAP* teletextcodestartofline5C(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x3C);
+}
+
+HOSTMAP* teletextcodestartofline5D(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x3D);
+}
+
+HOSTMAP* teletextcodestartofline5E(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x3E);
+}
+
+HOSTMAP* teletextcodestartofline5F(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaynotgraphic(hmap, 0x3F);
+}
+
+HOSTMAP* teletextcodestartofline60(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x40);
+}
+
+HOSTMAP* teletextcodestartofline61(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x41);
+}
+
+HOSTMAP* teletextcodestartofline62(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x42);
+}
+
+HOSTMAP* teletextcodestartofline63(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x43);
+}
+
+HOSTMAP* teletextcodestartofline64(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x44);
+}
+
+HOSTMAP* teletextcodestartofline65(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x45);
+}
+
+HOSTMAP* teletextcodestartofline66(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x46);
+}
+
+HOSTMAP* teletextcodestartofline67(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x47);
+}
+
+HOSTMAP* teletextcodestartofline68(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x48);
+}
+
+HOSTMAP* teletextcodestartofline69(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x49);
+}
+
+HOSTMAP* teletextcodestartofline6A(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x4A);
+}
+
+HOSTMAP* teletextcodestartofline6B(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x4B);
+}
+
+HOSTMAP* teletextcodestartofline6C(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x4C);
+}
+
+HOSTMAP* teletextcodestartofline6D(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x4D);
+}
+
+HOSTMAP* teletextcodestartofline6E(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x4E);
+}
+
+HOSTMAP* teletextcodestartofline6F(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x4F);
+}
+
+HOSTMAP* teletextcodestartofline70(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x50);
+}
+
+HOSTMAP* teletextcodestartofline71(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x51);
+}
+
+HOSTMAP* teletextcodestartofline72(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x52);
+}
+
+HOSTMAP* teletextcodestartofline73(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x53);
+}
+
+HOSTMAP* teletextcodestartofline74(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x54);
+}
+
+HOSTMAP* teletextcodestartofline75(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x55);
+}
+
+HOSTMAP* teletextcodestartofline76(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x56);
+}
+
+HOSTMAP* teletextcodestartofline77(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x57);
+}
+
+HOSTMAP* teletextcodestartofline78(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x58);
+}
+
+HOSTMAP* teletextcodestartofline79(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x59);
+}
+
+HOSTMAP* teletextcodestartofline7A(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x5A);
+}
+
+HOSTMAP* teletextcodestartofline7B(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x5B);
+}
+
+HOSTMAP* teletextcodestartofline7C(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x5C);
+}
+
+HOSTMAP* teletextcodestartofline7D(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x5D);
+}
+
+HOSTMAP* teletextcodestartofline7E(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x5E);
+}
+
+HOSTMAP* teletextcodestartofline7F(HOSTMAP* hmap)
+{
+  teletextlinestart(hmap);
+  return teletextdisplaypossiblegraphic(hmap, 0x5F);
+}
+
+HOSTMAP* teletextcodemidline00(HOSTMAP* hmap)
+{
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline01(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextafteralphared);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline02(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextafteralphagreen);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline03(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextafteralphayellow);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline04(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextafteralphablue);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline05(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextafteralphamagenta);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline06(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextafteralphacyan);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline07(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextafteralphawhite);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline08(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextafterflash);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline09(HOSTMAP* hmap)
+{
+  /*steady*/
+  uint8_t flipflops = hmap->A_teletext.flipflops & NOTTELETEXTFLASHFLAG;
+  hmap->A_teletext.flipflops = flipflops;
+  if (flipflops <= TELETEXTCONCEALTHRESHOLD)
+    hmap->B_teletext.fg1fill = hmap->B_teletext.colourfill[hmap->B_teletext.colours&0x07];
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline0C(HOSTMAP* hmap)
+{
+  /*normal height*/
+  uint8_t flipflops = hmap->A_teletext.flipflops;
+  if (flipflops&TELETEXTDOUBLEHEIGHTFLAG)
+  {
+    hmap->A_teletext.flipflops = flipflops & NOTTELETEXTDOUBLEHEIGHTFLAG;
+    hmap->B_teletext.lutslice -= 60;
+    hmap->B_teletext.holdlue = hmap->teletextlinelut[0];
+  }
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline0D(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextafterdoubleheight);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline11(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextaftergraphicred);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline12(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextaftergraphicgreen);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline13(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextaftergraphicyellow);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline14(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextaftergraphicblue);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline15(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextaftergraphicmagenta);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline16(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextaftergraphiccyan);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline17(HOSTMAP* hmap)
+{
+  videoapplyevenloadintercept(hmap, teletextaftergraphicwhite);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline18(HOSTMAP* hmap)
+{
+  /*conceal*/
+  hmap->A_teletext.flipflops |= TELETEXTCONCEALFLAG;
+  hmap->B_teletext.fg1fill = hmap->B_teletext.bg1fill;
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline19(HOSTMAP* hmap)
+{
+  /*contiguous*/
+  uint8_t flipflops = hmap->A_teletext.flipflops;
+  if (flipflops & TELETEXTSEPARATEDFLAG)
+  {
+    hmap->A_teletext.flipflops = flipflops & NOTTELETEXTSEPARATEDFLAG;
+    if (flipflops & TELETEXTGRAPHICFLAG)
+      hmap->B_teletext.lutslice -= 20;
+  }
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline1A(HOSTMAP* hmap)
+{
+  /*separated*/
+  uint8_t flipflops = hmap->A_teletext.flipflops;
+  if (!(flipflops & TELETEXTSEPARATEDFLAG))
+  {
+    hmap->A_teletext.flipflops = flipflops | TELETEXTSEPARATEDFLAG;
+    if (flipflops & TELETEXTGRAPHICFLAG)
+      hmap->B_teletext.lutslice += 20;
+  }
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline1C(HOSTMAP* hmap)
+{
+  hmap->B_teletext.colours &= ~0x70;
+  hmap->B_teletext.bg1fill = hmap->B_teletext.colourfill[0];
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline1D(HOSTMAP* hmap)
+{
+  uintptr_t colours = hmap->B_teletext.colours;
+  hmap->B_teletext.colours = (colours&~0x70) | ((colours&0x07)<<4);
+  hmap->B_teletext.bg1fill = hmap->B_teletext.colourfill[colours&0x07];
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline1E(HOSTMAP* hmap)
+{
+  /*hold graphics*/
+  /*hold/release graphics actually affects the way colour-change*/
+  /*codes are displayed. normally they are blank; when hold graphics*/
+  /*is set, the previous character is displayed again. This allows*/
+  /*contiguous blocks of colour.*/
+  /*Thanks to Tom Seddon for that bit of information...*/
+  hmap->A_teletext.flipflops |= TELETEXTHOLDFLAG;
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline1F(HOSTMAP* hmap)
+{
+  /*release graphics*/
+  videoapplyevenloadintercept(hmap, teletextafterreleasegraphics);
+  return teletextcontrolcommon(hmap);
+}
+
+HOSTMAP* teletextcodemidline20(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x00);
+}
+
+HOSTMAP* teletextcodemidline21(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x01);
+}
+
+HOSTMAP* teletextcodemidline22(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x02);
+}
+
+HOSTMAP* teletextcodemidline23(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x03);
+}
+
+HOSTMAP* teletextcodemidline24(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x04);
+}
+
+HOSTMAP* teletextcodemidline25(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x05);
+}
+
+HOSTMAP* teletextcodemidline26(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x06);
+}
+
+HOSTMAP* teletextcodemidline27(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x07);
+}
+
+HOSTMAP* teletextcodemidline28(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x08);
+}
+
+HOSTMAP* teletextcodemidline29(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x09);
+}
+
+HOSTMAP* teletextcodemidline2A(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x0A);
+}
+
+HOSTMAP* teletextcodemidline2B(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x0B);
+}
+
+HOSTMAP* teletextcodemidline2C(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x0C);
+}
+
+HOSTMAP* teletextcodemidline2D(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x0D);
+}
+
+HOSTMAP* teletextcodemidline2E(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x0E);
+}
+
+HOSTMAP* teletextcodemidline2F(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x0F);
+}
+
+HOSTMAP* teletextcodemidline30(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x10);
+}
+
+HOSTMAP* teletextcodemidline31(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x11);
+}
+
+HOSTMAP* teletextcodemidline32(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x12);
+}
+
+HOSTMAP* teletextcodemidline33(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x13);
+}
+
+HOSTMAP* teletextcodemidline34(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x14);
+}
+
+HOSTMAP* teletextcodemidline35(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x15);
+}
+
+HOSTMAP* teletextcodemidline36(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x16);
+}
+
+HOSTMAP* teletextcodemidline37(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x17);
+}
+
+HOSTMAP* teletextcodemidline38(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x18);
+}
+
+HOSTMAP* teletextcodemidline39(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x19);
+}
+
+HOSTMAP* teletextcodemidline3A(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x1A);
+}
+
+HOSTMAP* teletextcodemidline3B(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x1B);
+}
+
+HOSTMAP* teletextcodemidline3C(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x1C);
+}
+
+HOSTMAP* teletextcodemidline3D(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x1D);
+}
+
+HOSTMAP* teletextcodemidline3E(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x1E);
+}
+
+HOSTMAP* teletextcodemidline3F(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x1F);
+}
+
+HOSTMAP* teletextcodemidline40(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x20);
+}
+
+HOSTMAP* teletextcodemidline41(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x21);
+}
+
+HOSTMAP* teletextcodemidline42(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x22);
+}
+
+HOSTMAP* teletextcodemidline43(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x23);
+}
+
+HOSTMAP* teletextcodemidline44(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x24);
+}
+
+HOSTMAP* teletextcodemidline45(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x25);
+}
+
+HOSTMAP* teletextcodemidline46(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x26);
+}
+
+HOSTMAP* teletextcodemidline47(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x27);
+}
+
+HOSTMAP* teletextcodemidline48(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x28);
+}
+
+HOSTMAP* teletextcodemidline49(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x29);
+}
+
+HOSTMAP* teletextcodemidline4A(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x2A);
+}
+
+HOSTMAP* teletextcodemidline4B(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x2B);
+}
+
+HOSTMAP* teletextcodemidline4C(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x2C);
+}
+
+HOSTMAP* teletextcodemidline4D(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x2D);
+}
+
+HOSTMAP* teletextcodemidline4E(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x2E);
+}
+
+HOSTMAP* teletextcodemidline4F(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x2F);
+}
+
+HOSTMAP* teletextcodemidline50(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x30);
+}
+
+HOSTMAP* teletextcodemidline51(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x31);
+}
+
+HOSTMAP* teletextcodemidline52(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x32);
+}
+
+HOSTMAP* teletextcodemidline53(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x33);
+}
+
+HOSTMAP* teletextcodemidline54(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x34);
+}
+
+HOSTMAP* teletextcodemidline55(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x35);
+}
+
+HOSTMAP* teletextcodemidline56(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x36);
+}
+
+HOSTMAP* teletextcodemidline57(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x37);
+}
+
+HOSTMAP* teletextcodemidline58(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x38);
+}
+
+HOSTMAP* teletextcodemidline59(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x39);
+}
+
+HOSTMAP* teletextcodemidline5A(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x3A);
+}
+
+HOSTMAP* teletextcodemidline5B(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x3B);
+}
+
+HOSTMAP* teletextcodemidline5C(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x3C);
+}
+
+HOSTMAP* teletextcodemidline5D(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x3D);
+}
+
+HOSTMAP* teletextcodemidline5E(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x3E);
+}
+
+HOSTMAP* teletextcodemidline5F(HOSTMAP* hmap)
+{
+  return teletextdisplaynotgraphic(hmap, 0x3F);
+}
+
+HOSTMAP* teletextcodemidline60(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x40);
+}
+
+HOSTMAP* teletextcodemidline61(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x41);
+}
+
+HOSTMAP* teletextcodemidline62(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x42);
+}
+
+HOSTMAP* teletextcodemidline63(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x43);
+}
+
+HOSTMAP* teletextcodemidline64(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x44);
+}
+
+HOSTMAP* teletextcodemidline65(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x45);
+}
+
+HOSTMAP* teletextcodemidline66(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x46);
+}
+
+HOSTMAP* teletextcodemidline67(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x47);
+}
+
+HOSTMAP* teletextcodemidline68(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x48);
+}
+
+HOSTMAP* teletextcodemidline69(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x49);
+}
+
+HOSTMAP* teletextcodemidline6A(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x4A);
+}
+
+HOSTMAP* teletextcodemidline6B(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x4B);
+}
+
+HOSTMAP* teletextcodemidline6C(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x4C);
+}
+
+HOSTMAP* teletextcodemidline6D(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x4D);
+}
+
+HOSTMAP* teletextcodemidline6E(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x4E);
+}
+
+HOSTMAP* teletextcodemidline6F(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x4F);
+}
+
+HOSTMAP* teletextcodemidline70(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x50);
+}
+
+HOSTMAP* teletextcodemidline71(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x51);
+}
+
+HOSTMAP* teletextcodemidline72(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x52);
+}
+
+HOSTMAP* teletextcodemidline73(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x53);
+}
+
+HOSTMAP* teletextcodemidline74(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x54);
+}
+
+HOSTMAP* teletextcodemidline75(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x55);
+}
+
+HOSTMAP* teletextcodemidline76(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x56);
+}
+
+HOSTMAP* teletextcodemidline77(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x57);
+}
+
+HOSTMAP* teletextcodemidline78(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x58);
+}
+
+HOSTMAP* teletextcodemidline79(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x59);
+}
+
+HOSTMAP* teletextcodemidline7A(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x5A);
+}
+
+HOSTMAP* teletextcodemidline7B(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x5B);
+}
+
+HOSTMAP* teletextcodemidline7C(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x5C);
+}
+
+HOSTMAP* teletextcodemidline7D(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x5D);
+}
+
+HOSTMAP* teletextcodemidline7E(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x5E);
+}
+
+HOSTMAP* teletextcodemidline7F(HOSTMAP* hmap)
+{
+  return teletextdisplaypossiblegraphic(hmap, 0x5F);
 }

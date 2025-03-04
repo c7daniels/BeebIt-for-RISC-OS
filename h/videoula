@@ -11,12 +11,14 @@
 
 /*Video ULA*/
 
+extern const VIDEOULALOADOP videoulaoloadset[32];
 extern const VIDEOULALOADOP videoulaloadset[32];
 extern const VIDEOULALOADOP videoulaploadset[32];
 
 extern void videoulainit(void);
 extern void videoulareset(void);
-extern void videoulasetloads(void);
+extern void videoulasetloads(int oneslice);
+extern void videoulaclearloads(void);
 extern void videoulasetcolours(void);
 extern R6502ZONEMAP* videoulablankblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
 extern R6502ZONEMAP* videoulablacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code);
