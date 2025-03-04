@@ -317,8 +317,8 @@ void video4to4lutinit(VIDEOSCALELUTPARAMETERS* lutparams)
 
   for (i=0; i<256; i++)
   {
-    leftmask = hmap->D_colour.fill[i&7];
-    rightmask = hmap->D_colour.fill[(i>>4)&7];
+    leftmask = hmap->D_colour.outputfill[i&7];
+    rightmask = hmap->D_colour.outputfill[(i>>4)&7];
 
     for (j=0,n=lutparams->leftpixel;j+7<n;j+=8)
     {
@@ -382,8 +382,8 @@ void video4to8lutinit(VIDEOSCALELUTPARAMETERS* lutparams)
 
   for (i=0; i<256; i++)
   {
-    leftmask = hmap->D_colour.fill[i&7];
-    rightmask = hmap->D_colour.fill[(i>>4)&7];
+    leftmask = hmap->D_colour.outputfill[i&7];
+    rightmask = hmap->D_colour.outputfill[(i>>4)&7];
 
     for (j=0,n=lutparams->leftpixel;j+3<n;j+=4)
     {
@@ -447,8 +447,8 @@ void video4to16lutinit(VIDEOSCALELUTPARAMETERS* lutparams)
 
   for (i=0; i<256; i++)
   {
-    leftmask = hmap->D_colour.fill[i&7];
-    rightmask = hmap->D_colour.fill[(i>>4)&7];
+    leftmask = hmap->D_colour.outputfill[i&7];
+    rightmask = hmap->D_colour.outputfill[(i>>4)&7];
 
     for (j=0,n=lutparams->leftpixel;j+1<n;j+=2)
     {
@@ -511,8 +511,8 @@ void video4to32lutinit(VIDEOSCALELUTPARAMETERS* lutparams)
 
   for (i=0; i<256; i++)
   {
-    leftmask = hmap->D_colour.fill[i&7];
-    rightmask = hmap->D_colour.fill[(i>>4)&7];
+    leftmask = hmap->D_colour.outputfill[i&7];
+    rightmask = hmap->D_colour.outputfill[(i>>4)&7];
 
     for (j=0,n=lutparams->leftpixel;j<n;j++)
     {
