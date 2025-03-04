@@ -13,18 +13,65 @@
 #include "video.h"
 #include "videoscale.h"
 
+void refreshteletextcolourfill(HOSTMAP* hmap)
+{
+  uintptr_t colours = hmap->B_teletext.colours;
+  uintptr_t bg1fill = hmap->B_teletext.colourfill[(colours>>4)&7];
+  uintptr_t bg2fill = hmap->B_teletext.colourfill[(colours>>12)&7];
+
+  hmap->B_teletext.bg1fill = bg1fill;
+  hmap->B_teletext.bg2fill = bg2fill;
+
+  if (hmap->A_teletext.flipflops > TELETEXTCONCEALTHRESHOLD)
+  {
+    hmap->B_teletext.fg1fill = bg1fill;
+    hmap->B_teletext.fg2fill = bg2fill;
+  }
+  else
+  {
+    hmap->B_teletext.fg1fill = hmap->B_teletext.colourfill[colours&7];
+    hmap->B_teletext.fg2fill = hmap->B_teletext.colourfill[(colours>>8)&7];
+  }
+}
+
 static inline void selectnormalteletextcolour(HOSTMAP* hmap)
 {
-  int i;
-  for (i=0; i<8; i++)
-    hmap->D_colour.fill[i] = hmap->D_colour.normalfill[i];
+  uintptr_t colours = hmap->B_teletext.colours;
+  uintptr_t bgfill;
+
+  bgfill = hmap->B_teletext.colourfill[(colours>>4)&7];
+  if (hmap->B_teletext.fg1fill == hmap->B_teletext.bg1fill)
+    hmap->B_teletext.fg1fill = bgfill;
+  else
+    hmap->B_teletext.fg1fill = hmap->B_teletext.colourfill[colours&7];
+  hmap->B_teletext.bg1fill = bgfill;
+
+  bgfill = hmap->B_teletext.colourfill[(colours>>12)&7];
+  if (hmap->B_teletext.fg2fill == hmap->B_teletext.bg2fill)
+    hmap->B_teletext.fg2fill = bgfill;
+  else
+    hmap->B_teletext.fg2fill = hmap->B_teletext.colourfill[(colours>>8)&7];
+  hmap->B_teletext.bg2fill = bgfill;
 }
 
 static inline void selectinverseteletextcolour(HOSTMAP* hmap)
 {
-  int i;
-  for (i=0; i<8; i++)
-    hmap->D_colour.fill[i] = hmap->D_colour.inversefill[i];
+  uintptr_t colours = hmap->B_teletext.colours;
+  uintptr_t bgfill;
+
+  bgfill = hmap->D_colour.inversefill[(colours>>4)&7];
+  if (hmap->B_teletext.fg1fill == hmap->B_teletext.bg1fill)
+    hmap->B_teletext.fg1fill = bgfill;
+  else
+    hmap->B_teletext.fg1fill = hmap->D_colour.inversefill[colours&7];
+  hmap->B_teletext.bg1fill = bgfill;
+
+  bgfill = hmap->D_colour.inversefill[(colours>>12)&7];
+  if (hmap->B_teletext.fg2fill == hmap->B_teletext.bg2fill)
+    hmap->B_teletext.fg2fill = bgfill;
+  else
+    hmap->B_teletext.fg2fill = hmap->D_colour.inversefill[(colours>>8)&7];
+  hmap->B_teletext.bg2fill = bgfill;
 }
 
 static inline void selectnormalgraphicscolour(HOSTMAP* hmap)
@@ -1089,8 +1136,8 @@ HOSTMAP* video4buf8halfdot1linegraphics(HOSTMAP* hmap)
 HOSTMAP* video4buf8halfdot1lineteletext(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<4);
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
   ((uint32_t*)buffer)[1] = (lue2[0] & fg2) | (~lue2[0] & bg2);
@@ -1101,10 +1148,10 @@ HOSTMAP* video4buf8halfdot1lineteletext(HOSTMAP* hmap)
 HOSTMAP* video4buf8halfdot1lineteletextb(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<4);
-  uintptr_t fg1 = hmap->D_colour.fill[hmap->B_teletext.colours&7];
-  uintptr_t bg1 = hmap->D_colour.fill[(hmap->B_teletext.colours>>8)&7];
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg1 = hmap->B_teletext.fg1fill;
+  uintptr_t bg1 = hmap->B_teletext.bg1fill;
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue1 = (const uint32_t*)hmap->B_teletext.lue1;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
@@ -1146,8 +1193,8 @@ HOSTMAP* video4buf8halfdot2linegraphics(HOSTMAP* hmap)
 HOSTMAP* video4buf8halfdot2lineteletext(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<4);
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
   ((uint32_t*)buffer)[1] = (lue2[0] & fg2) | (~lue2[0] & bg2);
@@ -1159,10 +1206,10 @@ HOSTMAP* video4buf8halfdot2lineteletext(HOSTMAP* hmap)
 HOSTMAP* video4buf8halfdot2lineteletextb(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<4);
-  uintptr_t fg1 = hmap->D_colour.fill[hmap->B_teletext.colours&7];
-  uintptr_t bg1 = hmap->D_colour.fill[(hmap->B_teletext.colours>>8)&7];
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg1 = hmap->B_teletext.fg1fill;
+  uintptr_t bg1 = hmap->B_teletext.bg1fill;
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue1 = (const uint32_t*)hmap->B_teletext.lue1;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
@@ -1205,8 +1252,8 @@ HOSTMAP* video4buf8halfdot3linegraphics(HOSTMAP* hmap)
 HOSTMAP* video4buf8halfdot3lineteletext(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<4);
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
   ((uint32_t*)buffer)[1] = (lue2[0] & fg2) | (~lue2[0] & bg2);
@@ -1219,10 +1266,10 @@ HOSTMAP* video4buf8halfdot3lineteletext(HOSTMAP* hmap)
 HOSTMAP* video4buf8halfdot3lineteletextb(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<4);
-  uintptr_t fg1 = hmap->D_colour.fill[hmap->B_teletext.colours&7];
-  uintptr_t bg1 = hmap->D_colour.fill[(hmap->B_teletext.colours>>8)&7];
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg1 = hmap->B_teletext.fg1fill;
+  uintptr_t bg1 = hmap->B_teletext.bg1fill;
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue1 = (const uint32_t*)hmap->B_teletext.lue1;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
@@ -1270,8 +1317,8 @@ HOSTMAP* video4buf12quarterdot1linegraphics(HOSTMAP* hmap)
 HOSTMAP* video4buf12quarterdot1lineteletext(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<4);
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
   ((uint32_t*)buffer)[1] = (lue2[0] & fg2) | (~lue2[0] & bg2);
@@ -1283,10 +1330,10 @@ HOSTMAP* video4buf12quarterdot1lineteletext(HOSTMAP* hmap)
 HOSTMAP* video4buf12quarterdot1lineteletextb(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<4);
-  uintptr_t fg1 = hmap->D_colour.fill[hmap->B_teletext.colours&7];
-  uintptr_t bg1 = hmap->D_colour.fill[(hmap->B_teletext.colours>>8)&7];
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg1 = hmap->B_teletext.fg1fill;
+  uintptr_t bg1 = hmap->B_teletext.bg1fill;
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue1 = (const uint32_t*)hmap->B_teletext.lue1;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
@@ -1334,8 +1381,8 @@ HOSTMAP* video4buf12quarterdot2linegraphics(HOSTMAP* hmap)
 HOSTMAP* video4buf12quarterdot2lineteletext(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<6);
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
   ((uint32_t*)buffer)[1] = (lue2[0] & fg2) | (~lue2[0] & bg2);
@@ -1349,10 +1396,10 @@ HOSTMAP* video4buf12quarterdot2lineteletext(HOSTMAP* hmap)
 HOSTMAP* video4buf12quarterdot2lineteletextb(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<6);
-  uintptr_t fg1 = hmap->D_colour.fill[hmap->B_teletext.colours&7];
-  uintptr_t bg1 = hmap->D_colour.fill[(hmap->B_teletext.colours>>8)&7];
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg1 = hmap->B_teletext.fg1fill;
+  uintptr_t bg1 = hmap->B_teletext.bg1fill;
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue1 = (const uint32_t*)hmap->B_teletext.lue1;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
@@ -1402,8 +1449,8 @@ HOSTMAP* video4buf12quarterdot3linegraphics(HOSTMAP* hmap)
 HOSTMAP* video4buf12quarterdot3lineteletext(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<6);
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
   ((uint32_t*)buffer)[1] = (lue2[0] & fg2) | (~lue2[0] & bg2);
@@ -1419,10 +1466,10 @@ HOSTMAP* video4buf12quarterdot3lineteletext(HOSTMAP* hmap)
 HOSTMAP* video4buf12quarterdot3lineteletextb(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<6);
-  uintptr_t fg1 = hmap->D_colour.fill[hmap->B_teletext.colours&7];
-  uintptr_t bg1 = hmap->D_colour.fill[(hmap->B_teletext.colours>>8)&7];
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg1 = hmap->B_teletext.fg1fill;
+  uintptr_t bg1 = hmap->B_teletext.bg1fill;
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue1 = (const uint32_t*)hmap->B_teletext.lue1;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
@@ -1479,8 +1526,8 @@ HOSTMAP* video4buf24eighthdot1linegraphics(HOSTMAP* hmap)
 HOSTMAP* video4buf24eighthdot1lineteletext(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<4);
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
   ((uint32_t*)buffer)[1] = (lue2[0] & fg2) | (~lue2[0] & bg2);
@@ -1493,10 +1540,10 @@ HOSTMAP* video4buf24eighthdot1lineteletext(HOSTMAP* hmap)
 HOSTMAP* video4buf24eighthdot1lineteletextb(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<4);
-  uintptr_t fg1 = hmap->D_colour.fill[hmap->B_teletext.colours&7];
-  uintptr_t bg1 = hmap->D_colour.fill[(hmap->B_teletext.colours>>8)&7];
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg1 = hmap->B_teletext.fg1fill;
+  uintptr_t bg1 = hmap->B_teletext.bg1fill;
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue1 = (const uint32_t*)hmap->B_teletext.lue1;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
@@ -1549,8 +1596,8 @@ HOSTMAP* video4buf24eighthdot2linegraphics(HOSTMAP* hmap)
 HOSTMAP* video4buf24eighthdot2lineteletext(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<6);
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
   ((uint32_t*)buffer)[1] = (lue2[0] & fg2) | (~lue2[0] & bg2);
@@ -1566,10 +1613,10 @@ HOSTMAP* video4buf24eighthdot2lineteletext(HOSTMAP* hmap)
 HOSTMAP* video4buf24eighthdot2lineteletextb(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<6);
-  uintptr_t fg1 = hmap->D_colour.fill[hmap->B_teletext.colours&7];
-  uintptr_t bg1 = hmap->D_colour.fill[(hmap->B_teletext.colours>>8)&7];
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg1 = hmap->B_teletext.fg1fill;
+  uintptr_t bg1 = hmap->B_teletext.bg1fill;
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue1 = (const uint32_t*)hmap->B_teletext.lue1;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
@@ -1625,8 +1672,8 @@ HOSTMAP* video4buf24eighthdot3linegraphics(HOSTMAP* hmap)
 HOSTMAP* video4buf24eighthdot3lineteletext(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<6);
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 
   ((uint32_t*)buffer)[1] = (lue2[0] & fg2) | (~lue2[0] & bg2);
@@ -1645,10 +1692,10 @@ HOSTMAP* video4buf24eighthdot3lineteletext(HOSTMAP* hmap)
 HOSTMAP* video4buf24eighthdot3lineteletextb(HOSTMAP* hmap)
 {
   intptr_t buffer = hmap->B_vidbuf.lineaddress + (hmap->B_vidbuf.column<<6);
-  uintptr_t fg1 = hmap->D_colour.fill[hmap->B_teletext.colours&7];
-  uintptr_t bg1 = hmap->D_colour.fill[(hmap->B_teletext.colours>>8)&7];
-  uintptr_t fg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>16)&7];
-  uintptr_t bg2 = hmap->D_colour.fill[(hmap->B_teletext.colours>>24)&7];
+  uintptr_t fg1 = hmap->B_teletext.fg1fill;
+  uintptr_t bg1 = hmap->B_teletext.bg1fill;
+  uintptr_t fg2 = hmap->B_teletext.fg2fill;
+  uintptr_t bg2 = hmap->B_teletext.bg2fill;
   const uint32_t* lue1 = (const uint32_t*)hmap->B_teletext.lue1;
   const uint32_t* lue2 = (const uint32_t*)hmap->B_teletext.lue2;
 

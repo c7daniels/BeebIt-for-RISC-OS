@@ -134,6 +134,13 @@ void videoulareset(void)
   {
     hmap->A_videoula.palette[i] = 0;
   }
+
+  hmap->B_videoula.evenloadop = 0;
+  hmap->B_videoula.evenRloadop = 0;
+  hmap->B_videoula.oddloadop = 0;
+  hmap->B_videoula.oddRloadop = 0;
+  hmap->B_videoula.selectedevenloadop = 0;
+  hmap->B_videoula.selectedevenRloadop = 0;
 }
 
 static inline void videoulasetfragmentops(HOSTHIGHOP write01, VIDEOULAFRAGMENTREFRESHOP refreshop)
@@ -145,13 +152,16 @@ static inline void videoulasetfragmentops(HOSTHIGHOP write01, VIDEOULAFRAGMENTRE
   sheilareplacevideoulawrites(&writes);
 }
 
-void videoulasetloads(void)
+void videoulasetloads(int oneslice)
 {
   HOSTMAP* hmap = &hostmap;
+  int evenloadintercept;
   const VIDEOULALOADOP (*selectedset)[32];
   VIDEOULALOADOP *loadopgroup;
 
-  if (hmap->A_vidbuf.progressive)
+  if (oneslice)
+    selectedset = &videoulaoloadset;
+  else if (hmap->A_vidbuf.progressive)
     selectedset = &videoulaploadset;
   else
     selectedset = &videoulaloadset;
@@ -159,11 +169,33 @@ void videoulasetloads(void)
   memcpy(hmap->videoulaloads, selectedset, 32 * sizeof(VIDEOULALOADOP));
 
   loadopgroup = &hmap->videoulaloads[hmap->A_videoula.control & 0x1C];
+  evenloadintercept = hmap->B_videoula.evenloadop != 0;
 
-  hmap->B_videoula.evenloadop = loadopgroup[0];
-  hmap->B_videoula.oddloadop = loadopgroup[1];
-  hmap->B_videoula.evenRloadop = loadopgroup[2];
+  if (!evenloadintercept)
+  {
+    hmap->B_videoula.evenloadop = loadopgroup[0];
+    hmap->B_videoula.evenRloadop = loadopgroup[1];
+  }
+  hmap->B_videoula.selectedevenloadop = loadopgroup[0];
+  hmap->B_videoula.selectedevenRloadop = loadopgroup[1];
+  hmap->B_videoula.oddloadop = loadopgroup[2];
   hmap->B_videoula.oddRloadop = loadopgroup[3];
+}
+
+void videoulaclearloads(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  int evenloadintercept = hmap->B_videoula.evenloadop != hmap->B_videoula.selectedevenloadop;
+
+  if (!evenloadintercept)
+  {
+    hmap->B_videoula.evenloadop = 0;
+    hmap->B_videoula.evenRloadop = 0;
+  }
+  hmap->B_videoula.selectedevenloadop = 0;
+  hmap->B_videoula.selectedevenRloadop = 0;
+  hmap->B_videoula.oddloadop = 0;
+  hmap->B_videoula.oddRloadop = 0;
 }
 
 static HOSTMAP* videoulasetblacklevelnphys(HOSTMAP* hmap, int nphys)
@@ -183,7 +215,7 @@ static HOSTMAP* videoulasetblacklevelnphys(HOSTMAP* hmap, int nphys)
   hmap->B_videoula.cursorfill = hmap->B_videoula.inverseblank;
 
   for (i=0; i<8; i++)
-    hmap->D_colour.fill[i] = hmap->D_colour.normalfill[i];
+    hmap->B_teletext.colourfill[i] = hmap->D_colour.normalfill[i];
 
   return hmap->B_videoula.fragmentrefreshaction(hmap, hmap->D_colour.normalfill);
 }
@@ -255,9 +287,9 @@ R6502ZONEMAP* videoulateletextblacklevel(R6502ZONEMAP* zmap, uintptr_t periphera
   const uint8_t* p = (const uint8_t*)hmap->B_teletext.lue2;
 
   if (p[0] & 1)
-    nphys = (hmap->B_teletext.colours>>16)&7;
+    nphys = (hmap->B_teletext.colours>>8)&7;
   else
-    nphys = (hmap->B_teletext.colours>>24)&7;
+    nphys = (hmap->B_teletext.colours>>12)&7;
 
   if (hmap->A_videoula.blacklevelnphys != nphys)
     videoulasetblacklevelnphys(hmap, nphys);
@@ -271,9 +303,9 @@ R6502ZONEMAP* videoulateletextbblacklevel(R6502ZONEMAP* zmap, uintptr_t peripher
   const uint32_t* p = (const uint32_t*)hmap->B_teletext.lue2;
 
   if (p[hmap->B_teletext.bblevelbit>>5] & (1<<(hmap->B_teletext.bblevelbit&31)))
-    nphys = (hmap->B_teletext.colours>>16)&7;
+    nphys = (hmap->B_teletext.colours>>8)&7;
   else
-    nphys = (hmap->B_teletext.colours>>24)&7;
+    nphys = (hmap->B_teletext.colours>>12)&7;
 
   if (hmap->A_videoula.blacklevelnphys != nphys)
     videoulasetblacklevelnphys(hmap, nphys);
@@ -346,9 +378,9 @@ R6502ZONEMAP* videoulacursorteletextblacklevel(R6502ZONEMAP* zmap, uintptr_t per
   cursorflags = hmap->B_videoula.cursorflags;
 
   if (p[0] & 1)
-    nphys = (hmap->B_teletext.colours>>16)&7;
+    nphys = (hmap->B_teletext.colours>>8)&7;
   else
-    nphys = (hmap->B_teletext.colours>>24)&7;
+    nphys = (hmap->B_teletext.colours>>12)&7;
 
   if (cursorflags & cursorbuffer)
     nphys ^= 7;
@@ -369,9 +401,9 @@ R6502ZONEMAP* videoulacursorteletextbblacklevel(R6502ZONEMAP* zmap, uintptr_t pe
   cursorflags = hmap->B_videoula.cursorflags;
 
   if (p[hmap->B_teletext.bblevelbit>>5] & (1<<(hmap->B_teletext.bblevelbit&31)))
-    nphys = (hmap->B_teletext.colours>>16)&7;
+    nphys = (hmap->B_teletext.colours>>8)&7;
   else
-    nphys = (hmap->B_teletext.colours>>24)&7;
+    nphys = (hmap->B_teletext.colours>>12)&7;
 
   if (cursorflags & cursorbuffer)
     nphys ^= 7;
@@ -383,7 +415,7 @@ R6502ZONEMAP* videoulacursorteletextbblacklevel(R6502ZONEMAP* zmap, uintptr_t pe
 
 HOSTMAP* videoula00write(HOSTMAP* hmap, uintptr_t address_code)
 {
-  int toggleflash;
+  int toggleflash,evenloadintercept;
   VIDEOULALOADOP *loadopgroup;
   unsigned int step_state_index;
 
@@ -400,10 +432,16 @@ HOSTMAP* videoula00write(HOSTMAP* hmap, uintptr_t address_code)
     hmap->B_crtc.step_state = hmap->crtcstep + (VIDEOSTEPIDLEFLAG | step_state_index);
 
   loadopgroup = &hmap->videoulaloads[hmap->m & 0x1C];
+  evenloadintercept = hmap->B_videoula.evenloadop != hmap->B_videoula.selectedevenloadop;
 
-  hmap->B_videoula.evenloadop = loadopgroup[0];
-  hmap->B_videoula.oddloadop = loadopgroup[1];
-  hmap->B_videoula.evenRloadop = loadopgroup[2];
+  if (!evenloadintercept)
+  {
+    hmap->B_videoula.evenloadop = loadopgroup[0];
+    hmap->B_videoula.evenRloadop = loadopgroup[1];
+  }
+  hmap->B_videoula.selectedevenloadop = loadopgroup[0];
+  hmap->B_videoula.selectedevenRloadop = loadopgroup[1];
+  hmap->B_videoula.oddloadop = loadopgroup[2];
   hmap->B_videoula.oddRloadop = loadopgroup[3];
 
   if (hmap->m & 0x02)
@@ -429,7 +467,7 @@ HOSTMAP* videoula01writenybble(HOSTMAP* hmap, uintptr_t address_code)
   if (hmap->A_videoula.control & (hmap->B_videoula.flashing>>nphys) & 1)
     nphys = nphys2;
 
-  bytefragment[hmap->m>>4] = hmap->D_colour.fill[nphys] & 0xF;
+  bytefragment[hmap->m>>4] = hmap->D_colour.normalfill[nphys] & 0xF;
 
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
@@ -446,7 +484,7 @@ HOSTMAP* videoula01writebyte(HOSTMAP* hmap, uintptr_t address_code)
   if (hmap->A_videoula.control & (hmap->B_videoula.flashing>>nphys) & 1)
     nphys = nphys2;
 
-  bytefragment[hmap->m>>4] = hmap->D_colour.fill[nphys] & 0xFF;
+  bytefragment[hmap->m>>4] = hmap->D_colour.normalfill[nphys] & 0xFF;
 
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
