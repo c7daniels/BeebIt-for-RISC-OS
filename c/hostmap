@@ -29,8 +29,9 @@
 #include "videoula.h"
 #include "beebit.h"
 
+static_assert(offsetof(HOSTMAP, keyboard_state) == offsetof(R6502ZONEMAP, keyboard_state), "Expecting consistent keyboard state offsets");
 static_assert(offsetof(HOSTMAP, m_shift) == offsetof(R6502ZONEMAP, m_shift), "Expecting consistent data bus value offsets");
-static_assert(offsetof(HOSTMAP, m) == offsetof(R6502ZONEMAP, m), "Expecting data bus value offsets");
+static_assert(offsetof(HOSTMAP, m) == offsetof(R6502ZONEMAP, m), "Expecting consistent data bus value offsets");
 
 static_assert(offsetof(HOSTMAP, AC) == offsetof(R6502ZONEMAP, AC), "Expecting consistent zone offsets");
 static_assert(offsetof(HOSTMAP, BC) == offsetof(R6502ZONEMAP, BC), "Expecting consistent zone offsets");
@@ -1092,6 +1093,8 @@ int hostmapresetcpu(void)
   cmap->resetstartingaction = h6502onresetstart;
   cmap->resetcontinuingaction = h6502onresetcontinue;
 
+  hmap->keyboard_state = &hmap->keyboardops[0];
+
   return FALSE;
 }
 
@@ -1260,6 +1263,18 @@ void hostmapresetperipherals(void)
   {
     hmap->stretchedreadhigh[0x300+i] = h6502readFF00;
     hmap->stretchedwritehigh[0x300+i] = h6502writeFF00;
+  }
+
+  switch (beebit_machinetype)
+  {
+    case MACHINE_MODELB:
+    case MACHINE_MODELBPLUS:
+      setkeyboardops(10);
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      setkeyboardops(13);
+      break;
   }
 
   sheilareset();

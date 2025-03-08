@@ -203,6 +203,7 @@ SIZEOF_HOSTBADC         * @
                         ^ 0
 ; offsets &00 - &FF
 HOST_AC                 # SIZEOF_R6502_AC_ZONE
+HOST_KEYSTATUS          # &10
 HOST_ROMWRITABLE        # &10
 HOST_ROMSEL             # &1
 HOST_ACCCON             # &1
@@ -215,9 +216,10 @@ HOST_SERIAL             # SIZEOF_HOSTASERIAL
 HOST_AI8271             # SIZEOF_HOSTAI8271
 HOST_AW1770             # SIZEOF_HOSTAW1770
 HOST_AADC               # SIZEOF_HOSTAADC
-                        # &7C
+                        # &6C
 
 ; offsets &100 - &3FF
+HOST_KEYBOARD_STATE     # &4
 HOST_M_SHIFT            # &3
 HOST_M                  # &1
 HOST_BC                 # SIZEOF_R6502_BC_ZONE
@@ -236,6 +238,7 @@ HOST_BADC               # SIZEOF_HOSTBADC
                         # &138
 
 ; offsets &400 - &FFF
+HOST_KEYBOARDOPS        # &200
 HOST_CC                 # SIZEOF_R6502_CC_ZONE
 HOST_CP                 # SIZEOF_R6502_CP_ZONE
 

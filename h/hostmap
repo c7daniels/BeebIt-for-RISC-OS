@@ -15,7 +15,7 @@
 #include "6502zmap.h"
 
 #define R6502_JUMP_FROM_HIGH_OP(HMAP) \
-  return HMAP;
+  return (HOSTMAP*)(*HMAP->keyboard_state)((R6502ZONEMAP*)HMAP, (intptr_t)(HMAP->keyboard_state+1));
 
 #define HOSTMAP_LIMIT_CYCLES_TO_GO(MAP, LIMIT) \
   { \
@@ -77,6 +77,7 @@ struct HOSTMAP;
 typedef struct HOSTMAP* (*HOSTHIGHOP)(struct HOSTMAP *hmap, uintptr_t address_code); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
 
 typedef struct HOSTMAP* (*HOSTSWAPOP)(struct HOSTMAP *hmap); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
+
 
 typedef uintptr_t HOSTMAPUEFFILEPOINTERAREA[1];
 
@@ -272,6 +273,7 @@ typedef struct HOSTMAP
 {
   // AArch32 offsets &00 - &FF
   R6502_AC_ZONE AC;
+  uint8_t keystatus[16];
   int8_t romwritable[16];
   uint8_t romsel; /*ROMSELect*/
   uint8_t acccon;  /*ACCCON*/
@@ -284,9 +286,10 @@ typedef struct HOSTMAP
   HOSTMAPAI8271 A_i8271;
   HOSTMAPAW1770 A_w1770;
   HOSTMAPAADC A_adc;
-  uint8_t AP_unused[63*sizeof(uintptr_t)-128];
+  uint8_t AP_unused[63*sizeof(uintptr_t)-144];
 
   // AArch32 offsets &100 - &3FF
+  R6502KEYBOARDOP *keyboard_state;
   R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
   R6502_BC_ZONE BC;
   void *zeribeep_writebyte;
@@ -304,6 +307,7 @@ typedef struct HOSTMAP
   uintptr_t B_unused[78];
 
   // AArch32 offsets &400 - &FFF
+  R6502KEYBOARDOPTABLE keyboardops;
   R6502_CC_ZONE CC;
   R6502_CP_ZONE CP;
 

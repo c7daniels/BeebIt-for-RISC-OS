@@ -19,9 +19,6 @@ extern void systemviasetca1(void);
 extern void systemviavidca1(void);
 extern void systemviavidirq(void);
 extern void systemviaunsetca1(void);
-extern void systemviasetca2(void);
-extern void systemviakeyca2(void);
-extern void keyboardcheck(int);
 extern void systemviareset(void);
 extern void systemviabeforesnapshot(void);
 extern void systemviaaftersnapshot(void);
@@ -71,3 +68,5 @@ extern HOSTMAP* systemvia0Fwrite_b(HOSTMAP* hmap, uintptr_t address_code);
 extern HOSTMAP* systemvia0Fwrite_m(HOSTMAP* hmap, uintptr_t address_code);
 extern HOSTMAP* systemvia0Fwrite_nosoundb(HOSTMAP* hmap, uintptr_t address_code);
 extern HOSTMAP* systemvia0Fwrite_nosoundm(HOSTMAP* hmap, uintptr_t address_code);
+
+extern void setkeyboardops(int columns);

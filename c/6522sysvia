@@ -4,11 +4,12 @@
  *
  * Rockwell 6522 Versatile Interface Adapter (VIA) [1MHz]
  *
- * (C) Copyright Michael J Foot, 1998-2024
+ * (C) Copyright Michael J Foot, 1998-2025
  *
  * Email: <mjfoot.nz@gmail.com>
  *
  * Addressing optimization contributed by Crispian Daniels in 2024
+ * Cycle-level keyboard emulation contributed by Crispian Daniels in 2025
  *
  * Email: <convertedgames@3insdale.me.uk>
  */
@@ -251,44 +252,32 @@ void systemviaunsetca1(void)
   systemviasetirq();
 }
 
-void systemviasetca2(void)
+static inline void systemviasetca2(HOSTMAP *hmap)
 {
-  HOSTMAP* hmap = &hostmap;
   #ifdef __DEBUG__
     fprintf(htrace,"CA2 ");
   #endif
   switch (hmap->A_sysvia.pcr & 0x0E)
   {
-    case 0:
-    case 2:
-      /*updatekeyboard();*/
-      hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
-      systemviasetirq();
-      break;
     case 4:
     case 6:
-      /*updatekeyboard();*/
       hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
       systemviasetirq();
       break;
   }
 }
 
-void systemviakeyca2(void)
+static inline void systemviaunsetca2(HOSTMAP *hmap)
 {
-  HOSTMAP* hmap = &hostmap;
-  /*updatekeyboard();*/
-  /*if (beebit_trace)
-    printf("SVK PC=%X, SP=%X %X\n", r6502_pc, r6502_sp, hmap->A_sysvia.ifr);*/
-  hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
-  systemviasetirq();
+  switch (hmap->A_sysvia.pcr & 0x0E)
+  {
+    case 0:
+    case 2:
+      hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
+      systemviasetirq();
+      break;
+  }
 }
-
-/*void systemviaunsetca2(void)
-{
-  hmap->A_sysvia.ifr &= 0xFE;*/ /*CA2 flag*/
-  /*systemviasetirq();
-}*/
 
 static intptr_t systemviapickcyclestogo(void)
 {
@@ -391,6 +380,8 @@ void systemviaaftersnapshot(void)
     hmap->B_sysvia.t2doubled += expiryoffset;
     HOSTMAP_LIMIT_PERIPHERAL_CYCLES_TO_GO(hmap, sysvia, hmap->B_sysvia.t2doubled + 2)
   }
+
+  hmap->keyboard_state = &hmap->keyboardops[KEYBOARDNOTWRITEENABLEFLAG];
 }
 
 HOSTMAP* systemviaatzerocycles(HOSTMAP* hmap)
@@ -476,6 +467,46 @@ HOSTMAP* systemviaatzerocycles(HOSTMAP* hmap)
 
   systemviasetirq();
   return hmap;
+}
+
+static inline void setkeyboardnotwriteenable(HOSTMAP* hmap, int notwriteenable)
+{
+  unsigned int keyboard_state_index;
+  uint8_t column;
+
+  keyboard_state_index = (unsigned int)(hmap->keyboard_state - hmap->keyboardops);
+  if (keyboard_state_index&KEYBOARDNOTWRITEENABLEFLAG)
+  {
+    if (!notwriteenable)
+    {
+      column = (hmap->A_sysvia.porta & hmap->A_sysvia.ddra) & 0x0F;
+      hmap->keyboard_state -= (keyboard_state_index & 0x1E);
+      hmap->keyboard_state += (column<<1);
+      hmap->keyboard_state -= KEYBOARDNOTWRITEENABLEFLAG;
+    }
+  }
+  else
+  {
+    if (notwriteenable)
+    {
+      hmap->keyboard_state += KEYBOARDNOTWRITEENABLEFLAG;
+      hmap->A_sysvia.porta &= (hmap->A_sysvia.ddra | 0x7F);
+    }
+  }
+}
+
+static inline void setkeyboardcolumn(HOSTMAP* hmap)
+{
+  unsigned int keyboard_state_index;
+  uint8_t column;
+
+  keyboard_state_index = (unsigned int)(hmap->keyboard_state - hmap->keyboardops);
+  if (!(keyboard_state_index&KEYBOARDNOTWRITEENABLEFLAG))
+  {
+    column = (hmap->A_sysvia.porta & hmap->A_sysvia.ddra) & 0x0F;
+    hmap->keyboard_state -= (keyboard_state_index & 0x1E);
+    hmap->keyboard_state += (column<<1);
+  }
 }
 
 HOSTMAP* systemvia00read(HOSTMAP* hmap, uintptr_t address_code)
@@ -596,7 +627,9 @@ HOSTMAP* systemvia01read_m(HOSTMAP* hmap, uintptr_t address_code)
       nresult = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
     }
     else
+    {
       nresult = hmap->A_sysvia.porta;
+    }
   }
   hmap->m = nresult;
 
@@ -756,8 +789,6 @@ HOSTMAP* systemvia0Fread_b(HOSTMAP* hmap, uintptr_t address_code)
   else
   {
     /*input latching disabled*/
-    if (keystatus[(hmap->A_sysvia.porta & hmap->A_sysvia.ddra)])
-      hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
     nresult = hmap->A_sysvia.porta;
   }
   hmap->m = nresult;
@@ -788,8 +819,6 @@ HOSTMAP* systemvia0Fread_m(HOSTMAP* hmap, uintptr_t address_code)
     }
     else
     {
-      if (keystatus[(hmap->A_sysvia.porta & hmap->A_sysvia.ddra)])
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
       nresult = hmap->A_sysvia.porta;
     }
   }
@@ -875,8 +904,7 @@ static inline void systemviaportbwrite_latchb(HOSTMAP* hmap)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardnotwriteenable(hmap, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -990,8 +1018,7 @@ static inline void systemviaportbwrite_latchm(HOSTMAP* hmap)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardnotwriteenable(hmap, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1071,8 +1098,7 @@ static inline void systemviaportbwrite_nosoundlatchb(HOSTMAP* hmap)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardnotwriteenable(hmap, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1180,8 +1206,7 @@ static inline void systemviaportbwrite_nosoundlatchm(HOSTMAP* hmap)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardnotwriteenable(hmap, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1266,8 +1291,7 @@ static inline void systemviaportawrite_latchb(HOSTMAP* hmap)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardcolumn(hmap);
       break;
   }
 }
@@ -1304,8 +1328,7 @@ static inline void systemviaportawrite_latchm(HOSTMAP* hmap)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardcolumn(hmap);
       break;
   }
 }
@@ -1330,8 +1353,7 @@ static inline void systemviaportawrite_nosoundlatchb(HOSTMAP* hmap)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardcolumn(hmap);
       break;
   }
 }
@@ -1362,8 +1384,7 @@ static inline void systemviaportawrite_nosoundlatchm(HOSTMAP* hmap)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardcolumn(hmap);
       break;
   }
 }
@@ -1668,4 +1689,480 @@ HOSTMAP* systemvia0Fwrite_nosoundm(HOSTMAP* hmap, uintptr_t address_code)
   systemviaportawrite_nosoundlatchm(hmap);
 
   R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+R6502ZONEMAP* keyboardlownop(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardmaxnop(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  zmap->keyboard_state = ((R6502KEYBOARDOP*)incremented_state) - 32;
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardWEnop(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  zmap->keyboard_state = ((R6502KEYBOARDOP*)incremented_state) - 2;
+  return zmap;
+}
+
+static inline R6502ZONEMAP* keyboardCA2columnN(R6502ZONEMAP *zmap, uintptr_t incremented_state, int n)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+  uint8_t keybits;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  keybits = hmap->keystatus[n];
+
+  if (keybits <= 1)
+  {
+    hmap->keyboard_state -= KEYBOARDCA2FLAG;
+    systemviaunsetca2(hmap);
+  }
+
+  return zmap;
+}
+
+static inline R6502ZONEMAP* keyboardCA2WEcolumnN(R6502ZONEMAP *zmap, uintptr_t incremented_state, int n)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+  int row;
+  uint8_t keybits;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  keybits = hmap->keystatus[n];
+
+  if (!(hmap->A_sysvia.ddra & 0x80))
+  {
+    row = (hmap->A_sysvia.porta & hmap->A_sysvia.ddra & 0x70)>>4;
+    if (keybits & (1<<row))
+      hmap->A_sysvia.porta |= 0x80;
+    else
+      hmap->A_sysvia.porta &= ~0x80;
+  }
+
+  if (keybits <= 1)
+  {
+    hmap->keyboard_state -= KEYBOARDCA2FLAG;
+    systemviaunsetca2(hmap);
+  }
+
+  return zmap;
+}
+
+static inline R6502ZONEMAP* keyboardcolumnN(R6502ZONEMAP *zmap, uintptr_t incremented_state, int n)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+  uint8_t keybits;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  keybits = hmap->keystatus[n];
+
+  if (keybits > 1)
+  {
+    hmap->keyboard_state += KEYBOARDCA2FLAG;
+    systemviasetca2(hmap);
+  }
+
+  return zmap;
+}
+
+static inline R6502ZONEMAP* keyboardWEcolumnN(R6502ZONEMAP *zmap, uintptr_t incremented_state, int n)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+  int row;
+  uint8_t keybits;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  keybits = hmap->keystatus[n];
+
+  if (!(hmap->A_sysvia.ddra & 0x80))
+  {
+    row = (hmap->A_sysvia.porta & hmap->A_sysvia.ddra & 0x70)>>4;
+    if (keybits & (1<<row))
+      hmap->A_sysvia.porta |= 0x80;
+    else
+      hmap->A_sysvia.porta &= ~0x80;
+  }
+
+  if (keybits > 1)
+  {
+    hmap->keyboard_state += KEYBOARDCA2FLAG;
+    systemviasetca2(hmap);
+  }
+
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardCA2column0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 0);
+}
+
+R6502ZONEMAP* keyboardCA2column1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 1);
+}
+
+R6502ZONEMAP* keyboardCA2column2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 2);
+}
+
+R6502ZONEMAP* keyboardCA2column3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 3);
+}
+
+R6502ZONEMAP* keyboardCA2column4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 4);
+}
+
+R6502ZONEMAP* keyboardCA2column5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 5);
+}
+
+R6502ZONEMAP* keyboardCA2column6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 6);
+}
+
+R6502ZONEMAP* keyboardCA2column7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 7);
+}
+
+R6502ZONEMAP* keyboardCA2column8(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 8);
+}
+
+R6502ZONEMAP* keyboardCA2column9(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 9);
+}
+
+R6502ZONEMAP* keyboardCA2column10(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 10);
+}
+
+R6502ZONEMAP* keyboardCA2column11(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 11);
+}
+
+R6502ZONEMAP* keyboardCA2column12(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 12);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn8(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 8);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn9(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 9);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn10(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 10);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn11(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 11);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn12(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 12);
+}
+
+R6502ZONEMAP* keyboardcolumn0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 0);
+}
+
+R6502ZONEMAP* keyboardcolumn1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 1);
+}
+
+R6502ZONEMAP* keyboardcolumn2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 2);
+}
+
+R6502ZONEMAP* keyboardcolumn3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 3);
+}
+
+R6502ZONEMAP* keyboardcolumn4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 4);
+}
+
+R6502ZONEMAP* keyboardcolumn5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 5);
+}
+
+R6502ZONEMAP* keyboardcolumn6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 6);
+}
+
+R6502ZONEMAP* keyboardcolumn7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 7);
+}
+
+R6502ZONEMAP* keyboardcolumn8(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 8);
+}
+
+R6502ZONEMAP* keyboardcolumn9(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 9);
+}
+
+R6502ZONEMAP* keyboardcolumn10(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 10);
+}
+
+R6502ZONEMAP* keyboardcolumn11(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 11);
+}
+
+R6502ZONEMAP* keyboardcolumn12(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 12);
+}
+
+R6502ZONEMAP* keyboardWEcolumn0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 0);
+}
+
+R6502ZONEMAP* keyboardWEcolumn1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 1);
+}
+
+R6502ZONEMAP* keyboardWEcolumn2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 2);
+}
+
+R6502ZONEMAP* keyboardWEcolumn3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 3);
+}
+
+R6502ZONEMAP* keyboardWEcolumn4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 4);
+}
+
+R6502ZONEMAP* keyboardWEcolumn5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 5);
+}
+
+R6502ZONEMAP* keyboardWEcolumn6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 6);
+}
+
+R6502ZONEMAP* keyboardWEcolumn7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 7);
+}
+
+R6502ZONEMAP* keyboardWEcolumn8(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 8);
+}
+
+R6502ZONEMAP* keyboardWEcolumn9(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 9);
+}
+
+R6502ZONEMAP* keyboardWEcolumn10(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 10);
+}
+
+R6502ZONEMAP* keyboardWEcolumn11(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 11);
+}
+
+R6502ZONEMAP* keyboardWEcolumn12(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 12);
+}
+
+R6502ZONEMAP* keyboardCA2nocolumn(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+
+  zmap->keyboard_state = ((R6502KEYBOARDOP*)incremented_state) - KEYBOARDCA2FLAG;
+  systemviaunsetca2(hmap);
+
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardCA2WEnocolumn(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+
+  zmap->keyboard_state = ((R6502KEYBOARDOP*)incremented_state) - KEYBOARDCA2FLAG;
+
+  if (!(hmap->A_sysvia.ddra & 0x80))
+  {
+    hmap->A_sysvia.porta &= ~0x80;
+  }
+
+  systemviaunsetca2(hmap);
+
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardnocolumn(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardWEnocolumn(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  if (!(hmap->A_sysvia.ddra & 0x80))
+  {
+    hmap->A_sysvia.porta &= ~0x80;
+  }
+
+  return zmap;
+}
+
+void setkeyboardops(int columns)
+{
+  HOSTMAP *hmap = &hostmap;
+  int i,j;
+  R6502KEYBOARDOP wecolumnops[13] = {
+    keyboardWEcolumn0, keyboardWEcolumn1, keyboardWEcolumn2, keyboardWEcolumn3,
+    keyboardWEcolumn4, keyboardWEcolumn5, keyboardWEcolumn6, keyboardWEcolumn7,
+    keyboardWEcolumn8, keyboardWEcolumn9, keyboardWEcolumn10, keyboardWEcolumn11,
+    keyboardWEcolumn12
+  };
+  R6502KEYBOARDOP columnops[13] = {
+    keyboardcolumn0, keyboardcolumn1, keyboardcolumn2, keyboardcolumn3,
+    keyboardcolumn4, keyboardcolumn5, keyboardcolumn6, keyboardcolumn7,
+    keyboardcolumn8, keyboardcolumn9, keyboardcolumn10, keyboardcolumn11,
+    keyboardcolumn12
+  };
+  R6502KEYBOARDOP ca2wecolumnops[13] = {
+    keyboardCA2WEcolumn0, keyboardCA2WEcolumn1, keyboardCA2WEcolumn2, keyboardCA2WEcolumn3,
+    keyboardCA2WEcolumn4, keyboardCA2WEcolumn5, keyboardCA2WEcolumn6, keyboardCA2WEcolumn7,
+    keyboardCA2WEcolumn8, keyboardCA2WEcolumn9, keyboardCA2WEcolumn10, keyboardCA2WEcolumn11,
+    keyboardCA2WEcolumn12
+  };
+  R6502KEYBOARDOP ca2columnops[13] = {
+    keyboardCA2column0, keyboardCA2column1, keyboardCA2column2, keyboardCA2column3,
+    keyboardCA2column4, keyboardCA2column5, keyboardCA2column6, keyboardCA2column7,
+    keyboardCA2column8, keyboardCA2column9, keyboardCA2column10, keyboardCA2column11,
+    keyboardCA2column12
+  };
+
+  for (i=0; i<columns; i++)
+  {
+    j = (i<<1);
+    hmap->keyboardops[j] = wecolumnops[i];
+    hmap->keyboardops[32+j] = columnops[i];
+    hmap->keyboardops[64+j] = ca2wecolumnops[i];
+    hmap->keyboardops[96+j] = ca2columnops[i];
+  }
+  for (i=columns; i<16; i++)
+  {
+    j = (i<<1);
+    hmap->keyboardops[j] = keyboardWEnocolumn;
+    hmap->keyboardops[32+j] = keyboardnocolumn;
+    hmap->keyboardops[64+j] = keyboardCA2WEnocolumn;
+    hmap->keyboardops[96+j] = keyboardCA2nocolumn;
+  }
+
+  for (i=0; i<128; i+=64)
+  {
+    for (j=1; j<32; j+=2)
+    {
+      hmap->keyboardops[i+j] = keyboardWEnop;
+    }
+    for (j=33; j<62; j+=2)
+    {
+      hmap->keyboardops[i+j] = keyboardlownop;
+    }
+    hmap->keyboardops[i+63] = keyboardmaxnop;
+  }
 }

@@ -10,8 +10,8 @@
 extern intptr_t nhostscreen;
 extern int nhostscreenlinelength;
 extern char keylookup[0x100];
-extern char keystatus[0x100];
-/*extern char keynormallookup[0x100];
+/*extern char keystatus[0x100];
+extern char keynormallookup[0x100];
 extern char keyshiftlookup[0x100];
 extern char keynormalstatus[0x100];
 extern char keyshiftstatus[0x100];*/
