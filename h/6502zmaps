@@ -1,0 +1,48 @@
+;>6502zmaps.h
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Cycle-level CPU emulation
+;
+; (C) Copyright Crispian Daniels, 2024-2025
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+SIZEOF_R6502_AC_ZONE EQU 4
+SIZEOF_R6502_AP_ZONE EQU 252
+SIZEOF_R6502_BC_ZONE EQU 108
+SIZEOF_R6502_BP_ZONE EQU 656
+SIZEOF_R6502_CC_ZONE EQU 512
+SIZEOF_R6502_CP_ZONE EQU 2560
+SIZEOF_R6502_DC_ZONE EQU 1152
+SIZEOF_R6502_DP_ZONE EQU 1920
+SIZEOF_R6502_EC_ZONE EQU 9216
+
+;outline of a storage map for both 6502 CPU and peripheral emulation
+;a C representation of this storage map appears in 6502zmap.h
+                        ^ 0
+; offsets &00 - &FF
+R6502ZONE_AC            # SIZEOF_R6502_AC_ZONE
+R6502ZONE_AP            # SIZEOF_R6502_AP_ZONE
+
+; offsets &100 - &3FF
+R6502ZONE_M_SHIFT       # &3
+R6502ZONE_M             # &1
+R6502ZONE_BC            # SIZEOF_R6502_BC_ZONE
+R6502ZONE_BP            # SIZEOF_R6502_BP_ZONE
+
+; offsets &400 - &FFF
+R6502ZONE_CC            # SIZEOF_R6502_CC_ZONE
+R6502ZONE_CP            # SIZEOF_R6502_CP_ZONE
+
+; offsets &1000 - &1BFF
+R6502ZONE_DC            # SIZEOF_R6502_DC_ZONE
+R6502ZONE_DP            # SIZEOF_R6502_DP_ZONE
+
+; offsets &1C00 - &3FFF
+R6502ZONE_EC            # SIZEOF_R6502_EC_ZONE
+
+SIZEOF_R6502ZONEMAP     * @
+
+  END

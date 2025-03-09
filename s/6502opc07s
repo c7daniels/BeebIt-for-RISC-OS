@@ -1,0 +1,250 @@
+;>6502opc07s.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; (C) Copyright Michael J Foot, 1998-2024
+;
+; Email: <mjfoot.nz@gmail.com>
+;
+; Fast ROM paging contributed by Crispian Daniels in 2024
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+  GET h.6502zmaps
+
+  GET h.hostmaps
+
+  GET h.6502cmaps
+
+  GET h.6502cpus
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET h.RegNames
+
+; Use the GET directive to include a list of SWI names as if typed here
+
+  GET h.SWInames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+; Export global symbols
+
+  EXPORT |h6502opcode07interfacestep|
+
+|h6502opcode07interfacestep|
+  ;check if it's called from the ROM space
+  LDR r3,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  TST r3,#&80000000
+  BNE h6502opcode07_interface
+  ADD r1,r0,#:INDEX:R6502_SEQUENCES
+  LDR r1,[r1,#R6502_OPCODE_07_SEQUENCE:SHL:2]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR pc, [r1], #4
+h6502opcode07_interface
+  ADD r3,r3,#1:SHL:16
+  STR r3,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  ;Opcode 07 Interface
+  STMFD sp!,{r0,r4-r12,lr}
+
+  ;swap in memory overlays
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:HOST_PAGING+:INDEX:HOSTPAGING_SWAPINTOMEMORY]
+
+  ;pointer to bbc memory
+  ADD r12,r0,#:INDEX:HOST_MEMORY
+  ;pointer to control block
+  LDRB r11,[r0,#:INDEX:R6502_X]
+  LDRB r2,[r0,#:INDEX:R6502_Y]
+  ORR r11,r11,r2,LSL#8
+  ADD r11,r11,r12
+
+  ;bit set of registers to relocate
+  LDRB r10,[r11,#4]
+
+  ;set the registers r0-r7
+  LDR r0,[r11,#09]
+  ANDS r9,r10,#1
+  ADDNE r0,r0,r12
+  LDR r1,[r11,#13]
+  ANDS r9,r10,#2
+  ADDNE r1,r1,r12
+  LDR r2,[r11,#17]
+  ANDS r9,r10,#4
+  ADDNE r2,r2,r12
+  LDR r3,[r11,#21]
+  ANDS r9,r10,#8
+  ADDNE r3,r3,r12
+  LDR r4,[r11,#25]
+  ANDS r9,r10,#16
+  ADDNE r4,r4,r12
+  LDR r5,[r11,#29]
+  ANDS r9,r10,#32
+  ADDNE r5,r5,r12
+  LDR r6,[r11,#33]
+  ANDS r9,r10,#64
+  ADDNE r6,r6,r12
+  LDR r7,[r11,#37]
+  ANDS r9,r10,#128
+  ADDNE r7,r7,r12
+
+  ;load the swi number
+  LDRB r10,[r11,#0]
+  LDRB r9,[r11,#1]
+  ORR r10,r10,r9,LSL#8
+  LDRB r9,[r11,#2]
+  ORR r10,r10,r9,LSL#16
+  ;set the 'X' error flag
+  ORR r10,r10,#&20000
+  SWI OS_CallASWI
+
+  LDR r10,[sp]
+  LDRB r8,[r10,#:INDEX:R6502_PS]
+  AND r8,r8,#&3C ;%00111100 ;clear NVubdiZC
+  ORRMI r8,r8,#NFLAG
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  ORRVS r8,r8,#VFLAG
+  STRB r8,[r10,#:INDEX:R6502_PS]
+
+  BVS h6502opcode07_error
+
+  LDRB r8,[r11,#3] ;number of registers to return
+  LDRB r10,[r11,#5] ;bit set of registers to relocate
+
+  ;write the registers r0-r7
+  CMP r8,#0
+  BEQ h6502opcode07_2
+  ANDS r9,r10,#1
+  SUBNE r0,r0,r12
+  STR r0,[r11,#09]
+  CMP r8,#1
+  BEQ h6502opcode07_2
+  ANDS r9,r10,#2
+  SUBNE r1,r1,r12
+  STR r1,[r11,#13]
+  CMP r8,#2
+  BEQ h6502opcode07_2
+  ANDS r9,r10,#4
+  SUBNE r2,r2,r12
+  STR r2,[r11,#17]
+  CMP r8,#3
+  BEQ h6502opcode07_2
+  ANDS r9,r10,#8
+  SUBNE r3,r3,r12
+  STR r3,[r11,#21]
+  CMP r8,#4
+  BEQ h6502opcode07_2
+  ANDS r9,r10,#16
+  SUBNE r4,r4,r12
+  STR r4,[r11,#25]
+  CMP r8,#5
+  BEQ h6502opcode07_2
+  ANDS r9,r10,#32
+  SUBNE r5,r5,r12
+  STR r5,[r11,#29]
+  CMP r8,#6
+  BEQ h6502opcode07_2
+  ANDS r9,r10,#64
+  SUBNE r6,r6,r12
+  STR r6,[r11,#33]
+  CMP r8,#7
+  BEQ h6502opcode07_2
+  ANDS r9,r10,#128
+  SUBNE r7,r7,r12
+  STR r7,[r11,#37]
+
+h6502opcode07_2
+  ;swap out memory overlays
+  LDR r0,[sp],#4
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:HOST_PAGING+:INDEX:HOSTPAGING_SWAPOUTOFMEMORY]
+
+  LDMFD sp!,{r4-r12,lr}
+  LDR r1,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
+
+h6502opcode07_error
+  ;load the swi number
+  LDRB r10,[r11,#2]
+  ;test the 'X' error flag
+  ANDS r10,r10,#&02
+
+  BEQ h6502opcode07_errorXC
+
+  ;X set
+  ;if set, point to error buffer
+  LDRB r10,[r11,#6]
+  LDRB r9,[r11,#7]
+  ORR r10,r10,r9,LSL#8
+  ADD r10,r10,r12
+  ;length of error buffer
+  LDRB r9,[r11,#8]
+  CMP r9,#0
+  BEQ h6502opcode07_error5
+  B h6502opcode07_error2
+
+h6502opcode07_errorXC
+  ;if X not set, point pc to &100
+  LDR r10,[sp]
+  MOV r9,#&100:SHL:16
+  ORR r9,r9,#BUS_BASEFLAG
+  STR r9,[r10,#:INDEX:R6502_SYNC_PC_CODE]
+  ADD r10,r12,r9,LSR #16
+
+  ;length of error buffer
+  MOV r9,#&40
+
+h6502opcode07_error2
+  ;set the BRK opcode
+  MOV r8,#0
+  ;write 00 opcode
+  STRB r8,[r10],#1
+  ;counter--
+  SUBS r9,r9,#1
+  BEQ h6502opcode07_error5
+  ;store the error code
+  LDRB r8,[r0],#4
+  STRB r8,[r10],#1
+  ;remove 1 for the error code
+  SUBS r9,r9,#1
+  BEQ h6502opcode07_error4
+
+  ;remove 1 for the terminator
+  SUBS r9,r9,#1
+  BEQ h6502opcode07_error4
+
+h6502opcode07_error3
+  LDRB r8,[r0],#1
+  STRB r8,[r10],#1
+  CMP r8,#0
+  BEQ h6502opcode07_error5
+  SUBS r9,r9,#1
+  BNE h6502opcode07_error3
+
+h6502opcode07_error4
+  ;set the terminator
+  MOV r8,#0
+  STRB r8,[r10]
+
+h6502opcode07_error5
+  ;swap out memory overlays
+  LDR r0,[sp],#4
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:HOST_PAGING+:INDEX:HOSTPAGING_SWAPOUTOFMEMORY]
+
+  LDMFD sp!,{r4-r12,lr}
+  LDR r1,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  LDR pc,[r0,#:INDEX:R6502_TRANSITION1ACTION]
+
+
+;Data Area
+
+;  AREA    |C$$data|, DATA
+
+  END

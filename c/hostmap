@@ -1,0 +1,1420 @@
+/*>hostmap.c
+ *
+ * BeebIt - BBC Micro Model B Emulator
+ *
+ * Cycle-level CPU emulation
+ *
+ * (C) Copyright Crispian Daniels, 2024-2025
+ *
+ * Email: <convertedgames@3insdale.me.uk>
+ */
+
+#include <assert.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
+#include "hostmap.h"
+#include "6502cpu.h"
+#include "sheila.h"
+#include "1770fdc.h"
+#include "6522sysvia.h"
+#include "6522usrvia.h"
+#include "6845crtc.h"
+#include "6850acia.h"
+#include "76489sound.h"
+#include "8271fdc.h"
+#include "adc.h"
+#include "keyboard.h"
+#include "video.h"
+#include "videoula.h"
+#include "beebit.h"
+
+static_assert(offsetof(HOSTMAP, m_shift) == offsetof(R6502ZONEMAP, m_shift), "Expecting consistent data bus value offsets");
+static_assert(offsetof(HOSTMAP, m) == offsetof(R6502ZONEMAP, m), "Expecting data bus value offsets");
+
+static_assert(offsetof(HOSTMAP, AC) == offsetof(R6502ZONEMAP, AC), "Expecting consistent zone offsets");
+static_assert(offsetof(HOSTMAP, BC) == offsetof(R6502ZONEMAP, BC), "Expecting consistent zone offsets");
+static_assert(offsetof(HOSTMAP, CC) == offsetof(R6502ZONEMAP, CC), "Expecting consistent zone offsets");
+static_assert(offsetof(HOSTMAP, DC) == offsetof(R6502ZONEMAP, DC), "Expecting consistent zone offsets");
+static_assert(offsetof(HOSTMAP, EC) == offsetof(R6502ZONEMAP, EC), "Expecting consistent zone offsets");
+
+extern R6502ZONEMAP* h6502read0000(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read3000(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_0(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_1(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_2(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_3(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_4(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_5(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_6(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_7(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_8(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_9(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_A(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_B(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_C(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_D(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_E(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502read8000_F(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502readC000(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502readF000(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502readbp3000_ram(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502readbp3000_ramram(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502readbp8000_ram(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502readm3000_x(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502readm3000_e(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502readm8000_ram(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502readmC000_y(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write0000(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write3000(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_0(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_1(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_2(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_3(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_4(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_5(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_6(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_7(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_8(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_9(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_A(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_B(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_C(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_D(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_E(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502write8000_F(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502writeC000(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502writeF000(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502writebp3000_ram(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502writebp3000_ramram(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502writebp8000_ram(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502writem3000_x(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502writem3000_e(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502writem8000_ram(R6502ZONEMAP* zmap, uintptr_t address_code);
+extern R6502ZONEMAP* h6502writemC000_y(R6502ZONEMAP* zmap, uintptr_t address_code);
+
+extern HOSTMAP* h6502startreadstretch(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502startwritestretch(HOSTMAP* hmap, uintptr_t address_code);
+
+extern HOSTMAP* h6502readfred(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502readjim(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502readmFC00(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502readmFD00(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502readFF00(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502writefred(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502writejim(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502writemFC00(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502writemFD00(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502writeFF00(HOSTMAP* hmap, uintptr_t address_code);
+
+extern R6502CPUMAP* h6502midstretchstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* h6502stretchedreadstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* h6502stretchedwritestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+#ifdef BEEBIT_NO_ASM
+HOSTMAP hostmap;
+#endif
+
+extern R6502CPUMAP* h6502opcode07interfacestep(R6502CPUMAP *cmap, uintptr_t incremented_cpu_state);
+
+static inline void hostmapstartreset(int poweron)
+{
+  userviastartreset(poweron);
+
+  i8271reset();
+  w1770reset();
+}
+
+static inline void hostmapendreset(void)
+{
+  userviafinishreset();
+
+  i8271reset();
+  w1770reset();
+}
+
+static R6502ZONEMAP* h6502onresetstart(R6502ZONEMAP* zmap)
+{
+  hostmapstartreset(FALSE);
+  return zmap;
+}
+
+static R6502ZONEMAP* h6502onresetcontinue(R6502ZONEMAP* zmap)
+{
+  hostmapendreset();
+  return zmap;
+}
+
+#ifdef BEEBIT_NO_ASM
+void swappages(uint8_t *block1, uint8_t *block2, int npagecount)
+{
+  char swap[256];
+  for (; npagecount > 0; npagecount--)
+  {
+    memcpy(swap,block1,256);
+    memcpy(block1,block2,256);
+    memcpy(block2,swap,256);
+    block1 += 256;
+    block2 += 256;
+  }
+}
+
+R6502ZONEMAP* h6502read0000(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&0000 - &2FFF (RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->memory[address_code>>16];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read3000(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&3000 - &7FFF (RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->memory[address_code>>16];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_0(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[0][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_1(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[1][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_2(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[2][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_3(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[3][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_4(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[4][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_5(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[5][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_6(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[6][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_7(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[7][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_8(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[8][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_9(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[9][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_A(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[10][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_B(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[11][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_C(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[12][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_D(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[13][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_E(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[14][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502read8000_F(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->roms[15][(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502readC000(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&C000 - &EFFF (OS)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  zmap->m = hmap->memory[address_code>>16];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502readF000(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (address_code >= 0xFC000000)
+  {
+    return (R6502ZONEMAP*)hmap->readhigh[(address_code>>16)-0xFC00](hmap, address_code);
+  }
+  else
+  {
+    /*&F000 - &FBFF (OS)*/
+    zmap->m = hmap->memory[address_code>>16];
+    R6502_JUMP_FROM_BUS_OP(zmap)
+  }
+}
+
+R6502ZONEMAP* h6502readbp3000_ram(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc b+*/
+  /*&3000 - &7FFF*/
+  /*shadow mode*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  uintptr_t pc = cmap->sync_pc_code;
+  if (pc >= 0xC0000000 AND pc < 0xE0000000)
+  {
+    hmap->m = hmap->shadow[address_code>>16];
+    R6502_JUMP_FROM_BUS_OP(zmap)
+  }
+  else
+    return h6502read3000(zmap, address_code);
+}
+
+R6502ZONEMAP* h6502readbp3000_ramram(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc b+*/
+  /*&3000 - &7FFF*/
+  /*shadow mode plus 12K ram*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  uintptr_t pc = cmap->sync_pc_code;
+  if (pc >= 0xA0000000 AND pc < 0xB0000000)
+  {
+    hmap->m = hmap->shadow[address_code>>16];
+    R6502_JUMP_FROM_BUS_OP(zmap)
+  }
+  else
+    return h6502readbp3000_ram(zmap, address_code);
+}
+
+R6502ZONEMAP* h6502readbp8000_ram(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc b+*/
+  /*&8000 - &AFFF (SHADOW RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->shadow[(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502readm3000_x(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc master 128*/
+  /*&3000 - &7FFF (RAM)*/
+  /*LYNNE (ACCCON b2) (X)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->shadow[address_code>>16];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502readm3000_e(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc master 128*/
+  /*&3000 - &7FFF (RAM)*/
+  /*(ACCCON b1) (E)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  uintptr_t pc = cmap->sync_pc_code;
+  if (pc >= 0xC0000000 AND pc < 0xE0000000)
+    return h6502readm3000_x(zmap, address_code);
+  else
+    return h6502read3000(zmap, address_code);
+}
+
+R6502ZONEMAP* h6502readm8000_ram(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc master 128*/
+  /*&8000 - &8FFF*/
+  /*ANDY (ROMSEL b7)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->shadow[(address_code>>16)-0x8000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502readmC000_y(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc master 128*/
+  /*&C000 - &DFFF*/
+  /*HAZEL (ACCCON b3) (Y)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->m = hmap->shadow[(address_code>>16)-0xB000];
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write0000(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&0000 - &2FFF (RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->memory[address_code>>16] = hmap->m;
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write3000(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&3000 - &7FFF (RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->memory[address_code>>16] = hmap->m;
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_0(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[0])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[0][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_1(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[1])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[1][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_2(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[2])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[2][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_3(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[3])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[3][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_4(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[4])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[4][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_5(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[5])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[5][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_6(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[6])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[6][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_7(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[7])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[7][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_8(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[8])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[8][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_9(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[9])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[9][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_A(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[10])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[10][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_B(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[11])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[11][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_C(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[12])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[12][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_D(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[13])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[13][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_E(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[14])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[14][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502write8000_F(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->romwritable[15])
+  {
+    /*check sideways ram write enabled*/
+    hmap->roms[15][(address_code>>16)-0x8000] = hmap->m;
+  }
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502writeC000(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*&C000 - &EFFF (OS - should not be allowed!)*/
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502writeF000(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (address_code >= 0xFC000000)
+  {
+    return (R6502ZONEMAP*)hmap->writehigh[(address_code>>16)-0xFC00](hmap, address_code);
+  }
+  else
+  {
+    /*&F000 - &FBFF (OS - should not be allowed!)*/
+    R6502_JUMP_FROM_BUS_OP(zmap)
+  }
+}
+
+R6502ZONEMAP* h6502writebp3000_ram(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc b+*/
+  /*&3000 - &7FFF (RAM)*/
+  /*shadow mode*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  uintptr_t pc = cmap->sync_pc_code;
+  if (pc >= 0xC0000000 AND pc < 0xE0000000)
+  {
+    hmap->shadow[address_code>>16] = hmap->m;
+    R6502_JUMP_FROM_BUS_OP(zmap)
+  }
+  else
+    return h6502write3000(zmap, address_code);
+}
+
+R6502ZONEMAP* h6502writebp3000_ramram(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc b+*/
+  /*&3000 - &7FFF (RAM)*/
+  /*shadow mode plus 12K ram*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  uintptr_t pc = cmap->sync_pc_code;
+  if (pc >= 0xA0000000 AND pc < 0xB0000000)
+  {
+    hmap->shadow[address_code>>16] = hmap->m;
+    R6502_JUMP_FROM_BUS_OP(zmap)
+  }
+  else
+    return h6502writebp3000_ram(zmap, address_code);
+}
+
+R6502ZONEMAP* h6502writebp8000_ram(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc b+*/
+  /*&8000 - &AFFF (SHADOW RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->shadow[(address_code>>16)-0x8000] = hmap->m;
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502writem3000_x(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc master 128*/
+  /*&3000 - &7FFF (RAM)*/
+  /*LYNNE (ACCCON b2) (X)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->shadow[address_code>>16] = hmap->m;
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502writem3000_e(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc master 128*/
+  /*&3000 - &7FFF (RAM)*/
+  /*(ACCCON b1) (E)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  uintptr_t pc = cmap->sync_pc_code;
+  if (pc >= 0xC0000000 AND pc < 0xE0000000)
+    return h6502writem3000_x(zmap, address_code);
+  else
+    return h6502write3000(zmap, address_code);
+}
+
+R6502ZONEMAP* h6502writem8000_ram(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc master 128*/
+  /*&8000 - &8FFF*/
+  /*ANDY (ROMSEL b7)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->shadow[(address_code>>16)-0x8000] = hmap->m;
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+R6502ZONEMAP* h6502writemC000_y(R6502ZONEMAP* zmap, uintptr_t address_code)
+{
+  /*bbc master 128*/
+  /*&C000 - &DFFF*/
+  /*HAZEL (ACCCON b3) (Y)*/
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  hmap->shadow[(address_code>>16)-0xB000] = hmap->m;
+  R6502_JUMP_FROM_BUS_OP(zmap)
+}
+
+HOSTMAP* h6502startreadstretch(HOSTMAP* hmap, uintptr_t address_code)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+
+  cmap->address_code = address_code;
+  cmap->stretched_cpu_state = cmap->cpu_state;
+  cmap->cpu_state = cmap->sequences[R6502_READ_STRETCH_SEQUENCE];
+  if (!((hmap->cycles.odd ^ hmap->cycles.togo ^ hmap->cycles.original) & 1))
+    cmap->cpu_state++;
+  R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+HOSTMAP* h6502startwritestretch(HOSTMAP* hmap, uintptr_t address_code)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+
+  cmap->address_code = address_code;
+  cmap->stretched_cpu_state = cmap->cpu_state;
+  cmap->cpu_state = cmap->sequences[R6502_WRITE_STRETCH_SEQUENCE];
+  if (!((hmap->cycles.odd ^ hmap->cycles.togo ^ hmap->cycles.original) & 1))
+    cmap->cpu_state++;
+  R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+HOSTMAP* h6502readfred(HOSTMAP* hmap, uintptr_t address_code)
+{
+  hmap->m = 0xFE;
+  R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+HOSTMAP* h6502readjim(HOSTMAP* hmap, uintptr_t address_code)
+{
+  hmap->m = 0xFE;
+  R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+HOSTMAP* h6502readmFC00(HOSTMAP* hmap, uintptr_t address_code)
+{
+  if (hmap->acccon & 0x40)
+  {
+    /*TST*/
+    hmap->m = hmap->memory[address_code>>16];
+    R6502_JUMP_FROM_HIGH_OP(hmap)
+  }
+  else if (hmap->acccon & 0x20)
+  {
+    /*IFJ*/
+    hmap->m = 0;
+    R6502_JUMP_FROM_HIGH_OP(hmap)
+  }
+  else
+    return h6502startreadstretch(hmap, address_code);
+}
+
+HOSTMAP* h6502readmFD00(HOSTMAP* hmap, uintptr_t address_code)
+{
+  if (hmap->acccon & 0x40)
+  {
+    /*TST*/
+    hmap->m = hmap->memory[address_code>>16];
+    R6502_JUMP_FROM_HIGH_OP(hmap)
+  }
+  else if (hmap->acccon & 0x20)
+  {
+    /*IFJ*/
+    hmap->m = 0;
+    R6502_JUMP_FROM_HIGH_OP(hmap)
+  }
+  else
+    return h6502startreadstretch(hmap, address_code);
+}
+
+HOSTMAP* h6502readFF00(HOSTMAP* hmap, uintptr_t address_code)
+{
+  /*&FF00 - &FFFF (OS)*/
+  hmap->m = hmap->memory[address_code>>16];
+  R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+HOSTMAP* h6502writefred(HOSTMAP* hmap, uintptr_t address_code)
+{
+  R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+HOSTMAP* h6502writejim(HOSTMAP* hmap, uintptr_t address_code)
+{
+  R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+HOSTMAP* h6502writemFC00(HOSTMAP* hmap, uintptr_t address_code)
+{
+  if (hmap->acccon & 0x40)
+  {
+    /*TST (OS - should not be allowed!)*/
+    R6502_JUMP_FROM_HIGH_OP(hmap)
+  }
+  else if (hmap->acccon & 0x20)
+  {
+    /*IFJ*/
+    R6502_JUMP_FROM_HIGH_OP(hmap)
+  }
+  else
+    return h6502startwritestretch(hmap, address_code);
+}
+
+HOSTMAP* h6502writemFD00(HOSTMAP* hmap, uintptr_t address_code)
+{
+  if (hmap->acccon & 0x40)
+  {
+    /*TST (OS - should not be allowed!)*/
+    R6502_JUMP_FROM_HIGH_OP(hmap)
+  }
+  else if (hmap->acccon & 0x20)
+  {
+    /*IFJ*/
+    R6502_JUMP_FROM_HIGH_OP(hmap)
+  }
+  else
+    return h6502startwritestretch(hmap, address_code);
+}
+
+HOSTMAP* h6502writeFF00(HOSTMAP* hmap, uintptr_t address_code)
+{
+  /*&FF00 - &FFFF (OS - should not be allowed!)*/
+  R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+R6502CPUMAP* h6502midstretchstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_WITHOUT_BUS_OP(cmap)
+}
+
+R6502CPUMAP* h6502stretchedreadstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+
+  cmap->cpu_state = cmap->stretched_cpu_state;
+  return (R6502CPUMAP*)hmap->stretchedreadhigh[(cmap->address_code>>16)-0xFC00](hmap, cmap->address_code);
+}
+
+R6502CPUMAP* h6502stretchedwritestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+
+  cmap->cpu_state = cmap->stretched_cpu_state;
+  return (R6502CPUMAP*)hmap->stretchedwritehigh[(cmap->address_code>>16)-0xFC00](hmap, cmap->address_code);
+}
+#endif
+
+const R6502OP h6502_readstretchsequence[] = {h6502midstretchstep, h6502stretchedreadstep, NULL};
+const R6502OP h6502_writestretchsequence[] = {h6502midstretchstep, h6502stretchedwritestep, NULL};
+const R6502OP h6502_opcode07interfacesequence[] = {h6502opcode07interfacestep, NULL};
+
+HOSTMAP* swappagesintomemoryb(HOSTMAP* hmap)
+{
+  int nrom;
+
+  nrom = hmap->romsel & 0x0F;
+  memcpy(&hmap->memory[0x8000],hmap->roms[nrom],0x4000);
+  return hmap;
+}
+
+HOSTMAP* swappagesintomemorybp(HOSTMAP* hmap)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  int nrom;
+  uintptr_t pc = (cmap->sync_pc_code>>16);
+
+  if ((pc >= 0xC000 AND pc < 0xE000)
+    OR ((hmap->romsel & 0x80) AND pc >= 0xA000 AND pc < 0xB000))
+  {
+    swappages(&hmap->memory[0x3000],&hmap->shadow[0x3000],0x50);
+  }
+
+  nrom = hmap->romsel & 0x0F;
+  if (nrom == 0x0F)
+    nrom = 0x0E;
+  if (hmap->romsel & 0x80)
+  {
+    memcpy(&hmap->memory[0x8000],hmap->shadow,0x3000);
+    memcpy(&hmap->memory[0xB000],&hmap->roms[nrom][0x3000],0x1000);
+  }
+  else
+    memcpy(&hmap->memory[0x8000],hmap->roms[nrom],0x4000);
+  return hmap;
+}
+
+HOSTMAP* swappagesintomemorym(HOSTMAP* hmap)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  int nrom;
+  uintptr_t pc = (cmap->sync_pc_code>>16);
+
+  if ((hmap->acccon & 0x04)
+    OR ((hmap->acccon & 0x02) AND pc >= 0xC000 AND pc < 0xE000))
+  {
+    swappages(&hmap->memory[0x3000],&hmap->shadow[0x3000],0x50);
+  }
+
+  nrom = hmap->romsel & 0x0F;
+  if (hmap->romsel & 0x80)
+  {
+    memcpy(&hmap->memory[0x8000],hmap->shadow,0x1000);
+    memcpy(&hmap->memory[0x9000],&hmap->roms[nrom][0x1000],0x3000);
+  }
+  else
+    memcpy(&hmap->memory[0x8000],hmap->roms[nrom],0x4000);
+
+  if (hmap->acccon & 0x04)
+    swappages(&hmap->memory[0xC000],&hmap->shadow[0x1000],0x20);
+
+  return hmap;
+}
+
+HOSTMAP* swappagesoutofmemoryb(HOSTMAP* hmap)
+{
+  int nrom;
+
+  nrom = hmap->romsel & 0x0F;
+  if (hmap->romwritable[nrom])
+    memcpy(hmap->roms[nrom],&hmap->memory[0x8000],0x4000);
+  return hmap;
+}
+
+HOSTMAP* swappagesoutofmemorybp(HOSTMAP* hmap)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  int nrom;
+  uintptr_t pc = (cmap->sync_pc_code>>16);
+
+  if ((pc >= 0xC000 AND pc < 0xE000)
+    OR ((hmap->romsel & 0x80) AND pc >= 0xA000 AND pc < 0xB000))
+  {
+    swappages(&hmap->memory[0x3000],&hmap->shadow[0x3000],0x50);
+  }
+
+  nrom = hmap->romsel & 0x0F;
+  if (nrom == 0x0F)
+    nrom = 0x0E;
+  if (hmap->romsel & 0x80)
+  {
+    memcpy(hmap->shadow,&hmap->memory[0x8000],0x3000);
+    if (hmap->romwritable[nrom])
+      memcpy(&hmap->roms[nrom][0x3000],&hmap->memory[0xB000],0x1000);
+  }
+  else
+  {
+    if (hmap->romwritable[nrom])
+      memcpy(hmap->roms[nrom],&hmap->memory[0x8000],0x4000);
+  }
+  return hmap;
+}
+
+HOSTMAP* swappagesoutofmemorym(HOSTMAP* hmap)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  int nrom;
+  uintptr_t pc = (cmap->sync_pc_code>>16);
+
+  if ((hmap->acccon & 0x04)
+    OR ((hmap->acccon & 0x02) AND pc >= 0xC000 AND pc < 0xE000))
+  {
+    swappages(&hmap->memory[0x3000],&hmap->shadow[0x3000],0x50);
+  }
+
+  nrom = hmap->romsel & 0x0F;
+  if (hmap->romsel & 0x80)
+  {
+    memcpy(hmap->shadow,&hmap->memory[0x8000],0x1000);
+    if (hmap->romwritable[nrom])
+      memcpy(&hmap->roms[nrom][0x1000],&hmap->memory[0x9000],0x1000);
+  }
+  else
+  {
+    if (hmap->romwritable[nrom])
+      memcpy(hmap->roms[nrom],&hmap->memory[0x8000],0x4000);
+  }
+
+  if (hmap->acccon & 0x04)
+    swappages(&hmap->memory[0xC000],&hmap->shadow[0x1000],0x20);
+
+  return hmap;
+}
+
+
+void hostmapinit(void)
+{
+  videoinit();
+}
+
+void hostmapapplysoundoption(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  HOSTHIGHOP* stretchedwritehigh = &hmap->stretchedwritehigh[0x200];
+  int i;
+
+  for (i=0x40; i<0x60; i+=0x10)
+  {
+    if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+    {
+      if (beebit_sound)
+      {
+        stretchedwritehigh[i] = systemvia00write_m;
+        stretchedwritehigh[i+0x01] = systemvia01write_m;
+        stretchedwritehigh[i+0x0F] = systemvia0Fwrite_m;
+      }
+      else
+      {
+        stretchedwritehigh[i] = systemvia00write_nosoundm;
+        stretchedwritehigh[i+0x01] = systemvia01write_nosoundm;
+        stretchedwritehigh[i+0x0F] = systemvia0Fwrite_nosoundm;
+      }
+    }
+    else
+    {
+      if (beebit_sound)
+      {
+        stretchedwritehigh[i] = systemvia00write_b;
+        stretchedwritehigh[i+0x01] = systemvia01write_b;
+        stretchedwritehigh[i+0x0F] = systemvia0Fwrite_b;
+      }
+      else
+      {
+        stretchedwritehigh[i] = systemvia00write_nosoundb;
+        stretchedwritehigh[i+0x01] = systemvia01write_nosoundb;
+        stretchedwritehigh[i+0x0F] = systemvia0Fwrite_nosoundb;
+      }
+    }
+  }
+}
+
+int hostmapresetcpu(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  const R6502OP* const *mainsequences;
+  const R6502OP* const extrasequences[R6502_EXTRA_SEQUENCE_COUNT] = {
+    h6502_readstretchsequence,
+    h6502_writestretchsequence,
+    h6502_opcode07interfacesequence
+  };
+
+  cmap->pagezero = &hmap->memory[0];
+  cmap->pageone = &hmap->memory[0x100];
+
+  switch (beebit_machinetype)
+  {
+    case MACHINE_MODELB:
+    case MACHINE_MODELBPLUS:
+      mainsequences = r6502sequences;
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      mainsequences = r65c12sequences;
+      break;
+  }
+
+  if (r6502reset(cmap, mainsequences, extrasequences))
+      return TRUE;
+
+  cmap->resetstartingaction = h6502onresetstart;
+  cmap->resetcontinuingaction = h6502onresetcontinue;
+
+  return FALSE;
+}
+
+void hostmapresetperipherals(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  const R6502BUSOP initialbusops[32] = {
+    h6502read0000,h6502read0000, h6502read0000,
+    h6502read3000, h6502read3000, h6502read3000, h6502read3000, h6502read3000,
+    h6502read8000_0, h6502read8000_0, h6502read8000_0, h6502read8000_0,
+    h6502readC000, h6502readC000, h6502readC000,
+    h6502readF000,
+    h6502write0000, h6502write0000, h6502write0000,
+    h6502write3000, h6502write3000, h6502write3000, h6502write3000, h6502write3000,
+    h6502write8000_0, h6502write8000_0, h6502write8000_0, h6502write8000_0,
+    h6502writeC000, h6502writeC000, h6502writeC000,
+    h6502writeF000
+  };
+  const R6502BUSOP read8000s[0x10] =
+  {
+    h6502read8000_0, h6502read8000_1,
+    h6502read8000_2, h6502read8000_3,
+    h6502read8000_4, h6502read8000_5,
+    h6502read8000_6, h6502read8000_7,
+    h6502read8000_8, h6502read8000_9,
+    h6502read8000_A, h6502read8000_B,
+    h6502read8000_C, h6502read8000_D,
+    h6502read8000_E, h6502read8000_F
+  };
+  R6502BUSOP write8000s[0x10] =
+  {
+    h6502write8000_0, h6502write8000_1,
+    h6502write8000_2, h6502write8000_3,
+    h6502write8000_4, h6502write8000_5,
+    h6502write8000_6, h6502write8000_7,
+    h6502write8000_8, h6502write8000_9,
+    h6502write8000_A, h6502write8000_B,
+    h6502write8000_C, h6502write8000_D,
+    h6502write8000_E, h6502write8000_F
+  };
+  HOSTHIGHOP readFC00,writeFC00;
+  HOSTHIGHOP readFD00,writeFD00;
+  int i;
+
+  cmap->nmis |= NMIS_OLDRESET;
+
+  hmap->cycles.odd = 0;
+  hmap->cycles.togo = 0x10000;
+  hmap->cycles.original = hmap->cycles.togo;
+
+  for (i=0; i<32; i++)
+  {
+    cmap->busops[i].op = initialbusops[i];
+  }
+
+  memcpy(hmap->read8000s, read8000s, sizeof(read8000s));
+  memcpy(hmap->write8000s, write8000s, sizeof(write8000s));
+
+  if (beebit_machinetype == MACHINE_MODELBPLUS)
+  {
+    /*make rom F use rom E*/
+    hmap->read8000s[0xF] = read8000s[0xE];
+    hmap->write8000s[0xF] = write8000s[0xE];
+  }
+
+  hmap->paging.read3000 = h6502read3000;
+  hmap->paging.write3000 = h6502write3000;
+
+  switch (beebit_machinetype)
+  {
+    default:
+      hmap->paging.read3000_ram = NULL;
+      hmap->paging.write3000_ram = NULL;
+      hmap->paging.read3000_ramram = NULL;
+      hmap->paging.write3000_ramram = NULL;
+      break;
+    case MACHINE_MODELBPLUS:
+      hmap->paging.read3000_ram = h6502readbp3000_ram;
+      hmap->paging.write3000_ram = h6502writebp3000_ram;
+      hmap->paging.read3000_ramram = h6502readbp3000_ramram;
+      hmap->paging.write3000_ramram = h6502writebp3000_ramram;
+      break;
+  }
+
+  switch (beebit_machinetype)
+  {
+    default:
+      hmap->paging.read3000_e = NULL;
+      hmap->paging.write3000_e = NULL;
+      hmap->paging.read3000_x = NULL;
+      hmap->paging.write3000_x = NULL;
+      hmap->paging.readC000_y = NULL;
+      hmap->paging.writeC000_y = NULL;
+      readFC00 = h6502startreadstretch;
+      writeFC00 = h6502startwritestretch;
+      readFD00 = h6502startreadstretch;
+      writeFD00 = h6502startwritestretch;
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      hmap->paging.read3000 = h6502read3000;
+      hmap->paging.write3000 = h6502write3000;
+      hmap->paging.read3000_e = h6502readm3000_e;
+      hmap->paging.write3000_e = h6502writem3000_e;
+      hmap->paging.read3000_x = h6502readm3000_x;
+      hmap->paging.write3000_x = h6502writem3000_x;
+      hmap->paging.readC000_y = h6502readmC000_y;
+      hmap->paging.writeC000_y = h6502writemC000_y;
+      readFC00 = h6502readmFC00;
+      writeFC00 = h6502writemFC00;
+      readFD00 = h6502readmFD00;
+      writeFD00 = h6502writemFD00;
+      break;
+  }
+
+  switch (beebit_machinetype)
+  {
+    default:
+      hmap->paging.read8000_ram = NULL;
+      hmap->paging.write8000_ram = NULL;
+      hmap->paging.swapintomemory = swappagesintomemoryb;
+      hmap->paging.swapoutofmemory = swappagesoutofmemoryb;
+      break;
+    case MACHINE_MODELBPLUS:
+      hmap->paging.read8000_ram = h6502readbp8000_ram;
+      hmap->paging.write8000_ram = h6502writebp8000_ram;
+      hmap->paging.swapintomemory = swappagesintomemorybp;
+      hmap->paging.swapoutofmemory = swappagesoutofmemorybp;
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      hmap->paging.read8000_ram = h6502readm8000_ram;
+      hmap->paging.write8000_ram = h6502writem8000_ram;
+      hmap->paging.swapintomemory = swappagesintomemorym;
+      hmap->paging.swapoutofmemory = swappagesoutofmemorym;
+      break;
+  }
+
+  for (i=0; i<0x100; i++)
+  {
+    hmap->readhigh[i] = readFC00;
+    hmap->writehigh[i] = writeFC00;
+  }
+  for (i=0; i<0x100; i++)
+  {
+    hmap->readhigh[0x100+i] = readFD00;
+    hmap->writehigh[0x100+i] = writeFD00;
+  }
+  for (i=0; i<0x100; i++)
+  {
+    hmap->readhigh[0x300+i] = h6502readFF00;
+    hmap->writehigh[0x300+i] = h6502writeFF00;
+  }
+  for (i=0; i<0x100; i++)
+  {
+    hmap->stretchedreadhigh[i] = h6502readfred;
+    hmap->stretchedwritehigh[i] = h6502writefred;
+  }
+  for (i=0; i<0x100; i++)
+  {
+    hmap->stretchedreadhigh[0x100+i] = h6502readjim;
+    hmap->stretchedwritehigh[0x100+i] = h6502writejim;
+  }
+  for (i=0; i<0x100; i++)
+  {
+    hmap->stretchedreadhigh[0x300+i] = h6502readFF00;
+    hmap->stretchedwritehigh[0x300+i] = h6502writeFF00;
+  }
+
+  sheilareset();
+  aciareset();
+  adcreset();
+  videoulareset();
+  crtcreset();
+  keyboardreset();
+  systemviareset();
+  videoreset();
+  soundreset();
+  hostmapstartreset(TRUE);
+}
+
+#ifdef BEEBIT_NO_ASM
+HOSTMAP* hostmapadvancetimers(HOSTMAP* hmap)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  intptr_t cyclesoriginal, fewestcyclestogo, cyclestogo;
+
+  cyclesoriginal = hmap->cycles.original;
+  hmap->cycles.original = 0;
+  hmap->cycles.odd ^= (cyclesoriginal & 1);
+  hmap->cycles.monotonic += cyclesoriginal;
+  fewestcyclestogo = (1<<16);
+
+  cyclestogo = hmap->cycles.sysvia_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.sysvia_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      systemviaatzerocycles(hmap);
+      cyclestogo = hmap->cycles.sysvia_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.usrvia_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.usrvia_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      userviaatzerocycles(hmap);
+      cyclestogo = hmap->cycles.usrvia_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.i8271_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.i8271_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      i8271poll(hmap);
+      cyclestogo = hmap->cycles.i8271_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.w1770_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.w1770_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      w1770poll(hmap);
+      cyclestogo = hmap->cycles.w1770_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.adc_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.adc_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      adcpoll(hmap);
+      cyclestogo = hmap->cycles.adc_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.m6850_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.m6850_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      aciapoll(hmap);
+      cyclestogo = hmap->cycles.m6850_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.video_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.video_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      videoatzerocycles(hmap);
+      cyclestogo = hmap->cycles.video_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  hmap->cycles.original = fewestcyclestogo;
+  hmap->cycles.togo = fewestcyclestogo;
+
+  if (cmap->irq && !(cmap->ps & IFLAG))
+    r6502startinterrupt(cmap);
+  return hmap;
+}
+
+void hostmapexecute(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+
+  cmap->nmis &= NMIS_NOTYIELD;
+  do
+  {
+    (*cmap->cpu_state)(cmap, (intptr_t)(cmap->cpu_state+1));
+    if (--hmap->cycles.togo == 0)
+      hostmapadvancetimers(hmap);
+  }
+  while (!(cmap->nmis & NMIS_YIELD));
+}
+#endif
+
+void hostmapbeforesnapshot(void)
+{
+  systemviabeforesnapshot();
+  userviabeforesnapshot();
+}
+
+void hostmapaftersnapshot(void)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)&hostmap;
+
+  systemviaaftersnapshot();
+  userviaaftersnapshot();
+
+  cmap->nmis &= ~NMIS_OLDRESET;
+
+  r6502aftersnapshot(cmap);
+}
