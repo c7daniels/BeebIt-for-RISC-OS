@@ -1,0 +1,181 @@
+/*>6502opc07.c
+ *
+ * Rockwell 6502 central processor unit
+ *
+ * BeebIt - BBC Micro Model B Emulator
+ *
+ * (C) Copyright Michael J Foot, 1998-2024
+ *
+ * Email: <mjfoot.nz@gmail.com>
+ */
+
+#include <stddef.h>
+#include <string.h>
+#include "hostmap.h"
+#include "6502cpu.h"
+#include "beebit.h"
+#include "main.h"
+#include "riscos.h"
+#include "swis.h"
+#include "kernel.h"
+
+extern _kernel_swi_regs regs;
+
+#ifdef BEEBIT_NO_ASM
+R6502CPUMAP* h6502opcode07interfacestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+#ifdef __RISCOS__
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  char* memory = (char*)hmap->memory;
+  int c, cb, eb, eblength, swi, regcount;
+  _kernel_oserror *oserror;
+  char relocate;
+
+  /*check if it's called from the ROM space*/
+  if (cmap->sync_pc_code & 0x80000000)
+  {
+    cmap->sync_pc_code = (cmap->sync_pc_code+0x10000) & 0xFFFFFFFF;
+
+    /*Opcode 07 Interface*/
+    hmap->paging.swapintomemory(hmap);
+
+    /*pointer to control block*/
+    cb = (cmap->y << 8) | cmap->x;
+
+    /*bit set of registers to relocate*/
+    relocate = memory[cb+4];
+
+    /*set the registers r0-r7*/
+    regs.r[0] = getword(memory+cb+9);
+    if (relocate & 1)
+      regs.r[0] += (intptr_t)memory;
+    regs.r[1] = getword(memory+cb+13);
+    if (relocate & 2)
+      regs.r[1] += (intptr_t)memory;
+    regs.r[2] = getword(memory+cb+17);
+    if (relocate & 4)
+      regs.r[2] += (intptr_t)memory;
+    regs.r[3] = getword(memory+cb+21);
+    if (relocate & 8)
+      regs.r[3] += (intptr_t)memory;
+    regs.r[4] = getword(memory+cb+25);
+    if (relocate & 16)
+      regs.r[4] += (intptr_t)memory;
+    regs.r[5] = getword(memory+cb+29);
+    if (relocate & 32)
+      regs.r[5] += (intptr_t)memory;
+    regs.r[6] = getword(memory+cb+33);
+    if (relocate & 64)
+      regs.r[6] += (intptr_t)memory;
+    regs.r[7] = getword(memory+cb+37);
+    if (relocate & 128)
+      regs.r[7] += (intptr_t)memory;
+
+    swi = (memory[cb+2]<<16)|(memory[cb+1]<<8)|memory[cb];
+
+    oserror = _kernel_swi_c(swi, &regs, &regs, &c);
+    cmap->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+
+    if (oserror == NULL)
+    {
+      if (c)
+        cmap->ps |= CFLAG;
+
+      /*number of registers to return*/
+      regcount = memory[cb+3];
+      /*bit set of registers to relocate*/
+      relocate = memory[cb+5];
+      if (regcount > 0)
+      {
+        if (relocate & 1)
+          regs.r[0] -= (intptr_t)memory;
+        setword(memory+cb+9,regs.r[0]);
+      }
+      if (regcount > 1)
+      {
+        if (relocate & 2)
+          regs.r[1] -= (intptr_t)memory;
+        setword(memory+cb+13,regs.r[1]);
+      }
+      if (regcount > 2)
+      {
+        if (relocate & 4)
+          regs.r[2] -= (intptr_t)memory;
+        setword(memory+cb+17,regs.r[2]);
+      }
+      if (regcount > 3)
+      {
+        if (relocate & 8)
+          regs.r[3] -= (intptr_t)memory;
+        setword(memory+cb+21,regs.r[3]);
+      }
+      if (regcount > 4)
+      {
+        if (relocate & 16)
+          regs.r[4] -= (intptr_t)memory;
+        setword(memory+cb+25,regs.r[4]);
+      }
+      if (regcount > 5)
+      {
+        if (relocate & 32)
+          regs.r[5] -= (intptr_t)memory;
+        setword(memory+cb+29,regs.r[5]);
+      }
+      if (regcount > 6)
+      {
+        if (relocate & 64)
+          regs.r[6] -= (intptr_t)memory;
+        setword(memory+cb+33,regs.r[6]);
+      }
+      if (regcount > 7)
+      {
+        if (relocate & 128)
+          regs.r[7] -= (intptr_t)memory;
+        setword(memory+cb+37,regs.r[7]);
+      }
+    }
+    else
+    {
+      cmap->ps |= (VFLAG | CFLAG);
+
+      if (swi & 0x20000)
+      {
+        eb = (memory[cb+7] << 8) | memory[cb+6];
+        eblength = memory[cb+8];
+      }
+      else
+      {
+        /*if X not set, point pc to &100*/
+        cmap->sync_pc_code = (0x100<<16) | BUS_BASEFLAG;
+        eb = 0x100;
+        eblength = 0x40;
+      }
+
+      if (eblength > 0)
+      {
+        /*set the BRK opcode*/
+        memory[eb] = 0;
+        if (eblength > 1)
+        {
+          /*store the error code*/
+          memory[eb+1] = oserror->errnum & 0xFF;
+        }
+        if (eblength > 2)
+        {
+          /*store the error message*/
+          strncpy(memory+eb+2, oserror->errmess, eblength-2);
+          memory[eb+eblength-1] = 0;
+        }
+      }
+    }
+    hmap->paging.swapoutofmemory(hmap);
+    R6502_NEXT_INSTRUCTION(cmap, cmap->sync_pc_code)
+  }
+  else
+#endif
+  {
+    cmap->cpu_state = cmap->sequences[R6502_OPCODE_07_SEQUENCE];
+    return (*cmap->cpu_state)(cmap, (intptr_t)(cmap->cpu_state+1));
+  }
+}
+#endif

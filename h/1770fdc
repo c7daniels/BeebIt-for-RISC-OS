@@ -2,9 +2,13 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2000
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mikef@voyager.co.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
 #define DFS_SECTORS_PER_TRACK 10
@@ -20,14 +24,18 @@
 #define ADFS_NON_INTERLEAVED 0x10 /*non interleaved*/
 #define ADFS_INTERLEAVED 0x11 /*interleaved*/
 
-extern int w1770_timer;
-
 extern void w1770reset(void);
 extern int w1770getsectorcount(FILE *hfile);
 extern int w1770getimagetype(FILE *hfile, int nsectorcount);
-extern void w1770poll(void);
-extern char w1770controlread(void);
-extern void w1770controlwrite(char nvalue);
-extern char w1770read(int naddress);
-extern void w1770write(int naddress, char nvalue);
-extern void w1770closedown(void);
+extern HOSTMAP* w1770poll(HOSTMAP* hmap);
+extern HOSTMAP* w1770controlread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* w1770controlwrite_bp(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* w1770controlwrite_m(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* w1770statusread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* w1770trackread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* w1770sectorread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* w1770dataread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* w1770commandwrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* w1770trackwrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* w1770sectorwrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* w1770datawrite(HOSTMAP* hmap, uintptr_t address_code);

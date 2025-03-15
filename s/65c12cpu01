@@ -1,0 +1,219 @@
+;>65c12cpu01.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Cycle-level CPU emulation
+;
+; (C) Copyright Crispian Daniels, 2024
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+  GET h.6502zmaps
+
+  GET h.6502cmaps
+
+  GET h.6502cpus
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET h.RegNames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+; Export global symbols
+
+  EXPORT |r65c12zpgreadagainstep|
+  EXPORT |r65c12readagainstep|
+  EXPORT |r65c12tsbzpgstep|
+  EXPORT |r65c12tsbstep|
+  EXPORT |r65c12trbzpgstep|
+  EXPORT |r65c12trbstep|
+  EXPORT |r65c12tozpgstep|
+  EXPORT |r65c12breadcrumbloadabsystep|
+  EXPORT |r65c12loadabsystep|
+  EXPORT |r65c12linearloadabsystep|
+  EXPORT |r65c12breadcrumbloadabsxstep|
+  EXPORT |r65c12loadabsxstep|
+  EXPORT |r65c12linearloadabsxstep|
+  EXPORT |r65c12incastep|
+
+|r65c12zpgreadagainstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_JUMP_TO_ZPG_READ_OP
+
+|r65c12readagainstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_JUMP_TO_READ_OP
+
+|r65c12tsbzpgstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDRB r3,[r0,#:INDEX:R6502_PS]
+  TST r1,r2
+  ORR r2,r2,r1
+  BICNE r3,r3,#ZFLAG
+  ORREQ r3,r3,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_PS]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_JUMP_TO_ZPG_WRITE_OP
+
+|r65c12tsbstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDRB r3,[r0,#:INDEX:R6502_PS]
+  TST r1,r2
+  ORR r2,r2,r1
+  BICNE r3,r3,#ZFLAG
+  ORREQ r3,r3,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_PS]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_JUMP_TO_WRITE_OP
+
+|r65c12trbzpgstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDRB r3,[r0,#:INDEX:R6502_PS]
+  TST r1,r2
+  BIC r2,r2,r1
+  BICNE r3,r3,#ZFLAG
+  ORREQ r3,r3,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_PS]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_JUMP_TO_ZPG_WRITE_OP
+
+|r65c12trbstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDRB r3,[r0,#:INDEX:R6502_PS]
+  TST r1,r2
+  BIC r2,r2,r1
+  BICNE r3,r3,#ZFLAG
+  ORREQ r3,r3,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_PS]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_JUMP_TO_WRITE_OP
+
+|r65c12tozpgstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  ADD r1,r1,#1:SHL:16
+  STR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  STR r2,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_JUMP_TO_READ_OP
+
+|r65c12breadcrumbloadabsystep|
+  LDRB r3,[r0,#:INDEX:R6502_Y]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  ADDEQ r1,r1,#1:SHL:2
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,r1,LSL #24
+  ORR r1,r1,#BUS_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_FIX_CODE]
+  LDRNE r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_JUMP_TO_READ_OP
+
+|r65c12loadabsystep|
+  LDRB r3,[r0,#:INDEX:R6502_Y]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  ADDEQ r1,r1,#1:SHL:2
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,r1,LSL #24
+  ORR r1,r1,#BUS_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_FIX_CODE]
+  LDRNE r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  R6502_JUMP_TO_READ_OP
+
+|r65c12linearloadabsystep|
+  LDRB r3,[r0,#:INDEX:R6502_Y]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,r1,LSL #24
+  ORR r1,r1,#BUS_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_FIX_CODE]
+  LDRNE r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  R6502_JUMP_TO_READ_OP
+
+|r65c12breadcrumbloadabsxstep|
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  ADDEQ r1,r1,#1:SHL:2
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,r1,LSL #24
+  ORR r1,r1,#BUS_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_FIX_CODE]
+  LDRNE r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_JUMP_TO_READ_OP
+
+|r65c12loadabsxstep|
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  ADDEQ r1,r1,#1:SHL:2
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,r1,LSL #24
+  ORR r1,r1,#BUS_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_FIX_CODE]
+  LDRNE r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  R6502_JUMP_TO_READ_OP
+
+|r65c12linearloadabsxstep|
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,r1,LSL #24
+  ORR r1,r1,#BUS_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_FIX_CODE]
+  LDRNE r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  R6502_JUMP_TO_READ_OP
+
+|r65c12incastep|
+  LDR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  LDRB r3,[r0,#:INDEX:R6502_PS]
+  ADDS r1,r2,#1:SHL:24
+  BIC r3,r3,#NFLAG|ZFLAG
+  ORRMI r3,r3,#NFLAG
+  ORREQ r3,r3,#ZFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  STRB r3,[r0,#:INDEX:R6502_PS]
+  R6502_IMPLIED_NEXT_INSTRUCTION
+
+;Data Area
+
+;  AREA    |C$$data|, DATA
+
+  END

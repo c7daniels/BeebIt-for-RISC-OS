@@ -4,9 +4,13 @@
  *
  * Acorn Video ULA [1MHz]
  *
- * (C) Copyright Michael J Foot, 1998-2003
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
 /* Bit assignments in control reg:
@@ -18,9 +22,10 @@
    7 - Master cursor width (if set causes large cursor)
 */
 
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
-#include "6502cpu.h"
+#include "hostmap.h"
 #include "6522sysvia.h"
 #include "6845crtc.h"
 #include "beebit.h"
@@ -66,20 +71,12 @@ int llargecursor,lteletextmode;
 int ncurrentmode;
 /*char npalettevalue;*/
 
-void videoulareset(int lfull)
+void videoulareset(void)
 {
   videoula_palettevalue = 0;
   lteletextmode = TRUE;
-  if (lfull)
-  {
-    video_mode = -1;
-    ncurrentmode = -1;
-  }
-  /*else
-  {
-    video_mode = 7;
-    ncurrentmode = -1;
-  }*/
+  video_mode = -1;
+  ncurrentmode = -1;
   cursor_width = 0;
 }
 
@@ -296,276 +293,222 @@ void videoulasetcursor(void)
   }
 }
 
-void videoulawrite(int naddress, char nvalue)
+HOSTMAP* videoula00write(HOSTMAP* hmap, uintptr_t address_code)
 {
-  int ntotal;
-  char n1,n2;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
+  videoula_control = hmap->m;
+  videoula_flashcolour = (hmap->m & 0x01);
+  llargecursor = (hmap->m & 0x80);
+  lteletextmode = (hmap->m & 0x02);
+  videoula_clockrate = (hmap->m & 0x10);
+  crtchorizontal();
+  crtcwidthextra();
+  crtccursor();
+  videoulasetcursor();
+
+  cursor_show = (!cursor_nondisplay AND cursor_width > 0) AND (m6845_cursorskew != 3);
+
+  if (lteletextmode)
+    video_mode = 7;
   else
-    r6502_cyclestogo -= 2;
-
-  #ifdef __DEBUG__
-    fprintf(htrace,"write videoula %X %X\n",naddress,nvalue);
-  #endif
-  if (naddress & 0x01)
   {
-    /*palette*/
-    videoula_rawpalette[nvalue>>4] =(nvalue & 0x0F);
-
-    n1 = (nvalue>>4); /*logical colour*/
-    n2 = ((nvalue & 0x0F)^7); /*physical colour*/
-    videoula_palettevalue = nvalue;
-    /*videoula_colours[n1] = n2;*/
-    #ifdef __DEBUG__
-      fprintf(htrace,"Palette %u=&%X\n",n1,n2);
-    #endif
-    switch (video_mode)
+    switch ((hmap->m & 0x1C)>>2)
     {
-      case 0x00:
-      case 0x03:
-      case 0x04:
-      case 0x06:
-        /*1bpp*/
-        videoula_palette0[n1] = videoula_physical0[n2];
-        videoula_palette1[n1] = videoula_physical1[n2];
-        n2 = video_colourlookup1[n1];
-        if (videoula_flashcolour == 0)
-        {
-          switch (beebit_graphicsmode)
-          {
-            case 12:
-            case 20:
-              videoula_palette[n2] = videoula_palette0[n1];
-              break;
-            case 15:
-            case 21:
-              videoula_palette[n2] = videoula_colourmap8[videoula_palette0[n1]];
-              break;
-          }
-        }
+      case 0x07:
+        if (hmap->screenstartaddress == 0x4000)
+          video_mode = 3;
         else
-        {
-          switch (beebit_graphicsmode)
-          {
-            case 12:
-            case 20:
-              videoula_palette[n2] = videoula_palette1[n1];
-              break;
-            case 15:
-            case 21:
-              videoula_palette[n2] = videoula_colourmap8[videoula_palette1[n1]];
-              break;
-          }
-        }
+          video_mode = 0;
+        break;
+      case 0x06:
+        video_mode = 1;
+        break;
+      case 0x05:
+        video_mode = 2;
+        break;
+      case 0x02:
+        if (hmap->screenstartaddress == 0x6000)
+          video_mode = 6;
+        else
+          video_mode = 4;
         break;
       case 0x01:
-      case 0x05:
-        /*2bpp*/
-        videoula_palette0[n1] = videoula_physical0[n2];
-        videoula_palette1[n1] = videoula_physical1[n2];
-        n2 = video_colourlookup2[n1];
-        if (videoula_flashcolour == 0)
-        {
-          switch (beebit_graphicsmode)
-          {
-            case 12:
-            case 20:
-              videoula_palette[n2] = videoula_palette0[n1];
-              break;
-            case 15:
-            case 21:
-              videoula_palette[n2] = videoula_colourmap8[videoula_palette0[n1]];
-              break;
-          }
-        }
-        else
-        {
-          switch (beebit_graphicsmode)
-          {
-            case 12:
-            case 20:
-              videoula_palette[n2] = videoula_palette1[n1];
-              break;
-            case 15:
-            case 21:
-              videoula_palette[n2] = videoula_colourmap8[videoula_palette1[n1]];
-              break;
-          }
-        }
+        video_mode = 5;
+        break;
+      case 0x00:
+        video_mode = 8;
         break;
       default:
-      /*case 0x02:*/
-        videoula_palette0[n1] = videoula_physical0[n2];
-        videoula_palette1[n1] = videoula_physical1[n2];
-        if (videoula_flashcolour == 0)
-        {
-          switch (beebit_graphicsmode)
-          {
-            case 12:
-            case 20:
-              videoula_palette[n1] = videoula_palette0[n1];
-              break;
-            case 15:
-            case 21:
-              videoula_palette[n1] = videoula_colourmap8[videoula_palette0[n1]];
-              break;
-          }
-        }
-        else
-        {
-          switch (beebit_graphicsmode)
-          {
-            case 12:
-            case 20:
-              videoula_palette[n1] = videoula_palette1[n1];
-              break;
-            case 15:
-            case 21:
-              videoula_palette[n1] = videoula_colourmap8[videoula_palette1[n1]];
-              break;
-          }
-        }
+        video_mode = -1;
         break;
     }
-    #ifdef __DEBUG__
-      fprintf(htrace,"FLASH=&%X\n",videoula_flashcolour);
-      fprintf(htrace,"PAL");
-      for (n1=0;n1<=0x0F;n1++)
-        fprintf(htrace," %u",videoula_palette[n1]);
-      fprintf(htrace,"\n");
-      fprintf(htrace,"PL0");
-      for (n1=0;n1<=0x0F;n1++)
-        fprintf(htrace," %u",videoula_palette0[n1]);
-      fprintf(htrace,"\n");
-      fprintf(htrace,"PL1");
-      for (n1=0;n1<=0x0F;n1++)
-        fprintf(htrace," %u",videoula_palette1[n1]);
-      fprintf(htrace,"\n");
-    #endif
-    /*#ifdef __DEBUG__
-      for (n1=0;n1<0x0F;n1++)
-        fprintf(htrace,"PAL %u=%u\n",n,videoulapalette[n1]);
-    #endif*/
+    videomodechange();
   }
-  else
+
+  videoulasetpalette();
+
+  if (ncurrentmode == -1)
   {
-    /*bbcvdu(86);
-    inttohex4(naddress);
-    bbcvdu(32);
-    inttohex4(nvalue);
-    bbcvdu(13);
-    bbcvdu(10);*/
-    videoula_control = nvalue;
-    videoula_flashcolour = (nvalue & 0x01);
-    /*fprintf(htrace,"FLASH=%u\n",videoula_flashcolour);*/
-    llargecursor = (nvalue & 0x80);
-    /*ncursorwidth = ((nvalue & 0x60)>>5);*/
-    lteletextmode = (nvalue & 0x02);
-    videoula_clockrate = (nvalue & 0x10);
-    crtchorizontal();
-    crtcwidthextra();
-    crtccursor();
-    videoulasetcursor();
-    /*fprintf(htrace,"CUR W:&%X &%X\n",cursor_width,llargecursor);*/
-
-    /*cursor_show = (cursor_width > 0);*/
-    /*cursor_show = (!cursor_nondisplay AND cursor_width > 0);*/
-      cursor_show = (!cursor_nondisplay AND cursor_width > 0) AND (m6845_cursorskew != 3);
-
-    #ifdef __DEBUG__
-      fprintf(htrace,"nvalue= &%X, &%X\n",nvalue,((nvalue & 0x1C)>>2));
-      if (lteletextmode AND video_baseaddress == 0x4000)
+    if (lteletextmode && local_teletextform == 0)
+    {
+      if (screenmoderecords)
       {
-      fprintf(htrace,"PC=&%X OP=&%X &%X &%X",r6502_pc-1,memory[r6502_pc-1],memory[r6502_pc-2],memory[r6502_pc-3]);
+        regs.r[0] = 0;
+        regs.r[1] = 7;
+        _kernel_swi(OS_ScreenMode,&regs,&regs);
       }
-    #endif
-
-    if (lteletextmode)
-      video_mode = 7;
+      else
+      {
+        bbcvdu(22);
+        bbcvdu(7);
+      }
+    }
     else
     {
-      switch ((nvalue & 0x1C)>>2)
+      if (screenmoderecords)
       {
-        case 0x07:
-          if (video_baseaddress == 0x4000)
-            video_mode = 3;
-          else
-            video_mode = 0;
-          break;
-        case 0x06:
-          video_mode = 1;
-          break;
-        case 0x05:
-          video_mode = 2;
-          break;
-        case 0x02:
-          if (video_baseaddress == 0x6000)
-            video_mode = 6;
-          else
-            video_mode = 4;
-          break;
-        case 0x01:
-          video_mode = 5;
-          break;
-        case 0x00:
-          video_mode = 8;
-          break;
-        default:
-          video_mode = -1;
-          break;
+        regs.r[0] = 0;
+        regs.r[1] = beebit_graphicsmodespecifier;
+        _kernel_swi(OS_ScreenMode,&regs,&regs);
       }
-      videomodechange();
-    }
-    #ifdef __DEBUG__
-      fprintf(htrace,"MODE %u\n",video_mode);
-    #endif
-
-    videoulasetpalette();
-
-    if (ncurrentmode == -1)
-    {
-      if (lteletextmode && local_teletextform == 0)
+      else
       {
-        if (screenmoderecords)
+        bbcvdu(22);
+        bbcvdu(beebit_graphicsmodespecifier);
+      }
+    }
+    ncurrentmode = video_mode;
+    videohostmodevars();
+    adcmodevars();
+    cursordisable();
+    crtcscreen();
+    crtccursor();
+    video_startaddress = video_storeaddress;
+    video_offset = 0;
+  }
+  R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+HOSTMAP* videoula01write(HOSTMAP* hmap, uintptr_t address_code)
+{
+  int n1,n2;
+
+  /*palette*/
+  videoula_rawpalette[hmap->m>>4] =(hmap->m & 0x0F);
+
+  n1 = (hmap->m>>4); /*logical colour*/
+  n2 = ((hmap->m & 0x0F)^7); /*physical colour*/
+  videoula_palettevalue = hmap->m;
+  /*videoula_colours[n1] = n2;*/
+  #ifdef __DEBUG__
+    fprintf(htrace,"Palette %u=&%X\n",n1,n2);
+  #endif
+  switch (video_mode)
+  {
+    case 0x00:
+    case 0x03:
+    case 0x04:
+    case 0x06:
+      /*1bpp*/
+      videoula_palette0[n1] = videoula_physical0[n2];
+      videoula_palette1[n1] = videoula_physical1[n2];
+      n2 = video_colourlookup1[n1];
+      if (videoula_flashcolour == 0)
+      {
+        switch (beebit_graphicsmode)
         {
-          regs.r[0] = 0;
-          regs.r[1] = 7;
-          _kernel_swi(OS_ScreenMode,&regs,&regs);
-        }
-        else
-        {
-          bbcvdu(22);
-          bbcvdu(7);
+          case 12:
+          case 20:
+            videoula_palette[n2] = videoula_palette0[n1];
+            break;
+          case 15:
+          case 21:
+            videoula_palette[n2] = videoula_colourmap8[videoula_palette0[n1]];
+            break;
         }
       }
       else
       {
-        if (screenmoderecords)
+        switch (beebit_graphicsmode)
         {
-          regs.r[0] = 0;
-          regs.r[1] = beebit_graphicsmodespecifier;
-          _kernel_swi(OS_ScreenMode,&regs,&regs);
-        }
-        else
-        {
-          bbcvdu(22);
-          bbcvdu(beebit_graphicsmodespecifier);
+          case 12:
+          case 20:
+            videoula_palette[n2] = videoula_palette1[n1];
+            break;
+          case 15:
+          case 21:
+            videoula_palette[n2] = videoula_colourmap8[videoula_palette1[n1]];
+            break;
         }
       }
-      ncurrentmode = video_mode;
-      /*videomodechange();*/
-      videohostmodevars();
-      adcmodevars();
-      cursordisable();
-      crtcscreen();
-      crtccursor();
-      video_startaddress = video_storeaddress;
-      video_offset = 0;
-    }
+      break;
+    case 0x01:
+    case 0x05:
+      /*2bpp*/
+      videoula_palette0[n1] = videoula_physical0[n2];
+      videoula_palette1[n1] = videoula_physical1[n2];
+      n2 = video_colourlookup2[n1];
+      if (videoula_flashcolour == 0)
+      {
+        switch (beebit_graphicsmode)
+        {
+          case 12:
+          case 20:
+            videoula_palette[n2] = videoula_palette0[n1];
+            break;
+          case 15:
+          case 21:
+            videoula_palette[n2] = videoula_colourmap8[videoula_palette0[n1]];
+            break;
+        }
+      }
+      else
+      {
+        switch (beebit_graphicsmode)
+        {
+          case 12:
+          case 20:
+            videoula_palette[n2] = videoula_palette1[n1];
+            break;
+          case 15:
+          case 21:
+            videoula_palette[n2] = videoula_colourmap8[videoula_palette1[n1]];
+            break;
+        }
+      }
+      break;
+    default:
+    /*case 0x02:*/
+      videoula_palette0[n1] = videoula_physical0[n2];
+      videoula_palette1[n1] = videoula_physical1[n2];
+      if (videoula_flashcolour == 0)
+      {
+        switch (beebit_graphicsmode)
+        {
+          case 12:
+          case 20:
+            videoula_palette[n1] = videoula_palette0[n1];
+            break;
+          case 15:
+          case 21:
+            videoula_palette[n1] = videoula_colourmap8[videoula_palette0[n1]];
+            break;
+        }
+      }
+      else
+      {
+        switch (beebit_graphicsmode)
+        {
+          case 12:
+          case 20:
+            videoula_palette[n1] = videoula_palette1[n1];
+            break;
+          case 15:
+          case 21:
+            videoula_palette[n1] = videoula_colourmap8[videoula_palette1[n1]];
+            break;
+        }
+      }
+      break;
   }
+  R6502_JUMP_FROM_HIGH_OP(hmap)
 }

@@ -4,13 +4,17 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2000
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mikef@voyager.co.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
 /*Motorola 6845 CRTC*/
-extern char m6845_r[18]; /*18 registers*/
+extern unsigned char m6845_r[18]; /*18 registers*/
 extern int m6845_vt;
 extern int m6845_sl;
 extern int m6845_slplus;
@@ -56,8 +60,10 @@ extern int cursor_on;
 extern int cursor_blinktime;
 
 void crtcreset(void);
-char crtcread(int Address);
-void crtcwrite(int Address,int Value);
+HOSTMAP* crtc00read(HOSTMAP* hmap, uintptr_t address_code);
+HOSTMAP* crtc01read(HOSTMAP* hmap, uintptr_t address_code);
+HOSTMAP* crtc00write(HOSTMAP* hmap, uintptr_t address_code);
+HOSTMAP* crtc01write(HOSTMAP* hmap, uintptr_t address_code);
 void crtcteletextwidthextra(void);
 void crtcwidthextra(void);
 void crtchorizontal(void);

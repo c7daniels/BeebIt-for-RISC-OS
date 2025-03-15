@@ -9,6 +9,7 @@
  * Email: <mikef@voyager.co.nz>
  */
 
+#include <stdint.h>
 #include "beebit.h"
 #include "kernel.h"
 #include "riscos.h"

@@ -6,19 +6,22 @@
  *
  * Email: <mjfoot.nz@gmail.com>
  *
- * Enhanced host screen mode compatibility (and more)
- *   contributed by Crispian Daniels in 2024
+ * Addressing optimization contributed by Crispian Daniels in 2024
  *
  * Email: <convertedgames@3insdale.me.uk>
  */
 
-/*sheila*/
-extern char sheila_b[0x100];
+extern void sheilareset(void);
 
-void sheilareset(void);
-int sheilaread_b(int);
-int sheilaread_bp(int);
-int sheilaread_m(int);
-void sheilawrite_b(unsigned int, int);
-void sheilawrite_bp(unsigned int, int);
-void sheilawrite_m(unsigned int, int);
+extern HOSTMAP* hostconstantread00(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* hostconstantreadFE(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* hostconstantreadFF(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* romselread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* accconread(HOSTMAP* hmap, uintptr_t address_code);
+
+extern HOSTMAP* hostnowrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* romselwrite_b(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* romselwrite_bp(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* romselwrite_m(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* accconwrite_bp(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* accconwrite_m(HOSTMAP* hmap, uintptr_t address_code);

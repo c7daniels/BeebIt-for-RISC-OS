@@ -6,6 +6,11 @@
 ;
 ; Email: <mjfoot@paradise.net.nz>
 ;
+
+  GET h.6502zmaps
+
+  GET h.hostmaps
+
 ; Use the GET directive to include register definitions as if typed here
 
   GET     h.RegNames
@@ -19,13 +24,10 @@
   AREA    |C$$code|, CODE, READONLY
 
 ; Import global symbols
-  IMPORT |memory|
-  IMPORT |shadow|
-  IMPORT |beebit_acccon|
+  IMPORT |hostmap|
   IMPORT |beebit_vdusel|
   IMPORT |videoula_palette|
   IMPORT |video_address|
-  IMPORT |video_baseaddress|
 
   EXPORT |mode4plot4|
   EXPORT |mode4plot8|
@@ -43,13 +45,13 @@
   ;r0 = address offset in riscos memory (screen)
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
-  LDR r12,=beebit_vdusel
-  LDR r3,[r12] ;vdusel
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:HOST_ACCCON] ;acccon
+  LDR r11,=beebit_vdusel
+  LDR r3,[r11] ;vdusel
   TST r2,r3 ;test vdusel set
-  LDREQ r12,=memory ;bbc memory space
-  LDRNE r12,=shadow ;shadow memory space
+  ADDEQ r12,r12,#:INDEX:HOST_MEMORY ;bbc memory space
+  ADDNE r12,r12,#:INDEX:HOST_SHADOW ;shadow memory space
 
   LDR r11,=videoula_palette ;videoula palette lookup
   LDR r10,=video_address
@@ -112,8 +114,8 @@ mode4plot4_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r9,=video_baseaddress
-  LDR r14,[r9] ;get bbc screen base address
+  LDR r9,=hostmap
+  LDR r14,[r9,#:INDEX:HOST_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r14,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode4plot4_1
@@ -127,13 +129,13 @@ mode4plot4_end
   ;r0 = address offset in riscos memory (screen)
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
-  LDR r12,=beebit_vdusel
-  LDR r3,[r12] ;vdusel
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:HOST_ACCCON] ;acccon
+  LDR r11,=beebit_vdusel
+  LDR r3,[r11] ;vdusel
   TST r2,r3 ;test vdusel set
-  LDREQ r12,=memory ;bbc memory space
-  LDRNE r12,=shadow ;shadow memory space
+  ADDEQ r12,r12,#:INDEX:HOST_MEMORY ;bbc memory space
+  ADDNE r12,r12,#:INDEX:HOST_SHADOW ;shadow memory space
 
   LDR r11,=videoula_palette ;videoula palette lookup
   LDR r10,=video_address
@@ -205,8 +207,8 @@ mode4plot8_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r9,=video_baseaddress
-  LDR r14,[r9] ;get bbc screen base address
+  LDR r9,=hostmap
+  LDR r14,[r9,#:INDEX:HOST_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r14,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode4plot8_1
@@ -220,13 +222,13 @@ mode4plot8_end
   ;r0 = address offset in riscos memory (screen)
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
-  LDR r12,=beebit_vdusel
-  LDR r3,[r12] ;vdusel
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:HOST_ACCCON] ;acccon
+  LDR r11,=beebit_vdusel
+  LDR r3,[r11] ;vdusel
   TST r2,r3 ;test vdusel set
-  LDREQ r12,=memory ;bbc memory space
-  LDRNE r12,=shadow ;shadow memory space
+  ADDEQ r12,r12,#:INDEX:HOST_MEMORY ;bbc memory space
+  ADDNE r12,r12,#:INDEX:HOST_SHADOW ;shadow memory space
 
   LDR r11,=videoula_palette ;videoula palette lookup
   LDR r10,=video_address
@@ -295,8 +297,8 @@ mode5plot4_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r14,=video_baseaddress
-  LDR r14,[r14] ;get bbc screen base address
+  LDR r14,=hostmap
+  LDR r14,[r14,#:INDEX:HOST_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r14,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode5plot4_1
@@ -310,13 +312,13 @@ mode5plot4_end
   ;r0 = address offset in riscos memory (screen)
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
-  LDR r12,=beebit_vdusel
-  LDR r3,[r12] ;vdusel
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:HOST_ACCCON] ;acccon
+  LDR r11,=beebit_vdusel
+  LDR r3,[r11] ;vdusel
   TST r2,r3 ;test vdusel set
-  LDREQ r12,=memory ;bbc memory space
-  LDRNE r12,=shadow ;shadow memory space
+  ADDEQ r12,r12,#:INDEX:HOST_MEMORY ;bbc memory space
+  ADDNE r12,r12,#:INDEX:HOST_SHADOW ;shadow memory space
 
   LDR r11,=videoula_palette ;videoula palette lookup
   LDR r10,=video_address
@@ -389,8 +391,8 @@ mode5plot8_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r14,=video_baseaddress
-  LDR r14,[r14] ;get bbc screen base address
+  LDR r14,=hostmap
+  LDR r14,[r14,#:INDEX:HOST_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r14,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode5plot8_1
@@ -417,15 +419,15 @@ mode5plot8_end
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
   ;LDR r12,=memory ;bbc memory space
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
-  LDR r12,=beebit_vdusel
-  LDR r3,[r12] ;vdusel
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:HOST_ACCCON] ;acccon
+  LDR r11,=beebit_vdusel
+  LDR r3,[r11] ;vdusel
   ;ANDS r2,r2,#&80
   ;ANDS r3,r2,r3 ;test vdusel set
   TST r2,r3 ;test vdusel set
-  LDREQ r12,=memory ;bbc memory space
-  LDRNE r12,=shadow ;shadow memory space
+  ADDEQ r12,r12,#:INDEX:HOST_MEMORY ;bbc memory space
+  ADDNE r12,r12,#:INDEX:HOST_SHADOW ;shadow memory space
 
 ;mode8plot4_0
   LDR r11,=videoula_palette ;videoula palette lookup
@@ -509,8 +511,8 @@ mode8plot4_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r3,=video_baseaddress
-  LDR r3,[r3] ;get bbc screen base address
+  LDR r3,=hostmap
+  LDR r3,[r3,#:INDEX:HOST_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r3,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode8plot4_1
@@ -525,15 +527,15 @@ mode8plot4_end
   ;r1 = number of bytes to plot
   STMFD sp!,{v1-v6,sl,fp,lr} ;a1-a4,ip don't need to be preserved for APCS
   ;LDR r12,=memory ;bbc memory space
-  LDR r12,=beebit_acccon
-  LDR r2,[r12] ;acccon
-  LDR r12,=beebit_vdusel
-  LDR r3,[r12] ;vdusel
+  LDR r12,=hostmap
+  LDRB r2,[r12,#:INDEX:HOST_ACCCON] ;acccon
+  LDR r11,=beebit_vdusel
+  LDR r3,[r11] ;vdusel
   ;ANDS r2,r2,#&80
   ;ANDS r3,r2,r3 ;test vdusel set
   TST r2,r3 ;test vdusel set
-  LDREQ r12,=memory ;bbc memory space
-  LDRNE r12,=shadow ;shadow memory space
+  ADDEQ r12,r12,#:INDEX:HOST_MEMORY ;bbc memory space
+  ADDNE r12,r12,#:INDEX:HOST_SHADOW ;shadow memory space
   ;BNE mode8shadow
 
   ;read from main memory
@@ -634,8 +636,8 @@ mode8plot8_1
 ;  SUB r2,r2,#1 ;to get &7FFF
 ;  AND r8,r8,r2 ;video_address &= 0x7FFF
   BIC r8,r8,#&80000000
-  LDR r3,=video_baseaddress
-  LDR r3,[r3] ;get bbc screen base address
+  LDR r3,=hostmap
+  LDR r3,[r3,#:INDEX:HOST_SCREENSTARTADDRESS] ;get bbc screen base address
   ADD r8,r8,r3,LSL #16 ;video_address += video_baseaddress
   ADD r7,r12,r8,LSR #16 ;absolute address in bbc memory
   B mode8plot8_1

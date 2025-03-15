@@ -2,23 +2,21 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2007
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Addressing optimization contributed by Crispian Daniels in 2024
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
 /*analog to digital converter*/
-extern int adc_channel;
-extern int adc_flag;
-extern int adc_resolution;
-extern int adc_status;
-extern int adc_highbyte;
-extern int adc_lowbyte;
-extern int adc_timer; /*adc timer*/
-
 extern void adcreset(void);
 extern void adcenter(void);
 extern void adcmodevars(void);
-extern void adcpoll(void);
-extern char adcread(int naddress);
-extern void adcwrite(int naddress,int nvalue);
+extern HOSTMAP* adcpoll(HOSTMAP* hmap);
+extern HOSTMAP* adc00read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* adc01read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* adc02read(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* adcwrite(HOSTMAP* hmap, uintptr_t address_code);

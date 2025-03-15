@@ -1,0 +1,61 @@
+/*>6502zmap.h
+ *
+ * BeebIt - BBC Micro Model B Emulator
+ *
+ * Cycle-level CPU emulation
+ *
+ * (C) Copyright Crispian Daniels, 2024-2025
+ *
+ * Email: <convertedgames@3insdale.me.uk>
+ */
+
+#ifndef __BEEBIT_6502ZMAP_H__
+#define __BEEBIT_6502ZMAP_H__
+
+#include <stdint.h>
+
+struct R6502ZONEMAP;
+
+typedef struct R6502ZONEMAP* (*R6502PERIPHERALOP)(struct R6502ZONEMAP *zmap); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
+
+typedef struct R6502ZONEMAP* (*R6502BUSOP)(struct R6502ZONEMAP *zmap, uintptr_t address_code); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
+
+/*outline of a storage map for both 6502 CPU and peripheral emulation*/
+typedef uintptr_t R6502_AC_ZONE[1];
+typedef uintptr_t R6502_AP_ZONE[63];
+typedef uintptr_t R6502_BC_ZONE[27];
+typedef uintptr_t R6502_BP_ZONE[164];
+typedef uintptr_t R6502_CC_ZONE[128];
+typedef uintptr_t R6502_CP_ZONE[640];
+typedef uintptr_t R6502_DC_ZONE[288];
+typedef uintptr_t R6502_DP_ZONE[480];
+typedef uintptr_t R6502_EC_ZONE[2304];
+
+/*for aligning a byte with the top of an AArch32 word*/
+typedef uint8_t R6502BYTESHIFT[sizeof(uintptr_t)-1];
+
+typedef struct R6502ZONEMAP
+{
+  // AArch32 offsets &00 - &FF
+  R6502_AC_ZONE AC;
+  R6502_AP_ZONE AP;
+
+  // AArch32 offsets &100 - &3FF
+  R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
+  R6502_BC_ZONE BC;
+  R6502_BP_ZONE BP;
+
+  // AArch32 offsets &400 - &FFF
+  R6502_CC_ZONE CC;
+  R6502_CP_ZONE CP;
+
+  // AArch32 offsets &1000 - &1BFF
+  R6502_DC_ZONE DC;
+  R6502_DP_ZONE DP;
+
+  // AArch32 offsets &1C00 - &3FFF
+  R6502_EC_ZONE EC;
+
+} R6502ZONEMAP;
+
+#endif //__BEEBIT_6502ZMAP_H__

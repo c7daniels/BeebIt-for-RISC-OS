@@ -4,116 +4,915 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2003
+ * Cycle-level CPU emulation
  *
- * Email: <mjfoot@paradise.net.nz>
+ * (C) Copyright Crispian Daniels, 2024-2025
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
 /*Original BBC 6502 ran at 2MHz (2,000,000 cycles)*/
 
+#include <stddef.h>
 #include <string.h>
 #include "6502cpu.h"
 #include "beebit.h"
 
-void swappagesintomemorym(void)
+const R6502OP r65c12_nopdecodesequence[] = {r65c12nopdecodestep, NULL};
+const R6502OP r65c12_phxsequence[] = R6502_PUSH_SEQUENCE(r65c12topushxstep);
+const R6502OP r65c12_plxsequence[] = R6502_PULL_SEQUENCE(r65c12pulledxstep);
+const R6502OP r65c12_physequence[] = R6502_PUSH_SEQUENCE(r65c12topushystep);
+const R6502OP r65c12_plysequence[] = R6502_PULL_SEQUENCE(r65c12pulledystep);
+const R6502OP r65c12_bitimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r65c12bitimmediatestep);
+const R6502OP r65c12_bitzpgxsequence[] = R65C12_LOAD_ZPGX_SEQUENCE(r6502bitstep);
+const R6502OP r65c12_bitabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502bitstep);
+const R6502OP r65c12_orazpgindsequence[] = R65C12_LOAD_ZPGIND_SEQUENCE(r6502orastep);
+const R6502OP r65c12_orapreindexedsequence[] = R65C12_LOAD_PREINDEXED_SEQUENCE(r6502orastep);
+const R6502OP r65c12_orazpgxsequence[] = R65C12_LOAD_ZPGX_SEQUENCE(r6502orastep);
+const R6502OP r65c12_oraabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502orastep);
+const R6502OP r65c12_oraabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r6502orastep);
+const R6502OP r65c12_orapostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r6502orastep);
+const R6502OP r65c12_andzpgindsequence[] = R65C12_LOAD_ZPGIND_SEQUENCE(r6502andstep);
+const R6502OP r65c12_andpreindexedsequence[] = R65C12_LOAD_PREINDEXED_SEQUENCE(r6502andstep);
+const R6502OP r65c12_andzpgxsequence[] = R65C12_LOAD_ZPGX_SEQUENCE(r6502andstep);
+const R6502OP r65c12_andabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502andstep);
+const R6502OP r65c12_andabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r6502andstep);
+const R6502OP r65c12_andpostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r6502andstep);
+const R6502OP r65c12_eorzpgindsequence[] = R65C12_LOAD_ZPGIND_SEQUENCE(r6502eorstep);
+const R6502OP r65c12_eorpreindexedsequence[] = R65C12_LOAD_PREINDEXED_SEQUENCE(r6502eorstep);
+const R6502OP r65c12_eorzpgxsequence[] = R65C12_LOAD_ZPGX_SEQUENCE(r6502eorstep);
+const R6502OP r65c12_eorabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502eorstep);
+const R6502OP r65c12_eorabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r6502eorstep);
+const R6502OP r65c12_eorpostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r6502eorstep);
+const R6502OP r65c12_adcimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r65c12adcimmediatestep, r65c12decimalflagsimmediatestep);
+const R6502OP r65c12_adczpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r65c12adcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_adcabssequence[] = R6502_LOAD_ABS_SEQUENCE(r65c12adcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_adczpgindsequence[] = R65C12_LOAD_ZPGIND_SEQUENCE(r65c12adcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_adcpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r65c12adcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_adczpgxsequence[] = R65C12_LOAD_ZPGX_SEQUENCE(r65c12adcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_adcabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r65c12adcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_adcabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r65c12adcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_adcpostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r65c12adcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_ldazpgindsequence[] = R65C12_LOAD_ZPGIND_SEQUENCE(r6502ldastep);
+const R6502OP r65c12_ldapreindexedsequence[] = R65C12_LOAD_PREINDEXED_SEQUENCE(r6502ldastep);
+const R6502OP r65c12_ldazpgxsequence[] = R65C12_LOAD_ZPGX_SEQUENCE(r6502ldastep);
+const R6502OP r65c12_ldaabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502ldastep);
+const R6502OP r65c12_ldaabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r6502ldastep);
+const R6502OP r65c12_ldapostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r6502ldastep);
+const R6502OP r65c12_ldxzpgysequence[] = R65C12_LOAD_ZPGY_SEQUENCE(r6502ldxstep);
+const R6502OP r65c12_ldxabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r6502ldxstep);
+const R6502OP r65c12_ldyzpgxsequence[] = R65C12_LOAD_ZPGX_SEQUENCE(r6502ldystep);
+const R6502OP r65c12_ldyabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502ldystep);
+const R6502OP r65c12_cmpzpgindsequence[] = R65C12_LOAD_ZPGIND_SEQUENCE(r6502cmpstep);
+const R6502OP r65c12_cmppreindexedsequence[] = R65C12_LOAD_PREINDEXED_SEQUENCE(r6502cmpstep);
+const R6502OP r65c12_cmpzpgxsequence[] = R65C12_LOAD_ZPGX_SEQUENCE(r6502cmpstep);
+const R6502OP r65c12_cmpabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r6502cmpstep);
+const R6502OP r65c12_cmpabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r6502cmpstep);
+const R6502OP r65c12_cmppostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r6502cmpstep);
+const R6502OP r65c12_sbcimmsequence[] = R6502_LOAD_IMM_SEQUENCE(r65c12sbcimmediatestep, r65c12decimalflagsimmediatestep);
+const R6502OP r65c12_sbczpgsequence[] = R6502_LOAD_ZPG_SEQUENCE(r65c12sbcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_sbcabssequence[] = R6502_LOAD_ABS_SEQUENCE(r65c12sbcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_sbczpgindsequence[] = R65C12_LOAD_ZPGIND_SEQUENCE(r65c12sbcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_sbcpreindexedsequence[] = R6502_LOAD_PREINDEXED_SEQUENCE(r65c12sbcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_sbczpgxsequence[] = R65C12_LOAD_ZPGX_SEQUENCE(r65c12sbcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_sbcabsxsequence[] = R65C12_LOAD_ABSX_SEQUENCE(r65c12sbcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_sbcabsysequence[] = R65C12_LOAD_ABSY_SEQUENCE(r65c12sbcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_sbcpostindexedsequence[] = R65C12_LOAD_POSTINDEXED_SEQUENCE(r65c12sbcstep, r65c12decimalflagsstep);
+const R6502OP r65c12_skbwait1sequence[] = {r65c12waitimmediatestep, r6502skipimmediatestep, NULL};
+const R6502OP r65c12_skbwait2sequence[] = {r65c12skbtowaitstep, r6502waitstep, r6502skipstep, NULL};
+const R6502OP r65c12_skwwait5sequence[] = {r65c12skwlostep, r6502waitstep, r6502waitstep, r6502waitstep, r6502waitstep, r6502waitstep, r6502skipstep, NULL};
+const R6502OP r65c12_aslzpgsequence[] = R65C12_MODIFY_ZPG_SEQUENCE(r6502aslzpgstep);
+const R6502OP r65c12_aslabssequence[] = R65C12_MODIFY_ABS_SEQUENCE(r6502aslstep);
+const R6502OP r65c12_aslzpgxsequence[] = R65C12_MODIFY_ZPGX_SEQUENCE(r6502aslzpgstep);
+const R6502OP r65c12_aslabsxsequence[] = R65C12_MODIFY_ABSX_SEQUENCE(r6502aslstep);
+const R6502OP r65c12_rolzpgsequence[] = R65C12_MODIFY_ZPG_SEQUENCE(r6502rolzpgstep);
+const R6502OP r65c12_rolabssequence[] = R65C12_MODIFY_ABS_SEQUENCE(r6502rolstep);
+const R6502OP r65c12_rolzpgxsequence[] = R65C12_MODIFY_ZPGX_SEQUENCE(r6502rolzpgstep);
+const R6502OP r65c12_rolabsxsequence[] = R65C12_MODIFY_ABSX_SEQUENCE(r6502rolstep);
+const R6502OP r65c12_lsrzpgsequence[] = R65C12_MODIFY_ZPG_SEQUENCE(r6502lsrzpgstep);
+const R6502OP r65c12_lsrabssequence[] = R65C12_MODIFY_ABS_SEQUENCE(r6502lsrstep);
+const R6502OP r65c12_lsrzpgxsequence[] = R65C12_MODIFY_ZPGX_SEQUENCE(r6502lsrzpgstep);
+const R6502OP r65c12_lsrabsxsequence[] = R65C12_MODIFY_ABSX_SEQUENCE(r6502lsrstep);
+const R6502OP r65c12_rorzpgsequence[] = R65C12_MODIFY_ZPG_SEQUENCE(r6502rorzpgstep);
+const R6502OP r65c12_rorabssequence[] = R65C12_MODIFY_ABS_SEQUENCE(r6502rorstep);
+const R6502OP r65c12_rorzpgxsequence[] = R65C12_MODIFY_ZPGX_SEQUENCE(r6502rorzpgstep);
+const R6502OP r65c12_rorabsxsequence[] = R65C12_MODIFY_ABSX_SEQUENCE(r6502rorstep);
+const R6502OP r65c12_decasequence[] = R6502_IMPLIED_SEQUENCE(r65c12decastep);
+const R6502OP r65c12_deczpgsequence[] = R65C12_MODIFY_ZPG_SEQUENCE(r6502deczpgstep);
+const R6502OP r65c12_decabssequence[] = R65C12_MODIFY_ABS_SEQUENCE(r6502decstep);
+const R6502OP r65c12_deczpgxsequence[] = R65C12_MODIFY_ZPGX_SEQUENCE(r6502deczpgstep);
+const R6502OP r65c12_decabsxsequence[] = R65C12_LINEAR_MODIFY_ABSX_SEQUENCE(r6502decstep);
+const R6502OP r65c12_incasequence[] = R6502_IMPLIED_SEQUENCE(r65c12incastep);
+const R6502OP r65c12_inczpgsequence[] = R65C12_MODIFY_ZPG_SEQUENCE(r6502inczpgstep);
+const R6502OP r65c12_incabssequence[] = R65C12_MODIFY_ABS_SEQUENCE(r6502incstep);
+const R6502OP r65c12_inczpgxsequence[] = R65C12_MODIFY_ZPGX_SEQUENCE(r6502inczpgstep);
+const R6502OP r65c12_incabsxsequence[] = R65C12_LINEAR_MODIFY_ABSX_SEQUENCE(r6502incstep);
+const R6502OP r65c12_tsbzpgsequence[] = R65C12_MODIFY_ZPG_SEQUENCE(r65c12tsbzpgstep);
+const R6502OP r65c12_tsbabssequence[] = R65C12_MODIFY_ABS_SEQUENCE(r65c12tsbstep);
+const R6502OP r65c12_trbzpgsequence[] = R65C12_MODIFY_ZPG_SEQUENCE(r65c12trbzpgstep);
+const R6502OP r65c12_trbabssequence[] = R65C12_MODIFY_ABS_SEQUENCE(r65c12trbstep);
+const R6502OP r65c12_stazpgindsequence[] = R65C12_STORE_ZPGIND_SEQUENCE(r6502loadabstostastep);
+const R6502OP r65c12_stapreindexedsequence[] = R65C12_STORE_PREINDEXED_SEQUENCE(r6502loadabstostastep);
+const R6502OP r65c12_stazpgxsequence[] = R65C12_STORE_ZPGX_SEQUENCE(r6502loadzpgxtostastep);
+const R6502OP r65c12_staabsxsequence[] = R65C12_STORE_ABSX_SEQUENCE(r6502fixindexedtostastep);
+const R6502OP r65c12_staabsysequence[] = R65C12_STORE_ABSY_SEQUENCE(r6502fixindexedtostastep);
+const R6502OP r65c12_stapostindexedsequence[] = R65C12_STORE_POSTINDEXED_SEQUENCE(r6502fixindexedtostastep);
+const R6502OP r65c12_stxzpgysequence[] = R65C12_STORE_ZPGY_SEQUENCE(r6502loadzpgytostxstep);
+const R6502OP r65c12_styzpgxsequence[] = R65C12_STORE_ZPGX_SEQUENCE(r6502loadzpgxtostystep);
+const R6502OP r65c12_stzzpgsequence[] = R6502_STORE_ZPG_SEQUENCE(r65c12loadzpgtostzstep);
+const R6502OP r65c12_stzabssequence[] = R6502_STORE_ABS_SEQUENCE(r65c12loadabstostzstep);
+const R6502OP r65c12_stzzpgxsequence[] = R65C12_STORE_ZPGX_SEQUENCE(r65c12loadzpgxtostzstep);
+const R6502OP r65c12_stzabsxsequence[] = R65C12_STORE_ABSX_SEQUENCE(r65c12fixindexedtostzstep);
+const R6502OP r65c12_bplsequence[] = R65C12_BRANCH_SEQUENCE(r6502bplstep);
+const R6502OP r65c12_bmisequence[] = R65C12_BRANCH_SEQUENCE(r6502bmistep);
+const R6502OP r65c12_bvcsequence[] = R65C12_BRANCH_SEQUENCE(r6502bvcstep);
+const R6502OP r65c12_bvssequence[] = R65C12_BRANCH_SEQUENCE(r6502bvsstep);
+const R6502OP r65c12_bccsequence[] = R65C12_BRANCH_SEQUENCE(r6502bccstep);
+const R6502OP r65c12_bcssequence[] = R65C12_BRANCH_SEQUENCE(r6502bcsstep);
+const R6502OP r65c12_bnesequence[] = R65C12_BRANCH_SEQUENCE(r6502bnestep);
+const R6502OP r65c12_beqsequence[] = R65C12_BRANCH_SEQUENCE(r6502beqstep);
+const R6502OP r65c12_brasequence[] = R65C12_BRANCH_SEQUENCE(r65c12brastep);
+const R6502OP r65c12_jmpabsindsequence[] = {r6502latchabslostep, r6502breadcrumbloadabsstep, r65c12latchjmpabsindlostep, r65c12fixjmpabsindstep, r6502loadpchstep, NULL};
+const R6502OP r65c12_jmpabsxindsequence[] = {r6502latchabslostep, r65c12breadcrumbloadabsxstep, r65c12breadcrumbfixjmpabsxindstep, r65c12latchjmpabsindlostep, r65c12fixjmpabsindstep, r6502loadpchstep, r6502latchjmpabsindlostep, r6502loadpchstep, NULL};
+const R6502OP r65c12_resetsequence[] = {r6502waitonresetstep, r6502topushpchstep, r6502pushedtopushpclstep, r6502pushedtopushpwithoutbstep, r65c12breadcrumbpushedtoresetlostep, r6502latchveclostep, r6502loadpchstep, NULL};
+const R6502OP r65c12_brksequence[] = {r6502tobrkpushpchstep, r6502pushedtopushpclstep, r6502pushedtopushpstep, r65c12breadcrumbpushedtobrklostep, r6502latchveclostep, r6502loadpchstep, NULL};
+const R6502OP r65c12_interruptsequence[] = {r6502topushpchstep, r6502pushedtopushpclstep, r6502pushedtopushpwithoutbstep, r65c12breadcrumbpushedtointerruptlostep, r6502latchveclostep, r6502loadpchstep, NULL};
+
+
+const R6502OP* const r65c12sequences[R6502_MAIN_SEQUENCE_COUNT] =
 {
-  int nrom;
+  r65c12_brksequence, //0x00
+  r65c12_orapreindexedsequence, //0x01
+  r6502_skbimmsequence, //0x02
+  r65c12_nopdecodesequence, //0x03
+  r65c12_tsbzpgsequence, //0x04
+  r6502_orazpgsequence, //0x05
+  r65c12_aslzpgsequence, //0x06
+  r65c12_nopdecodesequence, //0x07
+  r6502_phpsequence, //0x08
+  r6502_oraimmsequence, //0x09
+  r6502_aslasequence, //0x0A
+  r65c12_nopdecodesequence, //0x0B
+  r65c12_tsbabssequence, //0x0C
+  r6502_oraabssequence, //0x0D
+  r65c12_aslabssequence, //0x0E
+  r65c12_nopdecodesequence, //0x0F
 
-  if ((beebit_acccon & 0x04)
-    OR ((beebit_acccon & 0x02) AND r6502_pc >= 0xC000 AND r6502_pc < 0xE000))
-  {
-    swappages(&memory[0x3000],&shadow[0x3000],0x50);
-  }
+  r65c12_bplsequence, //0x10
+  r65c12_orapostindexedsequence, //0x11
+  r65c12_orazpgindsequence, //0x12
+  r65c12_nopdecodesequence, //0x13
+  r65c12_trbzpgsequence, //0x14
+  r65c12_orazpgxsequence, //0x15
+  r65c12_aslzpgxsequence, //0x16
+  r65c12_nopdecodesequence, //0x17
+  r6502_clcsequence, //0x18
+  r65c12_oraabsysequence, //0x19
+  r65c12_incasequence, //0x1A
+  r65c12_nopdecodesequence, //0x1B
+  r65c12_trbabssequence, //0x1C
+  r65c12_oraabsxsequence, //0x1D
+  r65c12_aslabsxsequence, //0x1E
+  r65c12_nopdecodesequence, //0x1F
 
-  nrom = beebit_romsel & 0x0F;
-  if (beebit_romsel & 0x80)
+  r6502_jsrsequence, //0x20
+  r65c12_andpreindexedsequence, //0x21
+  r6502_skbimmsequence, //0x22
+  r65c12_nopdecodesequence, //0x23
+  r6502_bitzpgsequence, //0x24
+  r6502_andzpgsequence, //0x25
+  r65c12_rolzpgsequence, //0x26
+  r65c12_nopdecodesequence, //0x27
+  r6502_plpsequence, //0x28
+  r6502_andimmsequence, //0x29
+  r6502_rolasequence, //0x2A
+  r65c12_nopdecodesequence, //0x2B
+  r6502_bitabssequence, //0x2C
+  r6502_andabssequence, //0x2D
+  r65c12_rolabssequence, //0x2E
+  r65c12_nopdecodesequence, //0x2F
+
+  r65c12_bmisequence, //0x30
+  r65c12_andpostindexedsequence, //0x31
+  r65c12_andzpgindsequence, //0x32
+  r65c12_nopdecodesequence, //0x33
+  r65c12_bitzpgxsequence, //0x34
+  r65c12_andzpgxsequence, //0x35
+  r65c12_rolzpgxsequence, //0x36
+  r65c12_nopdecodesequence, //0x37
+  r6502_secsequence, //0x38
+  r65c12_andabsysequence, //0x39
+  r65c12_decasequence, //0x3A
+  r65c12_nopdecodesequence, //0x3B
+  r65c12_bitabsxsequence, //0x3C
+  r65c12_andabsxsequence, //0x3D
+  r65c12_rolabsxsequence, //0x3E
+  r65c12_nopdecodesequence, //0x3F
+
+  r6502_rtisequence, //0x40
+  r65c12_eorpreindexedsequence, //0x41
+  r6502_skbimmsequence, //0x42
+  r65c12_nopdecodesequence, //0x43
+  r65c12_skbwait1sequence, //0x44
+  r6502_eorzpgsequence, //0x45
+  r65c12_lsrzpgsequence, //0x46
+  r65c12_nopdecodesequence, //0x47
+  r6502_phasequence, //0x48
+  r6502_eorimmsequence, //0x49
+  r6502_lsrasequence, //0x4A
+  r65c12_nopdecodesequence, //0x4B
+  r6502_jmpabssequence, //0x4C
+  r6502_eorabssequence, //0x4D
+  r65c12_lsrabssequence, //0x4E
+  r65c12_nopdecodesequence, //0x4F
+
+  r65c12_bvcsequence, //0x50
+  r65c12_eorpostindexedsequence, //0x51
+  r65c12_eorzpgindsequence, //0x52
+  r65c12_nopdecodesequence, //0x53
+  r65c12_skbwait2sequence, //0x54
+  r65c12_eorzpgxsequence, //0x55
+  r65c12_lsrzpgxsequence, //0x56
+  r65c12_nopdecodesequence, //0x57
+  r6502_clisequence, //0x58
+  r65c12_eorabsysequence, //0x59
+  r65c12_physequence, //0x5A
+  r65c12_nopdecodesequence, //0x5B
+  r65c12_skwwait5sequence, //0x5C
+  r65c12_eorabsxsequence, //0x5D
+  r65c12_lsrabsxsequence, //0x5E
+  r65c12_nopdecodesequence, //0x5F
+
+  r6502_rtssequence, //0x60
+  r65c12_adcpreindexedsequence, //0x61
+  r6502_skbimmsequence, //0x62
+  r65c12_nopdecodesequence, //0x63
+  r65c12_stzzpgsequence, //0x64
+  r65c12_adczpgsequence, //0x65
+  r65c12_rorzpgsequence, //0x66
+  r65c12_nopdecodesequence, //0x67
+  r6502_plasequence, //0x68
+  r65c12_adcimmsequence, //0x69
+  r6502_rorasequence, //0x6A
+  r65c12_nopdecodesequence, //0x6B
+  r65c12_jmpabsindsequence, //0x6C
+  r65c12_adcabssequence, //0x6D
+  r65c12_rorabssequence, //0x6E
+  r65c12_nopdecodesequence, //0x6F
+
+  r65c12_bvssequence, //0x70
+  r65c12_adcpostindexedsequence, //0x71
+  r65c12_adczpgindsequence, //0x72
+  r65c12_nopdecodesequence, //0x73
+  r65c12_stzzpgxsequence, //0x74
+  r65c12_adczpgxsequence, //0x75
+  r65c12_rorzpgxsequence, //0x76
+  r65c12_nopdecodesequence, //0x77
+  r6502_seisequence, //0x78
+  r65c12_adcabsysequence, //0x79
+  r65c12_plysequence, //0x7A
+  r65c12_nopdecodesequence, //0x7B
+  r65c12_jmpabsxindsequence, //0x7C
+  r65c12_adcabsxsequence, //0x7D
+  r65c12_rorabsxsequence, //0x7E
+  r65c12_nopdecodesequence, //0x7F
+
+  r65c12_brasequence,  //0x80
+  r65c12_stapreindexedsequence,  //0x81
+  r6502_skbimmsequence,  //0x82
+  r65c12_nopdecodesequence,  //0x83
+  r6502_styzpgsequence,  //0x84
+  r6502_stazpgsequence,  //0x85
+  r6502_stxzpgsequence,  //0x86
+  r65c12_nopdecodesequence,  //0x87
+  r6502_deysequence,  //0x88
+  r65c12_bitimmsequence,  //0x89
+  r6502_txasequence,  //0x8A
+  r65c12_nopdecodesequence,  //0x8B
+  r6502_styabssequence,  //0x8C
+  r6502_staabssequence,  //0x8D
+  r6502_stxabssequence,  //0x8E
+  r65c12_nopdecodesequence,  //0x8F
+
+  r65c12_bccsequence, //0x90
+  r65c12_stapostindexedsequence, //0x91
+  r65c12_stazpgindsequence, //0x92
+  r65c12_nopdecodesequence, //0x93
+  r65c12_styzpgxsequence, //0x94
+  r65c12_stazpgxsequence, //0x95
+  r65c12_stxzpgysequence, //0x96
+  r65c12_nopdecodesequence, //0x97
+  r6502_tyasequence, //0x98
+  r65c12_staabsysequence, //0x99
+  r6502_txssequence, //0x9A
+  r65c12_nopdecodesequence, //0x9B
+  r65c12_stzabssequence, //0x9C
+  r65c12_staabsxsequence, //0x9D
+  r65c12_stzabsxsequence, //0x9E
+  r65c12_nopdecodesequence, //0x9F
+
+  r6502_ldyimmsequence,  //0xA0
+  r65c12_ldapreindexedsequence,  //0xA1
+  r6502_ldximmsequence,  //0xA2
+  r65c12_nopdecodesequence,  //0xA3
+  r6502_ldyzpgsequence,  //0xA4
+  r6502_ldazpgsequence,  //0xA5
+  r6502_ldxzpgsequence,  //0xA6
+  r65c12_nopdecodesequence,  //0xA7
+  r6502_taysequence,  //0xA8
+  r6502_ldaimmsequence,  //0xA9
+  r6502_taxsequence,  //0xAA
+  r65c12_nopdecodesequence,  //0xAB
+  r6502_ldyabssequence,  //0xAC
+  r6502_ldaabssequence,  //0xAD
+  r6502_ldxabssequence,  //0xAE
+  r65c12_nopdecodesequence,  //0xAF
+
+  r65c12_bcssequence, //0xB0
+  r65c12_ldapostindexedsequence, //0xB1
+  r65c12_ldazpgindsequence, //0xB2
+  r65c12_nopdecodesequence, //0xB3
+  r65c12_ldyzpgxsequence, //0xB4
+  r65c12_ldazpgxsequence, //0xB5
+  r65c12_ldxzpgysequence, //0xB6
+  r65c12_nopdecodesequence, //0xB7
+  r6502_clvsequence, //0xB8
+  r65c12_ldaabsysequence, //0xB9
+  r6502_tsxsequence, //0xBA
+  r65c12_nopdecodesequence, //0xBB
+  r65c12_ldyabsxsequence, //0xBC
+  r65c12_ldaabsxsequence, //0xBD
+  r65c12_ldxabsysequence, //0xBE
+  r65c12_nopdecodesequence, //0xBF
+
+  r6502_cpyimmsequence, //0xC0
+  r65c12_cmppreindexedsequence, //0xC1
+  r6502_skbimmsequence, //0xC2
+  r65c12_nopdecodesequence, //0xC3
+  r6502_cpyzpgsequence, //0xC4
+  r6502_cmpzpgsequence, //0xC5
+  r65c12_deczpgsequence, //0xC6
+  r65c12_nopdecodesequence, //0xC7
+  r6502_inysequence, //0xC8
+  r6502_cmpimmsequence, //0xC9
+  r6502_dexsequence, //0xCA
+  r65c12_nopdecodesequence, //0xCB
+  r6502_cpyabssequence, //0xCC
+  r6502_cmpabssequence, //0xCD
+  r65c12_decabssequence, //0xCE
+  r65c12_nopdecodesequence, //0xCF
+
+  r65c12_bnesequence, //0xD0
+  r65c12_cmppostindexedsequence, //0xD1
+  r65c12_cmpzpgindsequence, //0xD2
+  r65c12_nopdecodesequence, //0xD3
+  r65c12_skbwait2sequence, //0xD4
+  r65c12_cmpzpgxsequence, //0xD5
+  r65c12_deczpgxsequence, //0xD6
+  r65c12_nopdecodesequence, //0xD7
+  r6502_cldsequence, //0xD8
+  r65c12_cmpabsysequence, //0xD9
+  r65c12_phxsequence, //0xDA
+  r65c12_nopdecodesequence, //0xDB
+  r6502_skwabssequence, //0xDC
+  r65c12_cmpabsxsequence, //0xDD
+  r65c12_decabsxsequence, //0xDE
+  r65c12_nopdecodesequence, //0xDF
+
+  r6502_cpximmsequence, //0xE0
+  r65c12_sbcpreindexedsequence, //0xE1
+  r6502_skbimmsequence, //0xE2
+  r65c12_nopdecodesequence, //0xE3
+  r6502_cpxzpgsequence, //0xE4
+  r65c12_sbczpgsequence, //0xE5
+  r65c12_inczpgsequence, //0xE6
+  r65c12_nopdecodesequence, //0xE7
+  r6502_inxsequence, //0xE8
+  r65c12_sbcimmsequence, //0xE9
+  r6502_nopsequence, //0xEA
+  r65c12_nopdecodesequence, //0xEB
+  r6502_cpxabssequence, //0xEC
+  r65c12_sbcabssequence, //0xED
+  r65c12_incabssequence, //0xEE
+  r65c12_nopdecodesequence, //0xEF
+
+  r65c12_beqsequence, //0xF0
+  r65c12_sbcpostindexedsequence, //0xF1
+  r65c12_sbczpgindsequence, //0xF2
+  r65c12_nopdecodesequence, //0xF3
+  r65c12_skbwait2sequence, //0xF4
+  r65c12_sbczpgxsequence, //0xF5
+  r65c12_inczpgxsequence, //0xF6
+  r65c12_nopdecodesequence, //0xF7
+  r6502_sedsequence, //0xF8
+  r65c12_sbcabsysequence, //0xF9
+  r65c12_plxsequence, //0xFA
+  r65c12_nopdecodesequence, //0xFB
+  r6502_skwabssequence, //0xFC
+  r65c12_sbcabsxsequence, //0xFD
+  r65c12_incabsxsequence, //0xFE
+  r65c12_nopdecodesequence, //0xFF
+
+  r6502_decodesequence,
+  r6502_interruptdecodesequence,
+  r65c12_interruptsequence,
+  r65c12_resetsequence
+};
+
+#ifdef BEEBIT_NO_ASM
+R6502CPUMAP* r65c12nopdecodestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  unsigned int sync_pc_code = (cmap->sync_pc_code + 0x10000) & 0xFFFFFFFF;
+  cmap->sync_pc_code = sync_pc_code;
+  cmap->cpu_state = cmap->sequences[(unsigned char)cmap->m];
+  R6502_JUMP_TO_READ_OP(cmap, (sync_pc_code + 0x10000) & 0xFFFFFFFF)
+}
+
+R6502CPUMAP* r65c12breadcrumbloadabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t sum = cmap->latch + (((uintptr_t)cmap->x)<<16);
+  uintptr_t address_code = ((((uintptr_t)cmap->m)<<24) + sum) | BUS_BASEFLAG;
+  cmap->address_fix_code = address_code;
+  if (sum & 0x01000000)
   {
-    memcpy(&memory[0x8000],shadow,0x1000);
-    memcpy(&memory[0x9000],&roms[nrom][0x1000],0x3000);
+    cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+    address_code = cmap->last_pc_code;
   }
   else
-    memcpy(&memory[0x8000],roms[nrom],0x4000);
-  
-  if (beebit_acccon & 0x04)
-    swappages(&memory[0xC000],&shadow[0x1000],0x20);
+    cmap->cpu_state = ((R6502OP*)incremented_cpu_state)+1;
+  cmap->address_code = address_code;
+  R6502_JUMP_TO_READ_OP(cmap, address_code)
 }
 
-void swappagesoutofmemorym(void)
+R6502CPUMAP* r65c12loadabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
 {
-  int nrom;
-
-  if ((beebit_acccon & 0x04)
-    OR ((beebit_acccon & 0x02) AND r6502_pc >= 0xC000 AND r6502_pc < 0xE000))
+  uintptr_t sum = cmap->latch + (((uintptr_t)cmap->x)<<16);
+  uintptr_t address_code = ((((uintptr_t)cmap->m)<<24) + sum) | BUS_BASEFLAG;
+  cmap->address_fix_code = address_code;
+  if (sum & 0x01000000)
   {
-    swappages(&memory[0x3000],&shadow[0x3000],0x50);
+    cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+    address_code = cmap->last_pc_code;
   }
+  else
+    cmap->cpu_state = ((R6502OP*)incremented_cpu_state)+1;
+  R6502_JUMP_TO_READ_OP(cmap, address_code)
+}
 
-  nrom = beebit_romsel & 0x0F;  
-  if (beebit_romsel & 0x80)
+R6502CPUMAP* r65c12breadcrumbloadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t sum = cmap->latch + (((uintptr_t)cmap->y)<<16);
+  uintptr_t address_code = ((((uintptr_t)cmap->m)<<24) + sum) | BUS_BASEFLAG;
+  cmap->address_fix_code = address_code;
+  if (sum & 0x01000000)
   {
-    memcpy(shadow,&memory[0x8000],0x1000);
-    if (beebit_romwritable[nrom])
-      memcpy(&roms[nrom][0x1000],&memory[0x9000],0x1000);
+    cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+    address_code = cmap->last_pc_code;
+  }
+  else
+    cmap->cpu_state = ((R6502OP*)incremented_cpu_state)+1;
+  cmap->address_code = address_code;
+  R6502_JUMP_TO_READ_OP(cmap, address_code)
+}
+
+R6502CPUMAP* r65c12loadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t sum = cmap->latch + (((uintptr_t)cmap->y)<<16);
+  uintptr_t address_code = ((((uintptr_t)cmap->m)<<24) + sum) | BUS_BASEFLAG;
+  cmap->address_fix_code = address_code;
+  if (sum & 0x01000000)
+  {
+    cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+    address_code = cmap->last_pc_code;
+  }
+  else
+    cmap->cpu_state = ((R6502OP*)incremented_cpu_state)+1;
+  R6502_JUMP_TO_READ_OP(cmap, address_code)
+}
+
+R6502CPUMAP* r65c12linearloadabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t sum = cmap->latch + (((uintptr_t)cmap->x)<<16);
+  uintptr_t address_code = ((((uintptr_t)cmap->m)<<24) + sum) | BUS_BASEFLAG;
+  cmap->address_fix_code = address_code;
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  if (sum & 0x01000000)
+    address_code = cmap->last_pc_code;
+  R6502_JUMP_TO_READ_OP(cmap, address_code)
+}
+
+R6502CPUMAP* r65c12linearloadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t sum = cmap->latch + (((uintptr_t)cmap->y)<<16);
+  uintptr_t address_code = ((((uintptr_t)cmap->m)<<24) + sum) | BUS_BASEFLAG;
+  cmap->address_fix_code = address_code;
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  if (sum & 0x01000000)
+    address_code = cmap->last_pc_code;
+  R6502_JUMP_TO_READ_OP(cmap, address_code)
+}
+
+// IMPLIED_STEP
+R6502CPUMAP* r65c12pulledxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->x = cmap->m;
+  cmap->ps &= (NOTNFLAG & NOTZFLAG);
+  cmap->ps |= (cmap->x & NFLAG) | (cmap->x == 0 ? ZFLAG : 0);
+  R6502_IMPLIED_NEXT_INSTRUCTION(cmap)
+}
+
+R6502CPUMAP* r65c12pulledystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->y = cmap->m;
+  cmap->ps &= (NOTNFLAG & NOTZFLAG);
+  cmap->ps |= (cmap->y & NFLAG) | (cmap->y == 0 ? ZFLAG : 0);
+  R6502_IMPLIED_NEXT_INSTRUCTION(cmap)
+}
+
+// FROM_IMMEDIATE_STEP / FROM_ADDRESS_STEP
+R6502CPUMAP* r65c12tozpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t last_pc_code;
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  last_pc_code = (cmap->sync_pc_code + 0x10000) & 0xFFFFFFFF;
+  cmap->last_pc_code = last_pc_code;
+  cmap->address_code = (((uintptr_t)cmap->m)<<24);
+  R6502_JUMP_TO_READ_OP(cmap, last_pc_code)
+}
+
+R6502CPUMAP* r65c12bitimmediatestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  unsigned int aandm = cmap->a & cmap->m;
+  cmap->ps &= ~ZFLAG;
+  cmap->ps |= (aandm == 0 ? ZFLAG : 0);
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(cmap)
+}
+
+R6502CPUMAP* r65c12adcimmediatestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  unsigned int m = cmap->m;
+  unsigned int a = cmap->a;
+  uintptr_t sum;
+  m = ((m<<4)&0xF00) | (m&0xF);
+  a = ((a<<4)&0xF00) | (a&0xF);
+  sum = a + 0x0F0 + m + (cmap->ps & CFLAG);
+  cmap->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  cmap->ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
+  if (cmap->ps & DFLAG)
+    sum += 6;
+  cmap->ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
+  if (cmap->ps & DFLAG)
+  {
+    cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+    if (sum & 0x80)
+      sum -= 6;
+    if (sum >= 0xA00)
+      sum += 0x600;
+    if (sum >= 0x1000)
+      cmap->ps |= CFLAG;
+    cmap->a = ((sum>>4)&0xF0) | (sum&0xF);
+    R6502_JUMP_TO_READ_OP(cmap, (cmap->sync_pc_code + 0x10000) & 0xFFFFFFFF)
   }
   else
   {
-    if (beebit_romwritable[nrom])
-      memcpy(roms[nrom],&memory[0x8000],0x4000);
+    if (sum >= 0x1000)
+      cmap->ps |= CFLAG;
+    cmap->a = ((sum>>4)&0xF0) | (sum&0xF);
+    R6502_IMMEDIATE_NEXT_INSTRUCTION(cmap)
   }
-  
-  if (beebit_acccon & 0x04)
-    swappages(&memory[0xC000],&shadow[0x1000],0x20);
 }
 
-void r65c12reset(int lfull)
+R6502CPUMAP* r65c12adcstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
 {
-  /*noldloc = memory[0x10CE];*/
-  if (lfull)
+  unsigned int m = cmap->m;
+  unsigned int a = cmap->a;
+  uintptr_t sum;
+  m = ((m<<4)&0xF00) | (m&0xF);
+  a = ((a<<4)&0xF00) | (a&0xF);
+  sum = a + 0x0F0 + m + (cmap->ps & CFLAG);
+  cmap->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  cmap->ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
+  if (cmap->ps & DFLAG)
+    sum += 6;
+  cmap->ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
+  if (cmap->ps & DFLAG)
   {
-    /*r6502_a = 0;
-    r6502_x = 0;
-    r6502_y = 0;*/
-    r6502_sp = 0xFF;
-    r6502_ps = 0x00;
-    beebit_irq = 0x00;
-    beebit_nmi = beebit_oldnmi = 0x00;
-
-    r6502readoffset[0x0] = r6502read0000;
-    r6502readoffset[0x1] = r6502read0000;
-    r6502readoffset[0x2] = r6502read0000;
-    r6502readoffset[0x3] = r6502read3000;
-    r6502readoffset[0x4] = r6502read3000;
-    r6502readoffset[0x5] = r6502read3000;
-    r6502readoffset[0x6] = r6502read3000;
-    r6502readoffset[0x7] = r6502read3000;
-    r6502readoffset[0x8] = r6502read8000_0;
-    r6502readoffset[0x9] = r6502read8000_0;
-    r6502readoffset[0xA] = r6502read8000_0;
-    r6502readoffset[0xB] = r6502read8000_0;
-    r6502readoffset[0xC] = r6502readC000;
-    r6502readoffset[0xD] = r6502readC000;
-    r6502readoffset[0xE] = r6502readC000;
-    r6502readoffset[0xF] = r6502readmF000;
-
-    r6502writeoffset[0x0] = r6502write0000;
-    r6502writeoffset[0x1] = r6502write0000;
-    r6502writeoffset[0x2] = r6502write0000;
-    r6502writeoffset[0x3] = r6502write3000;
-    r6502writeoffset[0x4] = r6502write3000;
-    r6502writeoffset[0x5] = r6502write3000;
-    r6502writeoffset[0x6] = r6502write3000;
-    r6502writeoffset[0x7] = r6502write3000;
-    r6502writeoffset[0x8] = r6502write8000_0;
-    r6502writeoffset[0x9] = r6502write8000_0;
-    r6502writeoffset[0xA] = r6502write8000_0;
-    r6502writeoffset[0xB] = r6502write8000_0;
-    r6502writeoffset[0xC] = r6502writeC000;
-    r6502writeoffset[0xD] = r6502writeC000;
-    r6502writeoffset[0xE] = r6502writeC000;
-    r6502writeoffset[0xF] = r6502writemF000;
-
-    swappagesintomemory = swappagesintomemorym;
-    swappagesoutofmemory = swappagesoutofmemorym;
+    cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+    if (sum & 0x80)
+      sum -= 6;
+    if (sum >= 0xA00)
+      sum += 0x600;
+    if (sum >= 0x1000)
+      cmap->ps |= CFLAG;
+    cmap->a = ((sum>>4)&0xF0) | (sum&0xF);
+    R6502_JUMP_TO_READ_OP(cmap, cmap->last_pc_code)
   }
-  r6502_pc = (memory[0xFFFD]<<8) + memory[0xFFFC];
+  else
+  {
+    if (sum >= 0x1000)
+      cmap->ps |= CFLAG;
+    cmap->a = ((sum>>4)&0xF0) | (sum&0xF);
+    R6502_ADDRESSED_NEXT_INSTRUCTION(cmap)
+  }
 }
+
+R6502CPUMAP* r65c12sbcimmediatestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  unsigned int im = 0xFF ^ cmap->m;
+  unsigned int a = cmap->a;
+  uintptr_t sum;
+  im = ((im<<4)&0xF00) | (im&0xF);
+  a = ((a<<4)&0xF00) | (a&0xF);
+  sum = a + 0x0F0 + im + (cmap->ps & CFLAG);
+  cmap->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  cmap->ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
+  cmap->ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
+  if (cmap->ps & DFLAG)
+  {
+    cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+    if (sum & 0x80)
+      sum -= 0xF6;
+    if (!(cmap->ps & CFLAG))
+      sum -= 0x600;
+    cmap->a = ((sum>>4)&0xF0) | (sum&0xF);
+    R6502_JUMP_TO_READ_OP(cmap, (cmap->sync_pc_code + 0x10000) & 0xFFFFFFFF)
+  }
+  else
+  {
+    cmap->a = ((sum>>4)&0xF0) | (sum&0xF);
+    R6502_IMMEDIATE_NEXT_INSTRUCTION(cmap)
+  }
+}
+
+R6502CPUMAP* r65c12sbcstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  unsigned int im = 0xFF ^ cmap->m;
+  unsigned int a = cmap->a;
+  uintptr_t sum;
+  im = ((im<<4)&0xF00) | (im&0xF);
+  a = ((a<<4)&0xF00) | (a&0xF);
+  sum = a + 0x0F0 + im + (cmap->ps & CFLAG);
+  cmap->ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  cmap->ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
+  cmap->ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
+  if (cmap->ps & DFLAG)
+  {
+    cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+    if (sum & 0x80)
+      sum -= 0xF6;
+    if (!(cmap->ps & CFLAG))
+      sum -= 0x600;
+    cmap->a = ((sum>>4)&0xF0) | (sum&0xF);
+    R6502_JUMP_TO_READ_OP(cmap, cmap->last_pc_code)
+  }
+  else
+  {
+    cmap->a = ((sum>>4)&0xF0) | (sum&0xF);
+    R6502_ADDRESSED_NEXT_INSTRUCTION(cmap)
+  }
+}
+
+R6502CPUMAP* r65c12decimalflagsimmediatestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  unsigned int a = cmap->a;
+  cmap->ps &= (NOTNFLAG & NOTZFLAG);
+  cmap->ps |= (a & NFLAG) | (a == 0 ? ZFLAG : 0);
+  R6502_IMMEDIATE_NEXT_INSTRUCTION(cmap)
+}
+
+R6502CPUMAP* r65c12decimalflagsstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  unsigned int a = cmap->a;
+  cmap->ps &= (NOTNFLAG & NOTZFLAG);
+  cmap->ps |= (a & NFLAG) | (a == 0 ? ZFLAG : 0);
+  R6502_ADDRESSED_NEXT_INSTRUCTION(cmap)
+}
+
+R6502CPUMAP* r65c12waitimmediatestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_TO_READ_OP(cmap, (cmap->sync_pc_code + 0x10000) & 0xFFFFFFFF)
+}
+
+R6502CPUMAP* r65c12skbtowaitstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t last_pc_code;
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  last_pc_code = (cmap->sync_pc_code + 0x10000) & 0xFFFFFFFF;
+  cmap->last_pc_code = last_pc_code;
+  R6502_JUMP_TO_READ_OP(cmap, last_pc_code)
+}
+
+R6502CPUMAP* r65c12skwlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t last_pc_code;
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  last_pc_code = (cmap->sync_pc_code + 0x20000) & 0xFFFFFFFF;
+  cmap->last_pc_code = last_pc_code;
+  R6502_JUMP_TO_READ_OP(cmap, last_pc_code)
+}
+
+// MODIFY_STEP 6502 / 65C12
+R6502CPUMAP* r65c12zpgreadagainstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_TO_ZPG_READ_OP(cmap, cmap->address_code)
+}
+
+R6502CPUMAP* r65c12readagainstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_TO_READ_OP(cmap, cmap->address_code)
+}
+
+R6502CPUMAP* r65c12decastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->a = (cmap->a - 1) & 0xFF;
+  cmap->ps &= (NOTNFLAG & NOTZFLAG);
+  cmap->ps |= (cmap->a & NFLAG) | (cmap->a == 0 ? ZFLAG : 0);
+  R6502_IMPLIED_NEXT_INSTRUCTION(cmap)
+}
+
+R6502CPUMAP* r65c12incastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->a = (cmap->a + 1) & 0xFF;
+  cmap->ps &= (NOTNFLAG & NOTZFLAG);
+  cmap->ps |= (cmap->a & NFLAG) | (cmap->a == 0 ? ZFLAG : 0);
+  R6502_IMPLIED_NEXT_INSTRUCTION(cmap)
+}
+
+R6502CPUMAP* r65c12tsbzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->ps &= NOTZFLAG;
+  cmap->ps |= ((cmap->m & cmap->a) == 0 ? ZFLAG : 0);
+  cmap->m |= cmap->a;
+  R6502_JUMP_TO_ZPG_WRITE_OP(cmap, cmap->address_code)
+}
+
+R6502CPUMAP* r65c12tsbstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->ps &= NOTZFLAG;
+  cmap->ps |= ((cmap->m & cmap->a) == 0 ? ZFLAG : 0);
+  cmap->m |= cmap->a;
+  R6502_JUMP_TO_WRITE_OP(cmap, cmap->address_code)
+}
+
+R6502CPUMAP* r65c12trbzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->ps &= NOTZFLAG;
+  cmap->ps |= ((cmap->m & cmap->a) == 0 ? ZFLAG : 0);
+  cmap->m &= ~cmap->a;
+  R6502_JUMP_TO_ZPG_WRITE_OP(cmap, cmap->address_code)
+}
+
+R6502CPUMAP* r65c12trbstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->ps &= NOTZFLAG;
+  cmap->ps |= ((cmap->m & cmap->a) == 0 ? ZFLAG : 0);
+  cmap->m &= ~cmap->a;
+  R6502_JUMP_TO_WRITE_OP(cmap, cmap->address_code)
+}
+
+// TO_ADDRESS_STEP / FIX_TO_ADDRESS_STEP
+R6502CPUMAP* r65c12topushxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->m = cmap->x;
+  R6502_JUMP_TO_STACK_WRITE_OP(cmap, cmap->sp_code)
+}
+
+R6502CPUMAP* r65c12topushystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->m = cmap->y;
+  R6502_JUMP_TO_STACK_WRITE_OP(cmap, cmap->sp_code)
+}
+
+R6502CPUMAP* r65c12loadzpgtostzstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t address_code;
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->last_pc_code = (cmap->sync_pc_code + 0x10000) & 0xFFFFFFFF;
+  address_code = (((uintptr_t)cmap->m)<<24);
+  cmap->m = 0;
+  R6502_JUMP_TO_ZPG_WRITE_OP(cmap, address_code)
+}
+
+R6502CPUMAP* r65c12loadabstostzstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t address_code;
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = (((uintptr_t)cmap->m)<<24) | cmap->latch | BUS_BASEFLAG;
+  cmap->m = 0;
+  R6502_JUMP_TO_WRITE_OP(cmap, address_code)
+}
+
+R6502CPUMAP* r65c12loadzpgxtostzstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t address_code;
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  address_code = ((cmap->address_code+(((uintptr_t)cmap->x)<<24)) & 0xFF000000);
+  cmap->m = 0;
+  R6502_JUMP_TO_ZPG_WRITE_OP(cmap, address_code)
+}
+
+R6502CPUMAP* r65c12fixindexedtostzstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->m = 0;
+  R6502_JUMP_TO_WRITE_OP(cmap, cmap->address_fix_code)
+}
+
+// BRANCH_STEP
+R6502CPUMAP* r65c12brastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->latch = (((uintptr_t)cmap->m)<<16);
+  R6502_JUMP_TO_READ_OP(cmap, (cmap->sync_pc_code + 0x20000) & 0xFFFFFFFF)
+}
+
+R6502CPUMAP* r65c12branchtakenstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t address_code = cmap->sync_pc_code + 0x20000;
+  uintptr_t sum = cmap->latch;
+  if (sum & 0x800000)
+    sum |= 0xFF000000;
+  sum = ((address_code & 0x00FFFFFF) + sum) & 0xFFFFFFFF;
+  address_code = (address_code & 0xFF000000) | (sum & 0x00FFFFFF);
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  if (sum & 0xFF000000)
+  {
+    cmap->address_fix_code = (address_code + (sum & 0xFF000000)) & 0xFFFFFFFF;
+    R6502_JUMP_TO_READ_OP(cmap, address_code)
+  }
+  else
+    R6502_NEXT_INSTRUCTION(cmap, address_code)
+}
+
+// JUMPS
+R6502CPUMAP* r65c12latchjmpabsindlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->address_fix_code = (cmap->address_code + 0x10000) & 0xFFFFFFFF;
+  cmap->latch = (((uintptr_t)cmap->m)<<16);
+  R6502_JUMP_TO_READ_OP(cmap, cmap->last_pc_code)
+}
+
+R6502CPUMAP* r65c12fixjmpabsindstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  R6502_JUMP_TO_READ_OP(cmap, cmap->address_fix_code)
+}
+
+R6502CPUMAP* r65c12breadcrumbfixjmpabsxindstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = ((R6502OP*)incremented_cpu_state)+3;
+  cmap->address_code = cmap->address_fix_code;
+  R6502_JUMP_TO_READ_OP(cmap, cmap->address_code)
+}
+
+// VECTORS AND SUBROUTINES
+R6502CPUMAP* r65c12breadcrumbpushedtoresetlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->sp_code = (cmap->sp_code - 0x1000000) & 0xFFFFFFFF;
+  cmap->ps &= NOTDFLAG;
+  cmap->ps |= IFLAG;
+  cmap->address_code = 0xFFFC0000 | BUS_BASEFLAG;
+  cmap->transition1action = cmap->transition2action;
+  R6502_CHECK_FOR_BREAK(cmap)
+  R6502_JUMP_TO_READ_OP(cmap, cmap->address_code)
+}
+
+R6502CPUMAP* r65c12breadcrumbpushedtointerruptlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->sp_code = (cmap->sp_code - 0x1000000) & 0xFFFFFFFF;
+  cmap->ps &= NOTDFLAG;
+  cmap->ps |= IFLAG;
+  if ((cmap->nmis & NMIS_NMI) && !(cmap->nmis & NMIS_OLDNMI))
+  {
+    cmap->nmis |= NMIS_OLDNMI;
+    cmap->address_code = 0xFFFA0000 | BUS_BASEFLAG;
+  }
+  else
+    cmap->address_code = 0xFFFE0000 | BUS_BASEFLAG;
+  cmap->transition1action = cmap->transition2action;
+  R6502_CHECK_FOR_BREAK(cmap)
+  R6502_JUMP_TO_READ_OP(cmap, cmap->address_code)
+}
+
+R6502CPUMAP* r65c12breadcrumbpushedtobrklostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->sp_code = (cmap->sp_code - 0x1000000) & 0xFFFFFFFF;
+  cmap->ps &= NOTDFLAG;
+  cmap->ps |= IFLAG;
+  cmap->address_code = 0xFFFE0000 | BUS_BASEFLAG;
+  R6502_JUMP_TO_READ_OP(cmap, cmap->address_code)
+}
+#endif
