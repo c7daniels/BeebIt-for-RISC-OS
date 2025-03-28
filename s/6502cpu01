@@ -407,10 +407,11 @@ r6502branchtakenstep2
   CMP r3,r2
   BNE r6502branchtakenstep3
   LDR r3,[r0,#:INDEX:R6502_FETCHACTION]
-  LDRB r2,[r0,#:INDEX:R6502_NMIS]
-  ORR r2,r2,#NMIS_YIELD
+  STR lr,[sp, #-4]!
   STR r3,[r0,#:INDEX:R6502_TRANSITION2ACTION]
-  STRB r2,[r0,#:INDEX:R6502_NMIS]
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_YIELDFLAGACTION]
+  LDR lr, [sp], #4
 r6502branchtakenstep3
   R6502_JUMP_TO_READ_OP
 

@@ -61,9 +61,10 @@ typedef struct R6502CPUMAP
   R6502TRANSITIONOP fetchaction, interruptfetchaction;
   R6502TRANSITIONOP fetchthentestirqaction, resetaction;
   R6502PERIPHERALOP resetstartingaction,resetcontinuingaction;
+  R6502PERIPHERALOP yieldflagaction;
   intptr_t timesinterruptmissed;
   uintptr_t lbreak;
-  uintptr_t BC_unused[2];
+  uintptr_t BC_unused[1];
   R6502_BP_ZONE BP;
 
   // AArch32 offsets &400 - &FFF

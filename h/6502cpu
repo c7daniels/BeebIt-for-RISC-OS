@@ -42,11 +42,9 @@
 #define NMIS_OLDRESET 0x40
 #define NMIS_OLDNMI 0x20
 #define NMIS_NMI 0x02
-#define NMIS_YIELD 0x01 /*yield control on a vsync*/
 #define NMIS_NOTOLDRESET 0xBF
 #define NMIS_NOTOLDNMI 0xDF
 #define NMIS_NOTNMI 0xFD
-#define NMIS_NOTYIELD 0xFE
 
 #define R6502_DECODE_SEQUENCE 256
 #define R6502_INTERRUPT_DECODE_SEQUENCE 257

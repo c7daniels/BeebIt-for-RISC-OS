@@ -38,6 +38,8 @@ static_assert(offsetof(HOSTMAP, CC) == offsetof(R6502ZONEMAP, CC), "Expecting co
 static_assert(offsetof(HOSTMAP, DC) == offsetof(R6502ZONEMAP, DC), "Expecting consistent zone offsets");
 static_assert(offsetof(HOSTMAP, EC) == offsetof(R6502ZONEMAP, EC), "Expecting consistent zone offsets");
 
+extern R6502ZONEMAP* h6502yieldflag(R6502ZONEMAP* zmap);
+
 extern R6502ZONEMAP* h6502read0000(R6502ZONEMAP* zmap, uintptr_t address_code);
 extern R6502ZONEMAP* h6502read3000(R6502ZONEMAP* zmap, uintptr_t address_code);
 extern R6502ZONEMAP* h6502read8000_0(R6502ZONEMAP* zmap, uintptr_t address_code);
@@ -93,9 +95,6 @@ extern R6502ZONEMAP* h6502writem3000_e(R6502ZONEMAP* zmap, uintptr_t address_cod
 extern R6502ZONEMAP* h6502writem8000_ram(R6502ZONEMAP* zmap, uintptr_t address_code);
 extern R6502ZONEMAP* h6502writemC000_y(R6502ZONEMAP* zmap, uintptr_t address_code);
 
-extern HOSTMAP* h6502startreadstretch(HOSTMAP* hmap, uintptr_t address_code);
-extern HOSTMAP* h6502startwritestretch(HOSTMAP* hmap, uintptr_t address_code);
-
 extern HOSTMAP* h6502readfred(HOSTMAP* hmap, uintptr_t address_code);
 extern HOSTMAP* h6502readjim(HOSTMAP* hmap, uintptr_t address_code);
 extern HOSTMAP* h6502readmFC00(HOSTMAP* hmap, uintptr_t address_code);
@@ -146,6 +145,22 @@ static R6502ZONEMAP* h6502onresetcontinue(R6502ZONEMAP* zmap)
 }
 
 #ifdef BEEBIT_NO_ASM
+int h6502getplacementinregisters(void)
+{
+  return 0;
+}
+
+extern HOSTMAP* h6502cyclestogobridgeread(HOSTMAP* hmap, uintptr_t address_code)
+{
+  return hmap->bridgedreadhigh[(address_code>>16)-0xFC00](hmap, address_code);
+}
+
+extern HOSTMAP* h6502cyclestogobridgewrite(HOSTMAP* hmap, uintptr_t address_code)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  return hmap->bridgedwritehigh[(address_code>>16)-0xFC00](hmap, address_code);
+}
+
 void swappages(uint8_t *block1, uint8_t *block2, int npagecount)
 {
   char swap[256];
@@ -157,6 +172,20 @@ void swappages(uint8_t *block1, uint8_t *block2, int npagecount)
     block1 += 256;
     block2 += 256;
   }
+}
+
+R6502ZONEMAP* h6502yieldflag(R6502ZONEMAP* zmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  intptr_t excess = hmap->cycles.togo - 1;
+
+  if (excess > 0)
+  {
+    hmap->cycles.original -= excess;
+    hmap->cycles.togo = 1;
+  }
+  hmap->yield = 0xFF;
+  return zmap;
 }
 
 R6502ZONEMAP* h6502read0000(R6502ZONEMAP* zmap, uintptr_t address_code)
@@ -1023,40 +1052,53 @@ void hostmapapplysoundoption(void)
 {
   HOSTMAP* hmap = &hostmap;
   HOSTHIGHOP* stretchedwritehigh = &hmap->stretchedwritehigh[0x200];
+  HOSTHIGHOP* bridgedwritehigh = &hmap->bridgedwritehigh[0x200];
   int i;
+  int bridged00,bridged01,bridged0F;
 
   for (i=0x40; i<0x60; i+=0x10)
   {
+    bridged00 = stretchedwritehigh[i] != bridgedwritehigh[i];
+    bridged01 = stretchedwritehigh[i+0x01] != bridgedwritehigh[i+0x01];
+    bridged0F = stretchedwritehigh[i+0x0F] != bridgedwritehigh[i+0x0F];
+
     if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
     {
       if (beebit_sound)
       {
-        stretchedwritehigh[i] = systemvia00write_m;
-        stretchedwritehigh[i+0x01] = systemvia01write_m;
-        stretchedwritehigh[i+0x0F] = systemvia0Fwrite_m;
+        bridgedwritehigh[i] = systemvia00write_m;
+        bridgedwritehigh[i+0x01] = systemvia01write_m;
+        bridgedwritehigh[i+0x0F] = systemvia0Fwrite_m;
       }
       else
       {
-        stretchedwritehigh[i] = systemvia00write_nosoundm;
-        stretchedwritehigh[i+0x01] = systemvia01write_nosoundm;
-        stretchedwritehigh[i+0x0F] = systemvia0Fwrite_nosoundm;
+        bridgedwritehigh[i] = systemvia00write_nosoundm;
+        bridgedwritehigh[i+0x01] = systemvia01write_nosoundm;
+        bridgedwritehigh[i+0x0F] = systemvia0Fwrite_nosoundm;
       }
     }
     else
     {
       if (beebit_sound)
       {
-        stretchedwritehigh[i] = systemvia00write_b;
-        stretchedwritehigh[i+0x01] = systemvia01write_b;
-        stretchedwritehigh[i+0x0F] = systemvia0Fwrite_b;
+        bridgedwritehigh[i] = systemvia00write_b;
+        bridgedwritehigh[i+0x01] = systemvia01write_b;
+        bridgedwritehigh[i+0x0F] = systemvia0Fwrite_b;
       }
       else
       {
-        stretchedwritehigh[i] = systemvia00write_nosoundb;
-        stretchedwritehigh[i+0x01] = systemvia01write_nosoundb;
-        stretchedwritehigh[i+0x0F] = systemvia0Fwrite_nosoundb;
+        bridgedwritehigh[i] = systemvia00write_nosoundb;
+        bridgedwritehigh[i+0x01] = systemvia01write_nosoundb;
+        bridgedwritehigh[i+0x0F] = systemvia0Fwrite_nosoundb;
       }
     }
+
+    if (!bridged00)
+      stretchedwritehigh[i] = bridgedwritehigh[i];
+    if (!bridged01)
+      stretchedwritehigh[i+0x01] = bridgedwritehigh[i+0x01];
+    if (!bridged0F)
+      stretchedwritehigh[i+0x0F] = bridgedwritehigh[i+0x0F];
   }
 }
 
@@ -1091,6 +1133,7 @@ int hostmapresetcpu(void)
 
   cmap->resetstartingaction = h6502onresetstart;
   cmap->resetcontinuingaction = h6502onresetcontinue;
+  cmap->yieldflagaction = h6502yieldflag;
 
   return FALSE;
 }
@@ -1390,14 +1433,17 @@ void hostmapexecute(void)
   HOSTMAP* hmap = &hostmap;
   R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
 
-  cmap->nmis &= NMIS_NOTYIELD;
-  do
+  hmap->yield = 0;
+  while (1)
   {
     (*cmap->cpu_state)(cmap, (intptr_t)(cmap->cpu_state+1));
     if (--hmap->cycles.togo == 0)
+    {
       hostmapadvancetimers(hmap);
+      if (hmap->yield)
+        break;
+    }
   }
-  while (!(cmap->nmis & NMIS_YIELD));
 }
 #endif
 

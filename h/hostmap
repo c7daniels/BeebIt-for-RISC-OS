@@ -14,6 +14,8 @@
 
 #include "6502zmap.h"
 
+#define CYCLES_TO_GO_IN_REGISTER_FLAG 1
+
 #define R6502_JUMP_FROM_HIGH_OP(HMAP) \
   return HMAP;
 
@@ -277,6 +279,8 @@ typedef struct HOSTMAP
   uint8_t acccon;  /*ACCCON*/
   uint8_t lsoundlatch;
   uint8_t screenstartindex; /*screen start index (system via)*/
+  uint8_t yield; /*yield control on a vsync*/
+  uint8_t yield_unused[3];
   HOSTMAPAVIA A_sysvia;
   HOSTMAPAVIA A_usrvia;
   HOSTMAPRTC rtc;
@@ -284,7 +288,7 @@ typedef struct HOSTMAP
   HOSTMAPAI8271 A_i8271;
   HOSTMAPAW1770 A_w1770;
   HOSTMAPAADC A_adc;
-  uint8_t AP_unused[63*sizeof(uintptr_t)-128];
+  uint8_t AP_unused[63*sizeof(uintptr_t)-132];
 
   // AArch32 offsets &100 - &3FF
   R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
@@ -323,12 +327,17 @@ typedef struct HOSTMAP
   HOSTHIGHOP stretchedwritehigh[1024];
 
   // AArch32 offsets &8000 - &FFFF
-  uint8_t shadow[0x8000];
+  HOSTHIGHOP bridgedreadhigh[1024];
+  HOSTHIGHOP bridgedwritehigh[1024];
+  uintptr_t high_unused[6144];
 
   // AArch32 offsets &10000 - &1FFFF
   uint8_t memory[0x10000];
 
-  // AArch32 offsets &20000 - &5FFFF
+  // AArch32 offsets &20000 - &27FFF
+  uint8_t shadow[0x8000];
+
+  // AArch32 offsets &28000 - &67FFF
   uint8_t roms[0x10][0x4000];
 
 } HOSTMAP;
@@ -337,6 +346,10 @@ extern HOSTMAP hostmap;
 
 extern HOSTMAP* h6502startreadstretch(HOSTMAP* hmap, uintptr_t address_code);
 extern HOSTMAP* h6502startwritestretch(HOSTMAP* hmap, uintptr_t address_code);
+
+extern int h6502getplacementinregisters(void);
+extern HOSTMAP* h6502cyclestogobridgeread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502cyclestogobridgewrite(HOSTMAP* hmap, uintptr_t address_code);
 
 extern void swappages(uint8_t *block1, uint8_t *block2, int npagecount);
 

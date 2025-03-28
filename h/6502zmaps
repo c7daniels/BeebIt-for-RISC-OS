@@ -9,6 +9,10 @@
 ; Email: <convertedgames@3insdale.me.uk>
 ;
 
+; optimizations not compatible with C
+  GBLL PlaceCyclesToGoInRegister
+PlaceCyclesToGoInRegister SETL {TRUE}
+
 SIZEOF_R6502_AC_ZONE EQU 4
 SIZEOF_R6502_AP_ZONE EQU 252
 SIZEOF_R6502_BC_ZONE EQU 108

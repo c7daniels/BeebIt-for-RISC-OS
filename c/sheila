@@ -39,8 +39,10 @@
 
 void sheilareset(void)
 {
-  const int slow_mask = 0x0F00FF0F;
+  const unsigned int slow_mask = 0x0F00FF0FU;
+  unsigned int cyclestogo_bridge_mask;
   int i,j;
+  int inregisterflags = h6502getplacementinregisters();
   HOSTHIGHOP* readhigh = &hostmap.readhigh[0x200];
   HOSTHIGHOP* writehigh = &hostmap.writehigh[0x200];
 
@@ -381,6 +383,30 @@ void sheilareset(void)
     {
       readhigh[i] = hostconstantreadFE;
       writehigh[i] = hostnowrite;
+    }
+  }
+
+  memcpy(&hostmap.bridgedreadhigh[0x200], readhigh, sizeof(R6502BUSOP)<<8);
+  memcpy(&hostmap.bridgedwritehigh[0x200], writehigh, sizeof(R6502BUSOP)<<8);
+
+  if (inregisterflags & CYCLES_TO_GO_IN_REGISTER_FLAG)
+  {
+    if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+    {
+      cyclestogo_bridge_mask = 0xFFFFFF2EU;
+    }
+    else
+    {
+      cyclestogo_bridge_mask = 0xFFFFFF0EU;
+    }
+
+    for (i=0; i<0x100; i++)
+    {
+      if (cyclestogo_bridge_mask & (1<<(i>>3)))
+      {
+        readhigh[i] = h6502cyclestogobridgeread;
+        writehigh[i] = h6502cyclestogobridgewrite;
+      }
     }
   }
 

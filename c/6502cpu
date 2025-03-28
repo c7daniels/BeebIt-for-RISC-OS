@@ -549,12 +549,14 @@ const R6502OP* const r6502sequences[R6502_MAIN_SEQUENCE_COUNT] =
 #ifdef BEEBIT_NO_ASM
 R6502CPUMAP* r6502yield(R6502CPUMAP* cmap, uintptr_t pc_code)
 {
+  R6502ZONEMAP* zmap = (R6502ZONEMAP*)cmap;
+
   cmap->transition1action = cmap->fetchaction;
   cmap->transition2action = cmap->fetchaction;
 
   cmap->sync_pc_code = pc_code;
   cmap->cpu_state = cmap->sequences[R6502_DECODE_SEQUENCE];
-  cmap->nmis |= NMIS_YIELD;
+  cmap->yieldflagaction(zmap);
   R6502_JUMP_TO_READ_OP(cmap, cmap->sync_pc_code)
 }
 
@@ -1961,6 +1963,7 @@ R6502CPUMAP* r6502beqstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
 
 R6502CPUMAP* r6502branchtakenstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
 {
+  R6502ZONEMAP* zmap = (R6502ZONEMAP*)cmap;
   uintptr_t address_code = cmap->sync_pc_code + 0x20000;
   uintptr_t sum = cmap->latch;
   if (sum & 0x800000)
@@ -1987,7 +1990,7 @@ R6502CPUMAP* r6502branchtakenstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_s
       else if (cmap->transition2action == cmap->yieldaction)
       {
         cmap->transition2action = cmap->fetchaction;
-        cmap->nmis |= NMIS_YIELD;
+        cmap->yieldflagaction(zmap);
       }
       R6502_JUMP_TO_READ_OP(cmap, address_code)
     }

@@ -46,6 +46,8 @@
 
   EXPORT |hostmap|
 
+  EXPORT |h6502yieldflag|
+
   EXPORT |h6502read0000|
   EXPORT |h6502read3000|
   EXPORT |h6502read8000_0|
@@ -123,6 +125,10 @@
   EXPORT |h6502stretchedreadstep|
   EXPORT |h6502stretchedwritestep|
 
+  EXPORT |h6502getplacementinregisters|
+  EXPORT |h6502cyclestogobridgeread|
+  EXPORT |h6502cyclestogobridgewrite|
+
   EXPORT |hostmapadvancetimers|
   EXPORT |hostmapexecute|
 
@@ -134,6 +140,27 @@
   ASSERT :INDEX:HOST_CC == :INDEX:R6502ZONE_CC
   ASSERT :INDEX:HOST_DC == :INDEX:R6502ZONE_DC
   ASSERT :INDEX:HOST_EC == :INDEX:R6502ZONE_EC
+
+h6502yieldflag
+  MOV r2,#&FF
+  STRB r2,[r0,#:INDEX:HOST_YIELD]
+  IF PlaceCyclesToGoInRegister
+  SUBS r2,r9,#1
+  MOVLE pc,lr
+  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
+  SUB r3,r3,r2
+  MOV r9,#1
+  ELSE
+  LDR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  SUBS r2,r2,#1
+  MOVLE pc,lr
+  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
+  SUB r3,r3,r2
+  MOV r2,#1
+  STR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  ENDIF
+  STR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
+  MOV pc,lr
 
 h6502read0000
 h6502read3000
@@ -495,9 +522,13 @@ h6502startreadstretch
   STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ODD]
   STR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
-  LDR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
   LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
+  IF PlaceCyclesToGoInRegister
+  EOR r1,r1,r9
+  ELSE
+  LDR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
   EOR r1,r1,r2
+  ENDIF
   ADD r2,r0,#:INDEX:R6502_SEQUENCES
   LDR r2,[r2,#R6502_READ_STRETCH_SEQUENCE:SHL:2]
   EOR r1,r1,r3
@@ -511,9 +542,13 @@ h6502startwritestretch
   STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ODD]
   STR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
-  LDR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
   LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
+  IF PlaceCyclesToGoInRegister
+  EOR r1,r1,r9
+  ELSE
+  LDR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
   EOR r1,r1,r2
+  ENDIF
   ADD r2,r0,#:INDEX:R6502_SEQUENCES
   LDR r2,[r2,#R6502_WRITE_STRETCH_SEQUENCE:SHL:2]
   EOR r1,r1,r3
@@ -568,8 +603,47 @@ h6502writemFD00
   STR r2,[r0,#:INDEX:R6502_CPU_STATE]
   LDR pc,[r3,r1,LSR #14]
 
+|h6502getplacementinregisters|
+  IF PlaceCyclesToGoInRegister
+  MOV r0,#CYCLES_TO_GO_IN_REGISTER_FLAG
+  ELSE
+  MOV r0,#0
+  ENDIF
+  MOV pc,lr
+
+|h6502cyclestogobridgeread|
+  IF PlaceCyclesToGoInRegister
+  STR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  STR lr,[sp, #-4]!
+  ADD lr,pc,#8-4
+  ENDIF
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDREADHIGH
+  LDR pc,[r3,r1,LSR #14]
+  IF PlaceCyclesToGoInRegister
+  LDR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  LDR pc, [sp], #4
+  ENDIF
+
+|h6502cyclestogobridgewrite|
+  IF PlaceCyclesToGoInRegister
+  STR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  STR lr,[sp, #-4]!
+  ADD lr,pc,#8-4
+  ENDIF
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDWRITEHIGH
+  LDR pc,[r3,r1,LSR #14]
+  IF PlaceCyclesToGoInRegister
+  LDR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  LDR pc, [sp], #4
+  ENDIF
+
 |hostmapadvancetimers|
-  STMFD sp!,{r4-r5,lr}
+  IF PlaceCyclesToGoInRegister
+  STR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  STMFD sp!,{r4,lr}
+  ELSE
+  STMFD sp!,{r4,r9,lr}
+  ENDIF
 
   MOV r1,#0
   LDR r4,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
@@ -581,7 +655,7 @@ h6502writemFD00
   LDR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_MONOTONIC]
   ADD r2,r2,r4
   STR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_MONOTONIC]
-  MOV r5,#0x10000
+  MOV r9,#0x10000
 
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_SYSVIATOGO]
   SUBS r1,r1,r4
@@ -591,8 +665,8 @@ h6502writemFD00
   BL systemviaatzerocycles
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_SYSVIATOGO]
   SUB r2,r1,#1
-  CMP r2,r5
-  MOVLO r5,r1
+  CMP r2,r9
+  MOVLO r9,r1
 
 advancetimers2
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_USRVIATOGO]
@@ -603,8 +677,8 @@ advancetimers2
   BL userviaatzerocycles
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_USRVIATOGO]
   SUB r2,r1,#1
-  CMP r2,r5
-  MOVLO r5,r1
+  CMP r2,r9
+  MOVLO r9,r1
 
 advancetimers3
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_I8271TOGO]
@@ -615,8 +689,8 @@ advancetimers3
   BL i8271poll
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_I8271TOGO]
   SUB r2,r1,#1
-  CMP r2,r5
-  MOVLO r5,r1
+  CMP r2,r9
+  MOVLO r9,r1
 
 advancetimers4
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_W1770TOGO]
@@ -627,8 +701,8 @@ advancetimers4
   BL w1770poll
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_W1770TOGO]
   SUB r2,r1,#1
-  CMP r2,r5
-  MOVLO r5,r1
+  CMP r2,r9
+  MOVLO r9,r1
 
 advancetimers5
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ADCTOGO]
@@ -639,8 +713,8 @@ advancetimers5
   BL adcpoll
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ADCTOGO]
   SUB r2,r1,#1
-  CMP r2,r5
-  MOVLO r5,r1
+  CMP r2,r9
+  MOVLO r9,r1
 
 advancetimers6
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_M6850TOGO]
@@ -651,8 +725,8 @@ advancetimers6
   BL aciapoll
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_M6850TOGO]
   SUB r2,r1,#1
-  CMP r2,r5
-  MOVLO r5,r1
+  CMP r2,r9
+  MOVLO r9,r1
 
 advancetimers7
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_VIDEOTOGO]
@@ -663,13 +737,17 @@ advancetimers7
   BL videoatzerocycles
   LDR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_VIDEOTOGO]
   SUB r2,r1,#1
-  CMP r2,r5
-  MOVLO r5,r1
+  CMP r2,r9
+  MOVLO r9,r1
 
 advancetimers8
-  STR r5,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
-  STR r5,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  LDMFD sp!,{r4-r5,lr}
+  STR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
+  IF PlaceCyclesToGoInRegister
+  LDMFD sp!,{r4,lr}
+  ELSE
+  STR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  LDMFD sp!,{r4,r9,lr}
+  ENDIF
 
   LDRB r3,[r0,#:INDEX:R6502_PS]
   TST r3,#IFLAG
@@ -681,23 +759,41 @@ advancetimers8
   MOV pc,lr
 
 |hostmapexecute|
+  IF PlaceCyclesToGoInRegister
+  STMFD sp!,{r9,lr}
+  ELSE
   STR lr,[sp, #-4]!
+  ENDIF
   LDR r0,=hostmap
-  LDRB r2,[r0,#:INDEX:R6502_NMIS]
-  BIC r2,r2,#NMIS_YIELD
-  STRB r2,[r0,#:INDEX:R6502_NMIS]
+  IF PlaceCyclesToGoInRegister
+  LDR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  ENDIF
+  MOV r2,#0
+  STRB r2,[r0,#:INDEX:HOST_YIELD]
 hostmapexecute1
   LDR r1,[r0,#:INDEX:R6502_CPU_STATE]
   MOV lr,pc
   LDR pc, [r1], #4
+  IF PlaceCyclesToGoInRegister
+  SUBS r9,r9,#1
+  ELSE
   LDR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
   SUBS r2,r2,#1
   STR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  BLEQ hostmapadvancetimers
-  LDRB r2,[r0,#:INDEX:R6502_NMIS]
-  TST r2,#NMIS_YIELD
+  ENDIF
+  BNE hostmapexecute1
+  BL hostmapadvancetimers
+  LDRB r2,[r0,#:INDEX:HOST_YIELD]
+  TST r2,r2
   BEQ hostmapexecute1
+  IF PlaceCyclesToGoInRegister
+  STR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  ENDIF
+  IF PlaceCyclesToGoInRegister
+  LDMFD sp!,{r9,pc}
+  ELSE
   LDR pc, [sp], #4
+  ENDIF
 
 ;Data Area
 
