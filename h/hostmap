@@ -14,10 +14,11 @@
 
 #include "6502zmap.h"
 
-#define CYCLES_TO_GO_IN_REGISTER_FLAG 1
+#define KEYBOARD_STATE_IN_REGISTER_FLAG 2
+#define CYCLES_TO_GO_IN_REGISTER_FLAG   1
 
 #define R6502_JUMP_FROM_HIGH_OP(HMAP) \
-  return HMAP;
+  return (HOSTMAP*)(*HMAP->keyboard_state)((R6502ZONEMAP*)HMAP, (intptr_t)(HMAP->keyboard_state+1));
 
 #define HOSTMAP_LIMIT_CYCLES_TO_GO(MAP, LIMIT) \
   { \
@@ -274,6 +275,7 @@ typedef struct HOSTMAP
 {
   // AArch32 offsets &00 - &FF
   R6502_AC_ZONE AC;
+  uint8_t keystatus[16];
   int8_t romwritable[16];
   uint8_t romsel; /*ROMSELect*/
   uint8_t acccon;  /*ACCCON*/
@@ -288,9 +290,10 @@ typedef struct HOSTMAP
   HOSTMAPAI8271 A_i8271;
   HOSTMAPAW1770 A_w1770;
   HOSTMAPAADC A_adc;
-  uint8_t AP_unused[63*sizeof(uintptr_t)-132];
+  uint8_t AP_unused[63*sizeof(uintptr_t)-148];
 
   // AArch32 offsets &100 - &3FF
+  R6502KEYBOARDOP *keyboard_state;
   R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
   R6502_BC_ZONE BC;
   void *zeribeep_writebyte;
@@ -329,7 +332,8 @@ typedef struct HOSTMAP
   // AArch32 offsets &8000 - &FFFF
   HOSTHIGHOP bridgedreadhigh[1024];
   HOSTHIGHOP bridgedwritehigh[1024];
-  uintptr_t high_unused[6144];
+  R6502KEYBOARDOP keyboardops[4096];
+  uintptr_t high_unused[2048];
 
   // AArch32 offsets &10000 - &1FFFF
   uint8_t memory[0x10000];
@@ -350,6 +354,10 @@ extern HOSTMAP* h6502startwritestretch(HOSTMAP* hmap, uintptr_t address_code);
 extern int h6502getplacementinregisters(void);
 extern HOSTMAP* h6502cyclestogobridgeread(HOSTMAP* hmap, uintptr_t address_code);
 extern HOSTMAP* h6502cyclestogobridgewrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502keyboardstatebridgeread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502keyboardstatebridgewrite(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502keyboardstatecyclestogobridgeread(HOSTMAP* hmap, uintptr_t address_code);
+extern HOSTMAP* h6502keyboardstatecyclestogobridgewrite(HOSTMAP* hmap, uintptr_t address_code);
 
 extern void swappages(uint8_t *block1, uint8_t *block2, int npagecount);
 

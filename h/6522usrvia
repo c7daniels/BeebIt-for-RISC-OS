@@ -19,7 +19,6 @@ extern void userviastartreset(int lfull);
 extern void userviafinishreset(void);
 extern void userviabeforesnapshot(void);
 extern void userviaaftersnapshot(void);
-extern void userviasetirq(void);
 extern HOSTMAP* userviaatzerocycles(HOSTMAP* hmap);
 
 extern HOSTMAP* uservia00read(HOSTMAP* hmap, uintptr_t address_code);

@@ -59,7 +59,12 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
   LDRB r2,[r3,r1,LSR #24]
   STRB r2,[r0,#:INDEX:R6502_M]
-  MOV pc,lr
+  IF PlaceKeyboardStateInRegister
+  LDR pc, [r8], #4
+  ELSE
+  LDR r1,[r0,#:INDEX:R6502_KEYBOARD_STATE]
+  LDR pc, [r1], #4
+  ENDIF
   MEND
 
   MACRO
@@ -67,7 +72,12 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
   LDRB r2,[r0,#:INDEX:R6502_M]
   STRB r2,[r3,r1,LSR #24]
-  MOV pc,lr
+  IF PlaceKeyboardStateInRegister
+  LDR pc, [r8], #4
+  ELSE
+  LDR r1,[r0,#:INDEX:R6502_KEYBOARD_STATE]
+  LDR pc, [r1], #4
+  ENDIF
   MEND
 
   MACRO
@@ -75,7 +85,12 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   LDR r3,[r0,#:INDEX:R6502_PAGEONE]
   LDRB r2,[r3,r1,LSR #24]
   STRB r2,[r0,#:INDEX:R6502_M]
-  MOV pc,lr
+  IF PlaceKeyboardStateInRegister
+  LDR pc, [r8], #4
+  ELSE
+  LDR r1,[r0,#:INDEX:R6502_KEYBOARD_STATE]
+  LDR pc, [r1], #4
+  ENDIF
   MEND
 
   MACRO
@@ -83,17 +98,32 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   LDR r3,[r0,#:INDEX:R6502_PAGEONE]
   LDRB r2,[r0,#:INDEX:R6502_M]
   STRB r2,[r3,r1,LSR #24]
-  MOV pc,lr
+  IF PlaceKeyboardStateInRegister
+  LDR pc, [r8], #4
+  ELSE
+  LDR r1,[r0,#:INDEX:R6502_KEYBOARD_STATE]
+  LDR pc, [r1], #4
+  ENDIF
   MEND
 
   MACRO
   R6502_JUMP_WITHOUT_BUS_OP
-  MOV pc,lr
+  IF PlaceKeyboardStateInRegister
+  LDR pc, [r8], #4
+  ELSE
+  LDR r1,[r0,#:INDEX:R6502_KEYBOARD_STATE]
+  LDR pc, [r1], #4
+  ENDIF
   MEND
 
   MACRO
   R6502_JUMP_FROM_BUS_OP
-  MOV pc,lr
+  IF PlaceKeyboardStateInRegister
+  LDR pc, [r8], #4
+  ELSE
+  LDR r1,[r0,#:INDEX:R6502_KEYBOARD_STATE]
+  LDR pc, [r1], #4
+  ENDIF
   MEND
 
   MACRO

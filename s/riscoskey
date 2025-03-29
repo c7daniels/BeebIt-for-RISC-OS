@@ -1,0 +1,1253 @@
+;>riscoskey.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Cycle-level keyboard emulation
+;
+; (C) Copyright Crispian Daniels, 2025
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+  GET h.6502zmaps
+
+  GET h.hostmaps
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET     h.RegNames
+
+; Use the GET directive to include a list of SWI names as if typed here
+
+  GET     h.SWInames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA    |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+  IMPORT |systemviasetca2|
+  IMPORT |systemviaunsetca2|
+
+; Export global symbols
+
+  EXPORT |keyboardCA2column0|
+  EXPORT |keyboardCA2column1|
+  EXPORT |keyboardCA2column2|
+  EXPORT |keyboardCA2column3|
+  EXPORT |keyboardCA2column4|
+  EXPORT |keyboardCA2column5|
+  EXPORT |keyboardCA2column6|
+  EXPORT |keyboardCA2column7|
+  EXPORT |keyboardCA2column8|
+  EXPORT |keyboardCA2column9|
+  EXPORT |keyboardCA2column10|
+  EXPORT |keyboardCA2column11|
+  EXPORT |keyboardCA2column12|
+  EXPORT |keyboardCA2WEIcolumn0row0|
+  EXPORT |keyboardCA2WEIcolumn0row1|
+  EXPORT |keyboardCA2WEIcolumn0row2|
+  EXPORT |keyboardCA2WEIcolumn0row3|
+  EXPORT |keyboardCA2WEIcolumn0row4|
+  EXPORT |keyboardCA2WEIcolumn0row5|
+  EXPORT |keyboardCA2WEIcolumn0row6|
+  EXPORT |keyboardCA2WEIcolumn0row7|
+  EXPORT |keyboardCA2WEIcolumn1row0|
+  EXPORT |keyboardCA2WEIcolumn1row1|
+  EXPORT |keyboardCA2WEIcolumn1row2|
+  EXPORT |keyboardCA2WEIcolumn1row3|
+  EXPORT |keyboardCA2WEIcolumn1row4|
+  EXPORT |keyboardCA2WEIcolumn1row5|
+  EXPORT |keyboardCA2WEIcolumn1row6|
+  EXPORT |keyboardCA2WEIcolumn1row7|
+  EXPORT |keyboardCA2WEIcolumn2row0|
+  EXPORT |keyboardCA2WEIcolumn2row1|
+  EXPORT |keyboardCA2WEIcolumn2row2|
+  EXPORT |keyboardCA2WEIcolumn2row3|
+  EXPORT |keyboardCA2WEIcolumn2row4|
+  EXPORT |keyboardCA2WEIcolumn2row5|
+  EXPORT |keyboardCA2WEIcolumn2row6|
+  EXPORT |keyboardCA2WEIcolumn2row7|
+  EXPORT |keyboardCA2WEIcolumn3row0|
+  EXPORT |keyboardCA2WEIcolumn3row1|
+  EXPORT |keyboardCA2WEIcolumn3row2|
+  EXPORT |keyboardCA2WEIcolumn3row3|
+  EXPORT |keyboardCA2WEIcolumn3row4|
+  EXPORT |keyboardCA2WEIcolumn3row5|
+  EXPORT |keyboardCA2WEIcolumn3row6|
+  EXPORT |keyboardCA2WEIcolumn3row7|
+  EXPORT |keyboardCA2WEIcolumn4row0|
+  EXPORT |keyboardCA2WEIcolumn4row1|
+  EXPORT |keyboardCA2WEIcolumn4row2|
+  EXPORT |keyboardCA2WEIcolumn4row3|
+  EXPORT |keyboardCA2WEIcolumn4row4|
+  EXPORT |keyboardCA2WEIcolumn4row5|
+  EXPORT |keyboardCA2WEIcolumn4row6|
+  EXPORT |keyboardCA2WEIcolumn4row7|
+  EXPORT |keyboardCA2WEIcolumn5row0|
+  EXPORT |keyboardCA2WEIcolumn5row1|
+  EXPORT |keyboardCA2WEIcolumn5row2|
+  EXPORT |keyboardCA2WEIcolumn5row3|
+  EXPORT |keyboardCA2WEIcolumn5row4|
+  EXPORT |keyboardCA2WEIcolumn5row5|
+  EXPORT |keyboardCA2WEIcolumn5row6|
+  EXPORT |keyboardCA2WEIcolumn5row7|
+  EXPORT |keyboardCA2WEIcolumn6row0|
+  EXPORT |keyboardCA2WEIcolumn6row1|
+  EXPORT |keyboardCA2WEIcolumn6row2|
+  EXPORT |keyboardCA2WEIcolumn6row3|
+  EXPORT |keyboardCA2WEIcolumn6row4|
+  EXPORT |keyboardCA2WEIcolumn6row5|
+  EXPORT |keyboardCA2WEIcolumn6row6|
+  EXPORT |keyboardCA2WEIcolumn6row7|
+  EXPORT |keyboardCA2WEIcolumn7row0|
+  EXPORT |keyboardCA2WEIcolumn7row1|
+  EXPORT |keyboardCA2WEIcolumn7row2|
+  EXPORT |keyboardCA2WEIcolumn7row3|
+  EXPORT |keyboardCA2WEIcolumn7row4|
+  EXPORT |keyboardCA2WEIcolumn7row5|
+  EXPORT |keyboardCA2WEIcolumn7row6|
+  EXPORT |keyboardCA2WEIcolumn7row7|
+  EXPORT |keyboardCA2WEIcolumn8row0|
+  EXPORT |keyboardCA2WEIcolumn8row1|
+  EXPORT |keyboardCA2WEIcolumn8row2|
+  EXPORT |keyboardCA2WEIcolumn8row3|
+  EXPORT |keyboardCA2WEIcolumn8row4|
+  EXPORT |keyboardCA2WEIcolumn8row5|
+  EXPORT |keyboardCA2WEIcolumn8row6|
+  EXPORT |keyboardCA2WEIcolumn8row7|
+  EXPORT |keyboardCA2WEIcolumn9row0|
+  EXPORT |keyboardCA2WEIcolumn9row1|
+  EXPORT |keyboardCA2WEIcolumn9row2|
+  EXPORT |keyboardCA2WEIcolumn9row3|
+  EXPORT |keyboardCA2WEIcolumn9row4|
+  EXPORT |keyboardCA2WEIcolumn9row5|
+  EXPORT |keyboardCA2WEIcolumn9row6|
+  EXPORT |keyboardCA2WEIcolumn9row7|
+  EXPORT |keyboardCA2WEIcolumn10row0|
+  EXPORT |keyboardCA2WEIcolumn10row1|
+  EXPORT |keyboardCA2WEIcolumn10row2|
+  EXPORT |keyboardCA2WEIcolumn10row3|
+  EXPORT |keyboardCA2WEIcolumn10row4|
+  EXPORT |keyboardCA2WEIcolumn10row5|
+  EXPORT |keyboardCA2WEIcolumn10row6|
+  EXPORT |keyboardCA2WEIcolumn10row7|
+  EXPORT |keyboardCA2WEIcolumn11row0|
+  EXPORT |keyboardCA2WEIcolumn11row1|
+  EXPORT |keyboardCA2WEIcolumn11row2|
+  EXPORT |keyboardCA2WEIcolumn11row3|
+  EXPORT |keyboardCA2WEIcolumn11row4|
+  EXPORT |keyboardCA2WEIcolumn11row5|
+  EXPORT |keyboardCA2WEIcolumn11row6|
+  EXPORT |keyboardCA2WEIcolumn11row7|
+  EXPORT |keyboardCA2WEIcolumn12row0|
+  EXPORT |keyboardCA2WEIcolumn12row1|
+  EXPORT |keyboardCA2WEIcolumn12row2|
+  EXPORT |keyboardCA2WEIcolumn12row3|
+  EXPORT |keyboardCA2WEIcolumn12row4|
+  EXPORT |keyboardCA2WEIcolumn12row5|
+  EXPORT |keyboardCA2WEIcolumn12row6|
+  EXPORT |keyboardCA2WEIcolumn12row7|
+  EXPORT |keyboardCA2WEcolumn0|
+  EXPORT |keyboardCA2WEcolumn1|
+  EXPORT |keyboardCA2WEcolumn2|
+  EXPORT |keyboardCA2WEcolumn3|
+  EXPORT |keyboardCA2WEcolumn4|
+  EXPORT |keyboardCA2WEcolumn5|
+  EXPORT |keyboardCA2WEcolumn6|
+  EXPORT |keyboardCA2WEcolumn7|
+  EXPORT |keyboardCA2WEcolumn8|
+  EXPORT |keyboardCA2WEcolumn9|
+  EXPORT |keyboardCA2WEcolumn10|
+  EXPORT |keyboardCA2WEcolumn11|
+  EXPORT |keyboardCA2WEcolumn12|
+  EXPORT |keyboardcolumn0|
+  EXPORT |keyboardcolumn1|
+  EXPORT |keyboardcolumn2|
+  EXPORT |keyboardcolumn3|
+  EXPORT |keyboardcolumn4|
+  EXPORT |keyboardcolumn5|
+  EXPORT |keyboardcolumn6|
+  EXPORT |keyboardcolumn7|
+  EXPORT |keyboardcolumn8|
+  EXPORT |keyboardcolumn9|
+  EXPORT |keyboardcolumn10|
+  EXPORT |keyboardcolumn11|
+  EXPORT |keyboardcolumn12|
+  EXPORT |keyboardWEIcolumn0row0|
+  EXPORT |keyboardWEIcolumn0row1|
+  EXPORT |keyboardWEIcolumn0row2|
+  EXPORT |keyboardWEIcolumn0row3|
+  EXPORT |keyboardWEIcolumn0row4|
+  EXPORT |keyboardWEIcolumn0row5|
+  EXPORT |keyboardWEIcolumn0row6|
+  EXPORT |keyboardWEIcolumn0row7|
+  EXPORT |keyboardWEIcolumn1row0|
+  EXPORT |keyboardWEIcolumn1row1|
+  EXPORT |keyboardWEIcolumn1row2|
+  EXPORT |keyboardWEIcolumn1row3|
+  EXPORT |keyboardWEIcolumn1row4|
+  EXPORT |keyboardWEIcolumn1row5|
+  EXPORT |keyboardWEIcolumn1row6|
+  EXPORT |keyboardWEIcolumn1row7|
+  EXPORT |keyboardWEIcolumn2row0|
+  EXPORT |keyboardWEIcolumn2row1|
+  EXPORT |keyboardWEIcolumn2row2|
+  EXPORT |keyboardWEIcolumn2row3|
+  EXPORT |keyboardWEIcolumn2row4|
+  EXPORT |keyboardWEIcolumn2row5|
+  EXPORT |keyboardWEIcolumn2row6|
+  EXPORT |keyboardWEIcolumn2row7|
+  EXPORT |keyboardWEIcolumn3row0|
+  EXPORT |keyboardWEIcolumn3row1|
+  EXPORT |keyboardWEIcolumn3row2|
+  EXPORT |keyboardWEIcolumn3row3|
+  EXPORT |keyboardWEIcolumn3row4|
+  EXPORT |keyboardWEIcolumn3row5|
+  EXPORT |keyboardWEIcolumn3row6|
+  EXPORT |keyboardWEIcolumn3row7|
+  EXPORT |keyboardWEIcolumn4row0|
+  EXPORT |keyboardWEIcolumn4row1|
+  EXPORT |keyboardWEIcolumn4row2|
+  EXPORT |keyboardWEIcolumn4row3|
+  EXPORT |keyboardWEIcolumn4row4|
+  EXPORT |keyboardWEIcolumn4row5|
+  EXPORT |keyboardWEIcolumn4row6|
+  EXPORT |keyboardWEIcolumn4row7|
+  EXPORT |keyboardWEIcolumn5row0|
+  EXPORT |keyboardWEIcolumn5row1|
+  EXPORT |keyboardWEIcolumn5row2|
+  EXPORT |keyboardWEIcolumn5row3|
+  EXPORT |keyboardWEIcolumn5row4|
+  EXPORT |keyboardWEIcolumn5row5|
+  EXPORT |keyboardWEIcolumn5row6|
+  EXPORT |keyboardWEIcolumn5row7|
+  EXPORT |keyboardWEIcolumn6row0|
+  EXPORT |keyboardWEIcolumn6row1|
+  EXPORT |keyboardWEIcolumn6row2|
+  EXPORT |keyboardWEIcolumn6row3|
+  EXPORT |keyboardWEIcolumn6row4|
+  EXPORT |keyboardWEIcolumn6row5|
+  EXPORT |keyboardWEIcolumn6row6|
+  EXPORT |keyboardWEIcolumn6row7|
+  EXPORT |keyboardWEIcolumn7row0|
+  EXPORT |keyboardWEIcolumn7row1|
+  EXPORT |keyboardWEIcolumn7row2|
+  EXPORT |keyboardWEIcolumn7row3|
+  EXPORT |keyboardWEIcolumn7row4|
+  EXPORT |keyboardWEIcolumn7row5|
+  EXPORT |keyboardWEIcolumn7row6|
+  EXPORT |keyboardWEIcolumn7row7|
+  EXPORT |keyboardWEIcolumn8row0|
+  EXPORT |keyboardWEIcolumn8row1|
+  EXPORT |keyboardWEIcolumn8row2|
+  EXPORT |keyboardWEIcolumn8row3|
+  EXPORT |keyboardWEIcolumn8row4|
+  EXPORT |keyboardWEIcolumn8row5|
+  EXPORT |keyboardWEIcolumn8row6|
+  EXPORT |keyboardWEIcolumn8row7|
+  EXPORT |keyboardWEIcolumn9row0|
+  EXPORT |keyboardWEIcolumn9row1|
+  EXPORT |keyboardWEIcolumn9row2|
+  EXPORT |keyboardWEIcolumn9row3|
+  EXPORT |keyboardWEIcolumn9row4|
+  EXPORT |keyboardWEIcolumn9row5|
+  EXPORT |keyboardWEIcolumn9row6|
+  EXPORT |keyboardWEIcolumn9row7|
+  EXPORT |keyboardWEIcolumn10row0|
+  EXPORT |keyboardWEIcolumn10row1|
+  EXPORT |keyboardWEIcolumn10row2|
+  EXPORT |keyboardWEIcolumn10row3|
+  EXPORT |keyboardWEIcolumn10row4|
+  EXPORT |keyboardWEIcolumn10row5|
+  EXPORT |keyboardWEIcolumn10row6|
+  EXPORT |keyboardWEIcolumn10row7|
+  EXPORT |keyboardWEIcolumn11row0|
+  EXPORT |keyboardWEIcolumn11row1|
+  EXPORT |keyboardWEIcolumn11row2|
+  EXPORT |keyboardWEIcolumn11row3|
+  EXPORT |keyboardWEIcolumn11row4|
+  EXPORT |keyboardWEIcolumn11row5|
+  EXPORT |keyboardWEIcolumn11row6|
+  EXPORT |keyboardWEIcolumn11row7|
+  EXPORT |keyboardWEIcolumn12row0|
+  EXPORT |keyboardWEIcolumn12row1|
+  EXPORT |keyboardWEIcolumn12row2|
+  EXPORT |keyboardWEIcolumn12row3|
+  EXPORT |keyboardWEIcolumn12row4|
+  EXPORT |keyboardWEIcolumn12row5|
+  EXPORT |keyboardWEIcolumn12row6|
+  EXPORT |keyboardWEIcolumn12row7|
+  EXPORT |keyboardWEcolumn0|
+  EXPORT |keyboardWEcolumn1|
+  EXPORT |keyboardWEcolumn2|
+  EXPORT |keyboardWEcolumn3|
+  EXPORT |keyboardWEcolumn4|
+  EXPORT |keyboardWEcolumn5|
+  EXPORT |keyboardWEcolumn6|
+  EXPORT |keyboardWEcolumn7|
+  EXPORT |keyboardWEcolumn8|
+  EXPORT |keyboardWEcolumn9|
+  EXPORT |keyboardWEcolumn10|
+  EXPORT |keyboardWEcolumn11|
+  EXPORT |keyboardWEcolumn12|
+  EXPORT |keyboardCA2nocolumn|
+  EXPORT |keyboardCA2WEInocolumn|
+  EXPORT |keyboardCA2WEnocolumn|
+  EXPORT |keyboardnocolumn|
+  EXPORT |keyboardWEInocolumn|
+  EXPORT |keyboardWEnocolumn|
+  EXPORT |keyboardlownop|
+  EXPORT |keyboardmaxnop|
+  EXPORT |keyboardWEnop|
+  EXPORT |keyboardbridge|
+
+  MACRO
+  KEYBOARD_CA2_COLUMN_N $n
+  LDRB r2,[r0,#:INDEX:HOST_KEYSTATUS+$n]
+  CMP r2,#1
+  IF PlaceKeyboardStateInRegister
+  SUBLE r8,r8,#KEYBOARDCA2FLAG:SHL:2
+  ELSE
+  SUBLE r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  MOVGT pc,lr
+  B systemviaunsetca2
+  MEND
+
+  MACRO
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M $n,$m
+  LDRB r2,[r0,#:INDEX:HOST_KEYSTATUS+$n]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,#1:SHL:$m
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  CMP r2,#1
+  IF PlaceKeyboardStateInRegister
+  SUBLE r8,r8,#KEYBOARDCA2FLAG:SHL:2
+  ELSE
+  SUBLE r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  MOVGT pc,lr
+  B systemviaunsetca2
+  MEND
+
+  MACRO
+  KEYBOARD_CA2_WE_COLUMN_N $n
+  LDRB r2,[r0,#:INDEX:HOST_KEYSTATUS+$n]
+  CMP r2,#1
+  IF PlaceKeyboardStateInRegister
+  SUBLE r8,r8,#KEYBOARDCA2FLAG:SHL:2
+  ELSE
+  SUBLE r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  MOVGT pc,lr
+  B systemviaunsetca2
+  MEND
+
+  MACRO
+  KEYBOARD_COLUMN_N $n
+  LDRB r2,[r0,#:INDEX:HOST_KEYSTATUS+$n]
+  CMP r2,#1
+  IF PlaceKeyboardStateInRegister
+  ADDGT r8,r8,#KEYBOARDCA2FLAG:SHL:2
+  ELSE
+  ADDGT r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  MOVLE pc,lr
+  B systemviasetca2
+  MEND
+
+  MACRO
+  KEYBOARD_WEI_COLUMN_N_ROW_M $n,$m
+  LDRB r2,[r0,#:INDEX:HOST_KEYSTATUS+$n]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,#1:SHL:$m
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  CMP r2,#1
+  IF PlaceKeyboardStateInRegister
+  ADDGT r8,r8,#KEYBOARDCA2FLAG:SHL:2
+  ELSE
+  ADDGT r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  MOVLE pc,lr
+  B systemviasetca2
+  MEND
+
+  MACRO
+  KEYBOARD_WE_COLUMN_N $n
+  LDRB r2,[r0,#:INDEX:HOST_KEYSTATUS+$n]
+  CMP r2,#1
+  IF PlaceKeyboardStateInRegister
+  ADDGT r8,r8,#KEYBOARDCA2FLAG:SHL:2
+  ELSE
+  ADDGT r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  MOVLE pc,lr
+  B systemviasetca2
+  MEND
+
+|keyboardCA2column0|
+  KEYBOARD_CA2_COLUMN_N 0
+
+|keyboardCA2column1|
+  KEYBOARD_CA2_COLUMN_N 1
+
+|keyboardCA2column2|
+  KEYBOARD_CA2_COLUMN_N 2
+
+|keyboardCA2column3|
+  KEYBOARD_CA2_COLUMN_N 3
+
+|keyboardCA2column4|
+  KEYBOARD_CA2_COLUMN_N 4
+
+|keyboardCA2column5|
+  KEYBOARD_CA2_COLUMN_N 5
+
+|keyboardCA2column6|
+  KEYBOARD_CA2_COLUMN_N 6
+
+|keyboardCA2column7|
+  KEYBOARD_CA2_COLUMN_N 7
+
+|keyboardCA2column8|
+  KEYBOARD_CA2_COLUMN_N 8
+
+|keyboardCA2column9|
+  KEYBOARD_CA2_COLUMN_N 9
+
+|keyboardCA2column10|
+  KEYBOARD_CA2_COLUMN_N 10
+
+|keyboardCA2column11|
+  KEYBOARD_CA2_COLUMN_N 11
+
+|keyboardCA2column12|
+  KEYBOARD_CA2_COLUMN_N 12
+
+|keyboardCA2WEIcolumn0row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 0,0
+
+|keyboardCA2WEIcolumn0row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 0,1
+
+|keyboardCA2WEIcolumn0row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 0,2
+
+|keyboardCA2WEIcolumn0row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 0,3
+
+|keyboardCA2WEIcolumn0row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 0,4
+
+|keyboardCA2WEIcolumn0row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 0,5
+
+|keyboardCA2WEIcolumn0row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 0,6
+
+|keyboardCA2WEIcolumn0row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 0,7
+
+|keyboardCA2WEIcolumn1row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 1,0
+
+|keyboardCA2WEIcolumn1row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 1,1
+
+|keyboardCA2WEIcolumn1row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 1,2
+
+|keyboardCA2WEIcolumn1row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 1,3
+
+|keyboardCA2WEIcolumn1row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 1,4
+
+|keyboardCA2WEIcolumn1row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 1,5
+
+|keyboardCA2WEIcolumn1row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 1,6
+
+|keyboardCA2WEIcolumn1row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 1,7
+
+|keyboardCA2WEIcolumn2row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 2,0
+
+|keyboardCA2WEIcolumn2row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 2,1
+
+|keyboardCA2WEIcolumn2row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 2,2
+
+|keyboardCA2WEIcolumn2row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 2,3
+
+|keyboardCA2WEIcolumn2row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 2,4
+
+|keyboardCA2WEIcolumn2row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 2,5
+
+|keyboardCA2WEIcolumn2row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 2,6
+
+|keyboardCA2WEIcolumn2row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 2,7
+
+|keyboardCA2WEIcolumn3row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 3,0
+
+|keyboardCA2WEIcolumn3row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 3,1
+
+|keyboardCA2WEIcolumn3row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 3,2
+
+|keyboardCA2WEIcolumn3row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 3,3
+
+|keyboardCA2WEIcolumn3row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 3,4
+
+|keyboardCA2WEIcolumn3row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 3,5
+
+|keyboardCA2WEIcolumn3row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 3,6
+
+|keyboardCA2WEIcolumn3row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 3,7
+
+|keyboardCA2WEIcolumn4row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 4,0
+
+|keyboardCA2WEIcolumn4row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 4,1
+
+|keyboardCA2WEIcolumn4row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 4,2
+
+|keyboardCA2WEIcolumn4row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 4,3
+
+|keyboardCA2WEIcolumn4row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 4,4
+
+|keyboardCA2WEIcolumn4row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 4,5
+
+|keyboardCA2WEIcolumn4row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 4,6
+
+|keyboardCA2WEIcolumn4row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 4,7
+
+|keyboardCA2WEIcolumn5row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 5,0
+
+|keyboardCA2WEIcolumn5row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 5,1
+
+|keyboardCA2WEIcolumn5row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 5,2
+
+|keyboardCA2WEIcolumn5row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 5,3
+
+|keyboardCA2WEIcolumn5row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 5,4
+
+|keyboardCA2WEIcolumn5row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 5,5
+
+|keyboardCA2WEIcolumn5row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 5,6
+
+|keyboardCA2WEIcolumn5row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 5,7
+
+|keyboardCA2WEIcolumn6row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 6,0
+
+|keyboardCA2WEIcolumn6row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 6,1
+
+|keyboardCA2WEIcolumn6row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 6,2
+
+|keyboardCA2WEIcolumn6row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 6,3
+
+|keyboardCA2WEIcolumn6row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 6,4
+
+|keyboardCA2WEIcolumn6row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 6,5
+
+|keyboardCA2WEIcolumn6row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 6,6
+
+|keyboardCA2WEIcolumn6row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 6,7
+
+|keyboardCA2WEIcolumn7row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 7,0
+
+|keyboardCA2WEIcolumn7row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 7,1
+
+|keyboardCA2WEIcolumn7row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 7,2
+
+|keyboardCA2WEIcolumn7row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 7,3
+
+|keyboardCA2WEIcolumn7row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 7,4
+
+|keyboardCA2WEIcolumn7row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 7,5
+
+|keyboardCA2WEIcolumn7row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 7,6
+
+|keyboardCA2WEIcolumn7row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 7,7
+
+|keyboardCA2WEIcolumn8row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 8,0
+
+|keyboardCA2WEIcolumn8row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 8,1
+
+|keyboardCA2WEIcolumn8row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 8,2
+
+|keyboardCA2WEIcolumn8row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 8,3
+
+|keyboardCA2WEIcolumn8row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 8,4
+
+|keyboardCA2WEIcolumn8row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 8,5
+
+|keyboardCA2WEIcolumn8row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 8,6
+
+|keyboardCA2WEIcolumn8row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 8,7
+
+|keyboardCA2WEIcolumn9row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 9,0
+
+|keyboardCA2WEIcolumn9row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 9,1
+
+|keyboardCA2WEIcolumn9row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 9,2
+
+|keyboardCA2WEIcolumn9row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 9,3
+
+|keyboardCA2WEIcolumn9row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 9,4
+
+|keyboardCA2WEIcolumn9row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 9,5
+
+|keyboardCA2WEIcolumn9row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 9,6
+
+|keyboardCA2WEIcolumn9row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 9,7
+
+|keyboardCA2WEIcolumn10row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 10,0
+
+|keyboardCA2WEIcolumn10row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 10,1
+
+|keyboardCA2WEIcolumn10row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 10,2
+
+|keyboardCA2WEIcolumn10row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 10,3
+
+|keyboardCA2WEIcolumn10row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 10,4
+
+|keyboardCA2WEIcolumn10row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 10,5
+
+|keyboardCA2WEIcolumn10row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 10,6
+
+|keyboardCA2WEIcolumn10row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 10,7
+
+|keyboardCA2WEIcolumn11row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 11,0
+
+|keyboardCA2WEIcolumn11row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 11,1
+
+|keyboardCA2WEIcolumn11row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 11,2
+
+|keyboardCA2WEIcolumn11row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 11,3
+
+|keyboardCA2WEIcolumn11row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 11,4
+
+|keyboardCA2WEIcolumn11row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 11,5
+
+|keyboardCA2WEIcolumn11row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 11,6
+
+|keyboardCA2WEIcolumn11row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 11,7
+
+|keyboardCA2WEIcolumn12row0|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 12,0
+
+|keyboardCA2WEIcolumn12row1|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 12,1
+
+|keyboardCA2WEIcolumn12row2|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 12,2
+
+|keyboardCA2WEIcolumn12row3|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 12,3
+
+|keyboardCA2WEIcolumn12row4|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 12,4
+
+|keyboardCA2WEIcolumn12row5|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 12,5
+
+|keyboardCA2WEIcolumn12row6|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 12,6
+
+|keyboardCA2WEIcolumn12row7|
+  KEYBOARD_CA2_WEI_COLUMN_N_ROW_M 12,7
+
+|keyboardCA2WEcolumn0|
+  KEYBOARD_CA2_WE_COLUMN_N 0
+
+|keyboardCA2WEcolumn1|
+  KEYBOARD_CA2_WE_COLUMN_N 1
+
+|keyboardCA2WEcolumn2|
+  KEYBOARD_CA2_WE_COLUMN_N 2
+
+|keyboardCA2WEcolumn3|
+  KEYBOARD_CA2_WE_COLUMN_N 3
+
+|keyboardCA2WEcolumn4|
+  KEYBOARD_CA2_WE_COLUMN_N 4
+
+|keyboardCA2WEcolumn5|
+  KEYBOARD_CA2_WE_COLUMN_N 5
+
+|keyboardCA2WEcolumn6|
+  KEYBOARD_CA2_WE_COLUMN_N 6
+
+|keyboardCA2WEcolumn7|
+  KEYBOARD_CA2_WE_COLUMN_N 7
+
+|keyboardCA2WEcolumn8|
+  KEYBOARD_CA2_WE_COLUMN_N 8
+
+|keyboardCA2WEcolumn9|
+  KEYBOARD_CA2_WE_COLUMN_N 9
+
+|keyboardCA2WEcolumn10|
+  KEYBOARD_CA2_WE_COLUMN_N 10
+
+|keyboardCA2WEcolumn11|
+  KEYBOARD_CA2_WE_COLUMN_N 11
+
+|keyboardCA2WEcolumn12|
+  KEYBOARD_CA2_WE_COLUMN_N 12
+
+|keyboardcolumn0|
+  KEYBOARD_COLUMN_N 0
+
+|keyboardcolumn1|
+  KEYBOARD_COLUMN_N 1
+
+|keyboardcolumn2|
+  KEYBOARD_COLUMN_N 2
+
+|keyboardcolumn3|
+  KEYBOARD_COLUMN_N 3
+
+|keyboardcolumn4|
+  KEYBOARD_COLUMN_N 4
+
+|keyboardcolumn5|
+  KEYBOARD_COLUMN_N 5
+
+|keyboardcolumn6|
+  KEYBOARD_COLUMN_N 6
+
+|keyboardcolumn7|
+  KEYBOARD_COLUMN_N 7
+
+|keyboardcolumn8|
+  KEYBOARD_COLUMN_N 8
+
+|keyboardcolumn9|
+  KEYBOARD_COLUMN_N 9
+
+|keyboardcolumn10|
+  KEYBOARD_COLUMN_N 10
+
+|keyboardcolumn11|
+  KEYBOARD_COLUMN_N 11
+
+|keyboardcolumn12|
+  KEYBOARD_COLUMN_N 12
+
+|keyboardWEIcolumn0row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 0,0
+
+|keyboardWEIcolumn0row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 0,1
+
+|keyboardWEIcolumn0row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 0,2
+
+|keyboardWEIcolumn0row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 0,3
+
+|keyboardWEIcolumn0row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 0,4
+
+|keyboardWEIcolumn0row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 0,5
+
+|keyboardWEIcolumn0row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 0,6
+
+|keyboardWEIcolumn0row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 0,7
+
+|keyboardWEIcolumn1row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 1,0
+
+|keyboardWEIcolumn1row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 1,1
+
+|keyboardWEIcolumn1row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 1,2
+
+|keyboardWEIcolumn1row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 1,3
+
+|keyboardWEIcolumn1row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 1,4
+
+|keyboardWEIcolumn1row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 1,5
+
+|keyboardWEIcolumn1row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 1,6
+
+|keyboardWEIcolumn1row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 1,7
+
+|keyboardWEIcolumn2row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 2,0
+
+|keyboardWEIcolumn2row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 2,1
+
+|keyboardWEIcolumn2row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 2,2
+
+|keyboardWEIcolumn2row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 2,3
+
+|keyboardWEIcolumn2row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 2,4
+
+|keyboardWEIcolumn2row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 2,5
+
+|keyboardWEIcolumn2row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 2,6
+
+|keyboardWEIcolumn2row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 2,7
+
+|keyboardWEIcolumn3row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 3,0
+
+|keyboardWEIcolumn3row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 3,1
+
+|keyboardWEIcolumn3row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 3,2
+
+|keyboardWEIcolumn3row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 3,3
+
+|keyboardWEIcolumn3row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 3,4
+
+|keyboardWEIcolumn3row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 3,5
+
+|keyboardWEIcolumn3row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 3,6
+
+|keyboardWEIcolumn3row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 3,7
+
+|keyboardWEIcolumn4row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 4,0
+
+|keyboardWEIcolumn4row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 4,1
+
+|keyboardWEIcolumn4row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 4,2
+
+|keyboardWEIcolumn4row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 4,3
+
+|keyboardWEIcolumn4row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 4,4
+
+|keyboardWEIcolumn4row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 4,5
+
+|keyboardWEIcolumn4row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 4,6
+
+|keyboardWEIcolumn4row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 4,7
+
+|keyboardWEIcolumn5row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 5,0
+
+|keyboardWEIcolumn5row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 5,1
+
+|keyboardWEIcolumn5row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 5,2
+
+|keyboardWEIcolumn5row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 5,3
+
+|keyboardWEIcolumn5row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 5,4
+
+|keyboardWEIcolumn5row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 5,5
+
+|keyboardWEIcolumn5row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 5,6
+
+|keyboardWEIcolumn5row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 5,7
+
+|keyboardWEIcolumn6row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 6,0
+
+|keyboardWEIcolumn6row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 6,1
+
+|keyboardWEIcolumn6row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 6,2
+
+|keyboardWEIcolumn6row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 6,3
+
+|keyboardWEIcolumn6row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 6,4
+
+|keyboardWEIcolumn6row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 6,5
+
+|keyboardWEIcolumn6row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 6,6
+
+|keyboardWEIcolumn6row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 6,7
+
+|keyboardWEIcolumn7row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 7,0
+
+|keyboardWEIcolumn7row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 7,1
+
+|keyboardWEIcolumn7row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 7,2
+
+|keyboardWEIcolumn7row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 7,3
+
+|keyboardWEIcolumn7row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 7,4
+
+|keyboardWEIcolumn7row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 7,5
+
+|keyboardWEIcolumn7row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 7,6
+
+|keyboardWEIcolumn7row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 7,7
+
+|keyboardWEIcolumn8row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 8,0
+
+|keyboardWEIcolumn8row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 8,1
+
+|keyboardWEIcolumn8row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 8,2
+
+|keyboardWEIcolumn8row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 8,3
+
+|keyboardWEIcolumn8row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 8,4
+
+|keyboardWEIcolumn8row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 8,5
+
+|keyboardWEIcolumn8row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 8,6
+
+|keyboardWEIcolumn8row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 8,7
+
+|keyboardWEIcolumn9row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 9,0
+
+|keyboardWEIcolumn9row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 9,1
+
+|keyboardWEIcolumn9row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 9,2
+
+|keyboardWEIcolumn9row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 9,3
+
+|keyboardWEIcolumn9row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 9,4
+
+|keyboardWEIcolumn9row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 9,5
+
+|keyboardWEIcolumn9row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 9,6
+
+|keyboardWEIcolumn9row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 9,7
+
+|keyboardWEIcolumn10row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 10,0
+
+|keyboardWEIcolumn10row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 10,1
+
+|keyboardWEIcolumn10row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 10,2
+
+|keyboardWEIcolumn10row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 10,3
+
+|keyboardWEIcolumn10row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 10,4
+
+|keyboardWEIcolumn10row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 10,5
+
+|keyboardWEIcolumn10row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 10,6
+
+|keyboardWEIcolumn10row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 10,7
+
+|keyboardWEIcolumn11row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 11,0
+
+|keyboardWEIcolumn11row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 11,1
+
+|keyboardWEIcolumn11row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 11,2
+
+|keyboardWEIcolumn11row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 11,3
+
+|keyboardWEIcolumn11row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 11,4
+
+|keyboardWEIcolumn11row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 11,5
+
+|keyboardWEIcolumn11row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 11,6
+
+|keyboardWEIcolumn11row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 11,7
+
+|keyboardWEIcolumn12row0|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 12,0
+
+|keyboardWEIcolumn12row1|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 12,1
+
+|keyboardWEIcolumn12row2|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 12,2
+
+|keyboardWEIcolumn12row3|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 12,3
+
+|keyboardWEIcolumn12row4|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 12,4
+
+|keyboardWEIcolumn12row5|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 12,5
+
+|keyboardWEIcolumn12row6|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 12,6
+
+|keyboardWEIcolumn12row7|
+  KEYBOARD_WEI_COLUMN_N_ROW_M 12,7
+
+|keyboardWEcolumn0|
+  KEYBOARD_WE_COLUMN_N 0
+
+|keyboardWEcolumn1|
+  KEYBOARD_WE_COLUMN_N 1
+
+|keyboardWEcolumn2|
+  KEYBOARD_WE_COLUMN_N 2
+
+|keyboardWEcolumn3|
+  KEYBOARD_WE_COLUMN_N 3
+
+|keyboardWEcolumn4|
+  KEYBOARD_WE_COLUMN_N 4
+
+|keyboardWEcolumn5|
+  KEYBOARD_WE_COLUMN_N 5
+
+|keyboardWEcolumn6|
+  KEYBOARD_WE_COLUMN_N 6
+
+|keyboardWEcolumn7|
+  KEYBOARD_WE_COLUMN_N 7
+
+|keyboardWEcolumn8|
+  KEYBOARD_WE_COLUMN_N 8
+
+|keyboardWEcolumn9|
+  KEYBOARD_WE_COLUMN_N 9
+
+|keyboardWEcolumn10|
+  KEYBOARD_WE_COLUMN_N 10
+
+|keyboardWEcolumn11|
+  KEYBOARD_WE_COLUMN_N 11
+
+|keyboardWEcolumn12|
+  KEYBOARD_WE_COLUMN_N 12
+
+|keyboardCA2nocolumn|
+  IF PlaceKeyboardStateInRegister
+  SUB r8,r8,#KEYBOARDCA2FLAG:SHL:2
+  ELSE
+  SUB r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  B systemviaunsetca2
+
+|keyboardCA2WEInocolumn|
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  BIC r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  IF PlaceKeyboardStateInRegister
+  SUB r8,r8,#KEYBOARDCA2FLAG:SHL:2
+  ELSE
+  SUB r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  B systemviaunsetca2
+
+|keyboardCA2WEnocolumn|
+  IF PlaceKeyboardStateInRegister
+  SUB r8,r8,#KEYBOARDCA2FLAG:SHL:2
+  ELSE
+  SUB r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  B systemviaunsetca2
+
+|keyboardWEInocolumn|
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  BIC r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+|keyboardWEnocolumn|
+|keyboardlownop|
+|keyboardnocolumn|
+  IF :LNOT:PlaceKeyboardStateInRegister
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  MOV pc,lr
+
+|keyboardmaxnop|
+  IF PlaceKeyboardStateInRegister
+  SUB r8,r8,#32:SHL:2
+  ELSE
+  SUB r1,r1,#32:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  MOV pc,lr
+
+|keyboardWEnop|
+  IF PlaceKeyboardStateInRegister
+  SUB r8,r8,#2:SHL:2
+  ELSE
+  SUB r1,r1,#2:SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  MOV pc,lr
+
+|keyboardbridge|
+  IF PlaceKeyboardStateInRegister
+  STMFD sp!,{r8,lr}
+  ADD lr,pc,#8-4
+  SUB r8,r1,#KEYBOARDBRIDGEFLAG:SHL:2
+  LDR pc, [r8, #-4]
+  STR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  LDMFD sp!,{r8,pc}
+  ELSE
+  SUB r1,r1,#KEYBOARDBRIDGEFLAG:SHL:2
+  LDR pc, [r1, #-4]
+  ENDIF
+
+  END

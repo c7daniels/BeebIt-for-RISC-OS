@@ -3685,9 +3685,7 @@ void videoscanline(void)
         video_offset = 0;
       }
 
-      hmap->A_sysvia.ifr |= 0x02; /*CA1 flag*/
-      systemviasetirq();
-      hmap->A_sysvia.ira = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) + (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
+      systemviasetca1(hmap);
 
       r6502startyield(cmap);
 

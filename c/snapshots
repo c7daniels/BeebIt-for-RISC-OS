@@ -171,12 +171,10 @@ void snapshotload(FILE *hfile)
   hmap->A_sysvia.ifr =readhdr.SysVIAIFR;
 //      hmap->A_sysvia.ier = cbuffer[1];
   hmap->A_sysvia.ier =readhdr.SysVIAIER;
-      systemviasetirq();
 //      hmap->A_usrvia.ifr = cbuffer[2];
   hmap->A_usrvia.ifr =readhdr.UserVIAIFR;
 //      hmap->A_usrvia.ier = cbuffer[3];
   hmap->A_usrvia.ier =readhdr.UserVIAIER;
-      userviasetirq();
 
       /*unused*/
 //     fread(cbuffer,1,4,hfile); /*80*/

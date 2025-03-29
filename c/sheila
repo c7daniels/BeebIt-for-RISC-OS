@@ -400,13 +400,40 @@ void sheilareset(void)
       cyclestogo_bridge_mask = 0xFFFFFF0EU;
     }
 
+    if (inregisterflags & KEYBOARD_STATE_IN_REGISTER_FLAG)
+    {
+      for (i=0; i<0x100; i++)
+      {
+        if (cyclestogo_bridge_mask & (1<<(i>>3)))
+        {
+          readhigh[i] = h6502keyboardstatecyclestogobridgeread;
+          writehigh[i] = h6502keyboardstatecyclestogobridgewrite;
+        }
+        else
+        {
+          readhigh[i] = h6502keyboardstatebridgeread;
+          writehigh[i] = h6502keyboardstatebridgewrite;
+        }
+      }
+    }
+    else
+    {
+      for (i=0; i<0x100; i++)
+      {
+        if (cyclestogo_bridge_mask & (1<<(i>>3)))
+        {
+          readhigh[i] = h6502cyclestogobridgeread;
+          writehigh[i] = h6502cyclestogobridgewrite;
+        }
+      }
+    }
+  }
+  else if (inregisterflags & KEYBOARD_STATE_IN_REGISTER_FLAG)
+  {
     for (i=0; i<0x100; i++)
     {
-      if (cyclestogo_bridge_mask & (1<<(i>>3)))
-      {
-        readhigh[i] = h6502cyclestogobridgeread;
-        writehigh[i] = h6502cyclestogobridgewrite;
-      }
+      readhigh[i] = h6502keyboardstatebridgeread;
+      writehigh[i] = h6502keyboardstatebridgewrite;
     }
   }
 

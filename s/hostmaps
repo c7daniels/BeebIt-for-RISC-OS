@@ -128,10 +128,15 @@
   EXPORT |h6502getplacementinregisters|
   EXPORT |h6502cyclestogobridgeread|
   EXPORT |h6502cyclestogobridgewrite|
+  EXPORT |h6502keyboardstatebridgeread|
+  EXPORT |h6502keyboardstatebridgewrite|
+  EXPORT |h6502keyboardstatecyclestogobridgeread|
+  EXPORT |h6502keyboardstatecyclestogobridgewrite|
 
   EXPORT |hostmapadvancetimers|
   EXPORT |hostmapexecute|
 
+  ASSERT :INDEX:HOST_KEYBOARD_STATE == :INDEX:R6502ZONE_KEYBOARD_STATE
   ASSERT :INDEX:HOST_M_SHIFT == :INDEX:R6502ZONE_M_SHIFT
   ASSERT :INDEX:HOST_M == :INDEX:R6502ZONE_M
 
@@ -604,7 +609,11 @@ h6502writemFD00
   LDR pc,[r3,r1,LSR #14]
 
 |h6502getplacementinregisters|
-  IF PlaceCyclesToGoInRegister
+  IF PlaceKeyboardStateInRegister:LAND:PlaceCyclesToGoInRegister
+  MOV r0,#KEYBOARD_STATE_IN_REGISTER_FLAG+CYCLES_TO_GO_IN_REGISTER_FLAG
+  ELIF PlaceKeyboardStateInRegister
+  MOV r0,#KEYBOARD_STATE_IN_REGISTER_FLAG
+  ELIF PlaceCyclesToGoInRegister
   MOV r0,#CYCLES_TO_GO_IN_REGISTER_FLAG
   ELSE
   MOV r0,#0
@@ -634,6 +643,82 @@ h6502writemFD00
   LDR pc,[r3,r1,LSR #14]
   IF PlaceCyclesToGoInRegister
   LDR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  LDR pc, [sp], #4
+  ENDIF
+
+|h6502keyboardstatebridgeread|
+  IF PlaceKeyboardStateInRegister
+  ADD r8,r8,#KEYBOARDBRIDGEFLAG:SHL:2
+  STR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  STR lr,[sp, #-4]!
+  ADD lr,pc,#8-4
+  ENDIF
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDREADHIGH
+  LDR pc,[r3,r1,LSR #14]
+  IF PlaceKeyboardStateInRegister
+  LDR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  LDR pc, [sp], #4
+  ENDIF
+
+|h6502keyboardstatebridgewrite|
+  IF PlaceKeyboardStateInRegister
+  ADD r8,r8,#KEYBOARDBRIDGEFLAG:SHL:2
+  STR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  STR lr,[sp, #-4]!
+  ADD lr,pc,#8-4
+  ENDIF
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDWRITEHIGH
+  LDR pc,[r3,r1,LSR #14]
+  IF PlaceKeyboardStateInRegister
+  LDR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  LDR pc, [sp], #4
+  ENDIF
+
+|h6502keyboardstatecyclestogobridgeread|
+  IF PlaceKeyboardStateInRegister
+  ADD r8,r8,#KEYBOARDBRIDGEFLAG:SHL:2
+  STR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  IF PlaceCyclesToGoInRegister
+  STR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  ENDIF
+  IF PlaceCyclesToGoInRegister:LOR:PlaceKeyboardStateInRegister
+  STR lr,[sp, #-4]!
+  ADD lr,pc,#8-4
+  ENDIF
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDREADHIGH
+  LDR pc,[r3,r1,LSR #14]
+  IF PlaceKeyboardStateInRegister
+  LDR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  IF PlaceCyclesToGoInRegister
+  LDR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  ENDIF
+  IF PlaceCyclesToGoInRegister:LOR:PlaceKeyboardStateInRegister
+  LDR pc, [sp], #4
+  ENDIF
+
+|h6502keyboardstatecyclestogobridgewrite|
+  IF PlaceKeyboardStateInRegister
+  ADD r8,r8,#KEYBOARDBRIDGEFLAG:SHL:2
+  STR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  IF PlaceCyclesToGoInRegister
+  STR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  ENDIF
+  IF PlaceCyclesToGoInRegister:LOR:PlaceKeyboardStateInRegister
+  STR lr,[sp, #-4]!
+  ADD lr,pc,#8-4
+  ENDIF
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDWRITEHIGH
+  LDR pc,[r3,r1,LSR #14]
+  IF PlaceKeyboardStateInRegister
+  LDR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
+  IF PlaceCyclesToGoInRegister
+  LDR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  ENDIF
+  IF PlaceCyclesToGoInRegister:LOR:PlaceKeyboardStateInRegister
   LDR pc, [sp], #4
   ENDIF
 
@@ -759,12 +844,19 @@ advancetimers8
   MOV pc,lr
 
 |hostmapexecute|
-  IF PlaceCyclesToGoInRegister
+  IF PlaceKeyboardStateInRegister:LAND:PlaceCyclesToGoInRegister
+  STMFD sp!,{r8-r9,lr}
+  ELIF PlaceKeyboardStateInRegister
+  STMFD sp!,{r8,lr}
+  ELIF PlaceCyclesToGoInRegister
   STMFD sp!,{r9,lr}
   ELSE
   STR lr,[sp, #-4]!
   ENDIF
   LDR r0,=hostmap
+  IF PlaceKeyboardStateInRegister
+  LDR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
   IF PlaceCyclesToGoInRegister
   LDR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
   ENDIF
@@ -786,10 +878,17 @@ hostmapexecute1
   LDRB r2,[r0,#:INDEX:HOST_YIELD]
   TST r2,r2
   BEQ hostmapexecute1
+  IF PlaceKeyboardStateInRegister
+  STR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  ENDIF
   IF PlaceCyclesToGoInRegister
   STR r9,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
   ENDIF
-  IF PlaceCyclesToGoInRegister
+  IF PlaceKeyboardStateInRegister:LAND:PlaceCyclesToGoInRegister
+  LDMFD sp!,{r8-r9,pc}
+  ELIF PlaceKeyboardStateInRegister
+  LDMFD sp!,{r8,pc}
+  ELIF PlaceCyclesToGoInRegister
   LDMFD sp!,{r9,pc}
   ELSE
   LDR pc, [sp], #4

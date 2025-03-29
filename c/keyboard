@@ -2,30 +2,28 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2004
+ * (C) Copyright Michael J Foot, 1998-2025
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Cycle-level keyboard emulation contributed by Crispian Daniels in 2025
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
 #include <stdio.h>
 #include <string.h>
 #include "hostmap.h"
-#include "6522sysvia.h"
 #include "beebit.h"
-#include "kernel.h"
 #include "riscos.h"
-#include "swis.h"
-
-int lrowscan;
-
-int keyboard_rowscan;
+#include "6522sysvia.h"
+#include "keyboard.h"
 
 extern void keyboardload(char *filename);
 
 void keyboardreset(void)
 {
   char cbuffer[128];
-  keyboard_rowscan = FALSE;
   strcpy(cbuffer,"<BeebIt$Dir>.KeyMaps.");
   strcat(cbuffer,beebit_keylayout);
   keyboardload(cbuffer);
@@ -44,6 +42,7 @@ void keyboardload(char *filename)
 
 void keyboardsetlinks(void)
 {
+  HOSTMAP* hmap = &hostmap;
   int i;
   switch (beebit_machinetype)
   {
@@ -52,58 +51,1722 @@ void keyboardsetlinks(void)
       for (i=0;i<8;i++)
       {
         if (beebit_links & (1 << (7-i)))
-          keystatus[0x02+i] = 0xFF;
+          hmap->keystatus[0x02+i] |= 1;
         else
-          keystatus[0x02+i] = 0x00;
+          hmap->keystatus[0x02+i] &= 0xFE;
       }
       break;
     case MACHINE_MASTER128:
     case MACHINE_COMPACT:
       for (i=0;i<8;i++)
-        keystatus[0x02+i] = 0x00;
+        hmap->keystatus[0x02+i] &= 0xFE;
       break;
   }
 }
 
-char keyboardread(char ORA, char DDRA)
+#ifdef BEEBIT_NO_ASM
+static inline R6502ZONEMAP* keyboardCA2columnN(R6502ZONEMAP *zmap, uintptr_t incremented_state, int n)
 {
-  int nkey, nrow, ncol, nr;
-  /*if (beebit_trace)
-    printf("KBR %X %X\n", ORA, DDRA);*/
-  nkey = (ORA & DDRA);
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+  uint8_t keybits;
 
-  /*nkey = ORA;*/
-  if ((nkey & 0x0F) >= 0x0A)
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  keybits = hmap->keystatus[n];
+
+  if (keybits <= 1)
   {
-    if ((nkey & 0x0F) == 0x0F)
-      lrowscan = TRUE;
+    hmap->keyboard_state -= KEYBOARDCA2FLAG;
+    systemviaunsetca2(hmap);
   }
-  else
-  {
-    if (lrowscan)
-    {
-      ncol = (nkey & 0x0F); /*b0-3*/
-      nrow = ((nkey & 0x70)>>4); /*b4-6*/
-      nr = 0;
-      while (nr < 8 AND keystatus[ncol] == 0)
-      {
-        ncol += 0x10;
-        nr++;
-      }
-      if (nr < 8)
-        systemviakeyca2();
-      lrowscan = FALSE;
-    }
-    /*else
-    {*/
-      if (keystatus[nkey])
-        nkey = (0x80 & ~DDRA) | nkey;
-      /*else
-        nkey = (0x00 & ~DDRA) | nkey;*/
-      /*nkey |= 0x80;*/
-    /*}*/
-  }
-  /*fprintf(htrace,"KB &%X\n",nkey);*/
-  return (nkey);
+
+  return zmap;
 }
 
+static inline R6502ZONEMAP* keyboardCA2WEIcolumnNrowM(R6502ZONEMAP *zmap, uintptr_t incremented_state, int n, int m)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+  uint8_t keybits;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  keybits = hmap->keystatus[n];
+
+  if (keybits & (1<<m))
+    hmap->A_sysvia.porta |= 0x80;
+  else
+    hmap->A_sysvia.porta &= ~0x80;
+
+  if (keybits <= 1)
+  {
+    hmap->keyboard_state -= KEYBOARDCA2FLAG;
+    systemviaunsetca2(hmap);
+  }
+
+  return zmap;
+}
+
+static inline R6502ZONEMAP* keyboardCA2WEcolumnN(R6502ZONEMAP *zmap, uintptr_t incremented_state, int n)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+  uint8_t keybits;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  keybits = hmap->keystatus[n];
+
+  if (keybits <= 1)
+  {
+    hmap->keyboard_state -= KEYBOARDCA2FLAG;
+    systemviaunsetca2(hmap);
+  }
+
+  return zmap;
+}
+
+static inline R6502ZONEMAP* keyboardcolumnN(R6502ZONEMAP *zmap, uintptr_t incremented_state, int n)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+  uint8_t keybits;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  keybits = hmap->keystatus[n];
+
+  if (keybits > 1)
+  {
+    hmap->keyboard_state += KEYBOARDCA2FLAG;
+    systemviasetca2(hmap);
+  }
+
+  return zmap;
+}
+
+static inline R6502ZONEMAP* keyboardWEIcolumnNrowM(R6502ZONEMAP *zmap, uintptr_t incremented_state, int n, int m)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+  uint8_t keybits;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  keybits = hmap->keystatus[n];
+
+  if (keybits & (1<<m))
+    hmap->A_sysvia.porta |= 0x80;
+  else
+    hmap->A_sysvia.porta &= ~0x80;
+
+  if (keybits > 1)
+  {
+    hmap->keyboard_state += KEYBOARDCA2FLAG;
+    systemviasetca2(hmap);
+  }
+
+  return zmap;
+}
+
+static inline R6502ZONEMAP* keyboardWEcolumnN(R6502ZONEMAP *zmap, uintptr_t incremented_state, int n)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+  uint8_t keybits;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  keybits = hmap->keystatus[n];
+
+  if (keybits > 1)
+  {
+    hmap->keyboard_state += KEYBOARDCA2FLAG;
+    systemviasetca2(hmap);
+  }
+
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardCA2column0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 0);
+}
+
+R6502ZONEMAP* keyboardCA2column1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 1);
+}
+
+R6502ZONEMAP* keyboardCA2column2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 2);
+}
+
+R6502ZONEMAP* keyboardCA2column3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 3);
+}
+
+R6502ZONEMAP* keyboardCA2column4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 4);
+}
+
+R6502ZONEMAP* keyboardCA2column5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 5);
+}
+
+R6502ZONEMAP* keyboardCA2column6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 6);
+}
+
+R6502ZONEMAP* keyboardCA2column7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 7);
+}
+
+R6502ZONEMAP* keyboardCA2column8(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 8);
+}
+
+R6502ZONEMAP* keyboardCA2column9(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 9);
+}
+
+R6502ZONEMAP* keyboardCA2column10(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 10);
+}
+
+R6502ZONEMAP* keyboardCA2column11(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 11);
+}
+
+R6502ZONEMAP* keyboardCA2column12(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2columnN(zmap, incremented_state, 12);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn0row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 0, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn0row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 0, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn0row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 0, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn0row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 0, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn0row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 0, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn0row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 0, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn0row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 0, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn0row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 0, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn1row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 1, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn1row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 1, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn1row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 1, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn1row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 1, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn1row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 1, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn1row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 1, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn1row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 1, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn1row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 1, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn2row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 2, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn2row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 2, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn2row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 2, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn2row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 2, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn2row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 2, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn2row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 2, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn2row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 2, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn2row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 2, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn3row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 3, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn3row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 3, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn3row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 3, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn3row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 3, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn3row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 3, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn3row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 3, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn3row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 3, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn3row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 3, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn4row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 4, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn4row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 4, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn4row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 4, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn4row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 4, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn4row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 4, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn4row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 4, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn4row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 4, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn4row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 4, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn5row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 5, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn5row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 5, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn5row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 5, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn5row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 5, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn5row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 5, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn5row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 5, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn5row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 5, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn5row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 5, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn6row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 6, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn6row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 6, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn6row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 6, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn6row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 6, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn6row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 6, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn6row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 6, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn6row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 6, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn6row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 6, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn7row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 7, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn7row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 7, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn7row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 7, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn7row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 7, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn7row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 7, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn7row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 7, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn7row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 7, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn7row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 7, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn8row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 8, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn8row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 8, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn8row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 8, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn8row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 8, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn8row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 8, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn8row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 8, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn8row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 8, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn8row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 8, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn9row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 9, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn9row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 9, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn9row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 9, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn9row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 9, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn9row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 9, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn9row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 9, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn9row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 9, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn9row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 9, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn10row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 10, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn10row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 10, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn10row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 10, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn10row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 10, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn10row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 10, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn10row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 10, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn10row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 10, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn10row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 10, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn11row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 11, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn11row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 11, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn11row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 11, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn11row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 11, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn11row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 11, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn11row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 11, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn11row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 11, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn11row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 11, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn12row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 12, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn12row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 12, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn12row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 12, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn12row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 12, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn12row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 12, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn12row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 12, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn12row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 12, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEIcolumn12row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEIcolumnNrowM(zmap, incremented_state, 12, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 0);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 1);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 2);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 3);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 4);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 5);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 6);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 7);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn8(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 8);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn9(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 9);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn10(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 10);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn11(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 11);
+}
+
+R6502ZONEMAP* keyboardCA2WEcolumn12(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardCA2WEcolumnN(zmap, incremented_state, 12);
+}
+
+R6502ZONEMAP* keyboardcolumn0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 0);
+}
+
+R6502ZONEMAP* keyboardcolumn1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 1);
+}
+
+R6502ZONEMAP* keyboardcolumn2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 2);
+}
+
+R6502ZONEMAP* keyboardcolumn3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 3);
+}
+
+R6502ZONEMAP* keyboardcolumn4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 4);
+}
+
+R6502ZONEMAP* keyboardcolumn5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 5);
+}
+
+R6502ZONEMAP* keyboardcolumn6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 6);
+}
+
+R6502ZONEMAP* keyboardcolumn7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 7);
+}
+
+R6502ZONEMAP* keyboardcolumn8(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 8);
+}
+
+R6502ZONEMAP* keyboardcolumn9(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 9);
+}
+
+R6502ZONEMAP* keyboardcolumn10(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 10);
+}
+
+R6502ZONEMAP* keyboardcolumn11(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 11);
+}
+
+R6502ZONEMAP* keyboardcolumn12(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardcolumnN(zmap, incremented_state, 12);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn0row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 0, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn0row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 0, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn0row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 0, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn0row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 0, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn0row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 0, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn0row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 0, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn0row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 0, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn0row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 0, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn1row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 1, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn1row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 1, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn1row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 1, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn1row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 1, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn1row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 1, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn1row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 1, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn1row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 1, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn1row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 1, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn2row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 2, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn2row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 2, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn2row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 2, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn2row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 2, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn2row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 2, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn2row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 2, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn2row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 2, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn2row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 2, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn3row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 3, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn3row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 3, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn3row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 3, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn3row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 3, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn3row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 3, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn3row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 3, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn3row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 3, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn3row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 3, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn4row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 4, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn4row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 4, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn4row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 4, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn4row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 4, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn4row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 4, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn4row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 4, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn4row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 4, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn4row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 4, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn5row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 5, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn5row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 5, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn5row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 5, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn5row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 5, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn5row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 5, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn5row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 5, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn5row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 5, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn5row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 5, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn6row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 6, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn6row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 6, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn6row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 6, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn6row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 6, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn6row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 6, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn6row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 6, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn6row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 6, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn6row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 6, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn7row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 7, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn7row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 7, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn7row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 7, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn7row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 7, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn7row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 7, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn7row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 7, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn7row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 7, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn7row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 7, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn8row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 8, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn8row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 8, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn8row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 8, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn8row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 8, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn8row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 8, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn8row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 8, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn8row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 8, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn8row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 8, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn9row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 9, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn9row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 9, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn9row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 9, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn9row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 9, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn9row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 9, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn9row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 9, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn9row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 9, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn9row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 9, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn10row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 10, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn10row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 10, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn10row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 10, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn10row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 10, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn10row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 10, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn10row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 10, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn10row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 10, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn10row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 10, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn11row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 11, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn11row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 11, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn11row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 11, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn11row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 11, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn11row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 11, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn11row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 11, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn11row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 11, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn11row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 11, 7);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn12row0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 12, 0);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn12row1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 12, 1);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn12row2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 12, 2);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn12row3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 12, 3);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn12row4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 12, 4);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn12row5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 12, 5);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn12row6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 12, 6);
+}
+
+R6502ZONEMAP* keyboardWEIcolumn12row7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEIcolumnNrowM(zmap, incremented_state, 12, 7);
+}
+
+R6502ZONEMAP* keyboardWEcolumn0(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 0);
+}
+
+R6502ZONEMAP* keyboardWEcolumn1(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 1);
+}
+
+R6502ZONEMAP* keyboardWEcolumn2(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 2);
+}
+
+R6502ZONEMAP* keyboardWEcolumn3(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 3);
+}
+
+R6502ZONEMAP* keyboardWEcolumn4(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 4);
+}
+
+R6502ZONEMAP* keyboardWEcolumn5(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 5);
+}
+
+R6502ZONEMAP* keyboardWEcolumn6(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 6);
+}
+
+R6502ZONEMAP* keyboardWEcolumn7(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 7);
+}
+
+R6502ZONEMAP* keyboardWEcolumn8(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 8);
+}
+
+R6502ZONEMAP* keyboardWEcolumn9(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 9);
+}
+
+R6502ZONEMAP* keyboardWEcolumn10(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 10);
+}
+
+R6502ZONEMAP* keyboardWEcolumn11(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 11);
+}
+
+R6502ZONEMAP* keyboardWEcolumn12(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  return keyboardWEcolumnN(zmap, incremented_state, 12);
+}
+
+R6502ZONEMAP* keyboardCA2nocolumn(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+
+  zmap->keyboard_state = ((R6502KEYBOARDOP*)incremented_state) - KEYBOARDCA2FLAG;
+  systemviaunsetca2(hmap);
+
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardCA2WEInocolumn(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+
+  zmap->keyboard_state = ((R6502KEYBOARDOP*)incremented_state) - KEYBOARDCA2FLAG;
+
+  hmap->A_sysvia.porta &= ~0x80;
+
+  systemviaunsetca2(hmap);
+
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardCA2WEnocolumn(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+
+  zmap->keyboard_state = ((R6502KEYBOARDOP*)incremented_state) - KEYBOARDCA2FLAG;
+
+  systemviaunsetca2(hmap);
+
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardnocolumn(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardWEInocolumn(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  HOSTMAP *hmap = (HOSTMAP*)zmap;
+
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+
+  hmap->A_sysvia.porta &= ~0x80;
+
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardWEnocolumn(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardlownop(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  zmap->keyboard_state = (R6502KEYBOARDOP*)incremented_state;
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardmaxnop(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  zmap->keyboard_state = ((R6502KEYBOARDOP*)incremented_state) - 32;
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardWEnop(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  zmap->keyboard_state = ((R6502KEYBOARDOP*)incremented_state) - 2;
+  return zmap;
+}
+
+R6502ZONEMAP* keyboardbridge(R6502ZONEMAP *zmap, uintptr_t incremented_state)
+{
+  incremented_state = (uintptr_t)(((R6502KEYBOARDOP*)incremented_state) - KEYBOARDBRIDGEFLAG);
+  return (*(((R6502KEYBOARDOP*)incremented_state) - 1))(zmap, incremented_state);
+  return zmap;
+}
+#endif
+
+static const R6502KEYBOARDOP keyboardWEIcolumnops[104] = {
+  keyboardWEIcolumn0row0, keyboardWEIcolumn0row1, keyboardWEIcolumn0row2, keyboardWEIcolumn0row3,
+  keyboardWEIcolumn0row4, keyboardWEIcolumn0row5, keyboardWEIcolumn0row6, keyboardWEIcolumn0row7,
+  keyboardWEIcolumn1row0, keyboardWEIcolumn1row1, keyboardWEIcolumn1row2, keyboardWEIcolumn1row3,
+  keyboardWEIcolumn1row4, keyboardWEIcolumn1row5, keyboardWEIcolumn1row6, keyboardWEIcolumn1row7,
+  keyboardWEIcolumn2row0, keyboardWEIcolumn2row1, keyboardWEIcolumn2row2, keyboardWEIcolumn2row3,
+  keyboardWEIcolumn2row4, keyboardWEIcolumn2row5, keyboardWEIcolumn2row6, keyboardWEIcolumn2row7,
+  keyboardWEIcolumn3row0, keyboardWEIcolumn3row1, keyboardWEIcolumn3row2, keyboardWEIcolumn3row3,
+  keyboardWEIcolumn3row4, keyboardWEIcolumn3row5, keyboardWEIcolumn3row6, keyboardWEIcolumn3row7,
+  keyboardWEIcolumn4row0, keyboardWEIcolumn4row1, keyboardWEIcolumn4row2, keyboardWEIcolumn4row3,
+  keyboardWEIcolumn4row4, keyboardWEIcolumn4row5, keyboardWEIcolumn4row6, keyboardWEIcolumn4row7,
+  keyboardWEIcolumn5row0, keyboardWEIcolumn5row1, keyboardWEIcolumn5row2, keyboardWEIcolumn5row3,
+  keyboardWEIcolumn5row4, keyboardWEIcolumn5row5, keyboardWEIcolumn5row6, keyboardWEIcolumn5row7,
+  keyboardWEIcolumn6row0, keyboardWEIcolumn6row1, keyboardWEIcolumn6row2, keyboardWEIcolumn6row3,
+  keyboardWEIcolumn6row4, keyboardWEIcolumn6row5, keyboardWEIcolumn6row6, keyboardWEIcolumn6row7,
+  keyboardWEIcolumn7row0, keyboardWEIcolumn7row1, keyboardWEIcolumn7row2, keyboardWEIcolumn7row3,
+  keyboardWEIcolumn7row4, keyboardWEIcolumn7row5, keyboardWEIcolumn7row6, keyboardWEIcolumn7row7,
+  keyboardWEIcolumn8row0, keyboardWEIcolumn8row1, keyboardWEIcolumn8row2, keyboardWEIcolumn8row3,
+  keyboardWEIcolumn8row4, keyboardWEIcolumn8row5, keyboardWEIcolumn8row6, keyboardWEIcolumn8row7,
+  keyboardWEIcolumn9row0, keyboardWEIcolumn9row1, keyboardWEIcolumn9row2, keyboardWEIcolumn9row3,
+  keyboardWEIcolumn9row4, keyboardWEIcolumn9row5, keyboardWEIcolumn9row6, keyboardWEIcolumn9row7,
+  keyboardWEIcolumn10row0, keyboardWEIcolumn10row1, keyboardWEIcolumn10row2, keyboardWEIcolumn10row3,
+  keyboardWEIcolumn10row4, keyboardWEIcolumn10row5, keyboardWEIcolumn10row6, keyboardWEIcolumn10row7,
+  keyboardWEIcolumn11row0, keyboardWEIcolumn11row1, keyboardWEIcolumn11row2, keyboardWEIcolumn11row3,
+  keyboardWEIcolumn11row4, keyboardWEIcolumn11row5, keyboardWEIcolumn11row6, keyboardWEIcolumn11row7,
+  keyboardWEIcolumn12row0, keyboardWEIcolumn12row1, keyboardWEIcolumn12row2, keyboardWEIcolumn12row3,
+  keyboardWEIcolumn12row4, keyboardWEIcolumn12row5, keyboardWEIcolumn12row6, keyboardWEIcolumn12row7
+};
+static const R6502KEYBOARDOP keyboardWEcolumnops[13] = {
+  keyboardWEcolumn0, keyboardWEcolumn1, keyboardWEcolumn2, keyboardWEcolumn3,
+  keyboardWEcolumn4, keyboardWEcolumn5, keyboardWEcolumn6, keyboardWEcolumn7,
+  keyboardWEcolumn8, keyboardWEcolumn9, keyboardWEcolumn10, keyboardWEcolumn11,
+  keyboardWEcolumn12
+};
+static const R6502KEYBOARDOP keyboardcolumnops[13] = {
+  keyboardcolumn0, keyboardcolumn1, keyboardcolumn2, keyboardcolumn3,
+  keyboardcolumn4, keyboardcolumn5, keyboardcolumn6, keyboardcolumn7,
+  keyboardcolumn8, keyboardcolumn9, keyboardcolumn10, keyboardcolumn11,
+  keyboardcolumn12
+};
+static const R6502KEYBOARDOP keyboardCA2WEIcolumnops[104] = {
+  keyboardCA2WEIcolumn0row0, keyboardCA2WEIcolumn0row1, keyboardCA2WEIcolumn0row2, keyboardCA2WEIcolumn0row3,
+  keyboardCA2WEIcolumn0row4, keyboardCA2WEIcolumn0row5, keyboardCA2WEIcolumn0row6, keyboardCA2WEIcolumn0row7,
+  keyboardCA2WEIcolumn1row0, keyboardCA2WEIcolumn1row1, keyboardCA2WEIcolumn1row2, keyboardCA2WEIcolumn1row3,
+  keyboardCA2WEIcolumn1row4, keyboardCA2WEIcolumn1row5, keyboardCA2WEIcolumn1row6, keyboardCA2WEIcolumn1row7,
+  keyboardCA2WEIcolumn2row0, keyboardCA2WEIcolumn2row1, keyboardCA2WEIcolumn2row2, keyboardCA2WEIcolumn2row3,
+  keyboardCA2WEIcolumn2row4, keyboardCA2WEIcolumn2row5, keyboardCA2WEIcolumn2row6, keyboardCA2WEIcolumn2row7,
+  keyboardCA2WEIcolumn3row0, keyboardCA2WEIcolumn3row1, keyboardCA2WEIcolumn3row2, keyboardCA2WEIcolumn3row3,
+  keyboardCA2WEIcolumn3row4, keyboardCA2WEIcolumn3row5, keyboardCA2WEIcolumn3row6, keyboardCA2WEIcolumn3row7,
+  keyboardCA2WEIcolumn4row0, keyboardCA2WEIcolumn4row1, keyboardCA2WEIcolumn4row2, keyboardCA2WEIcolumn4row3,
+  keyboardCA2WEIcolumn4row4, keyboardCA2WEIcolumn4row5, keyboardCA2WEIcolumn4row6, keyboardCA2WEIcolumn4row7,
+  keyboardCA2WEIcolumn5row0, keyboardCA2WEIcolumn5row1, keyboardCA2WEIcolumn5row2, keyboardCA2WEIcolumn5row3,
+  keyboardCA2WEIcolumn5row4, keyboardCA2WEIcolumn5row5, keyboardCA2WEIcolumn5row6, keyboardCA2WEIcolumn5row7,
+  keyboardCA2WEIcolumn6row0, keyboardCA2WEIcolumn6row1, keyboardCA2WEIcolumn6row2, keyboardCA2WEIcolumn6row3,
+  keyboardCA2WEIcolumn6row4, keyboardCA2WEIcolumn6row5, keyboardCA2WEIcolumn6row6, keyboardCA2WEIcolumn6row7,
+  keyboardCA2WEIcolumn7row0, keyboardCA2WEIcolumn7row1, keyboardCA2WEIcolumn7row2, keyboardCA2WEIcolumn7row3,
+  keyboardCA2WEIcolumn7row4, keyboardCA2WEIcolumn7row5, keyboardCA2WEIcolumn7row6, keyboardCA2WEIcolumn7row7,
+  keyboardCA2WEIcolumn8row0, keyboardCA2WEIcolumn8row1, keyboardCA2WEIcolumn8row2, keyboardCA2WEIcolumn8row3,
+  keyboardCA2WEIcolumn8row4, keyboardCA2WEIcolumn8row5, keyboardCA2WEIcolumn8row6, keyboardCA2WEIcolumn8row7,
+  keyboardCA2WEIcolumn9row0, keyboardCA2WEIcolumn9row1, keyboardCA2WEIcolumn9row2, keyboardCA2WEIcolumn9row3,
+  keyboardCA2WEIcolumn9row4, keyboardCA2WEIcolumn9row5, keyboardCA2WEIcolumn9row6, keyboardCA2WEIcolumn9row7,
+  keyboardCA2WEIcolumn10row0, keyboardCA2WEIcolumn10row1, keyboardCA2WEIcolumn10row2, keyboardCA2WEIcolumn10row3,
+  keyboardCA2WEIcolumn10row4, keyboardCA2WEIcolumn10row5, keyboardCA2WEIcolumn10row6, keyboardCA2WEIcolumn10row7,
+  keyboardCA2WEIcolumn11row0, keyboardCA2WEIcolumn11row1, keyboardCA2WEIcolumn11row2, keyboardCA2WEIcolumn11row3,
+  keyboardCA2WEIcolumn11row4, keyboardCA2WEIcolumn11row5, keyboardCA2WEIcolumn11row6, keyboardCA2WEIcolumn11row7,
+  keyboardCA2WEIcolumn12row0, keyboardCA2WEIcolumn12row1, keyboardCA2WEIcolumn12row2, keyboardCA2WEIcolumn12row3,
+  keyboardCA2WEIcolumn12row4, keyboardCA2WEIcolumn12row5, keyboardCA2WEIcolumn12row6, keyboardCA2WEIcolumn12row7
+};
+static const R6502KEYBOARDOP keyboardCA2WEcolumnops[13] = {
+  keyboardCA2WEcolumn0, keyboardCA2WEcolumn1, keyboardCA2WEcolumn2, keyboardCA2WEcolumn3,
+  keyboardCA2WEcolumn4, keyboardCA2WEcolumn5, keyboardCA2WEcolumn6, keyboardCA2WEcolumn7,
+  keyboardCA2WEcolumn8, keyboardCA2WEcolumn9, keyboardCA2WEcolumn10, keyboardCA2WEcolumn11,
+  keyboardCA2WEcolumn12
+};
+static const R6502KEYBOARDOP keyboardCA2columnops[13] = {
+  keyboardCA2column0, keyboardCA2column1, keyboardCA2column2, keyboardCA2column3,
+  keyboardCA2column4, keyboardCA2column5, keyboardCA2column6, keyboardCA2column7,
+  keyboardCA2column8, keyboardCA2column9, keyboardCA2column10, keyboardCA2column11,
+  keyboardCA2column12
+};
+
+void setkeyboardops(int columns)
+{
+  HOSTMAP *hmap = &hostmap;
+  int i,j;
+
+  for (j=0; j<256; j+=32)
+  {
+    for (i=0; i<columns; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardWEIcolumnops[(i<<3)+((j>>5)&7)];
+      hmap->keyboardops[j+(i<<1)+1] = keyboardWEnop;
+    }
+    for (i=columns; i<16; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardWEInocolumn;
+      hmap->keyboardops[j+(i<<1)+1] = keyboardWEnop;
+    }
+  }
+  for (j=256; j<512; j+=32)
+  {
+    for (i=0; i<columns; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardCA2WEIcolumnops[(i<<3)+((j>>5)&7)];
+      hmap->keyboardops[j+(i<<1)+1] = keyboardWEnop;
+    }
+    for (i=columns; i<16; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardCA2WEInocolumn;
+      hmap->keyboardops[j+(i<<1)+1] = keyboardWEnop;
+    }
+  }
+  for (j=512; j<768; j+=32)
+  {
+    for (i=0; i<columns; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardcolumnops[i];
+      hmap->keyboardops[j+(i<<1)+1] = keyboardlownop;
+    }
+    for (i=columns; i<15; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardnocolumn;
+      hmap->keyboardops[j+(i<<1)+1] = keyboardlownop;
+    }
+    hmap->keyboardops[j+(i<<1)] = keyboardnocolumn;
+    hmap->keyboardops[j+(i<<1)+1] = keyboardmaxnop;
+  }
+  for (j=768; j<1024; j+=32)
+  {
+    for (i=0; i<columns; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardCA2columnops[i];
+      hmap->keyboardops[j+(i<<1)+1] = keyboardlownop;
+    }
+    for (i=columns; i<15; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardCA2nocolumn;
+      hmap->keyboardops[j+(i<<1)+1] = keyboardlownop;
+    }
+    hmap->keyboardops[j+(i<<1)] = keyboardnocolumn;
+    hmap->keyboardops[j+(i<<1)+1] = keyboardmaxnop;
+  }
+  for (j=1024; j<1280; j+=32)
+  {
+    for (i=0; i<columns; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardWEcolumnops[i];
+      hmap->keyboardops[j+(i<<1)+1] = keyboardWEnop;
+    }
+    for (i=columns; i<16; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardWEnocolumn;
+      hmap->keyboardops[j+(i<<1)+1] = keyboardWEnop;
+    }
+  }
+  for (j=1280; j<1536; j+=32)
+  {
+    for (i=0; i<columns; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardCA2WEcolumnops[i];
+      hmap->keyboardops[j+(i<<1)+1] = keyboardWEnop;
+    }
+    for (i=columns; i<16; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardCA2WEnocolumn;
+      hmap->keyboardops[j+(i<<1)+1] = keyboardWEnop;
+    }
+  }
+  for (j=1536; j<1792; j+=32)
+  {
+    for (i=0; i<columns; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardcolumnops[i];
+      hmap->keyboardops[j+(i<<1)+1] = keyboardlownop;
+    }
+    for (i=columns; i<15; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardnocolumn;
+      hmap->keyboardops[j+(i<<1)+1] = keyboardlownop;
+    }
+    hmap->keyboardops[j+(i<<1)] = keyboardnocolumn;
+    hmap->keyboardops[j+(i<<1)+1] = keyboardmaxnop;
+  }
+  for (j=1792; j<2048; j+=32)
+  {
+    for (i=0; i<columns; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardCA2columnops[i];
+      hmap->keyboardops[j+(i<<1)+1] = keyboardlownop;
+    }
+    for (i=columns; i<15; i++)
+    {
+      hmap->keyboardops[j+(i<<1)] = keyboardCA2nocolumn;
+      hmap->keyboardops[j+(i<<1)+1] = keyboardlownop;
+    }
+    hmap->keyboardops[j+(i<<1)] = keyboardnocolumn;
+    hmap->keyboardops[j+(i<<1)+1] = keyboardmaxnop;
+  }
+
+  for (i=2048; i<4096; i++)
+  {
+    hmap->keyboardops[i] = keyboardbridge;
+  }
+}

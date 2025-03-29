@@ -42,7 +42,8 @@ RunImage = @.o.main @.o.beebit \
   @.o.6522sysvia @.o.6522usrvia @.o.6845crtc @.o.6850acia \
   @.o.76489sound @.o.tube @.o.hostmap @.o.hostmaps \
   @.o.8271fdc @.o.1770fdc @.o.adc @.o.keyboard @.o.sheila  \
-  @.o.scrmode @.o.video @.o.videoscale @.o.videoula @.o.riscos \
+  @.o.scrmode @.o.video @.o.videoscale @.o.videoula \
+  @.o.riscos @.o.riscoskey \
   @.o.riscosvid1 @.o.riscosvid2 @.o.riscosvid3 @.o.riscosvid4 \
   @.o.scrsave @.o.snapshots
 RipRoms = @.o.RipROMs
@@ -72,6 +73,40 @@ RipRoms = @.o.RipROMs
 # Static dependencies:
 
 # Dynamic dependencies:
+o.main:	c.main
+o.main:	h.hostmap
+o.main:	h.6502zmap
+o.main:	h.6850acia
+o.main:	h.8271fdc
+o.main:	h.main
+o.main:	h.beebit
+o.main:	h.sheila
+o.main:	h.swis
+o.main:	C:h.kernel
+o.main:	h.riscos
+o.main:	h.scrmode
+o.main:	h.scrsave
+o.main:	h.snapshots
+o.main:	h.video
+o.main:	h.videoscale
+o.beebit:	c.beebit
+o.beebit:	h.hostmap
+o.beebit:	h.6502zmap
+o.beebit:	h.1770fdc
+o.beebit:	h.8271fdc
+o.beebit:	h.6845crtc
+o.beebit:	h.6850acia
+o.beebit:	h.adc
+o.beebit:	h.beebit
+o.beebit:	C:h.kernel
+o.beebit:	h.keyboard
+o.beebit:	h.main
+o.beebit:	h.riscos
+o.beebit:	h.scrmode
+o.beebit:	h.scrsave
+o.beebit:	h.sheila
+o.beebit:	h.swis
+o.beebit:	h.video
 o.6502cpu:	c.6502cpu
 o.6502cpu:	h.6502cpu
 o.6502cpu:	h.6502cmap
@@ -192,7 +227,6 @@ o.6522sysvia:	h.6502cpu
 o.6522sysvia:	h.6502cmap
 o.6522sysvia:	h.6502zmap
 o.6522sysvia:	h.6522sysvia
-o.6522sysvia:	h.76489sound
 o.6522sysvia:	h.beebit
 o.6522sysvia:	C:h.kernel
 o.6522sysvia:	h.keyboard
@@ -300,11 +334,10 @@ o.adc:	h.swis
 o.keyboard:	c.keyboard
 o.keyboard:	h.hostmap
 o.keyboard:	h.6502zmap
-o.keyboard:	h.6522sysvia
 o.keyboard:	h.beebit
-o.keyboard:	C:h.kernel
 o.keyboard:	h.riscos
-o.keyboard:	h.swis
+o.keyboard:	h.6522sysvia
+o.keyboard:	h.keyboard
 o.sheila:	c.sheila
 o.sheila:	h.hostmap
 o.sheila:	h.6502zmap
@@ -378,6 +411,11 @@ o.riscos: h.hostmaps
 o.riscos: h.6502cmaps
 o.riscos: h.RegNames
 o.riscos: h.SWInames
+o.riscoskey: s.riscoskey
+o.riscoskey: h.6502zmaps
+o.riscoskey: h.hostmaps
+o.riscoskey: h.RegNames
+o.riscoskey: h.SWInames
 o.riscosvid1: s.riscosvid1
 o.riscosvid1: h.6502zmaps
 o.riscosvid1: h.hostmaps
@@ -419,37 +457,3 @@ o.snapshots:	h.sheila
 o.RipROMs:	c.RipROMs
 o.RipROMs:	C:h.kernel
 o.RipROMs:	h.swis
-o.main:	c.main
-o.main:	h.hostmap
-o.main:	h.6502zmap
-o.main:	h.6850acia
-o.main:	h.8271fdc
-o.main:	h.main
-o.main:	h.beebit
-o.main:	h.sheila
-o.main:	h.swis
-o.main:	C:h.kernel
-o.main:	h.riscos
-o.main:	h.scrmode
-o.main:	h.scrsave
-o.main:	h.snapshots
-o.main:	h.video
-o.main:	h.videoscale
-o.beebit:	c.beebit
-o.beebit:	h.hostmap
-o.beebit:	h.6502zmap
-o.beebit:	h.1770fdc
-o.beebit:	h.8271fdc
-o.beebit:	h.6845crtc
-o.beebit:	h.6850acia
-o.beebit:	h.adc
-o.beebit:	h.beebit
-o.beebit:	C:h.kernel
-o.beebit:	h.keyboard
-o.beebit:	h.main
-o.beebit:	h.riscos
-o.beebit:	h.scrmode
-o.beebit:	h.scrsave
-o.beebit:	h.sheila
-o.beebit:	h.swis
-o.beebit:	h.video

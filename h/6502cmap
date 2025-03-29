@@ -41,6 +41,7 @@ typedef struct R6502CPUMAP
   R6502_AP_ZONE AP;
 
   // AArch32 offsets &100 - &3FF
+  R6502KEYBOARDOP *keyboard_state;
   R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
   R6502BYTESHIFT a_shift; uint8_t a; /*register*/
   R6502BYTESHIFT x_shift; uint8_t x; /*register*/
@@ -64,7 +65,6 @@ typedef struct R6502CPUMAP
   R6502PERIPHERALOP yieldflagaction;
   intptr_t timesinterruptmissed;
   uintptr_t lbreak;
-  uintptr_t BC_unused[1];
   R6502_BP_ZONE BP;
 
   // AArch32 offsets &400 - &FFF

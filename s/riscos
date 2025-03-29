@@ -2,9 +2,9 @@
 ;
 ; BeebIt - BBC Micro Model B Emulator
 ;
-; (C) Copyright Michael J Foot, 1998-2003
+; (C) Copyright Michael J Foot, 1998-2025
 ;
-; Email: <mjfoot@paradise.net.nz>
+; Email: <mjfoot.nz@gmail.com>
 ;
 
   GET h.6502zmaps
@@ -32,8 +32,6 @@
   IMPORT |beebit_trace|
   IMPORT |hostmap|
 
-  IMPORT |systemviasetca2|
-
   IMPORT |nwimpmode| ;jdl** from c.main, so we can restore screen on crash
 
 ; Export global symbols
@@ -60,7 +58,6 @@
 
   ;EXPORT |quit|
   EXPORT |keylookup|
-  EXPORT |keystatus|
   ;EXPORT |lastkey|
 
 ScreenBlanker_Control EQU &43100
@@ -351,54 +348,16 @@ keyupdown3
   ;LDR r12,=lastkey
   ;STRB r11,[r12,#1]
 
-  LDR r11,=keystatus
-
+  MOV r11,#1
+  AND r8,r9,#&0F
+  MOV r9,r9,LSR #4
+  MOV r9,r11,LSL r9
+  LDR r11,=hostmap+:INDEX:HOST_KEYSTATUS
   CMP r1,#&00 ;if key is up
-  MOVEQ r8,#&00
-  STREQB r8,[r11,r9] ;set status to 0
-  ;BLEQ systemviasetca2
-  LDMEQFD sp!,{r0-r3,r8-r12,pc} ;exit
-
-  LDRB r8,[r11,r9] ;get key status
-  CMP r8,#&00 ;see if it's aleady been pressed down
-  ;BLNE systemviasetca2
-  LDMNEFD sp!,{r0-r3,r8-r12,pc} ;if it has, exit
-
-  MOV r8,#&FF
-  STRB r8,[r11,r9] ;set status to &FF
-
-  ;check for <Shift> and <Ctrl>
-  CMP r9,#&01
-  LDMLSFD sp!,{r0-r3,r8-r12,pc} ;if shift or ctrl, exit
-
-  ;CMP r9,#&50 ;shift lock
-  ;BNE keyupdown4
-
-  ;MOV r0,#202
-  ;MOV r1,#0
-  ;MOV r2,#&FF
-  ;SWI OS_Byte
-  ;ANDS r2,r1,#2 ;scroll lock on?
-  ;ORREQ r1,r1,#&2 ;shift on
-  ;ORREQ r1,r1,#16 ;caps off
-  ;ANDNE r1,r1,#&FD ;shift off
-  ;ANDNE r1,r1,#&EF ;caps on
-  ;MOV r2,#0
-  ;SWI OS_Byte
-  ;MOV r0,#118
-  ;SWI OS_Byte
-
-keyupdown4
-  ;MOV r0,r9
-  ;BL inttohex
-  ;MOV r0,#32
-  ;SWI OS_WriteC
-
-  ;AND r10,r11,#&70
-  ;MOV r11,r11,LSR #&04 ;bbc row
-  ;AND r9,r11,#&0F ;bbc col
-
-  BL systemviasetca2
+  LDRB r8,[r11,r8]!
+  BICEQ r8,r8,r9
+  ORRNE r8,r8,r9
+  STRB r8,[r11]
   LDMFD sp!,{r0-r3,r8-r12,pc} ; exit
 
 ;do_screendump
@@ -544,24 +503,6 @@ nescapestatus
 
 old_exit DCD 0
 old_r12 DCD 0
-
-|keystatus|
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-  DCB 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 ;|lastkey|
 ;  DCB 0,0

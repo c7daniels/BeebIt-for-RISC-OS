@@ -23,6 +23,7 @@ R6502_NMIS              # &1
 R6502_AP                # SIZEOF_R6502_AP_ZONE
 
 ; offsets &100 - &3FF
+R6502_KEYBOARD_STATE    # &4
 R6502_M_SHIFT           # &3
 R6502_M                 # &1
 R6502_A_SHIFT           # &3
@@ -55,7 +56,6 @@ R6502_RESETCONTINUINGACTION # &4
 R6502_YIELDFLAGACTION   # &4
 R6502_TIMESINTERRUPTMISSED # &4
 R6502_LBREAK            # &4
-                        # &4
 R6502_BP                # SIZEOF_R6502_BP_ZONE
 
 ; offsets &400 - &FFF

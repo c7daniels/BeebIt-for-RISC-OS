@@ -9,7 +9,13 @@
 ; Email: <convertedgames@3insdale.me.uk>
 ;
 
-CYCLES_TO_GO_IN_REGISTER_FLAG  EQU 1
+KEYBOARD_STATE_IN_REGISTER_FLAG EQU 2
+CYCLES_TO_GO_IN_REGISTER_FLAG   EQU 1
+
+KEYBOARDBRIDGEFLAG EQU &800
+KEYBOARDNOTINPUTFLAG EQU &400
+KEYBOARDNOTWRITEENABLEFLAG EQU &200
+KEYBOARDCA2FLAG EQU &100
 
                         ^ 0
 HOSTCYCLES_MONOTONIC    # &4
@@ -205,6 +211,7 @@ SIZEOF_HOSTBADC         * @
                         ^ 0
 ; offsets &00 - &FF
 HOST_AC                 # SIZEOF_R6502_AC_ZONE
+HOST_KEYSTATUS          # &10
 HOST_ROMWRITABLE        # &10
 HOST_ROMSEL             # &1
 HOST_ACCCON             # &1
@@ -219,9 +226,10 @@ HOST_SERIAL             # SIZEOF_HOSTASERIAL
 HOST_AI8271             # SIZEOF_HOSTAI8271
 HOST_AW1770             # SIZEOF_HOSTAW1770
 HOST_AADC               # SIZEOF_HOSTAADC
-                        # &78
+                        # &68
 
 ; offsets &100 - &3FF
+HOST_KEYBOARD_STATE     # &4
 HOST_M_SHIFT            # &3
 HOST_M                  # &1
 HOST_BC                 # SIZEOF_R6502_BC_ZONE
@@ -261,7 +269,8 @@ HOST_STRETCHEDWRITEHIGH # &1000
 ; offsets &8000 - &FFFF
 HOST_BRIDGEDREADHIGH    # &1000
 HOST_BRIDGEDWRITEHIGH   # &1000
-                        # &6000
+HOST_KEYBOARDOPS        # &4000
+                        # &2000
 
 ; offsets &10000 - &1FFFF
 HOST_MEMORY             # &10000

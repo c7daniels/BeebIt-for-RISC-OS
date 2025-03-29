@@ -14,14 +14,12 @@
  */
 
 /*System VIA*/
-extern void systemviasetirq(void);
-extern void systemviasetca1(void);
+extern void systemviasetca1(HOSTMAP* hmap);
 extern void systemviavidca1(void);
 extern void systemviavidirq(void);
 extern void systemviaunsetca1(void);
-extern void systemviasetca2(void);
-extern void systemviakeyca2(void);
-extern void keyboardcheck(int);
+extern HOSTMAP* systemviasetca2(HOSTMAP *hmap);
+extern HOSTMAP* systemviaunsetca2(HOSTMAP *hmap);
 extern void systemviareset(void);
 extern void systemviabeforesnapshot(void);
 extern void systemviaaftersnapshot(void);

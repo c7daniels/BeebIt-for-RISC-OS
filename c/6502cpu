@@ -18,12 +18,13 @@
 #include "beebit.h"
 
 static_assert(offsetof(R6502ZONEMAP, AC) == 0, "Expecting zones at specific offsets");
-static_assert(offsetof(R6502ZONEMAP, BC) == ((0x100>>2)+1) * sizeof(uintptr_t), "Expecting zones at specific offsets");
+static_assert(offsetof(R6502ZONEMAP, BC) == ((0x100>>2)+2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, CC) == (0x400>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, DC) == (0x1000>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, EC) == (0x1C00>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(sizeof(R6502ZONEMAP) == (0x4000>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 
+static_assert(offsetof(R6502CPUMAP, keyboard_state) == offsetof(R6502ZONEMAP, keyboard_state), "Expecting consistent keyboard state offsets");
 static_assert(offsetof(R6502CPUMAP, m_shift) == offsetof(R6502ZONEMAP, m_shift), "Expecting consistent data bus value offsets");
 static_assert(offsetof(R6502CPUMAP, m) == offsetof(R6502ZONEMAP, m), "Expecting consistent data bus value offsets");
 

@@ -37,6 +37,22 @@
 /*User VIA*/
 extern _kernel_swi_regs regs;
 
+static inline void userviasetirq(HOSTMAP *hmap)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+
+  if (hmap->A_usrvia.ifr & hmap->A_usrvia.ier & 0x7F)
+  {
+    hmap->A_usrvia.ifr |= 0x80;
+    cmap->irq |= IRQ_6522USRVIA;
+  }
+  else
+  {
+    hmap->A_usrvia.ifr &= 0x7F;
+    cmap->irq &= IRQ_NOT6522USRVIA;
+  }
+}
+
 void userviaamxmouse(void)
 {
   HOSTMAP* hmap = &hostmap;
@@ -78,25 +94,8 @@ void userviaamxmouse(void)
           hmap->amx.currenty--;
         }
       }
-      userviasetirq();
+      userviasetirq(hmap);
     }
-  }
-}
-
-void userviasetirq(void)
-{
-  HOSTMAP* hmap = &hostmap;
-  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
-
-  if (hmap->A_usrvia.ifr & hmap->A_usrvia.ier & 0x7F)
-  {
-    hmap->A_usrvia.ifr |= 0x80;
-    cmap->irq |= IRQ_6522USRVIA;
-  }
-  else
-  {
-    hmap->A_usrvia.ifr &= 0x7F;
-    cmap->irq &= IRQ_NOT6522USRVIA;
   }
 }
 
@@ -177,7 +176,7 @@ void userviastartreset(int lfull)
   hmap->A_usrvia.aftert1 = FALSE;
   hmap->A_usrvia.t1setint = FALSE;
   hmap->A_usrvia.t2setint = FALSE;
-  userviasetirq();
+  userviasetirq(hmap);
   hmap->amx.timer = 0;
   hmap->amx.buttons = 0;
 
@@ -228,6 +227,8 @@ void userviaaftersnapshot(void)
     hmap->B_usrvia.t2doubled += expiryoffset;
     HOSTMAP_LIMIT_PERIPHERAL_CYCLES_TO_GO(hmap, usrvia, hmap->B_usrvia.t2doubled + 2)
   }
+
+  userviasetirq(hmap);
 }
 
 HOSTMAP* userviaatzerocycles(HOSTMAP* hmap)
@@ -323,7 +324,7 @@ HOSTMAP* userviaatzerocycles(HOSTMAP* hmap)
 
   hmap->cycles.usrvia_togo = hmap->cycles.usrvia_original = userviapickcyclestogo();
 
-  userviasetirq();
+  userviasetirq(hmap);
 
   return hmap;
 }
@@ -347,7 +348,7 @@ HOSTMAP* uservia00read(HOSTMAP* hmap, uintptr_t address_code)
     /*clear b4,b3 (CB1,CB2)*/
     hmap->A_usrvia.ifr &= 0xE7;
   }
-  /*userviasetirq();*/
+  /*userviasetirq(hmap);*/
   /*reads output register bit in orb. pin level has no effect*/
   nresult = (hmap->A_usrvia.orb & hmap->A_usrvia.ddrb);
 
@@ -378,7 +379,7 @@ HOSTMAP* uservia00read(HOSTMAP* hmap, uintptr_t address_code)
     nresult |= (hmap->amx.buttons ^ 7) << 5;
     hmap->A_usrvia.ifr &= 0xE7;
 
-    userviasetirq();
+    userviasetirq(hmap);
 
     if ((hmap->amx.targetx != hmap->amx.currentx) OR (hmap->amx.targety != hmap->amx.currenty))
     {
@@ -415,7 +416,7 @@ HOSTMAP* uservia01read(HOSTMAP* hmap, uintptr_t address_code)
     /*clear b2,b1 (CA1,CA2)*/
     hmap->A_usrvia.ifr &= 0xFC;
   }
-  userviasetirq();
+  userviasetirq(hmap);
   if (hmap->A_usrvia.acr & 0x01)
   {
     /*input latching enabled*/
@@ -451,7 +452,7 @@ HOSTMAP* uservia04read(HOSTMAP* hmap, uintptr_t address_code)
   /*T1 low order counter*/
   /*T1 interrupt flag is cleared (IFR b6)*/
   hmap->A_usrvia.ifr &= 0xBF;
-  userviasetirq();
+  userviasetirq(hmap);
   HOSTMAP_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, hmap, usrvia)
   hmap->m = ((hmap->B_usrvia.t1doubled - cyclecount)>>1)&0xFF;
 
@@ -492,7 +493,7 @@ HOSTMAP* uservia08read(HOSTMAP* hmap, uintptr_t address_code)
   /*T2 low order counter*/
   /*T2 interrupt flag is cleared (IFR b5)*/
   hmap->A_usrvia.ifr &= 0xDF;
-  userviasetirq();
+  userviasetirq(hmap);
   if (!(hmap->A_usrvia.acr & 0x20))
   {
     HOSTMAP_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, hmap, usrvia)
@@ -529,7 +530,7 @@ HOSTMAP* uservia0Aread(HOSTMAP* hmap, uintptr_t address_code)
   /*shift register*/
   /*SR interrupt flag is cleared (IFR b2)*/
   hmap->A_usrvia.ifr &= 0xFB;
-  userviasetirq();
+  userviasetirq(hmap);
   hmap->m = hmap->A_usrvia.sr;
 
   R6502_JUMP_FROM_HIGH_OP(hmap)
@@ -556,7 +557,7 @@ HOSTMAP* uservia0Dread(HOSTMAP* hmap, uintptr_t address_code)
   /*interrupt flag reg*/
   /*b7 of this register will be read as a logic 1*/
   /*when an interrupt exists within the chip*/
-  userviasetirq();
+  userviasetirq(hmap);
   hmap->m = hmap->A_usrvia.ifr;
 
   R6502_JUMP_FROM_HIGH_OP(hmap)
@@ -605,7 +606,7 @@ HOSTMAP* uservia00write(HOSTMAP* hmap, uintptr_t address_code)
     /*clear b4,b3 (CB1,CB2)*/
     hmap->A_usrvia.ifr &= 0xE7;
   }
-  userviasetirq();
+  userviasetirq(hmap);
 
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
@@ -636,7 +637,7 @@ HOSTMAP* uservia01write(HOSTMAP* hmap, uintptr_t address_code)
   }
   /*clear b2 (CA1)*/
   hmap->A_usrvia.ifr |= 0x02; /*CA1*/
-  userviasetirq();
+  userviasetirq(hmap);
 
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
@@ -671,7 +672,7 @@ HOSTMAP* uservia05write(HOSTMAP* hmap, uintptr_t address_code)
   hmap->A_usrvia.t1lh = hmap->m;
   /*clear T1 interrupt flag (b6)*/
   hmap->A_usrvia.ifr &= 0xBF;
-  userviasetirq();
+  userviasetirq(hmap);
   if ((hmap->A_usrvia.acr & 0xC0) == 0x80)
   {
     /*output enabled (b7=1) and free-run disabled (b6=0)*/
@@ -723,7 +724,7 @@ HOSTMAP* uservia09write(HOSTMAP* hmap, uintptr_t address_code)
   /*T2 high order counter*/
   /*clear T2 interrupt flag (bit 5)*/
   hmap->A_usrvia.ifr &= 0xDF;
-  userviasetirq();
+  userviasetirq(hmap);
   /*provide a single interrupt*/
   hmap->A_usrvia.t2setint = TRUE;
   if (!(hmap->A_usrvia.acr & 0x20))
@@ -749,7 +750,7 @@ HOSTMAP* uservia0Awrite(HOSTMAP* hmap, uintptr_t address_code)
   /*shift reg*/
   hmap->A_usrvia.sr = hmap->m;
   hmap->A_usrvia.ifr &= 0xFB;
-  userviasetirq();
+  userviasetirq(hmap);
 
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
@@ -816,7 +817,7 @@ HOSTMAP* uservia0Dwrite(HOSTMAP* hmap, uintptr_t address_code)
   /*interrupt flag reg*/
   hmap->m &= 0x7F; /*not really needed*/
   hmap->A_usrvia.ifr &= (~hmap->m);
-  userviasetirq();
+  userviasetirq(hmap);
 
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
@@ -829,7 +830,7 @@ HOSTMAP* uservia0Ewrite(HOSTMAP* hmap, uintptr_t address_code)
   else
     hmap->A_usrvia.ier &= (~hmap->m);
   hmap->A_usrvia.ier &= 0x7F;
-  userviasetirq();
+  userviasetirq(hmap);
 
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
