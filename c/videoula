@@ -4,11 +4,9 @@
  *
  * Acorn Video ULA [1MHz]
  *
- * (C) Copyright Michael J Foot, 1998-2024
+ * Cycle-level video emulation
  *
- * Email: <mjfoot.nz@gmail.com>
- *
- * Addressing optimization contributed by Crispian Daniels in 2024
+ * (C) Copyright Crispian Daniels, 2024-2025
  *
  * Email: <convertedgames@3insdale.me.uk>
  */
@@ -22,493 +20,431 @@
    7 - Master cursor width (if set causes large cursor)
 */
 
+#include <assert.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
 #include "hostmap.h"
-#include "6522sysvia.h"
-#include "6845crtc.h"
-#include "beebit.h"
-#include "kernel.h"
-#include "main.h"
-#include "riscos.h"
-#include "scrmode.h"
-#include "swis.h"
-#include "adc.h"
+#include "videoula.h"
 #include "video.h"
-
-extern _kernel_swi_regs regs;
-
-#ifdef __DEVELOP__
-  extern FILE *htrace;
-#else
-  #ifdef __DEBUG__
-    extern FILE *htrace;
-  #endif
-#endif
+#include "sheila.h"
+#include "beebit.h"
 
 /*Video ULA*/
-/*char videoula_colours[0x10];*/
-/*colour lookup table for modes 0, 3, 4 and 6*/
-int video_colourlookup1[0x10] = {0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1};
-/*colour lookup table for modes 1 and 5*/
-int video_colourlookup2[0x10] = {0,0,1,1,0,0,1,1,2,2,3,3,2,2,3,3};
-char videoula_physical0[0x10] = {0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7};
-char videoula_physical1[0x10] = {0,1,2,3,4,5,6,7,7,6,5,4,3,2,1,0};
-char videoula_palette0[0x10] = {0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7};
-char videoula_palette1[0x10] = {0,1,2,3,4,5,6,7,7,6,5,4,3,2,1,0};
-char videoula_palette[0x10];
-/*colour map for 8bpp modes*/
-char videoula_colourmap8[0x08] = {0x00,0x15,0x62,0x77,0x88,0x9D,0xEA,0xFF};
-char videoula_rawpalette[0x10];
-int videoula_palettevalue;
-int videoula_clockrate;
-int videoula_flashcolour;
-int videoula_control;
 
-int llargecursor,lteletextmode;
-/*int ncursorwidth;*/
-int ncurrentmode;
-/*char npalettevalue;*/
+void videoulainit(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  int i;
+  uint8_t bytemapping[256];
+  unsigned int pixelcolour;
+  unsigned int bytecolours1,bytecolours2,bytecolours3;
+
+  for (i=0; i<256; i++)
+  {
+    bytemapping[i] = ((i&0x80)>>4)|((i&0x20)>>3)|((i&0x08)>>2)|((i&0x02)>>1);
+  }
+
+  for (i=0; i<256; i++)
+  {
+    pixelcolour = bytemapping[i];
+    bytecolours3 = (pixelcolour<<28);
+    pixelcolour |= (pixelcolour<<4);
+    bytecolours2 = (pixelcolour<<24);
+    pixelcolour |= (pixelcolour<<8);
+    bytecolours1 = (pixelcolour<<16);
+    hmap->shiftedbytecolours[i] = bytecolours1 | pixelcolour;
+
+    pixelcolour = bytemapping[((i<<1)&0xFF)|0x01];
+    bytecolours3 |= (pixelcolour<<24);
+    pixelcolour |= (pixelcolour<<4);
+    bytecolours2 |= (pixelcolour<<16);
+    pixelcolour |= (pixelcolour<<8);
+    hmap->shiftedbytecolours[256+i] = bytecolours1 | pixelcolour;
+
+    pixelcolour = bytemapping[((i<<2)&0xFF)|0x03];
+    bytecolours3 |= (pixelcolour<<20);
+    pixelcolour |= (pixelcolour<<4);
+    bytecolours2 |= (pixelcolour<<8);
+
+    pixelcolour = bytemapping[((i<<3)&0xFF)|0x07];
+    bytecolours3 |= (pixelcolour<<16);
+    pixelcolour |= (pixelcolour<<4);
+    hmap->shiftedbytecolours[512+i] = bytecolours2 | pixelcolour;
+
+    pixelcolour = bytemapping[((i<<4)&0xFF)|0x0F];
+    bytecolours3 |= (pixelcolour<<12);
+
+    pixelcolour = bytemapping[((i<<5)&0xFF)|0x1F];
+    bytecolours3 |= (pixelcolour<<8);
+
+    pixelcolour = bytemapping[((i<<6)&0xFF)|0x3F];
+    bytecolours3 |= (pixelcolour<<4);
+
+    pixelcolour = bytemapping[((i<<7)&0xFF)|0x7F];
+    hmap->shiftedbytecolours[768+i] = bytecolours3 | pixelcolour;
+  }
+}
+
+static inline int getnphys(HOSTMAP* hmap, int nlogical)
+{
+  int nphys2 = hmap->A_videoula.palette[nlogical];
+  int nphys = nphys2 ^ 0x7;
+
+  if (hmap->A_videoula.control & (hmap->B_videoula.flashing>>nphys) & 1)
+    return nphys2;
+  else
+    return nphys;
+}
+
+static HOSTMAP* videoularefreshnybblefragments(HOSTMAP* hmap, uintptr_t* fill)
+{
+  int i;
+  uint8_t* bytefragment = (uint8_t*)hmap->D_colour.fragment;
+
+  for (i=0; i<16; i++)
+  {
+    bytefragment[i] = fill[getnphys(hmap, i)] & 0xF;
+  }
+
+  return hmap;
+}
+
+static HOSTMAP* videoularefreshbytefragments(HOSTMAP* hmap, uintptr_t* fill)
+{
+  int i;
+  uint8_t* bytefragment = (uint8_t*)hmap->D_colour.fragment;
+
+  for (i=0; i<16; i++)
+  {
+    bytefragment[i] = fill[getnphys(hmap, i)] & 0xFF;
+  }
+
+  return hmap;
+}
 
 void videoulareset(void)
 {
-  videoula_palettevalue = 0;
-  lteletextmode = TRUE;
-  video_mode = -1;
-  ncurrentmode = -1;
-  cursor_width = 0;
-}
+  HOSTMAP* hmap = &hostmap;
+  int i;
 
-void videoulasetpalette(void)
-{
-  char n1,n2;
-  switch (video_mode)
+  hmap->A_videoula.control = 0;
+  hmap->B_videoula.bytelut = hmap->shiftedbytecolours;
+  hmap->B_videoula.flashing = 0xFF00;
+  for (i=0; i<16; i++)
   {
-    case 0x00:
-    case 0x03:
-    case 0x04:
-    case 0x06:
-      /*1bpp*/
-      if (videoula_flashcolour == 0)
-      {
-        for (n1=0;n1<=0x0F;n1++)
-        {
-          n2 = video_colourlookup1[n1];
-          switch (beebit_graphicsmode)
-          {
-            case 12:
-            case 20:
-              videoula_palette[n2] = videoula_palette0[n1];
-              break;
-            case 15:
-            case 21:
-              videoula_palette[n2] = videoula_colourmap8[videoula_palette0[n1]];
-              break;
-          }
-        }
-      }
-      else
-      {
-        for (n1=0;n1<=0x0F;n1++)
-        {
-          n2 = video_colourlookup1[n1];
-          switch (beebit_graphicsmode)
-          {
-            case 12:
-            case 20:
-              videoula_palette[n2] = videoula_palette1[n1];
-              break;
-            case 15:
-            case 21:
-              videoula_palette[n2] = videoula_colourmap8[videoula_palette1[n1]];
-              break;
-          }
-        }
-      }
-      break;
-    case 0x01:
-    case 0x05:
-      /*2bpp*/
-      if (videoula_flashcolour == 0)
-      {
-        for (n1=0;n1<=0x0F;n1++)
-        {
-          n2 = video_colourlookup2[n1];
-          switch (beebit_graphicsmode)
-          {
-            case 12:
-            case 20:
-              videoula_palette[n2] = videoula_palette0[n1];
-              break;
-            case 15:
-            case 21:
-              videoula_palette[n2] = videoula_colourmap8[videoula_palette0[n1]];
-              break;
-          }
-        }
-      }
-      else
-      {
-        for (n1=0;n1<=0x0F;n1++)
-        {
-          n2 = video_colourlookup2[n1];
-          switch (beebit_graphicsmode)
-          {
-            case 12:
-            case 20:
-              videoula_palette[n2] = videoula_palette1[n1];
-              break;
-            case 15:
-            case 21:
-              videoula_palette[n2] = videoula_colourmap8[videoula_palette1[n1]];
-              break;
-          }
-        }
-      }
-      break;
-    case 0x02:
-    case 0x08:
-      if (videoula_flashcolour == 0)
-      {
-        switch (beebit_graphicsmode)
-        {
-          case 12:
-          case 20:
-            memcpy(videoula_palette,videoula_palette0,0x10);
-            break;
-          case 15:
-          case 21:
-            for (n1=0;n1<=0x0F;n1++)
-              videoula_palette[n1] = videoula_colourmap8[videoula_palette0[n1]];
-            break;
-        }
-      }
-      else
-      {
-        switch (beebit_graphicsmode)
-        {
-          case 12:
-          case 20:
-            memcpy(videoula_palette,videoula_palette1,0x10);
-            break;
-          case 15:
-          case 21:
-            for (n1=0;n1<=0x0F;n1++)
-              videoula_palette[n1] = videoula_colourmap8[videoula_palette1[n1]];
-            break;
-        }
-      }
-    /*default:*/
-      break;
+    hmap->A_videoula.palette[i] = 0;
   }
 }
 
-int videoularead(int naddress)
+static inline void videoulasetfragmentops(HOSTHIGHOP write01, VIDEOULAFRAGMENTREFRESHOP refreshop)
 {
-/*
- routine used for making snapshot
- 0 = video control register
- 1 to 0x10 = palette entries
- */
+  HOSTMAP* hmap = &hostmap;
+  HOSTHIGHOP writes[4] = { videoula00write, write01, videoula00write, write01 };
 
-  #ifdef __DEBUG__
-    fprintf(htrace,"read videoula");
-  #endif
-
-  if (naddress == 0)
-    return videoula_control;
-  else
-    return videoula_rawpalette[naddress-1];
-
-  /*if (naddress & 0x01)
-    return (videoula_palettevalue);
-  else
-    return (0xAE);*/
+  hmap->B_videoula.fragmentrefreshaction = refreshop;
+  sheilareplacevideoulawrites(&writes);
 }
 
-void videoulasetcursor(void)
+void videoulasetloads(void)
 {
-  switch ((videoula_control & 0x60)>>5)
+  HOSTMAP* hmap = &hostmap;
+  const VIDEOULALOADOP (*selectedset)[32];
+  VIDEOULALOADOP *loadopgroup;
+
+  if (hmap->A_vidbuf.progressive)
+    selectedset = &videoulaploadset;
+  else
+    selectedset = &videoulaloadset;
+
+  memcpy(hmap->videoulaloads, selectedset, 32 * sizeof(VIDEOULALOADOP));
+
+  loadopgroup = &hmap->videoulaloads[hmap->A_videoula.control & 0x1C];
+
+  hmap->B_videoula.evenloadop = loadopgroup[0];
+  hmap->B_videoula.oddloadop = loadopgroup[1];
+  hmap->B_videoula.evenRloadop = loadopgroup[2];
+  hmap->B_videoula.oddRloadop = loadopgroup[3];
+}
+
+static HOSTMAP* videoulasetblacklevelnphys(HOSTMAP* hmap, int nphys)
+{
+  int i,mask;
+
+  hmap->A_videoula.blacklevelnphys = nphys;
+  mask = 15 ^ (nphys&7);
+
+  for (i=0; i<16; i++)
   {
-    case 0:
-      cursor_width = 1;
-      break;
-    case 1:
-      cursor_width = 0;
-      break;
-    case 2:
-      cursor_width = 2;
-      break;
-    case 3:
-      cursor_width = 4;
-      break;
+    hmap->D_colour.normalfill[i] = hmap->D_colour.absolutefill[i&mask];
+    hmap->D_colour.inversefill[i] = hmap->D_colour.absolutefill[(i^7)&mask];
   }
-  if (lteletextmode)
+
+  hmap->B_videoula.inverseblank = hmap->D_colour.inversefill[0];
+  hmap->B_videoula.cursorfill = hmap->B_videoula.inverseblank;
+
+  for (i=0; i<8; i++)
+    hmap->D_colour.fill[i] = hmap->D_colour.normalfill[i];
+
+  return hmap->B_videoula.fragmentrefreshaction(hmap, hmap->D_colour.normalfill);
+}
+
+void videoulasetcolours(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  int i;
+  unsigned int u;
+
+  if (hmap->A_videoula.fragmentbits == 8)
   {
-    if (local_teletextform == 0)
-    {
-      cursor_width <<= 1;
-    }
-    else
-    {
-      if ((local_teletextform & 2) == 0)
-        cursor_width <<= 2;
-      else
-        cursor_width <<= 3;
-    }
+    videoulasetfragmentops(videoula01writebyte, videoularefreshbytefragments);
   }
   else
   {
-    if (videoula_clockrate)
-    {
-      /*modes 0-3*/
-      switch (beebit_graphicsmode)
-      {
-        case 12:
-        case 20:
-          cursor_width <<= 2;
-          break;
-        case 15:
-        case 21:
-          cursor_width <<= 3;
-          break;
-      }
-    }
-    else
-    {
-      /*modes 4-7*/
-      switch (beebit_graphicsmode)
-      {
-        case 12:
-        case 20:
-          cursor_width <<= 3;
-          break;
-        case 15:
-        case 21:
-          cursor_width <<= 4;
-          break;
-      }
-    }
+    videoulasetfragmentops(videoula01writenybble, videoularefreshnybblefragments);
   }
+
+  for (i=0; i<8; i++)
+  {
+    u = i;
+    u |= (u<<4);
+    u |= (u<<8);
+    u |= (u<<16);
+    hmap->D_colour.absolutefill[i] = u;
+    hmap->D_colour.absolutefill[i+8] = u;
+  }
+
+  hmap->B_videoula.normalblank = hmap->D_colour.absolutefill[0];
+
+  videoulasetblacklevelnphys(hmap, 0);
+}
+
+R6502ZONEMAP* videoulablankblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  if (hmap->A_videoula.blacklevelnphys != 0)
+    videoulasetblacklevelnphys(hmap, 0);
+  return zmap;
+}
+
+R6502ZONEMAP* videoulagraphicsblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  int nphys;
+  uintptr_t bc;
+
+  if (!(hmap->A_crtc.c9 & 8))
+  {
+    bc = hmap->B_videoula.bytelut[hmap->A_videoula.shiftregister&0xFF];
+    nphys = getnphys(hmap, (bc>>28)&0xF);
+
+    if (hmap->A_videoula.blacklevelnphys != nphys)
+      videoulasetblacklevelnphys(hmap, nphys);
+  }
+  else
+  {
+    if (hmap->A_videoula.blacklevelnphys != 0)
+      videoulasetblacklevelnphys(hmap, 0);
+  }
+  return zmap;
+}
+
+R6502ZONEMAP* videoulateletextblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  int nphys;
+  const uint8_t* p = (const uint8_t*)hmap->B_teletext.lue2;
+
+  if (p[0] & 1)
+    nphys = (hmap->B_teletext.colours>>16)&7;
+  else
+    nphys = (hmap->B_teletext.colours>>24)&7;
+
+  if (hmap->A_videoula.blacklevelnphys != nphys)
+    videoulasetblacklevelnphys(hmap, nphys);
+  return zmap;
+}
+
+R6502ZONEMAP* videoulateletextbblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  int nphys;
+  const uint32_t* p = (const uint32_t*)hmap->B_teletext.lue2;
+
+  if (p[hmap->B_teletext.bblevelbit>>5] & (1<<(hmap->B_teletext.bblevelbit&31)))
+    nphys = (hmap->B_teletext.colours>>16)&7;
+  else
+    nphys = (hmap->B_teletext.colours>>24)&7;
+
+  if (hmap->A_videoula.blacklevelnphys != nphys)
+    videoulasetblacklevelnphys(hmap, nphys);
+  return zmap;
+}
+
+R6502ZONEMAP* videoulacursorblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  uintptr_t signalbuffer,cursorflags;
+
+  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorflags = hmap->B_videoula.cursorflags;
+
+  if (cursorflags & signalbuffer)
+  {
+    if (hmap->A_videoula.blacklevelnphys != 7)
+      videoulasetblacklevelnphys(hmap, 7);
+  }
+  else
+  {
+    if (hmap->A_videoula.blacklevelnphys != 0)
+      videoulasetblacklevelnphys(hmap, 0);
+  }
+  return zmap;
+}
+
+R6502ZONEMAP* videoulacursorgraphicsblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  int nphys;
+  uintptr_t bc;
+  uintptr_t signalbuffer,cursorflags;
+
+  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorflags = hmap->B_videoula.cursorflags;
+
+  if (!(hmap->A_crtc.c9 & 8))
+  {
+    bc = hmap->B_videoula.bytelut[hmap->A_videoula.shiftregister&0xFF];
+    nphys = getnphys(hmap, (bc>>28)&0xF);
+
+    if (cursorflags & signalbuffer)
+      nphys ^= 7;
+
+    if (hmap->A_videoula.blacklevelnphys != nphys)
+      videoulasetblacklevelnphys(hmap, nphys);
+  }
+  else if (cursorflags & signalbuffer)
+  {
+    if (hmap->A_videoula.blacklevelnphys != 7)
+      videoulasetblacklevelnphys(hmap, 7);
+  }
+  else
+  {
+    if (hmap->A_videoula.blacklevelnphys != 0)
+      videoulasetblacklevelnphys(hmap, 0);
+  }
+  return zmap;
+}
+
+R6502ZONEMAP* videoulacursorteletextblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  int nphys;
+  uintptr_t signalbuffer,cursorflags;
+  const uint8_t* p = (const uint8_t*)hmap->B_teletext.lue2;
+
+  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorflags = hmap->B_videoula.cursorflags;
+
+  if (p[0] & 1)
+    nphys = (hmap->B_teletext.colours>>16)&7;
+  else
+    nphys = (hmap->B_teletext.colours>>24)&7;
+
+  if (cursorflags & signalbuffer)
+    nphys ^= 7;
+
+  if (hmap->A_videoula.blacklevelnphys != nphys)
+    videoulasetblacklevelnphys(hmap, nphys);
+  return zmap;
+}
+
+R6502ZONEMAP* videoulacursorteletextbblacklevel(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)zmap;
+  int nphys;
+  uintptr_t signalbuffer,cursorflags;
+  const uint32_t* p = (const uint32_t*)hmap->B_teletext.lue2;
+
+  signalbuffer = hmap->B_crtc.signalbuffer;
+  cursorflags = hmap->B_videoula.cursorflags;
+
+  if (p[hmap->B_teletext.bblevelbit>>5] & (1<<(hmap->B_teletext.bblevelbit&31)))
+    nphys = (hmap->B_teletext.colours>>16)&7;
+  else
+    nphys = (hmap->B_teletext.colours>>24)&7;
+
+  if (cursorflags & signalbuffer)
+    nphys ^= 7;
+
+  if (hmap->A_videoula.blacklevelnphys != nphys)
+    videoulasetblacklevelnphys(hmap, nphys);
+  return zmap;
 }
 
 HOSTMAP* videoula00write(HOSTMAP* hmap, uintptr_t address_code)
 {
-  videoula_control = hmap->m;
-  videoula_flashcolour = (hmap->m & 0x01);
-  llargecursor = (hmap->m & 0x80);
-  lteletextmode = (hmap->m & 0x02);
-  videoula_clockrate = (hmap->m & 0x10);
-  crtchorizontal();
-  crtcwidthextra();
-  crtccursor();
-  videoulasetcursor();
+  int toggleflash;
+  VIDEOULALOADOP *loadopgroup;
 
-  cursor_show = (!cursor_nondisplay AND cursor_width > 0) AND (m6845_cursorskew != 3);
+  toggleflash = (hmap->A_videoula.control ^ hmap->m) & 1;
 
-  if (lteletextmode)
-    video_mode = 7;
+  hmap->B_videoula.bytelut = &hmap->shiftedbytecolours[(hmap->m&0xC)<<6];
+  hmap->B_videoula.cursorflags = ((hmap->m&0xE0)<<(VIDEOSTEPSIGNALSEGMENTSHIFT-4))|((hmap->m&0x20)<<(VIDEOSTEPSIGNALSEGMENTSHIFT-5));
+  hmap->A_videoula.control = hmap->m;
+
+  if (hmap->m & 0x10)
+    hmap->B_crtc.step_code |= VIDEOSTEPFASTFLAG;
   else
-  {
-    switch ((hmap->m & 0x1C)>>2)
-    {
-      case 0x07:
-        if (hmap->screenstartaddress == 0x4000)
-          video_mode = 3;
-        else
-          video_mode = 0;
-        break;
-      case 0x06:
-        video_mode = 1;
-        break;
-      case 0x05:
-        video_mode = 2;
-        break;
-      case 0x02:
-        if (hmap->screenstartaddress == 0x6000)
-          video_mode = 6;
-        else
-          video_mode = 4;
-        break;
-      case 0x01:
-        video_mode = 5;
-        break;
-      case 0x00:
-        video_mode = 8;
-        break;
-      default:
-        video_mode = -1;
-        break;
-    }
-    videomodechange();
-  }
+    hmap->B_crtc.step_code &= ~VIDEOSTEPFASTFLAG;
 
-  videoulasetpalette();
+  loadopgroup = &hmap->videoulaloads[hmap->m & 0x1C];
 
-  if (ncurrentmode == -1)
-  {
-    if (lteletextmode && local_teletextform == 0)
-    {
-      if (screenmoderecords)
-      {
-        regs.r[0] = 0;
-        regs.r[1] = 7;
-        _kernel_swi(OS_ScreenMode,&regs,&regs);
-      }
-      else
-      {
-        bbcvdu(22);
-        bbcvdu(7);
-      }
-    }
-    else
-    {
-      if (screenmoderecords)
-      {
-        regs.r[0] = 0;
-        regs.r[1] = beebit_graphicsmodespecifier;
-        _kernel_swi(OS_ScreenMode,&regs,&regs);
-      }
-      else
-      {
-        bbcvdu(22);
-        bbcvdu(beebit_graphicsmodespecifier);
-      }
-    }
-    ncurrentmode = video_mode;
-    videohostmodevars();
-    adcmodevars();
-    cursordisable();
-    crtcscreen();
-    crtccursor();
-    video_startaddress = video_storeaddress;
-    video_offset = 0;
-  }
+  hmap->B_videoula.evenloadop = loadopgroup[0];
+  hmap->B_videoula.oddloadop = loadopgroup[1];
+  hmap->B_videoula.evenRloadop = loadopgroup[2];
+  hmap->B_videoula.oddRloadop = loadopgroup[3];
+
+  if (hmap->m & 0x02)
+    hmap->peripheral_code |= VIDEODISPLAYTELETEXT;
+  else
+    hmap->peripheral_code &= ~VIDEODISPLAYTELETEXT;
+
+  if (toggleflash)
+    hmap->B_videoula.fragmentrefreshaction(hmap, hmap->D_colour.normalfill);
+
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
 
-HOSTMAP* videoula01write(HOSTMAP* hmap, uintptr_t address_code)
+HOSTMAP* videoula01writenybble(HOSTMAP* hmap, uintptr_t address_code)
 {
-  int n1,n2;
+  unsigned int nphys, nphys2;
+  uint8_t* bytefragment = (uint8_t*)hmap->D_colour.fragment;
 
-  /*palette*/
-  videoula_rawpalette[hmap->m>>4] =(hmap->m & 0x0F);
+  nphys2 = (hmap->m & 0x0F);
+  nphys = nphys2 ^ 0x7;
+  hmap->A_videoula.palette[hmap->m>>4] = nphys2;
 
-  n1 = (hmap->m>>4); /*logical colour*/
-  n2 = ((hmap->m & 0x0F)^7); /*physical colour*/
-  videoula_palettevalue = hmap->m;
-  /*videoula_colours[n1] = n2;*/
-  #ifdef __DEBUG__
-    fprintf(htrace,"Palette %u=&%X\n",n1,n2);
-  #endif
-  switch (video_mode)
-  {
-    case 0x00:
-    case 0x03:
-    case 0x04:
-    case 0x06:
-      /*1bpp*/
-      videoula_palette0[n1] = videoula_physical0[n2];
-      videoula_palette1[n1] = videoula_physical1[n2];
-      n2 = video_colourlookup1[n1];
-      if (videoula_flashcolour == 0)
-      {
-        switch (beebit_graphicsmode)
-        {
-          case 12:
-          case 20:
-            videoula_palette[n2] = videoula_palette0[n1];
-            break;
-          case 15:
-          case 21:
-            videoula_palette[n2] = videoula_colourmap8[videoula_palette0[n1]];
-            break;
-        }
-      }
-      else
-      {
-        switch (beebit_graphicsmode)
-        {
-          case 12:
-          case 20:
-            videoula_palette[n2] = videoula_palette1[n1];
-            break;
-          case 15:
-          case 21:
-            videoula_palette[n2] = videoula_colourmap8[videoula_palette1[n1]];
-            break;
-        }
-      }
-      break;
-    case 0x01:
-    case 0x05:
-      /*2bpp*/
-      videoula_palette0[n1] = videoula_physical0[n2];
-      videoula_palette1[n1] = videoula_physical1[n2];
-      n2 = video_colourlookup2[n1];
-      if (videoula_flashcolour == 0)
-      {
-        switch (beebit_graphicsmode)
-        {
-          case 12:
-          case 20:
-            videoula_palette[n2] = videoula_palette0[n1];
-            break;
-          case 15:
-          case 21:
-            videoula_palette[n2] = videoula_colourmap8[videoula_palette0[n1]];
-            break;
-        }
-      }
-      else
-      {
-        switch (beebit_graphicsmode)
-        {
-          case 12:
-          case 20:
-            videoula_palette[n2] = videoula_palette1[n1];
-            break;
-          case 15:
-          case 21:
-            videoula_palette[n2] = videoula_colourmap8[videoula_palette1[n1]];
-            break;
-        }
-      }
-      break;
-    default:
-    /*case 0x02:*/
-      videoula_palette0[n1] = videoula_physical0[n2];
-      videoula_palette1[n1] = videoula_physical1[n2];
-      if (videoula_flashcolour == 0)
-      {
-        switch (beebit_graphicsmode)
-        {
-          case 12:
-          case 20:
-            videoula_palette[n1] = videoula_palette0[n1];
-            break;
-          case 15:
-          case 21:
-            videoula_palette[n1] = videoula_colourmap8[videoula_palette0[n1]];
-            break;
-        }
-      }
-      else
-      {
-        switch (beebit_graphicsmode)
-        {
-          case 12:
-          case 20:
-            videoula_palette[n1] = videoula_palette1[n1];
-            break;
-          case 15:
-          case 21:
-            videoula_palette[n1] = videoula_colourmap8[videoula_palette1[n1]];
-            break;
-        }
-      }
-      break;
-  }
+  if (hmap->A_videoula.control & (hmap->B_videoula.flashing>>nphys) & 1)
+    nphys = nphys2;
+
+  bytefragment[hmap->m>>4] = hmap->D_colour.fill[nphys] & 0xF;
+
+  R6502_JUMP_FROM_HIGH_OP(hmap)
+}
+
+HOSTMAP* videoula01writebyte(HOSTMAP* hmap, uintptr_t address_code)
+{
+  unsigned int nphys, nphys2;
+  uint8_t* bytefragment = (uint8_t*)hmap->D_colour.fragment;
+
+  nphys2 = (hmap->m & 0x0F);
+  nphys = nphys2 ^ 0x7;
+  hmap->A_videoula.palette[hmap->m>>4] = nphys2;
+
+  if (hmap->A_videoula.control & (hmap->B_videoula.flashing>>nphys) & 1)
+    nphys = nphys2;
+
+  bytefragment[hmap->m>>4] = hmap->D_colour.fill[nphys] & 0xFF;
+
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }

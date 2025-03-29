@@ -64,7 +64,6 @@ char beebit_cmos[0x40];
 
 int beebit_graphicsmodeselector[10]; /*selector used when mode is not specified by number*/
 intptr_t beebit_graphicsmodespecifier;
-int beebit_graphicsmode; /*can mode 12,15 or 21 be used for graphics?*/
 int beebit_currenttype;
 int beebit_machinetype;
 int beebit_cpuspeed;
@@ -73,15 +72,17 @@ int beebit_framerate;
 int beebit_mouseemulation;
 int beebit_displaymode;
 int beebit_displayzoom;
+int beebit_hadjust;
+int beebit_vadjust;
 int beebit_palette;
 int beebit_sound;
 int beebit_cursor;
+int beebit_topmiddle;
 int beebit_fasttape;
 int beebit_printer;
 int beebit_links; /*keyboard links*/
 int beebit_button1; /*joystick button 1*/
 int beebit_button2; /*joystick button 2*/
-int beebit_vdusel; /*VDUSEL (0x80) for B+, D (0x01) for Master 128*/
 int beebit_leds,host_leds;
 int beebit_rommask;
 int beebit_exit; /*exit the emulation F12 or close window*/
@@ -175,20 +176,6 @@ void beebitreset(void)
   {
     hostmap.romsel = 0;
     hostmap.acccon = 0;
-    /*bit flag for shadow memory*/
-    switch (beebit_machinetype)
-    {
-      case MACHINE_MODELB:
-        beebit_vdusel = 0x00;
-        break;
-      case MACHINE_MODELBPLUS:
-        beebit_vdusel = 0x80;
-        break;
-      case MACHINE_MASTER128:
-      case MACHINE_COMPACT:
-        beebit_vdusel = 0x01;
-        break;
-    }
     beebit_rommask = 0xFFFFFF;
     beebit_button1 = 0;
     beebit_button2 = 0;
@@ -340,6 +327,7 @@ void beebitinit(void)
   beebit_machinetype = beebit_currenttype = -1;
   beebit_sound = TRUE;
   beebit_cursor = TRUE;
+  beebit_topmiddle = TRUE;
   beebit_fasttape = FALSE;
   beebit_printer = FALSE;
   beebit_links = 0;
@@ -372,6 +360,7 @@ int beebitenter(void)
   char* rom;
   int i, lredraw, nmask, nindex;
   I8271_REMOVED_DATA discremoveddata;
+  int minlinescale;
   FILE *hfile;
 
   lexit = FALSE;
@@ -554,23 +543,30 @@ int beebitenter(void)
     {
       do
       {
-        if (numberedscreenmodeflags & (1<<12))
+        if (beebit_videospeed == VIDEO_FAST && beebit_videospeed == VIDEO_SLOW)
         {
-          beebit_graphicsmodespecifier = 12;
-          break;
+          if (numberedscreenmodeflags & (1<<12))
+          {
+            beebit_graphicsmodespecifier = 12;
+            break;
+          }
+          if (numberedscreenmodeflags & (1<<15))
+          {
+            beebit_graphicsmodespecifier = 15;
+            break;
+          }
+          minlinescale = 1;
         }
-        if (numberedscreenmodeflags & (1<<15))
-        {
-          beebit_graphicsmodespecifier = 15;
-          break;
-        }
+        else
+          minlinescale = 2;
+
         if (numberedscreenmodeflags & (1<<21))
         {
           beebit_graphicsmodespecifier = 21;
           break;
         }
 #ifdef VIDEOSCALE_WITH_OVERSCALE
-        i = pickascreenmode(1280,1024);
+        i = pickascreenmode(1280,1024,minlinescale);
         if (i>=0)
         {
           screenmodesetblock(screenmoderecords+i,&beebit_graphicsmodeselector);
@@ -578,7 +574,7 @@ int beebitenter(void)
           break;
         }
 #endif
-        i = pickascreenmode(640,256);
+        i = pickascreenmode(640,256,minlinescale);
         if (i>=0)
         {
           screenmodesetblock(screenmoderecords+i,&beebit_graphicsmodeselector);
@@ -603,46 +599,22 @@ int beebitenter(void)
 
       videosetpalette();
       videosetscale();
-      videosetplot();
 
-      if (video_mode != -1)
+      if (screenmoderecords)
       {
-        if (video_mode == 7 && local_teletextform == 0)
-        {
-          if (screenmoderecords)
-          {
-            regs.r[0] = 0;
-            regs.r[1] = 7;
-            _kernel_swi(OS_ScreenMode,&regs,&regs);
-          }
-          else
-          {
-            bbcvdu(22);
-            bbcvdu(7);
-          }
-        }
-        else
-        {
-          if (screenmoderecords)
-          {
-            regs.r[0] = 0;
-            regs.r[1] = beebit_graphicsmodespecifier;
-            _kernel_swi(OS_ScreenMode,&regs,&regs);
-          }
-          else
-          {
-            bbcvdu(22);
-            bbcvdu(beebit_graphicsmodespecifier);
-          }
-        }
-
-        crtcteletextwidthextra();
-        crtcwidthextra();
-        videomodechange();
-        videohostmodevars();
-        adcmodevars();
-        cursordisable();
+        regs.r[0] = 0;
+        regs.r[1] = beebit_graphicsmodespecifier;
+        _kernel_swi(OS_ScreenMode,&regs,&regs);
       }
+      else
+      {
+        bbcvdu(22);
+        bbcvdu(beebit_graphicsmodespecifier);
+      }
+
+      cursordisable();
+      videohostmodevars();
+      adcmodevars();
     }
     if (!lexit)
       keyclaim();
@@ -650,11 +622,7 @@ int beebitenter(void)
     else
     {*/
       /*multitask*/
-      /*beebit_graphicsmode = -1;
-      beebit_teletextmode = -1;
-      videosetplot();
-      videomodechange();
-      videohostmodevars();
+      /*videohostmodevars();
       adcmodevars();*/
       /*setword((char *)nlocalscreen, (int)screen);*/
       /*initialise keyboard handler*/

@@ -32,6 +32,7 @@
 
 ; Export global symbols
 
+  EXPORT |keyboardCA2max|
   EXPORT |keyboardCA2column0|
   EXPORT |keyboardCA2column1|
   EXPORT |keyboardCA2column2|
@@ -44,7 +45,6 @@
   EXPORT |keyboardCA2column9|
   EXPORT |keyboardCA2column10|
   EXPORT |keyboardCA2column11|
-  EXPORT |keyboardCA2column12|
   EXPORT |keyboardCA2WEIcolumn0row0|
   EXPORT |keyboardCA2WEIcolumn0row1|
   EXPORT |keyboardCA2WEIcolumn0row2|
@@ -162,6 +162,7 @@
   EXPORT |keyboardCA2WEcolumn10|
   EXPORT |keyboardCA2WEcolumn11|
   EXPORT |keyboardCA2WEcolumn12|
+  EXPORT |keyboardmax|
   EXPORT |keyboardcolumn0|
   EXPORT |keyboardcolumn1|
   EXPORT |keyboardcolumn2|
@@ -174,7 +175,6 @@
   EXPORT |keyboardcolumn9|
   EXPORT |keyboardcolumn10|
   EXPORT |keyboardcolumn11|
-  EXPORT |keyboardcolumn12|
   EXPORT |keyboardWEIcolumn0row0|
   EXPORT |keyboardWEIcolumn0row1|
   EXPORT |keyboardWEIcolumn0row2|
@@ -298,21 +298,13 @@
   EXPORT |keyboardnocolumn|
   EXPORT |keyboardWEInocolumn|
   EXPORT |keyboardWEnocolumn|
-  EXPORT |keyboardlownop|
-  EXPORT |keyboardmaxnop|
-  EXPORT |keyboardWEnop|
-  EXPORT |keyboardbridge|
 
   MACRO
   KEYBOARD_CA2_COLUMN_N $n
   LDRB r2,[r0,#:INDEX:HOST_KEYSTATUS+$n]
   CMP r2,#1
-  IF PlaceKeyboardStateInRegister
-  SUBLE r8,r8,#KEYBOARDCA2FLAG:SHL:2
-  ELSE
   SUBLE r1,r1,#KEYBOARDCA2FLAG:SHL:2
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
   MOVGT pc,lr
   B systemviaunsetca2
   MEND
@@ -326,13 +318,9 @@
   BICEQ r12,r12,#&80
   STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
   CMP r2,#1
-  IF PlaceKeyboardStateInRegister
-  SUBLE r8,r8,#KEYBOARDCA2FLAG:SHL:2
-  ELSE
-  SUBLE r1,r1,#KEYBOARDCA2FLAG:SHL:2
-  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
   MOVGT pc,lr
+  SUB r1,r1,#(KEYBOARDCA2FLAG+1):SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   B systemviaunsetca2
   MEND
 
@@ -340,13 +328,9 @@
   KEYBOARD_CA2_WE_COLUMN_N $n
   LDRB r2,[r0,#:INDEX:HOST_KEYSTATUS+$n]
   CMP r2,#1
-  IF PlaceKeyboardStateInRegister
-  SUBLE r8,r8,#KEYBOARDCA2FLAG:SHL:2
-  ELSE
-  SUBLE r1,r1,#KEYBOARDCA2FLAG:SHL:2
-  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
   MOVGT pc,lr
+  SUB r1,r1,#(KEYBOARDCA2FLAG+1):SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   B systemviaunsetca2
   MEND
 
@@ -354,12 +338,8 @@
   KEYBOARD_COLUMN_N $n
   LDRB r2,[r0,#:INDEX:HOST_KEYSTATUS+$n]
   CMP r2,#1
-  IF PlaceKeyboardStateInRegister
-  ADDGT r8,r8,#KEYBOARDCA2FLAG:SHL:2
-  ELSE
   ADDGT r1,r1,#KEYBOARDCA2FLAG:SHL:2
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
   MOVLE pc,lr
   B systemviasetca2
   MEND
@@ -373,13 +353,9 @@
   BICEQ r12,r12,#&80
   STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
   CMP r2,#1
-  IF PlaceKeyboardStateInRegister
-  ADDGT r8,r8,#KEYBOARDCA2FLAG:SHL:2
-  ELSE
-  ADDGT r1,r1,#KEYBOARDCA2FLAG:SHL:2
-  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
   MOVLE pc,lr
+  ADD r1,r1,#(KEYBOARDCA2FLAG-1):SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   B systemviasetca2
   MEND
 
@@ -387,53 +363,50 @@
   KEYBOARD_WE_COLUMN_N $n
   LDRB r2,[r0,#:INDEX:HOST_KEYSTATUS+$n]
   CMP r2,#1
-  IF PlaceKeyboardStateInRegister
-  ADDGT r8,r8,#KEYBOARDCA2FLAG:SHL:2
-  ELSE
-  ADDGT r1,r1,#KEYBOARDCA2FLAG:SHL:2
-  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
   MOVLE pc,lr
+  ADD r1,r1,#(KEYBOARDCA2FLAG-1):SHL:2
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   B systemviasetca2
   MEND
 
-|keyboardCA2column0|
+|keyboardCA2max|
+  SUB r1,r1,#16:SHL:2
   KEYBOARD_CA2_COLUMN_N 0
 
-|keyboardCA2column1|
+|keyboardCA2column0|
   KEYBOARD_CA2_COLUMN_N 1
 
-|keyboardCA2column2|
+|keyboardCA2column1|
   KEYBOARD_CA2_COLUMN_N 2
 
-|keyboardCA2column3|
+|keyboardCA2column2|
   KEYBOARD_CA2_COLUMN_N 3
 
-|keyboardCA2column4|
+|keyboardCA2column3|
   KEYBOARD_CA2_COLUMN_N 4
 
-|keyboardCA2column5|
+|keyboardCA2column4|
   KEYBOARD_CA2_COLUMN_N 5
 
-|keyboardCA2column6|
+|keyboardCA2column5|
   KEYBOARD_CA2_COLUMN_N 6
 
-|keyboardCA2column7|
+|keyboardCA2column6|
   KEYBOARD_CA2_COLUMN_N 7
 
-|keyboardCA2column8|
+|keyboardCA2column7|
   KEYBOARD_CA2_COLUMN_N 8
 
-|keyboardCA2column9|
+|keyboardCA2column8|
   KEYBOARD_CA2_COLUMN_N 9
 
-|keyboardCA2column10|
+|keyboardCA2column9|
   KEYBOARD_CA2_COLUMN_N 10
 
-|keyboardCA2column11|
+|keyboardCA2column10|
   KEYBOARD_CA2_COLUMN_N 11
 
-|keyboardCA2column12|
+|keyboardCA2column11|
   KEYBOARD_CA2_COLUMN_N 12
 
 |keyboardCA2WEIcolumn0row0|
@@ -787,43 +760,44 @@
 |keyboardCA2WEcolumn12|
   KEYBOARD_CA2_WE_COLUMN_N 12
 
-|keyboardcolumn0|
+|keyboardmax|
+  SUB r1,r1,#16:SHL:2
   KEYBOARD_COLUMN_N 0
 
-|keyboardcolumn1|
+|keyboardcolumn0|
   KEYBOARD_COLUMN_N 1
 
-|keyboardcolumn2|
+|keyboardcolumn1|
   KEYBOARD_COLUMN_N 2
 
-|keyboardcolumn3|
+|keyboardcolumn2|
   KEYBOARD_COLUMN_N 3
 
-|keyboardcolumn4|
+|keyboardcolumn3|
   KEYBOARD_COLUMN_N 4
 
-|keyboardcolumn5|
+|keyboardcolumn4|
   KEYBOARD_COLUMN_N 5
 
-|keyboardcolumn6|
+|keyboardcolumn5|
   KEYBOARD_COLUMN_N 6
 
-|keyboardcolumn7|
+|keyboardcolumn6|
   KEYBOARD_COLUMN_N 7
 
-|keyboardcolumn8|
+|keyboardcolumn7|
   KEYBOARD_COLUMN_N 8
 
-|keyboardcolumn9|
+|keyboardcolumn8|
   KEYBOARD_COLUMN_N 9
 
-|keyboardcolumn10|
+|keyboardcolumn9|
   KEYBOARD_COLUMN_N 10
 
-|keyboardcolumn11|
+|keyboardcolumn10|
   KEYBOARD_COLUMN_N 11
 
-|keyboardcolumn12|
+|keyboardcolumn11|
   KEYBOARD_COLUMN_N 12
 
 |keyboardWEIcolumn0row0|
@@ -1178,33 +1152,21 @@
   KEYBOARD_WE_COLUMN_N 12
 
 |keyboardCA2nocolumn|
-  IF PlaceKeyboardStateInRegister
-  SUB r8,r8,#KEYBOARDCA2FLAG:SHL:2
-  ELSE
   SUB r1,r1,#KEYBOARDCA2FLAG:SHL:2
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
   B systemviaunsetca2
 
 |keyboardCA2WEInocolumn|
   LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
   BIC r12,r12,#&80
   STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
-  IF PlaceKeyboardStateInRegister
-  SUB r8,r8,#KEYBOARDCA2FLAG:SHL:2
-  ELSE
-  SUB r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  SUB r1,r1,#(KEYBOARDCA2FLAG+1):SHL:2
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
   B systemviaunsetca2
 
 |keyboardCA2WEnocolumn|
-  IF PlaceKeyboardStateInRegister
-  SUB r8,r8,#KEYBOARDCA2FLAG:SHL:2
-  ELSE
-  SUB r1,r1,#KEYBOARDCA2FLAG:SHL:2
+  SUB r1,r1,#(KEYBOARDCA2FLAG+1):SHL:2
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
   B systemviaunsetca2
 
 |keyboardWEInocolumn|
@@ -1212,42 +1174,10 @@
   BIC r12,r12,#&80
   STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
 |keyboardWEnocolumn|
-|keyboardlownop|
+  MOV pc,lr
+
 |keyboardnocolumn|
-  IF :LNOT:PlaceKeyboardStateInRegister
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
   MOV pc,lr
-
-|keyboardmaxnop|
-  IF PlaceKeyboardStateInRegister
-  SUB r8,r8,#32:SHL:2
-  ELSE
-  SUB r1,r1,#32:SHL:2
-  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
-  MOV pc,lr
-
-|keyboardWEnop|
-  IF PlaceKeyboardStateInRegister
-  SUB r8,r8,#2:SHL:2
-  ELSE
-  SUB r1,r1,#2:SHL:2
-  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  ENDIF
-  MOV pc,lr
-
-|keyboardbridge|
-  IF PlaceKeyboardStateInRegister
-  STMFD sp!,{r8,lr}
-  ADD lr,pc,#8-4
-  SUB r8,r1,#KEYBOARDBRIDGEFLAG:SHL:2
-  LDR pc, [r8, #-4]
-  STR r8,[r0,#:INDEX:HOST_KEYBOARD_STATE]
-  LDMFD sp!,{r8,pc}
-  ELSE
-  SUB r1,r1,#KEYBOARDBRIDGEFLAG:SHL:2
-  LDR pc, [r1, #-4]
-  ENDIF
 
   END

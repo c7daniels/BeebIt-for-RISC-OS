@@ -27,6 +27,7 @@
 #include <time.h>
 #include "hostmap.h"
 #include "6502cpu.h"
+#include "video.h"
 #include "6522sysvia.h"
 #include "beebit.h"
 #include "kernel.h"
@@ -42,7 +43,6 @@ extern void zeribeepwrite(HOSTMAP *hmap, char nvalue);
 #endif
 
 /*System VIA*/
-static int ScreenStartArray[] = {0x4000,0x6000,0x3000,0x5800};
 
 char bcd(char nvalue)
 {
@@ -221,33 +221,35 @@ static inline void systemviasetirq(HOSTMAP *hmap)
 
 void systemviasetca1(HOSTMAP *hmap)
 {
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+
   #ifdef __DEBUG__
     fprintf(htrace,"CA1 ");
   #endif
-  hmap->A_sysvia.ifr |= 0x02; /*CA1 flag*/
-  systemviasetirq(hmap);
-  hmap->A_sysvia.ira = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) + (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
+  if (hmap->A_sysvia.pcr & 0x01)
+  {
+    hmap->A_sysvia.ifr |= 0x02; /*CA1 flag*/
+    systemviasetirq(hmap);
+    if (!(cmap->ps & IFLAG) && (cmap->irq & IRQ_6522SYSVIA))
+      r6502startinterrupt(cmap);
+
+    hmap->A_sysvia.ira = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) + (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
+  }
 }
 
-/*void systemviavidca1(void)
-{*/
-  /*CA1 flag*/
-  /*hmap->A_sysvia.ifr |= 0x02;
-  systemviasetirq(hmap);
-  hmap->A_sysvia.ira=(hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
-}*/
-
-/*void systemviavidirq(void)
+void systemviaunsetca1(HOSTMAP *hmap)
 {
-  systemviasetirq(hmap);
-  hmap->A_sysvia.ira=(hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
-}*/
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
 
-void systemviaunsetca1(void)
-{
-  HOSTMAP* hmap = &hostmap;
-  hmap->A_sysvia.ifr &= 0xFD; /*CA1 flag*/
-  systemviasetirq(hmap);
+  if (!(hmap->A_sysvia.pcr & 0x01))
+  {
+    hmap->A_sysvia.ifr |= 0x02; /*CA1 flag*/
+    systemviasetirq(hmap);
+    if (!(cmap->ps & IFLAG) && (cmap->irq & IRQ_6522SYSVIA))
+      r6502startinterrupt(cmap);
+
+    hmap->A_sysvia.ira = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) + (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
+  }
 }
 
 HOSTMAP* systemviasetca2(HOSTMAP *hmap)
@@ -343,8 +345,6 @@ void systemviareset(void)
 
   hmap->lsoundlatch = FALSE;
   systemviasetirq(hmap);
-  hmap->screenstartaddress = 0;
-  hmap->screenstartindex = 0;
 
   hmap->cycles.sysvia_togo = systemviapickcyclestogo();
   hmap->cycles.sysvia_original = hmap->cycles.sysvia_togo;
@@ -380,8 +380,6 @@ void systemviaaftersnapshot(void)
     hmap->B_sysvia.t2doubled += expiryoffset;
     HOSTMAP_LIMIT_PERIPHERAL_CYCLES_TO_GO(hmap, sysvia, hmap->B_sysvia.t2doubled + 2)
   }
-
-  systemviasetirq(hmap);
 
   hmap->keyboard_state = &hmap->keyboardops[KEYBOARDNOTWRITEENABLEFLAG];
 }
@@ -482,8 +480,8 @@ static inline void setkeyboardnotwriteenable(HOSTMAP* hmap, int notwriteenable)
     if (!notwriteenable)
     {
       offset = (hmap->A_sysvia.porta & hmap->A_sysvia.ddra) & 0x7F;
-      hmap->keyboard_state -= (keyboard_state_index & 0xFE);
-      hmap->keyboard_state += (offset<<1);
+      hmap->keyboard_state -= (keyboard_state_index & 0x7F);
+      hmap->keyboard_state += offset;
       hmap->keyboard_state -= KEYBOARDNOTWRITEENABLEFLAG;
     }
   }
@@ -506,8 +504,8 @@ static inline void setkeyboardscanposition(HOSTMAP* hmap)
   if (!(keyboard_state_index&KEYBOARDNOTWRITEENABLEFLAG))
   {
     offset = (hmap->A_sysvia.porta & hmap->A_sysvia.ddra) & 0x7F;
-    hmap->keyboard_state -= (keyboard_state_index & 0xFE);
-    hmap->keyboard_state += (offset<<1);
+    hmap->keyboard_state -= (keyboard_state_index & 0x7F);
+    hmap->keyboard_state += offset;
   }
 }
 
@@ -910,29 +908,17 @@ static inline void systemviaportbwrite_latchb(HOSTMAP* hmap)
       break;
     case 0x04:
       /*Screen Size hi*/
-      if (!lenabled)
-      {
-        hmap->screenstartindex &= 2;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+      if (lenabled)
+        hmap->B_crtc.scan_code |= (1<<VIDEOREADSTARTSHIFT);
       else
-      {
-        hmap->screenstartindex |= 1;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+        hmap->B_crtc.scan_code &= ~(1<<VIDEOREADSTARTSHIFT);
       break;
     case 0x05:
       /*Screen Size lo*/
-      if (!lenabled)
-      {
-        hmap->screenstartindex &= 1;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+      if (lenabled)
+        hmap->B_crtc.scan_code |= (2<<VIDEOREADSTARTSHIFT);
       else
-      {
-        hmap->screenstartindex |= 2;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+        hmap->B_crtc.scan_code &= ~(2<<VIDEOREADSTARTSHIFT);
       break;
     case 0x06:
       /*caps lock on/off*/
@@ -1024,29 +1010,17 @@ static inline void systemviaportbwrite_latchm(HOSTMAP* hmap)
       break;
     case 0x04:
       /*Screen Size hi*/
-      if (!lenabled)
-      {
-        hmap->screenstartindex &= 2;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+      if (lenabled)
+        hmap->B_crtc.scan_code |= (1<<VIDEOREADSTARTSHIFT);
       else
-      {
-        hmap->screenstartindex |= 1;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+        hmap->B_crtc.scan_code &= ~(1<<VIDEOREADSTARTSHIFT);
       break;
     case 0x05:
       /*Screen Size lo*/
-      if (!lenabled)
-      {
-        hmap->screenstartindex &= 1;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+      if (lenabled)
+        hmap->B_crtc.scan_code |= (2<<VIDEOREADSTARTSHIFT);
       else
-      {
-        hmap->screenstartindex |= 2;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+        hmap->B_crtc.scan_code &= ~(2<<VIDEOREADSTARTSHIFT);
       break;
     case 0x06:
       /*caps lock on/off*/
@@ -1104,29 +1078,17 @@ static inline void systemviaportbwrite_nosoundlatchb(HOSTMAP* hmap)
       break;
     case 0x04:
       /*Screen Size hi*/
-      if (!lenabled)
-      {
-        hmap->screenstartindex &= 2;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+      if (lenabled)
+        hmap->B_crtc.scan_code |= (1<<VIDEOREADSTARTSHIFT);
       else
-      {
-        hmap->screenstartindex |= 1;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+        hmap->B_crtc.scan_code &= ~(1<<VIDEOREADSTARTSHIFT);
       break;
     case 0x05:
       /*Screen Size lo*/
-      if (!lenabled)
-      {
-        hmap->screenstartindex &= 1;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+      if (lenabled)
+        hmap->B_crtc.scan_code |= (2<<VIDEOREADSTARTSHIFT);
       else
-      {
-        hmap->screenstartindex |= 2;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+        hmap->B_crtc.scan_code &= ~(2<<VIDEOREADSTARTSHIFT);
       break;
     case 0x06:
       /*caps lock on/off*/
@@ -1212,29 +1174,17 @@ static inline void systemviaportbwrite_nosoundlatchm(HOSTMAP* hmap)
       break;
     case 0x04:
       /*Screen Size hi*/
-      if (!lenabled)
-      {
-        hmap->screenstartindex &= 2;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+      if (lenabled)
+        hmap->B_crtc.scan_code |= (1<<VIDEOREADSTARTSHIFT);
       else
-      {
-        hmap->screenstartindex |= 1;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+        hmap->B_crtc.scan_code &= ~(1<<VIDEOREADSTARTSHIFT);
       break;
     case 0x05:
       /*Screen Size lo*/
-      if (!lenabled)
-      {
-        hmap->screenstartindex &= 1;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+      if (lenabled)
+        hmap->B_crtc.scan_code |= (2<<VIDEOREADSTARTSHIFT);
       else
-      {
-        hmap->screenstartindex |= 2;
-        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
-      }
+        hmap->B_crtc.scan_code &= ~(2<<VIDEOREADSTARTSHIFT);
       break;
     case 0x06:
       /*caps lock on/off*/
@@ -1614,14 +1564,15 @@ HOSTMAP* systemvia0Bwrite(HOSTMAP* hmap, uintptr_t address_code)
 
 HOSTMAP* systemvia0Cwrite(HOSTMAP* hmap, uintptr_t address_code)
 {
+  /*CB2 output LPSTB active edge*/
+  if ((hmap->A_sysvia.pcr & 0xE0) == 0xC0 && (hmap->m & 0xE0) == 0xE0)
+  {
+    hmap->A_crtc.lpstbtimer = 1;
+    hmap->A_vidbuf.eventflags |= VIDEOSTEPEVENTLPSTB;
+    hmap->B_crtc.scan_code |= VIDEOREADEVENTFLAG;
+  }
   /*peripheral control reg*/
   hmap->A_sysvia.pcr = hmap->m;
-  /*CA1 active edge*/
-  if (hmap->A_sysvia.pcr & 0x01)
-  {
-    /*set b2 (CA1)*/
-    hmap->A_sysvia.ifr |= 0x02;
-  }
   /*CA2 active edge*/
   if ((hmap->A_sysvia.pcr & 0x0E) == 0x04)
   {

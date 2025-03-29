@@ -160,7 +160,7 @@ void snapshotload(FILE *hfile)
       /*timer to vertical sync*/
 //      fread(cbuffer,1,4,hfile); /*60*/
 //      video_timer = getword(cbuffer);
-  hmap->cycles.video_togo =readhdr.Cvsync;
+//  hmap->cycles.video_togo =readhdr.Cvsync;
 
       /*unused*/
 //      fread(cbuffer,1,4,hfile); /*64*/
@@ -232,13 +232,14 @@ void snapshotload(FILE *hfile)
   }
 
 //      fread(cbuffer,1,4,hfile); /*136*/
-//      m6845_r[0x10] = cbuffer[0];
-//      m6845_r[0x11] = cbuffer[1];
-  m6845_r[0x10] =readhdr.crtc[0x10];
-  m6845_r[0x11] =readhdr.crtc[0x11];
+//      hmap->A_crtc.r[0x10] = cbuffer[0];
+//      hmap->A_crtc.r[0x11] = cbuffer[1];
+  hmap->A_crtc.r[0x10] =readhdr.crtc[0x10];
+  hmap->A_crtc.r[0x11] =readhdr.crtc[0x11];
       /*register 19*/
 //      hmap->screenstartindex = cbuffer[2];
-  hmap->screenstartindex =readhdr.crtc[0x12];
+  hmap->B_crtc.scan_code = (hmap->B_crtc.scan_code&~(3<<VIDEOREADSTARTSHIFT)) | (readhdr.crtc[0x12]<<VIDEOREADSTARTSHIFT);
+
       /*unused*/
 //      fread(cbuffer,1,4,hfile); /*140*/
 //      fread(cbuffer,1,4,hfile); /*144*/
@@ -256,7 +257,7 @@ void snapshotload(FILE *hfile)
   {
     int read;
     read =readhdr.palette[p];
-    hmap->m = (p<<4) +(read & 0xf); videoula01write(hmap, 0xFE210000);
+    hmap->m = (p<<4) +(read & 0xf); videoula01writenybble(hmap, 0xFE210000);
 // videoula_palette[p] =readhdr.palette[p];
   }
 
@@ -413,7 +414,8 @@ void snapheadersave(SNAPHDR *phdr)
 //  /*timer to vertical sync*/
 //  setword(cbuffer,video_timer);
 //  wimpwrite(cbuffer,1,4); /*60*/
-  phdr ->Cvsync =(int)hmap->cycles.video_togo;
+//  phdr ->Cvsync =(int)hmap->cycles.video_togo;
+  phdr ->Cvsync = 128;
 //  /*unused*/
 //  setword(cbuffer,0);
 //  wimpwrite(cbuffer,1,4); /*64*/
@@ -462,12 +464,12 @@ void snapheadersave(SNAPHDR *phdr)
 //  /*&FE20*/
 //  /*cbuffer[0] = sheila_b[0x20];*/
 //  wimpwrite(cbuffer,1,4); /*116*/
-  phdr ->Sheila20 =videoularead(0);
+  phdr ->Sheila20 =hmap->A_videoula.control;
 //  /*6845 crtc*/
 //  j = 0;
 //  for (i=0;i<=0x0F;i++)
 //  {
-//    cbuffer[j] = m6845_r[i];
+//    cbuffer[j] = hmap->A_crtc.r[i];
 //    j++;
 //    if (j > 3)
 //    {
@@ -477,17 +479,17 @@ void snapheadersave(SNAPHDR *phdr)
 //  }
   for (r =0; r<0x12; r++)
   {
-    phdr ->crtc[r] =m6845_r[r];
+    phdr ->crtc[r] =hmap->A_crtc.r[r];
   }
 
-//  cbuffer[0] = m6845_r[0x10];
-//  cbuffer[1] = m6845_r[0x11];
+//  cbuffer[0] = hmap->A_crtc.r[0x10];
+//  cbuffer[1] = hmap->A_crtc.r[0x11];
 
 //  /*register 19*/
 //  cbuffer[2] = hmap->screenstartindex;
 //  cbuffer[3] = 0;
 //  wimpwrite(cbuffer,1,4); /*136*/
-    phdr ->crtc[0x12] =hmap->screenstartindex;
+  phdr ->crtc[0x12] =(hmap->B_crtc.scan_code>>VIDEOREADSTARTSHIFT)&3;
 //  /*unused*/
 //  setword(cbuffer,0);
 //  wimpwrite(cbuffer,1,4); /*140*/
@@ -505,7 +507,7 @@ void snapheadersave(SNAPHDR *phdr)
 //    }
 //  }
   for (p =0; p<=15; p++)
-   phdr ->palette[p] =videoularead(p+1);
+   phdr ->palette[p] =hmap->A_videoula.palette[p];
 
 //  /*unused*/
 //  setword(cbuffer,0);

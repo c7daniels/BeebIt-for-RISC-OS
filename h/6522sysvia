@@ -17,7 +17,7 @@
 extern void systemviasetca1(HOSTMAP* hmap);
 extern void systemviavidca1(void);
 extern void systemviavidirq(void);
-extern void systemviaunsetca1(void);
+extern void systemviaunsetca1(HOSTMAP* hmap);
 extern HOSTMAP* systemviasetca2(HOSTMAP *hmap);
 extern HOSTMAP* systemviaunsetca2(HOSTMAP *hmap);
 extern void systemviareset(void);

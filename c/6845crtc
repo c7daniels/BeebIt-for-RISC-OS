@@ -13,93 +13,26 @@
  * Email: <convertedgames@3insdale.me.uk>
  */
 
+#include <string.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include "hostmap.h"
 #include "6845crtc.h"
 #include "beebit.h"
-#include "main.h"
 #include "video.h"
-#include "videoula.h"
-/*#include <time.h>*/
-#include "riscos.h"
-
-/*extern int nlocalscreen;*/
 
 /*Motorola 6845 CRTC*/
-unsigned char m6845_r[18]; /*18 registers*/
-int m6845_vt;
-int m6845_sl;
-int m6845_slplus;
-int m6845_scstep;
-int m6845_vd;
-int m6845_hsp;
-int m6845_vsp;
-int m6845_adj;
-int m6845_hsw;
-int m6845_vsw;
-int m6845_horizontaltotal;
-int m6845_alignmentmask;
-int m6845_leftoffscreen;
-int m6845_rightoffscreen;
-int m6845_leftextra; /*extra pixels on the left*/
-int m6845_rightextra; /*extra pixels on the right*/
-int m6845_interlaceon;
-int m6845_interlacesl;
-int m6845_displayskew;
-int m6845_cursorskew;
-int m6845_addressreg;
-int m6845_vc; /*vertical counter*/
-int m6845_sc; /*scanline counter*/
-int m6845_screenwidth; /*screen width in charcters*/
-
-/*video*/
-int video_storeaddress;
-int video_startaddress;
-int video_display0; /*vc start of drawing*/
-int video_display1; /*vc end of drawing*/
-int video_totalend; /*vertical total + adjustment*/
-
-/*cursor*/
-int cursor_startaddress;
-int cursor_start,cursor_end;
-int cursor_x,cursor_y0,cursor_y1;
-int cursor_nondisplay;
-int cursor_blink;
-int cursor_width;
-int cursor_show;
-int cursor_timer;
-int cursor_on;
-int cursor_blinktime;
-
-/*int xxx;*/
 
 void crtcreset(void)
 {
-  int i;
-  /*m6845_r[0]=127;
-  m6845_r[1]=80;
-  m6845_r[2]=98;
-  m6845_r[3]=0x28;
-  m6845_r[4]=38;
-  m6845_r[5]=0;
-  m6845_r[6]=32;
-  m6845_r[7]=34;*/
-
-  for (i=0;i<18;i++)
-    m6845_r[i] = 0;
-
-  m6845_vsp = 0;
-
-  video_storeaddress = 0;
-  video_startaddress = 0;
-  video_display0 = 0; /*vc start of drawing*/
-  video_display1 = 0; /*vc end of drawing*/
-  video_totalend = 0; /*vertical total + adjustment*/
-  cursor_show = TRUE;
-
-  /*xxx = 0;*/
+  HOSTMAP* hmap = &hostmap;
+  hmap->B_crtc.start_code = 0;
+  hmap->B_crtc.row_code = 0;
+  hmap->B_crtc.step_code = 0;
+  hmap->B_crtc.scan_code = 0;
+  hmap->B_crtc.cursoraddress = 0;
+  hmap->B_crtc.signalbuffer = 0;
+  memset(&hmap->A_crtc,0,sizeof(hmap->A_crtc));
 }
 
 HOSTMAP* crtc00read(HOSTMAP* hmap, uintptr_t address_code)
@@ -110,74 +43,65 @@ HOSTMAP* crtc00read(HOSTMAP* hmap, uintptr_t address_code)
 
 HOSTMAP* crtc01read(HOSTMAP* hmap, uintptr_t address_code)
 {
-  hmap->m = (m6845_r[m6845_addressreg]);
+  const unsigned int readable = 0x0003F000;
+
+  if ((readable>>hmap->A_crtc.addressreg)&1)
+    hmap->m = hmap->A_crtc.r[hmap->A_crtc.addressreg];
+  else
+    hmap->m = 0;
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
 
 HOSTMAP* crtc00write(HOSTMAP* hmap, uintptr_t address_code)
 {
-  m6845_addressreg = hmap->m;
+  hmap->A_crtc.addressreg = hmap->m & 0x1F;
   R6502_JUMP_FROM_HIGH_OP(hmap)
 }
 
 HOSTMAP* crtc01write(HOSTMAP* hmap, uintptr_t address_code)
 {
-  if (m6845_addressreg < 16)
-    /*cannot write R16-R17*/
-    m6845_r[m6845_addressreg] = hmap->m;
-
-  switch (m6845_addressreg)
+  switch (hmap->A_crtc.addressreg)
   {
     case 0:
-      /*8 bit*/
       /*total of displayed and non-displayed characters,*/
       /*minus 1, per horizontal line in milliseconds*/
       /*frequency of HSYNC is determined by this register*/
-      crtchorizontal();
+      hmap->A_crtc.r[0] = hmap->m;
       break;
     case 1:
-      /*8 bit*/
       /*number of characters displayed per horizontal line*/
       /*mode 0,1,2,3 = 80 (fast clock)*/
       /*mode 4,5,6,7 = 40 (slow clock)*/
-      m6845_screenwidth = hmap->m;
-      video_width = m6845_screenwidth << 3; /*multiply by 8*/
-      crtcteletextwidthextra();
-      crtcwidthextra();
+      hmap->A_crtc.r[1] = hmap->m;
       break;
     case 2:
-      /*8 bit*/
       /*position of the HSYNC on the horizonal line*/
       /*in terms of the character location number on the line*/
       /*determines the left-to-right location of the displayed text*/
-      m6845_hsp = hmap->m;
+      hmap->A_crtc.r[2] = hmap->m;
       break;
     case 3:
-      /*8 bit*/
       /*width of HSYNC = b0-b3*/
       /*width of VSYNC = b4-b7*/
-      m6845_hsw = (hmap->m & 0x0F);
-      m6845_vsw = (hmap->m>>4);
-      if (m6845_vsw == 0)
-        m6845_vsw = 0x10;
+      hmap->A_crtc.r[3] = hmap->m;
       break;
     case 4:
-      /*total vertical size of the screen*/
-      m6845_vt = (hmap->m+1);
-      crtcvertical();
+      /*total vertical size of the screen in rows minus 1*/
+      hmap->A_crtc.r[4] = (hmap->m & 0x7F);
       break;
     case 5:
-      m6845_adj = (hmap->m & 31);
-      crtcvertical();
+      /*total vertical adjust in lines*/
+      hmap->A_crtc.r[5] = (hmap->m & 0x1F);
       break;
     case 6:
-      m6845_vd = hmap->m;
-      crtcvertical();
+      /*displayed vertical size of the screen in rows*/
+      hmap->A_crtc.r[6] = (hmap->m & 0x7F);
+      hmap->B_crtc.step_code |= VIDEOSTEPROWREGISTERFLAG;
       break;
     case 7:
-      /*for character lines video*/
-      m6845_vsp = hmap->m;
-      crtcvertical();
+      /*position of VSYNC*/
+      hmap->A_crtc.r[7] = (hmap->m & 0x7F);
+      hmap->B_crtc.step_code |= VIDEOSTEPROWREGISTERFLAG;
       break;
     case 8:
       /*interlace mode and skew*/
@@ -196,359 +120,59 @@ HOSTMAP* crtc01write(HOSTMAP* hmap, uintptr_t address_code)
       /* 0  1=One character delay*/
       /* 1  0=Two character delay*/
       /* 1  1=Disable cursor output*/
-      m6845_interlaceon = (hmap->m & 0x01);
-      m6845_interlacesl = (hmap->m & 0x03) == 0x03;
-      m6845_displayskew = (hmap->m & 0x30)>>4;
-      m6845_cursorskew = (hmap->m & 0xC0)>>6;
-      m6845_scstep = m6845_interlacesl+1;
-      m6845_slplus = m6845_sl+m6845_scstep;
-      /*if (!m6845_interlaceon)
-        video_field = 0;*/
-      video_display = (video_de AND m6845_displayskew != 3);
-      /*video_display = video_de;*/
-      /*printf(htrace,"DS &%X\n",m6845_displayskew);
-      fprintf(htrace,"CS &%X\n",m6845_cursorskew);*/
-      /*bbcvdu(67);
-      bbcvdu(83);
-      inttohex4(m6845_cursorskew);
-      bbcvdu(32);
-      bbcvdu(32);*/
-      /*printf("DS &%X\n",m6845_displayskew);
-      printf("CS &%X\n",m6845_cursorskew);*/
-      /*cursor_show = (m6845_cursorskew = 3);*/
-      cursor_show = (!cursor_nondisplay AND cursor_width > 0) AND (m6845_cursorskew != 3);
+      if (hmap->m&1)
+      {
+        if (!(hmap->A_crtc.r[8] & 1))
+          hmap->A_crtc.fieldnumber = 0;
+        hmap->A_crtc.delayvs = 1;
+      }
+      else
+        hmap->A_crtc.delayvs = 0;
+
+      hmap->A_crtc.r[8] = hmap->m;
+      hmap->A_crtc.r9image = (hmap->m & 3) == 3 ? ((hmap->A_crtc.r[9]+1) & 0x1F) : (hmap->A_crtc.r[9] & 0x1F);
+      hmap->B_vidbuf.setskewop(hmap, hmap->m);
       break;
     case 9:
-      /*5 bit*/
       /*number of scan lines per character row*/
-      m6845_sl = (hmap->m & 0x1F);
-      m6845_slplus = m6845_sl+m6845_scstep;
-      crtcvertical();
+      hmap->A_crtc.r[9] = (hmap->m & 0x1F);
+
+      hmap->A_crtc.r9image = (hmap->A_crtc.r[8] & 3) == 3 ? ((hmap->m+1) & 0x1F) : (hmap->m & 0x1F);
       break;
     case 10:
       /*bit 6 enables cursor blinking*/
       /*bit 5 =0 blink every 16 v blanks*/
       /*      =1 blink every 32 v blanks*/
       /*bits 4-0 = cursor start line*/
-      cursor_nondisplay = ((hmap->m & 0x60) == 0x20);
-      /*fprintf(htrace,"CUR B:&%X-&%X\n",(hmap->m & 0x60),cursor_nondisplay);*/
-      cursor_blink = (hmap->m & 0x40);
-      if (lteletextmode)
-        cursor_blinktime = 25;
-      else
-      {
-        if (hmap->m & 0x20)
-          cursor_blinktime = 15; /*32 (16-1)*/
-        else
-          cursor_blinktime = 7; /*16 (8-1)*/
-      }
-      cursor_start = (hmap->m & 31);
-      cursor_show = (!cursor_nondisplay AND cursor_width > 0);
-      /*cursor_show = !(cursor_nondisplay);*/
+      hmap->A_crtc.r[10] = (hmap->m & 0x7F);
       break;
     case 11:
-      cursor_end = (hmap->m & 31);
-      /*fprintf(htrace,"Cend=&%X\n",cursor_end);*/
+      /*cursor end*/
+      hmap->A_crtc.r[11] = (hmap->m & 0x1F);
       break;
     case 12:
-      /*screen start address hi (b0-b6)*/
-      m6845_r[12] = (hmap->m & 0x3F);
-      crtcscreen();
-      crtccursor();
+      /*screen start address hi (b0-b5)*/
+      hmap->A_crtc.r[12] = (hmap->m & 0x3F);
+      hmap->B_crtc.start_code = ((hmap->m<<26)&0xFC000000) | (hmap->B_crtc.start_code&0x03FC0000);
       break;
     case 13:
       /*screen start address lo*/
-      crtcscreen();
-      crtccursor();
+      hmap->A_crtc.r[13] = hmap->m;
+      hmap->B_crtc.start_code = (hmap->B_crtc.start_code&0xFC000000) | (hmap->m<<18);
       break;
     case 14:
-    case 15:
-      /*cursor stuff*/
-      crtccursor();
+      /*cursor address hi (b0-b5)*/
+      hmap->A_crtc.r[14] = (hmap->m & 0x3F);
+      hmap->B_crtc.cursoraddress = ((hmap->m<<8)&0x3F00) | (hmap->B_crtc.cursoraddress&0xFF);
       break;
-    case 16:
-    case 17:
+    case 15:
+      /*cursor address lo*/
+      hmap->A_crtc.r[15] = hmap->m;
+      hmap->B_crtc.cursoraddress = (hmap->B_crtc.cursoraddress&0x3F00) | hmap->m;
+      break;
+    default:
       /*cannot write R16-R17*/
       break;
   }
   R6502_JUMP_FROM_HIGH_OP(hmap)
-}
-
-void crtcteletextwidthextra(void)
-{
-  if (local_teletextform == 0)
-  {
-    if (m6845_screenwidth > 40)
-      teletext_screenwidth = 40;
-    else
-      teletext_screenwidth = m6845_screenwidth;
-  }
-  else if (local_teletextform & 2)
-  {
-    teletext_rightextra = local_linelengthfloor - (m6845_screenwidth<<4);
-    teletext_leftextra = (teletext_rightextra>>1) & m6845_alignmentmask;
-    if (teletext_leftextra < 0)
-    {
-      teletext_leftoffscreen = -(teletext_leftextra>>4);
-      teletext_leftextra = 0;
-      teletext_rightextra -= (teletext_leftoffscreen<<4);
-      if (teletext_rightextra < 0)
-      {
-        teletext_rightextra = 0;
-      }
-      teletext_screenwidth = local_linelengthfloor>>4;
-    }
-    else
-    {
-      teletext_leftoffscreen = 0;
-      teletext_rightextra -= teletext_leftextra;
-      teletext_screenwidth = m6845_screenwidth;
-    }
-  }
-  else
-  {
-    teletext_rightextra = local_linelengthfloor - (m6845_screenwidth<<3);
-    teletext_leftextra = (teletext_rightextra>>1) & m6845_alignmentmask;
-    if (teletext_leftextra < 0)
-    {
-      teletext_leftoffscreen = -(teletext_leftextra>>3);
-      teletext_leftextra = 0;
-      teletext_rightextra -= (teletext_leftoffscreen<<3);
-      if (teletext_rightextra < 0)
-      {
-        teletext_rightextra = 0;
-      }
-      teletext_screenwidth = local_linelengthfloor>>3;
-    }
-    else
-    {
-      teletext_leftoffscreen = 0;
-      teletext_rightextra -= teletext_leftextra;
-      teletext_screenwidth = m6845_screenwidth;
-    }
-  }
-}
-
-void crtcwidthextra(void)
-{
-  int alignmentmask;
-
-  if (videoula_clockrate)
-  {
-    /*fast rate = 80 columns*/
-    switch (beebit_graphicsmode)
-    {
-      case 12:
-      case 20:
-        video_displaywidth = (m6845_screenwidth<<2);
-        break;
-      case 15:
-      case 21:
-        video_displaywidth = (m6845_screenwidth<<3);
-        break;
-    }
-    alignmentmask = m6845_alignmentmask & ~3;
-  }
-  else
-  {
-    /*slow rate = 40 columns*/
-    switch (beebit_graphicsmode)
-    {
-      case 12:
-      case 20:
-        video_displaywidth = (m6845_screenwidth<<3);
-        break;
-      case 15:
-      case 21:
-        video_displaywidth = (m6845_screenwidth<<4);
-        break;
-    }
-    alignmentmask = m6845_alignmentmask & ~7;
-  }
-
-  m6845_rightextra = local_linelengthfloor - video_displaywidth;
-  m6845_leftextra = (m6845_rightextra>>1) & m6845_alignmentmask;
-  if (m6845_leftextra < 0)
-  {
-    switch (beebit_graphicsmode)
-    {
-      case 12:
-      case 20:
-        m6845_leftoffscreen = -m6845_leftextra;
-        m6845_rightextra -= m6845_leftoffscreen;
-        if (m6845_rightextra < 0)
-        {
-          m6845_rightoffscreen = -m6845_rightextra;
-          m6845_rightextra = 0;
-        }
-        else
-        {
-          m6845_rightoffscreen = 0;
-        }
-        break;
-      case 15:
-      case 21:
-        m6845_leftoffscreen = ((-m6845_leftextra)>>1);
-        m6845_rightextra -= (m6845_leftoffscreen<<1);
-        if (m6845_rightextra < 0)
-        {
-          m6845_rightoffscreen = ((-m6845_rightextra)>>1);
-          m6845_rightextra = 0;
-        }
-        else
-        {
-          m6845_rightoffscreen = 0;
-        }
-        break;
-    }
-    m6845_leftextra = 0;
-    video_displaywidth = local_linelengthfloor;
-  }
-  else
-  {
-    m6845_leftoffscreen = 0;
-    m6845_rightoffscreen = 0;
-    m6845_rightextra -= m6845_leftextra;
-  }
-}
-
-void crtchorizontal(void)
-{
-  if (videoula_clockrate)
-    /*fast clock mode (2MHz cycles) */
-    m6845_horizontaltotal = (m6845_r[0x00] + 1);
-  else
-    /*slow clock mode (milliseconds)*/
-    m6845_horizontaltotal = ((m6845_r[0x00] + 1) << 1);
-}
-
-void crtcvertical(void)
-{
-  if ((m6845_vd*m6845_slplus) == MODE12_Y)
-    video_display0 = ((m6845_vt-m6845_vsp)*m6845_slplus)+m6845_adj/*-m6845_vsw*/;
-  else
-  {
-    /*MODES 3,6*/
-    if ((m6845_vd*m6845_slplus) == 250)
-      /*Botch for Master Compact Modes 3 and 6*/
-      video_display0 = ((m6845_vt-m6845_vsp)*m6845_slplus)+m6845_adj/*-m6845_vsw*/;
-    else
-      video_display0 = 32;
-    /*video_display0 = 32+((MODE12_Y-(m6845_vd*m6845_sl)+m6845_adj)/2);*/
-  }
-  video_display1 = video_display0+MODE12_Y; /*(m6845_vd*m6845_slplus)+m6845_adj;*/
-  video_totalend = ((m6845_vt << 8) | m6845_adj);
-
-/*    bbcvdu(32);
-    bbcvdu(47);
-    inttohex4(video_display0);
-    bbcvdu(32);
-    inttohex4(video_display1);
-    bbcvdu(47);
-    bbcvdu(13);
-    bbcvdu(10);
-    bbcvdu(32);*/
-}
-
-void crtcscreen(void)
-{
-  /*in M128 mode, the level 9 graphical adventures set video_storeaddress to less than &3000. The graphics that should be on screen are located in shadow memory location &C000-&DFFF*/
-
-  /*inttohex4(m6845_r[12]);
-  bbcvdu(32);
-  inttohex4(m6845_r[13]);
-  bbcvdu(32);*/
-
-  video_storeaddress = (m6845_r[12] << 8) | m6845_r[13];
-  if (lteletextmode)
-  {
-    video_storeaddress ^= 0x2000;
-    video_storeaddress = (video_storeaddress+0x7400);
-  }
-  else
-    /*the screen address must be multiplied by 8 since there are 8 lines per character*/
-    video_storeaddress <<= 3;
-
-  #ifdef __DEBUG__
-    fprintf(htrace,"screen start address = %X\n",video_storeaddress);
-  #endif
-}
-
-void crtccursor(void)
-{
-  int n,y;
-  /*fprintf(htrace,"&%X &%X &%X &%X\n",cursor_start,cursor_end,m6845_r[14],m6845_r[15]);*/
-  cursor_startaddress = (m6845_r[14]<<8)+m6845_r[15];
-  if (lteletextmode)
-  {
-    /*this calculates the BBC memory address of where the cursor is*/
-    cursor_startaddress ^= 0x2000;
-    cursor_startaddress = (cursor_startaddress+0x7400);
-
-    if (m6845_screenwidth > 0)
-    {
-      n = (cursor_startaddress-video_storeaddress);
-      cursor_x = (n % m6845_screenwidth);
-      cursor_y0 = cursor_y1 = (n / m6845_screenwidth);
-    }
-    /*n = (cursor_startaddress-video_startaddress);
-    cursor_x = (n%m6845_screenwidth);
-    cursor_y0 = (n/m6845_screenwidth);
-    cursor_x = (cursor_x<<2);
-    cursor_y0 = (cursor_y0*5);
-    cursor_y1 = cursor_y0+((cursor_end/4));
-    cursor_y0 = cursor_y0+((cursor_start/4));*/
-    /*fprintf(htrace,"cur=%X scr=%X &%X %X-%X &%X\n",cursor_startaddress,video_startaddress,m6845_screenwidth,cursor_start,cursor_end,ScanLinesInACharacterRow);*/
-  }
-  else
-  {
-    cursor_startaddress <<= 3;
-    /*if (cursor_startaddress >= 0x8000)
-      cursor_startaddress = video_startaddress+(cursor_startaddress & 0x7FFF);*/
-    if (m6845_screenwidth > 0)
-    {
-      n = ((cursor_startaddress-video_storeaddress)>>3);
-      if (videoula_clockrate)
-      {
-        switch (beebit_graphicsmode)
-        {
-          case 12:
-          case 20:
-            cursor_x = ((n%m6845_screenwidth)<<2);
-            break;
-          case 15:
-          case 21:
-            cursor_x = ((n%m6845_screenwidth)<<3);
-            break;
-        }
-      }
-      else
-      {
-        switch (beebit_graphicsmode)
-        {
-          case 12:
-          case 20:
-            cursor_x = ((n%m6845_screenwidth)<<3);
-            break;
-          case 15:
-          case 21:
-            cursor_x = ((n%m6845_screenwidth)<<4);
-            break;
-        }
-      }
-      cursor_y0 = ((n/m6845_screenwidth)<<3);
-      if (m6845_sl > 8)
-      {
-        n = (m6845_sl-8);
-        y = (cursor_y0>>3); /*divide by 8*/
-        cursor_y0 = (cursor_y0+(n*y)+1);
-      /*fprintf(htrace,">>&%X &%X &%X %u %u\n",cursor_x,cursor_y0,ScanLinesInACharacterRow,n,y);*/
-      }
-      cursor_y1 = cursor_y0+(cursor_end-1);
-      cursor_y0 = cursor_y0+(cursor_start-1);
-    }
-  }
-  #ifdef __DEBUG__
-    fprintf(htrace,"cursor start address = %X\n",cursor_startaddress);
-  #endif
 }

@@ -15,6 +15,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "hostmap.h"
+#include "beebit.h"
 #include "main.h"
 #include "kernel.h"
 #include "swis.h"
@@ -31,6 +33,7 @@ int numberedscreenmodeflags;
 SCREENMODERECORD *screenmoderecords;
 SCREENMODEICON *screenmodeicons;
 int screenmoderecordcount;
+int multisliceavailable;
 
 static const char *modevarcolumnnames = "XRES YRES  NCOLOUR  EX EY  MODEFLAGS LOG2BPP";
 static const char *refreshcolumnname = " RR";
@@ -129,13 +132,14 @@ static void detectscreenmodesbyenumeration(int writeaction)
   const char *formatcolumnname = "\nFMT ";
   const char *available = " AVAILABLE";
   char buffer[128];
+  int c;
   int modeblock[10];
   SCREENMODERECORD r,r2;
   SCREENMODERECORD* insertionptr;
   char *cnext;
   int enumblock[32];
   int nallocated,ntoskip,nread;
-  int c,i,j;
+  int i,j;
   int *emode;
   int eformat,insertionindex,direction;
 #ifdef SCREEN_MODES_WITH_NCOLOUR_OPTIONS
@@ -262,7 +266,7 @@ static void detectscreenmodesbyenumeration(int writeaction)
         }
       }
 
-      if (!get256linezoomavailabilityformode((intptr_t)modeblock))
+      if (!get256linezoomavailabilityformode((intptr_t)modeblock,1))
         continue;
 
 #ifndef SCREEN_MODES_WITH_NCOLOUR_OPTIONS
@@ -332,6 +336,14 @@ static void detectscreenmodesbyenumeration(int writeaction)
   {
     r = screenmoderecords[i];
     cnext = screenmodeicons[i];
+
+    if (!multisliceavailable)
+    {
+      screenmodesetblock(&r,&modeblock);
+
+      if (get256linezoomavailabilityformode((intptr_t)modeblock,2))
+        multisliceavailable = 1;
+    }
 
     if (writeaction == DETECTMODE_WRITESHORTLIST)
     {
@@ -404,6 +416,9 @@ void detectscreenmodes(void)
 {
   int c;
   numberedscreenmodeflags = 0;
+  screenmoderecordcount = 0;
+  multisliceavailable = 0;
+  screenmoderecords = NULL;
   regs.r[0] = 12;
   if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) == NULL && c == 0)
     numberedscreenmodeflags |= (1<<12);
@@ -412,9 +427,10 @@ void detectscreenmodes(void)
     numberedscreenmodeflags |= (1<<15);
   regs.r[0] = 21;
   if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) == NULL && c == 0)
+  {
     numberedscreenmodeflags |= (1<<21);
-  screenmoderecordcount = 0;
-  screenmoderecords = NULL;
+    multisliceavailable = 1;
+  }
   regs.r[0] = 0x81;
   regs.r[1] = 0x00;
   regs.r[2] = 0xFF;
@@ -427,19 +443,21 @@ void detectscreenmodes(void)
 
 int writeusedscreenmode(intptr_t mode)
 {
+  VIDEOSCALEUPDATEPARAMS *uparams = &videoscale_updateparameters;
   VIDEOSCALECHOICE choice;
-  VIDEOSCALELUTPARAMETERS glp,tlp;
-  VERTICALVIDEOSCALES vs;
+  VIDEOSCALELUTPARAMETERS lp;
   char buffer[128];
   int refreshrate = -1;
 
   const char *modecolumnname = "\nMODE ";
   const char *paddedNoNumber = "     ";
-  const char *notscalingmessage = "\nDrawing direct to screen memory\n";
-  const char *scalingmessage = "\nScaling lines drawn in Mode 12 format\n";
+  const char *interlacedtext = "\nScreen update option: Interlaced\n";
+  const char *noninterlacedtext = "\nScreen update option: Non-interlaced\n";
+  const char *roundedtext = "\nScreen update option: Rounded\n";
+  const char *emulatedtext = "\nScreen update option: Emulated\n";
+  const char *progressivetext = "\nScreen update option: Progressive\n";
   const char *graphicsheading = "\nGraphics pixel ratio:\n";
   const char *teletextheading = "\nTeletext pixel-to-dot ratio:\n";
-  const char *teletextrelaymessage = "\nPassing teletext to host Mode 7\n";
 
   wimpwrite(modecolumnname,1,strlen(modecolumnname));
   wimpwrite(modevarcolumnnames,1,strlen(modevarcolumnnames));
@@ -447,7 +465,7 @@ int writeusedscreenmode(intptr_t mode)
   if (mode >= 0 && mode <= 255)
   {
     wimpwrite("\n",1,1);
-    snprintf(buffer,sizeof(buffer),"%3d  ",mode);
+    snprintf(buffer,sizeof(buffer),"%3d  ",(uint8_t)mode);
     wimpwrite(buffer,1,strlen(buffer));
   }
   else
@@ -468,57 +486,73 @@ int writeusedscreenmode(intptr_t mode)
   }
   wimpwrite("\n",1,1);
 
-  videoscalechoose(mode, &choice);
-  glp = choice.graphicslutparameters;
-  tlp = choice.teletextlutparameters;
-  vs = choice.verticalscales;
-  if (choice.scalegraphics)
-  {
-    wimpwrite(scalingmessage,1,strlen(scalingmessage));
-  }
+  if (uparams->videospeed == VIDEO_FAST)
+    wimpwrite(interlacedtext,1,strlen(interlacedtext));
+  else if (uparams->videospeed == VIDEO_SLOW)
+    wimpwrite(noninterlacedtext,1,strlen(noninterlacedtext));
+  else if (uparams->videospeed == VIDEO_ROUNDED_SLOW)
+    wimpwrite(roundedtext,1,strlen(roundedtext));
+  else if (uparams->videospeed == VIDEO_EMULATED_SLOW)
+    wimpwrite(emulatedtext,1,strlen(emulatedtext));
+  else if (uparams->videospeed == VIDEO_PROGRESSIVE_SLOW)
+    wimpwrite(progressivetext,1,strlen(progressivetext));
   else
   {
-    wimpwrite(notscalingmessage,1,strlen(notscalingmessage));
+    snprintf(buffer,sizeof(buffer),"\nScreen update option not recognised: %d\n", uparams->videospeed);
+    wimpwrite(buffer,1,strlen(buffer));
   }
+
+  snprintf(buffer,sizeof(buffer),"\nFrame rate option: %.1lf fps\n", 50.0 / (float)(1<<uparams->framerate));
+  wimpwrite(buffer,1,strlen(buffer));
+
+  videoscalechoose(mode, uparams, &choice);
+  lp = choice.lutparameters;
   wimpwrite(graphicsheading,1,strlen(graphicsheading));
-  if (glp.leftpixel == glp.rightpixel)
+  if (choice.format&1)
   {
-    snprintf(buffer,sizeof(buffer),"  %d:1 horizontally, ",glp.leftpixel);
+    if (lp.leftpixel == lp.rightpixel)
+      snprintf(buffer,sizeof(buffer),"  %d:2 horizontally, ",3*lp.leftpixel);
+    else
+      snprintf(buffer,sizeof(buffer),"  %d:4 horizontally, ",3*(lp.leftpixel+lp.rightpixel));
   }
   else
   {
-    snprintf(buffer,sizeof(buffer),"  %d:2 horizontally, ",glp.leftpixel+glp.rightpixel);
+    if (lp.leftpixel == lp.rightpixel)
+      snprintf(buffer,sizeof(buffer),"  %d:1 horizontally, ",lp.leftpixel);
+    else
+      snprintf(buffer,sizeof(buffer),"  %d:2 horizontally, ",lp.leftpixel+lp.rightpixel);
   }
   wimpwrite(buffer,1,strlen(buffer));
-  snprintf(buffer,sizeof(buffer),"%d:1 vertically\n",vs.graphics);
+  snprintf(buffer,sizeof(buffer),"%d:1 vertically\n",choice.linescale);
   wimpwrite(buffer,1,strlen(buffer));
-  if (choice.teletextform)
+
+  wimpwrite(teletextheading,1,strlen(teletextheading));
+  if (choice.format&1)
   {
-    wimpwrite(teletextheading,1,strlen(teletextheading));
-    snprintf(buffer,sizeof(buffer),"  %d:1 horizontally, ",tlp.leftpixel+tlp.rightpixel);
-    wimpwrite(buffer,1,strlen(buffer));
-    switch (choice.teletextform >> 2)
-    {
-      case 1:
-        snprintf(buffer,sizeof(buffer),"%d:1 vertically, unrounded\n",vs.unroundedteletext);
-        break;
-      case 2:
-        snprintf(buffer,sizeof(buffer),"%d:1 vertically, rounded (%d up %d down)\n",
-          vs.roundedteletext+vs.roundedteletext,
-          vs.roundedteletext,vs.roundedteletext);
-        break;
-      case 3:
-        snprintf(buffer,sizeof(buffer),"%d:1 vertically, rounded (%d up %d down)\n",
-          vs.roundedteletext+vs.unroundedteletext+vs.roundedteletext,
-          vs.roundedteletext,vs.roundedteletext);
-        break;
-    }
-    wimpwrite(buffer,1,strlen(buffer));
+    snprintf(buffer,sizeof(buffer),"  %d:1 horizontally, 6 dot characters,\n",
+      2*(lp.leftpixel+lp.rightpixel));
   }
   else
   {
-    wimpwrite(teletextrelaymessage,1,strlen(teletextrelaymessage));
+    if (lp.leftpixel == lp.rightpixel)
+      snprintf(buffer,sizeof(buffer),"  %d:1 horizontally, 8 dot characters,\n",
+        2*lp.leftpixel);
+    else
+      snprintf(buffer,sizeof(buffer),"  %d:2 horizontally, 8 dot characters,\n",
+        2*(lp.leftpixel+lp.rightpixel));
   }
+  wimpwrite(buffer,1,strlen(buffer));
+  if (choice.teletextslices > 1)
+  {
+    snprintf(buffer,sizeof(buffer),"  %d:1 vertically, rounded (%d up %d down)\n",
+      choice.linescale,
+      (choice.linescale>>1),(choice.linescale>>1));
+  }
+  else
+  {
+    snprintf(buffer,sizeof(buffer),"  %d:1 vertically, unrounded\n",choice.linescale);
+  }
+  wimpwrite(buffer,1,strlen(buffer));
 
   return 1;
 }
@@ -635,15 +669,15 @@ int getscreenmodeoverscalezoomavailability(SCREENMODERECORD* r)
   return getoverscalezoomavailabilityformode((intptr_t)modeblock);
 }
 
-int getscreenmode256linezoomavailability(SCREENMODERECORD* r)
+int getscreenmode256linezoomavailability(SCREENMODERECORD* r,int minlinescale)
 {
   int modeblock[10];
 
   screenmodesetblock(r, &modeblock);
-  return get256linezoomavailabilityformode((intptr_t)modeblock);
+  return get256linezoomavailabilityformode((intptr_t)modeblock,minlinescale);
 }
 
-int pickascreenmode(int xresmin,int yresmin)
+int pickascreenmode(int xresmin,int yresmin,int minlinescale)
 {
   SCREENMODERECORD *r;
   int modeblock[10];
@@ -656,7 +690,7 @@ int pickascreenmode(int xresmin,int yresmin)
     if (r->xres < xresmin || r->yres < yresmin)
       continue;
     screenmodesetblock(r,&modeblock);
-    flags = get256linezoomavailabilityformode((intptr_t)modeblock);
+    flags = get256linezoomavailabilityformode((intptr_t)modeblock,minlinescale);
     if (flags>>1)
       return i;
     if (flags&1)

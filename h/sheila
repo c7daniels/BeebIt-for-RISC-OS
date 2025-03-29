@@ -12,6 +12,7 @@
  */
 
 extern void sheilareset(void);
+extern void sheilareplacevideoulawrites(HOSTHIGHOP (*writes)[4]);
 
 extern HOSTMAP* hostconstantread00(HOSTMAP* hmap, uintptr_t address_code);
 extern HOSTMAP* hostconstantreadFE(HOSTMAP* hmap, uintptr_t address_code);

@@ -33,29 +33,34 @@
 #define ROM_PATH_EDIT 12
 #define CPU_SPEED_EDIT 14
 #define CPU_SPEED_MENU 15
-#define SCREEN_UPDATE_EDIT 17
-#define SCREEN_UPDATE_MENU 18
-#define FRAME_RATE_EDIT 20
-#define FRAME_RATE_MENU 21
-#define KEYBOARD_LAYOUT_EDIT 23
-#define KEYBOARD_LAYOUT_MENU 24
+#define FRAME_RATE_EDIT 17
+#define FRAME_RATE_MENU 18
+#define KEYBOARD_LAYOUT_EDIT 20
+#define KEYBOARD_LAYOUT_MENU 21
 /*#define KEYBOARD_LAYOUT_EDIT 41*/
-#define MOUSE_EMULATION_EDIT 26
-#define MOUSE_EMULATION_MENU 27
-#define DISPLAY_MODE_EDIT 45
-#define DISPLAY_MODE_MENU 46
-#define DISPLAY_ZOOM_EDIT 48
-#define DISPLAY_ZOOM_MENU 49
-#define PALETTE_EDIT 51
-#define PALETTE_MENU 52
-#define OPTION_SOUND 28
-#define OPTION_CURSOR 29
-#define OPTION_FASTTAPE 30
-#define OPTION_PRINTER 31
-#define KEYBOARD_LINKS 32
-#define OPTIONS_SAVE 41
-#define OPTIONS_CANCEL 40
-#define OPTIONS_OK 42
+#define MOUSE_EMULATION_EDIT 23
+#define MOUSE_EMULATION_MENU 24
+#define DISPLAY_MODE_EDIT 26
+#define DISPLAY_MODE_MENU 27
+#define DISPLAY_ZOOM_EDIT 28
+#define DISPLAY_ZOOM_MENU 29
+#define DISPLAY_HADJUST_EDIT 30
+#define DISPLAY_HADJUST_MENU 31
+#define DISPLAY_VADJUST_EDIT 32
+#define DISPLAY_VADJUST_MENU 33
+#define SCREEN_UPDATE_EDIT 34
+#define SCREEN_UPDATE_MENU 35
+#define PALETTE_EDIT 36
+#define PALETTE_MENU 37
+#define OPTION_SOUND 38
+#define OPTION_CURSOR 39
+#define OPTION_TOPMIDDLE 40
+#define OPTION_FASTTAPE 41
+#define OPTION_PRINTER 42
+#define KEYBOARD_LINKS 43
+#define OPTIONS_SAVE 52
+#define OPTIONS_CANCEL 51
+#define OPTIONS_OK 53
 #define CONFIG_ROMS_SET 54
 #define CONFIG_ROMS_CANCEL 55
 #define CONFIG_ROMS_SAVE 53
@@ -66,6 +71,11 @@
 /*string constants*/
 #define TEXT_2_MHZ "2 MHz"
 #define TEXT_FULL_SPEED "Full Speed"
+
+#define LARGEST_HADJUST_VALUE 8
+#define LARGEST_VADJUST_VALUE 20
+
+#define SCREENITEMCOUNT 5
 
 void redraw(void);
 void openwindow(void);
@@ -111,12 +121,18 @@ int zoomnumbercount;
 char csprite[0x10],ctext[0x10];
 char b[256],cusermessages[0x08],cresetmenu[128],cmainmenu[256];
 char cconfigmenu[128], ckeymapmenu[2048], cmousemenu[128];
-char cspeedmenu[128], cscreenmenu[128], cframemenu[128];
+char cspeedmenu[128], cscreenmenu[160], cframemenu[128];
 char cmachinemenu[128];
 char cpalettemenu[256];
-char *cdisplaymenu,*czoommenu;
+char *cdisplaymenu,*czoommenu,*chadjustmenu,*cvadjustmenu;
 char cscreentitle[16],ckeymaptitle[16],cmousetitle[16];
-char cscreenitem1[16],cscreenitem2[16];
+char cscreenitem[SCREENITEMCOUNT][16] = {
+  "Interlaced",
+  "Non-interlaced",
+  "Rounded",
+  "Emulated",
+  "Progressive"
+};
 /*char cwimpmodeblock[24];*/
 /*char cmachinecompact[16];*/
 /*char cbartext[64];*/
@@ -941,6 +957,14 @@ int helprequest(int hwindow, int hicon, char *cbuffer)
       case DISPLAY_ZOOM_MENU:
         nlen = messagefilelookupb(hmessages, cbuffer, "OptionsDisplayZoom");
         break;
+      case DISPLAY_HADJUST_EDIT:
+      case DISPLAY_HADJUST_MENU:
+        nlen = messagefilelookupb(hmessages, cbuffer, "OptionsHPositionAdjust");
+        break;
+      case DISPLAY_VADJUST_EDIT:
+      case DISPLAY_VADJUST_MENU:
+        nlen = messagefilelookupb(hmessages, cbuffer, "OptionsVPositionAdjust");
+        break;
       case PALETTE_EDIT:
       case PALETTE_MENU:
         nlen = messagefilelookupb(hmessages, cbuffer, "OptionsPalette");
@@ -951,6 +975,9 @@ int helprequest(int hwindow, int hicon, char *cbuffer)
       case OPTION_CURSOR:
         nlen = messagefilelookupb(hmessages, cbuffer, "OptionsCursor");
         break;
+      case OPTION_TOPMIDDLE:
+        nlen = messagefilelookupb(hmessages, cbuffer, "OptionsTopMiddle");
+        break;
       case OPTION_FASTTAPE:
         nlen = messagefilelookupb(hmessages, cbuffer, "OptionsFastTape");
         break;
@@ -958,13 +985,13 @@ int helprequest(int hwindow, int hicon, char *cbuffer)
         nlen = messagefilelookupb(hmessages, cbuffer, "OptionsPrinter");
         break;
       case KEYBOARD_LINKS:
-      case 33:
-      case 34:
-      case 35:
-      case 36:
-      case 37:
-      case 38:
-      case 39:
+      case KEYBOARD_LINKS+1:
+      case KEYBOARD_LINKS+2:
+      case KEYBOARD_LINKS+3:
+      case KEYBOARD_LINKS+4:
+      case KEYBOARD_LINKS+5:
+      case KEYBOARD_LINKS+6:
+      case KEYBOARD_LINKS+7:
         nlen = messagefilelookupb(hmessages, cbuffer, "OptionsLinks");
         break;
       case OPTIONS_CANCEL:
@@ -1163,7 +1190,13 @@ void configsave(void)
     if (beebit_videospeed == VIDEO_FAST)
       fputs("Interlaced", hfile);
     else if (beebit_videospeed == VIDEO_SLOW)
-      fputs("Non-Interlaced", hfile);
+      fputs("Non-interlaced", hfile);
+    else if (beebit_videospeed == VIDEO_ROUNDED_SLOW)
+      fputs("Rounded", hfile);
+    else if (beebit_videospeed == VIDEO_EMULATED_SLOW)
+      fputs("Emulated", hfile);
+    else if (beebit_videospeed == VIDEO_PROGRESSIVE_SLOW)
+      fputs("Progressive", hfile);
     fputs("\n", hfile);
     strcpy(cname,"FrameRate=");
     fputs(cname, hfile);
@@ -1241,6 +1274,18 @@ void configsave(void)
       fputs("Auto", hfile);
     }
     fputs("\n", hfile);
+    /*h adjust*/
+    strcpy(cname,"HAdjust=");
+    fputs(cname, hfile);
+    itoa(beebit_hadjust,cname);
+    fputs(cname, hfile);
+    fputs("\n", hfile);
+    /*v adjust*/
+    strcpy(cname,"VAdjust=");
+    fputs(cname, hfile);
+    itoa(beebit_vadjust,cname);
+    fputs(cname, hfile);
+    fputs("\n", hfile);
     /*palette*/
     strcpy(cname,"Palette=");
     fputs(cname, hfile);
@@ -1264,6 +1309,12 @@ void configsave(void)
     strcpy(cname,"Cursor=");
     fputs(cname, hfile);
     if (beebit_cursor)
+      fputs("TRUE\n", hfile);
+    else
+      fputs("FALSE\n", hfile);
+    strcpy(cname,"TopMiddle=");
+    fputs(cname, hfile);
+    if (beebit_topmiddle)
       fputs("TRUE\n", hfile);
     else
       fputs("FALSE\n", hfile);
@@ -1312,6 +1363,41 @@ int finddisplaymodebyicon(char* cbuffer)
   return DISPLAY_MODE_AUTO;
 }
 
+int finddisplayzoombyicon(char* cbuffer)
+{
+  int i;
+
+  for (i=0; i<zoomnumbercount; i++)
+  {
+    if (!displayzoomicons[i])
+      continue;
+
+    if (strcmp(cbuffer,displayzoomicons[i]) == 0)
+      break;
+  }
+
+  if (i<zoomnumbercount)
+    return DISPLAY_ZOOM_FIRST_IN_TABLE+i;
+
+  return DISPLAY_ZOOM_AUTO;
+}
+
+int findscreenupdatebyicon(char* cbuffer)
+{
+  int i;
+
+  for (i=0; i<SCREENITEMCOUNT; i++)
+  {
+    if (strcmp(cbuffer,cscreenitem[i]) == 0)
+      break;
+  }
+
+  if (i<SCREENITEMCOUNT)
+    return i;
+
+  return VIDEO_SLOW;
+}
+
 int getdisplaymodezoomavailability(int displaymode)
 {
   int i,n;
@@ -1323,7 +1409,7 @@ int getdisplaymodezoomavailability(int displaymode)
 #ifdef VIDEOSCALE_WITH_OVERSCALE
     n = getscreenmodeoverscalezoomavailability(screenmoderecords+i);
 #else
-    n = getscreenmode256linezoomavailability(screenmoderecords+i);
+    n = getscreenmode256linezoomavailability(screenmoderecords+i, 1);
 #endif
   }
   else
@@ -1344,11 +1430,60 @@ int getdisplaymodezoomavailability(int displaymode)
 #ifdef VIDEOSCALE_WITH_OVERSCALE
       n = getoverscalezoomavailabilityformode(n);
 #else
-      n = get256linezoomavailabilityformode(n);
+      n = get256linezoomavailabilityformode(n, 1);
 #endif
     }
   }
   return n;
+}
+
+int getscreenupdateavailability(int displaymode, int displayzoom)
+{
+  int i,j,n,a;
+  const int singleslice = (1<<VIDEO_SLOW)|(1<<VIDEO_FAST);
+  const int multislice = (1<<VIDEO_PROGRESSIVE_SLOW)|(1<<VIDEO_EMULATED_SLOW)|(1<<VIDEO_ROUNDED_SLOW);
+
+  i = displaymode - DISPLAY_MODE_FIRST_IN_TABLE;
+
+  if (i>=0 && i<screenmoderecordcount)
+  {
+    a = getscreenmode256linezoomavailability(screenmoderecords+i, 2);
+
+    if (displayzoom != DISPLAY_ZOOM_AUTO)
+    {
+      j = displayzoom - DISPLAY_ZOOM_FIRST_IN_TABLE;
+      a &= (1<<j);
+    }
+
+    if (a)
+      return multislice|singleslice;
+    else
+      return singleslice;
+  }
+  else
+  {
+    n = -1;
+    if (displaymode == DISPLAY_MODE_LOW)
+      n = 12;
+    if (displaymode == DISPLAY_MODE_MEDIUM)
+      n = 15;
+    if (displaymode == DISPLAY_MODE_HIGH)
+      n = 21;
+    if (n == -1)
+    {
+      if (multisliceavailable)
+        return multislice|singleslice;
+      else
+        return singleslice;
+    }
+    else
+    {
+      if (n == 21)
+        return multislice|singleslice;
+      else
+        return singleslice;
+    }
+  }
 }
 
 void updatezoommenuitems(int availability)
@@ -1374,6 +1509,29 @@ void updatezoommenuitems(int availability)
   *(citem) = 128;
 }
 
+void updatescreenupdatemenuitems(int availability)
+{
+  char *citem;
+  int i;
+
+  citem = (cscreenmenu+28);
+  *(citem) = 0;
+
+  for (i=1; i<SCREENITEMCOUNT; i++)
+  {
+    if (availability & (1<<i))
+    {
+      citem = (citem+24);
+      *(citem) = 0;
+      setword(citem+4,-1);
+      setword(citem+8,0x7009111);
+      setword(citem+12,(int)cscreenitem[i]);
+    }
+  }
+
+  *(citem) = 128;
+}
+
 void setoptions(int ntype)
 {
   int i;
@@ -1390,9 +1548,16 @@ void setoptions(int ntype)
   else
     writeicon(hoptions,CPU_SPEED_EDIT,TEXT_2_MHZ,0,0);
   if (beebit_videospeed == VIDEO_FAST)
-    writeicon(hoptions,SCREEN_UPDATE_EDIT,"Interlaced",0,0);
+    writeicon(hoptions,SCREEN_UPDATE_EDIT,cscreenitem[VIDEO_FAST],0,0);
+  else if (beebit_videospeed == VIDEO_ROUNDED_SLOW)
+    writeicon(hoptions,SCREEN_UPDATE_EDIT,cscreenitem[VIDEO_ROUNDED_SLOW],0,0);
+  else if (beebit_videospeed == VIDEO_EMULATED_SLOW)
+    writeicon(hoptions,SCREEN_UPDATE_EDIT,cscreenitem[VIDEO_EMULATED_SLOW],0,0);
+  else if (beebit_videospeed == VIDEO_PROGRESSIVE_SLOW)
+    writeicon(hoptions,SCREEN_UPDATE_EDIT,cscreenitem[VIDEO_PROGRESSIVE_SLOW],0,0);
   else
-    writeicon(hoptions,SCREEN_UPDATE_EDIT,"Non-interlaced",0,0);
+    writeicon(hoptions,SCREEN_UPDATE_EDIT,cscreenitem[VIDEO_SLOW],0,0);
+  updatescreenupdatemenuitems(getscreenupdateavailability(beebit_displaymode,beebit_displayzoom));
   if (beebit_framerate == VIDEO_50FPS)
     writeicon(hoptions,FRAME_RATE_EDIT,"50 fps",0,0);
   else if (beebit_framerate == VIDEO_25FPS)
@@ -1467,6 +1632,22 @@ void setoptions(int ntype)
   else
     writeicon(hoptions,DISPLAY_ZOOM_EDIT,"Auto",0,0);
 
+  /*h adjust*/
+  regs.r[0] = beebit_hadjust;
+  regs.r[1] = (int)cbuffer;
+  regs.r[2] = 4;
+  _kernel_swi(OS_BinaryToDecimal,&regs,&regs);
+  cbuffer[regs.r[2]] = 0;
+  writeicon(hoptions,DISPLAY_HADJUST_EDIT,cbuffer,0,0);
+
+  /*v adjust*/
+  regs.r[0] = beebit_vadjust;
+  regs.r[1] = (int)cbuffer;
+  regs.r[2] = 4;
+  _kernel_swi(OS_BinaryToDecimal,&regs,&regs);
+  cbuffer[regs.r[2]] = 0;
+  writeicon(hoptions,DISPLAY_VADJUST_EDIT,cbuffer,0,0);
+
   /*palette*/
   if (beebit_palette == PALETTE_COLOUR)
     writeicon(hoptions,PALETTE_EDIT,"Colour",0,0);
@@ -1479,6 +1660,7 @@ void setoptions(int ntype)
 
   setbutton(hoptions,OPTION_SOUND,beebit_sound);
   setbutton(hoptions,OPTION_CURSOR,beebit_cursor);
+  setbutton(hoptions,OPTION_TOPMIDDLE,beebit_topmiddle);
   setbutton(hoptions,OPTION_FASTTAPE,beebit_fasttape);
   setbutton(hoptions,OPTION_PRINTER,beebit_printer);
   for (i=0;i<8;i++)
@@ -1869,22 +2051,46 @@ void select(void)
     n = getdisplaymodezoomavailability(i);
     nchar = readicon(hoptions,DISPLAY_ZOOM_EDIT);
 
-    for (j=0; j<zoomnumbercount; j++)
-    {
-      if (!displayzoomicons[j])
-        continue;
+    j = finddisplayzoombyicon(nchar);
 
-      if (strcmp(nchar,displayzoomicons[j]) == 0)
-        break;
-    }
-
-    if (j==zoomnumbercount || !(n & (1<<j)))
+    if (j!=DISPLAY_ZOOM_AUTO && !(n & (1<<(j-DISPLAY_ZOOM_FIRST_IN_TABLE))))
       writeicon(hoptions,DISPLAY_ZOOM_EDIT,"Auto",0,0);
     updatezoommenuitems(n);
+
+    n = getscreenupdateavailability(i,j);
+    nchar = readicon(hoptions,SCREEN_UPDATE_EDIT);
+
+    j = findscreenupdatebyicon(nchar);
+
+    if (j!=VIDEO_SLOW && !(n & (1<<j)))
+      writeicon(hoptions,SCREEN_UPDATE_EDIT,cscreenitem[VIDEO_SLOW],0,0);
+    updatescreenupdatemenuitems(n);
   }
   else if (ncurmenu == (int)czoommenu)
   {
-    writeicon(hoptions,DISPLAY_ZOOM_EDIT,czoommenu+40+(nmain*24),0,0);
+    nchar = czoommenu+40+(nmain*24);
+    writeicon(hoptions,DISPLAY_ZOOM_EDIT,nchar,0,0);
+
+    j = finddisplayzoombyicon(nchar);
+    nchar = readicon(hoptions,DISPLAY_MODE_EDIT);
+
+    i = finddisplaymodebyicon(nchar);
+    n = getscreenupdateavailability(i,j);
+    nchar = readicon(hoptions,SCREEN_UPDATE_EDIT);
+
+    j = findscreenupdatebyicon(nchar);
+
+    if (j!=VIDEO_SLOW && !(n & (1<<j)))
+      writeicon(hoptions,SCREEN_UPDATE_EDIT,cscreenitem[VIDEO_SLOW],0,0);
+    updatescreenupdatemenuitems(n);
+  }
+  else if (ncurmenu == (int)chadjustmenu)
+  {
+    writeicon(hoptions,DISPLAY_HADJUST_EDIT,chadjustmenu+40+(nmain*24),0,0);
+  }
+  else if (ncurmenu == (int)cvadjustmenu)
+  {
+    writeicon(hoptions,DISPLAY_VADJUST_EDIT,cvadjustmenu+40+(nmain*24),0,0);
   }
   else if (ncurmenu == (int)cpalettemenu)
   {
@@ -2115,6 +2321,24 @@ void button(void)
         _kernel_swi(Wimp_CreateMenu,&regs,&regs);
         ncurmenu = regs.r[1];
         break;
+      case DISPLAY_HADJUST_MENU:
+        /*palette*/
+        /*96+(menuitems*44)*/
+        regs.r[1] = (int)chadjustmenu;
+        regs.r[2] = nmousex-64;
+        regs.r[3] = nmousey;
+        _kernel_swi(Wimp_CreateMenu,&regs,&regs);
+        ncurmenu = regs.r[1];
+        break;
+      case DISPLAY_VADJUST_MENU:
+        /*palette*/
+        /*96+(menuitems*44)*/
+        regs.r[1] = (int)cvadjustmenu;
+        regs.r[2] = nmousex-64;
+        regs.r[3] = nmousey;
+        _kernel_swi(Wimp_CreateMenu,&regs,&regs);
+        ncurmenu = regs.r[1];
+        break;
       case PALETTE_MENU:
         /*palette*/
         /*96+(menuitems*44)*/
@@ -2158,10 +2382,7 @@ void button(void)
           beebit_cpuspeed = CPU_2MHZ;
         /*screen update*/
         cbuffer = readicon(hoptions,SCREEN_UPDATE_EDIT);
-        if (strcmp(cbuffer,"Non-interlaced") == 0)
-          beebit_videospeed = VIDEO_SLOW;
-        else
-          beebit_videospeed = VIDEO_FAST;
+        beebit_videospeed = findscreenupdatebyicon(cbuffer);
         /*frame rate*/
         cbuffer = readicon(hoptions,FRAME_RATE_EDIT);
         if (strcmp(cbuffer,"50 fps") == 0)
@@ -2186,18 +2407,21 @@ void button(void)
         beebit_displaymode = finddisplaymodebyicon(cbuffer);
         /*display zoom*/
         cbuffer = readicon(hoptions,DISPLAY_ZOOM_EDIT);
-        beebit_displayzoom = DISPLAY_ZOOM_AUTO;
-        for (i=0; i<zoomnumbercount; i++)
-        {
-          if (!displayzoomicons[i])
-            continue;
-
-          if (strcmp(cbuffer,displayzoomicons[i]) == 0)
-          {
-            beebit_displayzoom = DISPLAY_ZOOM_FIRST_IN_TABLE+i;
-            break;
-          }
-        }
+        beebit_displayzoom = finddisplayzoombyicon(cbuffer);
+        /*h adjust*/
+        cbuffer = readicon(hoptions,DISPLAY_HADJUST_EDIT);
+        beebit_hadjust = atoi(cbuffer);
+        if (beebit_hadjust < -LARGEST_HADJUST_VALUE)
+          beebit_hadjust = -LARGEST_HADJUST_VALUE;
+        if (beebit_hadjust > LARGEST_HADJUST_VALUE)
+          beebit_hadjust = LARGEST_HADJUST_VALUE;
+        /*v adjust*/
+        cbuffer = readicon(hoptions,DISPLAY_VADJUST_EDIT);
+        beebit_vadjust = atoi(cbuffer);
+        if (beebit_vadjust < -LARGEST_VADJUST_VALUE)
+          beebit_vadjust = -LARGEST_VADJUST_VALUE;
+        if (beebit_vadjust > LARGEST_VADJUST_VALUE)
+          beebit_vadjust = LARGEST_VADJUST_VALUE;
         /*palette*/
         cbuffer = readicon(hoptions,PALETTE_EDIT);
         if (strcmp(cbuffer,"Colour") == 0)
@@ -2218,6 +2442,11 @@ void button(void)
           beebit_cursor = TRUE;
         else
           beebit_cursor = FALSE;
+        /*move display*/
+        if (buttonset(hoptions,OPTION_TOPMIDDLE))
+          beebit_topmiddle = TRUE;
+        else
+          beebit_topmiddle = FALSE;
         /*fast tape*/
         if (buttonset(hoptions,OPTION_FASTTAPE))
           beebit_fasttape = TRUE;
@@ -3010,6 +3239,12 @@ void setup(void)
             beebit_videospeed = VIDEO_FAST;
           else if (strncmp(cbuffer+13,"Non-interlaced",14) == 0)
             beebit_videospeed = VIDEO_SLOW;
+          else if (strncmp(cbuffer+13,"Rounded",7) == 0)
+            beebit_videospeed = VIDEO_ROUNDED_SLOW;
+          else if (strncmp(cbuffer+13,"Emulated",8) == 0)
+            beebit_videospeed = VIDEO_EMULATED_SLOW;
+          else if (strncmp(cbuffer+13,"Progressive",11) == 0)
+            beebit_videospeed = VIDEO_PROGRESSIVE_SLOW;
           else
             beebit_videospeed = VIDEO_SLOW;
         }
@@ -3119,6 +3354,22 @@ void setup(void)
             }
           }
         }
+        else if (strncmp(cbuffer,"HAdjust",7) == 0)
+        {
+          beebit_hadjust = atoi(cbuffer+8);
+          if (beebit_hadjust < -LARGEST_HADJUST_VALUE)
+            beebit_hadjust = -LARGEST_HADJUST_VALUE;
+          if (beebit_hadjust > LARGEST_HADJUST_VALUE)
+            beebit_hadjust = LARGEST_HADJUST_VALUE;
+        }
+        else if (strncmp(cbuffer,"VAdjust",7) == 0)
+        {
+          beebit_vadjust = atoi(cbuffer+8);
+          if (beebit_vadjust < -LARGEST_VADJUST_VALUE)
+            beebit_vadjust = -LARGEST_VADJUST_VALUE;
+          if (beebit_vadjust > LARGEST_VADJUST_VALUE)
+            beebit_vadjust = LARGEST_VADJUST_VALUE;
+        }
         else if (strncmp(cbuffer,"Palette",7) == 0)
         {
           if (strncmp(cbuffer+8,"Colour",7) == 0)
@@ -3144,6 +3395,13 @@ void setup(void)
             beebit_cursor = TRUE;
           else
             beebit_cursor = FALSE;
+        }
+        else if (strncmp(cbuffer,"TopMiddle",9) == 0)
+        {
+          if (cbuffer[10] == 84)
+            beebit_topmiddle = TRUE;
+          else
+            beebit_topmiddle = FALSE;
         }
         else if (strncmp(cbuffer,"FastTape",8) == 0)
         {
@@ -3182,6 +3440,12 @@ void setup(void)
     if (!(i & (1<<j)))
       beebit_displayzoom = DISPLAY_ZOOM_AUTO;
   }
+  if (beebit_videospeed != VIDEO_SLOW)
+  {
+    i = getscreenupdateavailability(beebit_displaymode,beebit_displayzoom);
+    if (!(i & (1<<beebit_videospeed)))
+      beebit_videospeed = VIDEO_SLOW;
+  }
   updateappicon();
 }
 
@@ -3206,9 +3470,6 @@ void menus(void)
   setword(citem+8,0x7009011);
   strcpy((citem+12),"Full speed");
 
-  strcpy(cscreenitem1,"Interlaced");
-  strcpy(cscreenitem2,"Non-interlaced");
-
   /*strcpy(cscreenmenu,"Screen updte");*/
   strcpy(cscreentitle,"Screen update");
   setword(cscreenmenu,(int)cscreentitle);
@@ -3222,14 +3483,14 @@ void menus(void)
   /*setword(citem+8,0x7009011);
   strcpy((citem+12),"Intlaced");*/
   setword(citem+8,0x7009111);
-  setword(citem+12,(int)cscreenitem1);
+  setword(citem+12,(int)cscreenitem[VIDEO_FAST]);
   citem = (citem+24);
   *(citem) = 128;
   setword(citem+4,-1);
   /*setword(citem+8,0x7009011);
   strcpy((citem+12),"Non-Intlaced");*/
   setword(citem+8,0x7009111);
-  setword(citem+12,(int)cscreenitem2);
+  setword(citem+12,(int)cscreenitem[VIDEO_SLOW]);
   *(cscreenmenu+29) = 1; /*indirected menu title*/
 
   strcpy(cframemenu,"Frame rate");
@@ -3342,6 +3603,50 @@ void menus(void)
   setword(citem+4,-1);
   setword(citem+8,0x7009011);
   strcpy((citem+12),"Auto");
+
+  chadjustmenu = calloc(1,28+(1+2*LARGEST_HADJUST_VALUE)*24);
+
+  strcpy(chadjustmenu,"H Adjust");
+  setword(chadjustmenu+12,0x00070207);
+  *(chadjustmenu+16) = 208;
+  *(chadjustmenu+20) = 44;
+  *(chadjustmenu+24) = 0;
+  citem = (chadjustmenu+28)-24;
+  for (i=-LARGEST_HADJUST_VALUE; i<=LARGEST_HADJUST_VALUE; i++)
+  {
+    citem = (citem+24);
+    *(citem) = 0;
+    setword(citem+4,-1);
+    setword(citem+8,0x7009011);
+    regs.r[0] = i;
+    regs.r[1] = (int)(citem+12);
+    regs.r[2] = 4;
+    _kernel_swi(OS_BinaryToDecimal,&regs,&regs);
+    citem[regs.r[2]] = 0;
+  }
+  *(citem) = 128;
+
+  cvadjustmenu = calloc(1,28+(1+2*LARGEST_VADJUST_VALUE)*24);
+
+  strcpy(cvadjustmenu,"V Adjust");
+  setword(cvadjustmenu+12,0x00070207);
+  *(cvadjustmenu+16) = 208;
+  *(cvadjustmenu+20) = 44;
+  *(cvadjustmenu+24) = 0;
+  citem = (cvadjustmenu+28)-24;
+  for (i=-LARGEST_VADJUST_VALUE; i<=LARGEST_VADJUST_VALUE; i++)
+  {
+    citem = (citem+24);
+    *(citem) = 0;
+    setword(citem+4,-1);
+    setword(citem+8,0x7009011);
+    regs.r[0] = i;
+    regs.r[1] = (int)(citem+12);
+    regs.r[2] = 4;
+    _kernel_swi(OS_BinaryToDecimal,&regs,&regs);
+    citem[regs.r[2]] = 0;
+  }
+  *(citem) = 128;
 
   strcpy(cpalettemenu,"Palette");
   setword(cpalettemenu+12,0x00070207);

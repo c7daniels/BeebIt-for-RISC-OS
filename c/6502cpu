@@ -19,14 +19,15 @@
 
 static_assert(offsetof(R6502ZONEMAP, AC) == 0, "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, BC) == ((0x100>>2)+2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
-static_assert(offsetof(R6502ZONEMAP, CC) == (0x400>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
+static_assert(offsetof(R6502ZONEMAP, CC) == (0x800>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, DC) == (0x1000>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, EC) == (0x1C00>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(sizeof(R6502ZONEMAP) == (0x4000>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 
-static_assert(offsetof(R6502CPUMAP, keyboard_state) == offsetof(R6502ZONEMAP, keyboard_state), "Expecting consistent keyboard state offsets");
+static_assert(offsetof(R6502CPUMAP, peripheral_code) == offsetof(R6502ZONEMAP, peripheral_code), "Expecting consistent peripheral code offsets");
 static_assert(offsetof(R6502CPUMAP, m_shift) == offsetof(R6502ZONEMAP, m_shift), "Expecting consistent data bus value offsets");
 static_assert(offsetof(R6502CPUMAP, m) == offsetof(R6502ZONEMAP, m), "Expecting consistent data bus value offsets");
+static_assert(offsetof(R6502CPUMAP, peripheralops) == offsetof(R6502ZONEMAP, peripheralops), "Expecting consistent peripheral op table offsets");
 
 static_assert(offsetof(R6502CPUMAP, AP) == offsetof(R6502ZONEMAP, AP), "Expecting consistent zone offsets");
 static_assert(offsetof(R6502CPUMAP, BP) == offsetof(R6502ZONEMAP, BP), "Expecting consistent zone offsets");
@@ -35,6 +36,8 @@ static_assert(offsetof(R6502CPUMAP, DP) == offsetof(R6502ZONEMAP, DP), "Expectin
 static_assert(sizeof(R6502CPUMAP) == sizeof(R6502ZONEMAP), "Expecting consistent zone offsets");
 
 static_assert(R6502_SEQUENCE_COUNT <= R6502_SEQUENCE_ALLOWANCE, "Expecting R6502_SEQUENCE_COUNT not to exceed R6502_SEQUENCE_ALLOWANCE");
+
+static_assert(offsetof(R6502CPUMAP, peripheralops) == ((PERIPHERAL_BASEFLAG)*sizeof(uintptr_t)), "Expacting peripheralops at specific offset");
 
 static_assert(offsetof(R6502CPUMAP, busops) == ((BUS_BASEFLAG-BUS_WRITEFLAG)*(64*sizeof(uintptr_t))), "Expacting busops at specific offset");
 
@@ -2338,11 +2341,20 @@ static inline R6502CPUMAP* r6502readmemorystep(R6502CPUMAP* cmap, intptr_t incre
   R6502_JUMP_TO_READ_OP(cmap, cmap->address_code)
 }
 
+R6502ZONEMAP* r6502readmemoryperipheralop(R6502ZONEMAP* zmap, uintptr_t peripheral_code)
+{
+  return zmap;
+}
+
 void r6502readmemory(R6502CPUMAP* cmap, char* buffer, uintptr_t naddress, int ncount)
 {
+  uintptr_t peripheral_code = cmap->peripheral_code;
+  R6502PERIPHERALOP savedperipheralop = cmap->peripheralops[peripheral_code&0xFF];
   uintptr_t savedaddresscode = cmap->address_code;
   R6502OP* savedcpustate = cmap->cpu_state;
   unsigned char savedm = cmap->m;
+
+  cmap->peripheralops[peripheral_code&0xFF] = r6502readmemoryperipheralop;
 
   cmap->address_code = ((naddress<<16) & 0xFFFF0000) | BUS_BASEFLAG;
   cmap->cpu_state = cmap->sequences[0xEA];
@@ -2359,6 +2371,7 @@ void r6502readmemory(R6502CPUMAP* cmap, char* buffer, uintptr_t naddress, int nc
     cmap->address_code = (cmap->address_code + 0x10000) & 0xFFFFFFFF;
   }
 
+  cmap->peripheralops[peripheral_code&0xFF] = savedperipheralop;
   cmap->address_code = savedaddresscode;
   cmap->cpu_state = savedcpustate;
   cmap->m = savedm;

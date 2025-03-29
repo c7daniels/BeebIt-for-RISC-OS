@@ -155,14 +155,15 @@ void screentobuffer(void)
 
       readpixel =read & mask;
 
-      if (readpixel == host_colournumbers[0]) readpixel=0;
-      else if (readpixel == host_colournumbers[1]) readpixel=1;
-      else if (readpixel == host_colournumbers[2]) readpixel=2;
-      else if (readpixel == host_colournumbers[3]) readpixel=3;
-      else if (readpixel == host_colournumbers[4]) readpixel=4;
-      else if (readpixel == host_colournumbers[5]) readpixel=5;
-      else if (readpixel == host_colournumbers[6]) readpixel=6;
-      else if (readpixel == host_colournumbers[7]) readpixel=7;
+      if (readpixel == (int)hostmap.D_colour.numbers[0]) readpixel=0;
+      else if (readpixel == (int)hostmap.D_colour.numbers[1]) readpixel=1;
+      else if (readpixel == (int)hostmap.D_colour.numbers[2]) readpixel=2;
+      else if (readpixel == (int)hostmap.D_colour.numbers[3]) readpixel=3;
+      else if (readpixel == (int)hostmap.D_colour.numbers[4]) readpixel=4;
+      else if (readpixel == (int)hostmap.D_colour.numbers[5]) readpixel=5;
+      else if (readpixel == (int)hostmap.D_colour.numbers[6]) readpixel=6;
+      else if (readpixel == (int)hostmap.D_colour.numbers[7]) readpixel=7;
+
 
       write =write >>4;
       write =write | (readpixel <<4);
