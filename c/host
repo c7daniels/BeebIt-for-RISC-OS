@@ -1305,7 +1305,7 @@ void hostresetperipherals(void)
   hoststartreset(TRUE);
 }
 
-#ifdef BEEBIT_NO_ASM
+//#ifdef BEEBIT_NO_ASM
 HOSTMAP* hostadvancetimers(HOSTMAP* hmap)
 {
   intptr_t cyclesoriginal, fewestcyclestogo, cyclestogo;
@@ -1423,10 +1423,12 @@ void hostexecute(void)
 
   while (cmap->cpu_state != cmap->sequences[R6502_YIELD_SEQUENCE])
   {
+    extern void tickmafile(void);
+    tickmafile();
     (*cmap->cpu_state)(cmap, (intptr_t)(cmap->cpu_state+1));
   }
 }
-#endif
+//#endif
 
 void hostbeforesnapshot(void)
 {

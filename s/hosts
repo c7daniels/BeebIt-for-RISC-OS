@@ -252,8 +252,8 @@
   EXPORT |host_r6502readspecial|
   EXPORT |host_r6502writespecial|
 
-  EXPORT |hostadvancetimers|
-  EXPORT |hostexecute|
+  ;EXPORT |hostadvancetimers|
+  ;EXPORT |hostexecute|
 
   ASSERT :INDEX:HOST_M_SHIFT == :INDEX:R6502ZONE_M_SHIFT
   ASSERT :INDEX:HOST_M == :INDEX:R6502ZONE_M

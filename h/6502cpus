@@ -16,8 +16,8 @@
   GBLL Optimise6502Links
   GBLL Optimise6502WorkAreas
   GBLL Optimise6502Timing
-Optimise6502Links SETL {TRUE}
-Optimise6502WorkAreas SETL {TRUE}
+Optimise6502Links SETL {FALSE}
+Optimise6502WorkAreas SETL {FALSE}
 Optimise6502Timing SETL {TRUE}
 
 

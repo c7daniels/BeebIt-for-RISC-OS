@@ -368,6 +368,44 @@ void beebitinit(void)
   #endif*/
 }
 
+#if 1
+FILE *mafile;
+static int mafn;
+static int maticks;
+
+static void opennextmafile(void)
+{
+  char fname[32];
+
+  ++mafn;
+  snprintf(fname, sizeof(fname), "<BeebIt$Dir>.LOGB.SLICE%06d",
+           mafn);
+  mafile = BEEBIT_FOPEN(fname,"w");
+  maticks = 0;
+}
+
+void openmafile(void)
+{
+  mafn = -1;
+  opennextmafile();
+}
+
+void tickmafile(void)
+{
+  if (mafile && ++maticks == 20000)
+  {
+    fclose(mafile);
+    opennextmafile();
+  }
+}
+
+void closemafile(void)
+{
+  fclose(mafile);
+  mafile = 0;
+}
+#endif
+
 int beebitenter(void)
 {
   char /*cbuffer[128],*/cname[128];
@@ -389,6 +427,8 @@ int beebitenter(void)
     lredraw = FALSE;
   else
   {
+    openmafile();
+
     /*configuration*/
     for (i=0x0F;i>=0x00;i--)
     {
@@ -718,6 +758,8 @@ void beebitexit(void)
 {
   char choicedir[]="<Choices$Write>.BeebIt";
   FILE *hfile;
+
+  closemafile();
 
   /*t76489closedown();*/ /*sound*/
   /*_kernel_swi(0x4E0C1,&regs,&regs);*/
