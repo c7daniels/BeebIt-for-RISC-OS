@@ -15,8 +15,8 @@
 
   GBLL Optimise6502Links
   GBLL Optimise6502WorkAreas
-Optimise6502Links SETL {TRUE}
-Optimise6502WorkAreas SETL {TRUE}
+Optimise6502Links SETL {FALSE}
+Optimise6502WorkAreas SETL {FALSE}
 
 
 NFLAG EQU &80
