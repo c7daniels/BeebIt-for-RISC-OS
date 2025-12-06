@@ -198,7 +198,7 @@ void cmoswrite(char naddress,char nvalue)
   }
 }
 
-void systemviaeventsetirq(HOSTMAP* htop)
+static inline void systemviaeventsetirq(HOSTMAP* htop)
 {
   if (htop[-1].A_sysvia.ifr & htop[-1].A_sysvia.ier & 0x7F)
   {
@@ -214,7 +214,7 @@ void systemviaeventsetirq(HOSTMAP* htop)
   }
 }
 
-void systemviaregistersetirq(HOSTMAP* htop)
+static inline void systemviaregistersetirq(HOSTMAP* htop)
 {
   if (htop[-1].A_sysvia.ifr & htop[-1].A_sysvia.ier & 0x7F)
   {
@@ -230,35 +230,32 @@ void systemviaregistersetirq(HOSTMAP* htop)
   }
 }
 
-void systemviasetca1(void)
+static inline void systemviasetirqafterifrclear(HOSTMAP* htop)
 {
-  HOSTMAP* htop = (HOSTMAP*)&hostmap.upper;
+  htop[-1].A_sysvia.ifr |= htop[-1].A_sysvia.ifrresist;
+  systemviaregistersetirq(htop);
+}
+
+static inline void systemviasetirqwithifrresist(HOSTMAP* htop)
+{
+  if (htop[-1].A_sysvia.ifrresist)
+  {
+    htop[-1].A_sysvia.ifr |= htop[-1].A_sysvia.ifrresist;
+    systemviaeventsetirq(htop);
+  }
+}
+
+HOSTMAP* systemviasetca1(HOSTMAP* htop)
+{
   #ifdef __DEBUG__
     fprintf(htrace,"CA1 ");
   #endif
-  htop[-1].A_sysvia.ifr |= 0x02; /*CA1 flag*/
-  systemviaeventsetirq(htop);
-}
-
-/*void systemviavidca1(void)
-{*/
-  /*CA1 flag*/
-  /*htop[-1].A_sysvia.ifr |= 0x02;
-  systemviaeventsetirq(htop);
-  htop[-1].A_sysvia.ira=(htop[-1].A_sysvia.ora & htop[-1].A_sysvia.ddra) | (htop[-1].A_sysvia.porta & ~htop[-1].A_sysvia.ddra);
-}*/
-
-/*void systemviavidirq(void)
-{
-  systemviaeventsetirq(htop);
-  htop[-1].A_sysvia.ira=(htop[-1].A_sysvia.ora & htop[-1].A_sysvia.ddra) | (htop[-1].A_sysvia.porta & ~htop[-1].A_sysvia.ddra);
-}*/
-
-void systemviaunsetca1(void)
-{
-  HOSTMAP* htop = (HOSTMAP*)&hostmap.upper;
-  htop[-1].A_sysvia.ifr &= 0xFD; /*CA1 flag*/
-  systemviaeventsetirq(htop);
+  if (htop[-1].A_sysvia.pcr & 0x01)
+  {
+    htop[-1].A_sysvia.ifr |= 0x02; /*CA1 flag*/
+    systemviaeventsetirq(htop);
+  }
+  return htop;
 }
 
 void systemviasetca2(void)
@@ -282,6 +279,19 @@ void systemviasetca2(void)
       systemviaeventsetirq(htop);
       break;
   }
+}
+
+HOSTMAP* systemviaunsetca1(HOSTMAP* htop)
+{
+  if (!(htop[-1].A_sysvia.pcr & 0x01))
+  {
+    htop[-1].A_sysvia.ifr |= 0x02; /*CA1 flag*/
+    systemviaeventsetirq(htop);
+  }
+
+  htop[-1].A_sysvia.ira = (htop[-1].A_sysvia.ora & htop[-1].A_sysvia.ddra) + (htop[-1].A_sysvia.porta & ~htop[-1].A_sysvia.ddra);
+
+  return htop;
 }
 
 void systemviakeyca2(void)
@@ -322,7 +332,7 @@ static intptr_t systemviapickcyclestogo(void)
     cyclestogo = htop[-1].B_sysvia.t1doubled + 2;
   }
 
-  if (htop[-1].A_sysvia.aftert1)
+  if (htop[-1].A_sysvia.aftert1 || htop[-1].A_sysvia.ifrresist)
   {
     cyclestogo = 1;
   }
@@ -351,9 +361,9 @@ void systemviareset(void)
   htop[-1].A_sysvia.t2ll = 0xFF;
   htop[-1].A_sysvia.acr = 0;
   htop[-1].A_sysvia.pcr = 0;
-  htop[-1].A_sysvia.ora = 0xFF;
+  htop[-1].A_sysvia.ora = 0x00;
   htop[-1].A_sysvia.ira = 0xFF;
-  htop[-1].A_sysvia.orb = 0xFF;
+  htop[-1].A_sysvia.orb = 0x00;
   htop[-1].A_sysvia.irb = 0xFF;
   htop[-1].A_sysvia.porta = 0xFF;
   htop[-1].A_sysvia.portb = 0xFF;
@@ -361,6 +371,8 @@ void systemviareset(void)
   htop[-1].A_sysvia.aftert1 = FALSE;
   htop[-1].A_sysvia.t1setint = FALSE;
   htop[-1].A_sysvia.t2setint = FALSE;
+  htop[-1].A_sysvia.ifrresist = 0x00;
+  htop[-1].A_sysvia.t1signal = 0x80;
 
   htop[-1].lsoundlatch = FALSE;
   systemviaregistersetirq(htop);
@@ -408,50 +420,36 @@ void systemviaaftersnapshot(void)
 HOSTMAP* systemviaatzerocycles(HOSTMAP* htop)
 {
   /*we are dealing with a 1MHz device here*/
+  htop[-1].A_sysvia.ifrresist = 0;
   htop[-1].B_sysvia.t1doubled -= htop[-1].cycles.sysvia_original;
 
   if (htop[-1].B_sysvia.t1doubled == -2)
   {
-    switch (htop[-1].A_sysvia.acr & 0xC0)
+    if (htop[-1].A_sysvia.t1setint)
     {
-      case 0x00:
-        /*output disabled and one-shot mode*/
+      if (!(htop[-1].A_sysvia.acr & 0x40))
+      {
+        /*one-shot mode*/
         /*timed interrupt each time T1 is loaded*/
-        if (htop[-1].A_sysvia.t1setint)
+        htop[-1].A_sysvia.t1setint = FALSE;
+        if (!htop[-1].A_sysvia.t1signal)
         {
+          /*PB7 goes high (if output enabled)*/
+          htop[-1].A_sysvia.t1signal = 0x80;
           /*T1 interrupt flag set*/
-          htop[-1].A_sysvia.ifr |= 0x40;
-          htop[-1].A_sysvia.t1setint = FALSE;
+          htop[-1].A_sysvia.ifrresist |= 0x40;
         }
-        break;
-      case 0x40:
-        /*output disabled and free-run mode*/
+      }
+      else
+      {
+        /*free-run mode*/
         /*continuous interrupts*/
-        /*ELITE uses this one*/
-         if (htop[-1].A_sysvia.t1setint)
-          /*T1 interrupt flag set*/
-          htop[-1].A_sysvia.ifr |= 0x40;
-        break;
-      case 0x80:
-        /*output enabled and one-shot mode*/
-        /*timed interrupt each time T1 is loaded*/
-        if (htop[-1].A_sysvia.t1setint)
-        {
-          /*PB7 goes high*/
-          htop[-1].A_sysvia.portb |= 0x80;
-          /*T1 interrupt flag set*/
-          htop[-1].A_sysvia.ifr |= 0x40;
-          htop[-1].A_sysvia.t1setint = FALSE;
-        }
-        break;
-      case 0xC0:
-        /*output enabled and free-run mode*/
-        /*continuous interrupts*/
-        htop[-1].A_sysvia.portb ^= 0x80;
-        if (htop[-1].A_sysvia.t1setint)
-          /*T1 interrupt flag set*/
-          htop[-1].A_sysvia.ifr |= 0x40;
-        break;
+        /*ELITE uses this one (with output disabled)*/
+        /*PB7 is toggled (if output enabled)*/
+        htop[-1].A_sysvia.t1signal ^= 0x80;
+        /*T1 interrupt flag set*/
+        htop[-1].A_sysvia.ifrresist |= 0x40;
+      }
     }
 
     htop[-1].B_sysvia.t1doubled += 0x20000;
@@ -459,10 +457,7 @@ HOSTMAP* systemviaatzerocycles(HOSTMAP* htop)
   }
   else if (htop[-1].A_sysvia.aftert1)
   {
-    if (htop[-1].A_sysvia.acr & 0x40)
-    {
-      htop[-1].B_sysvia.t1doubled = ((htop[-1].A_sysvia.t1lh<<9) | (htop[-1].A_sysvia.t1ll<<1)) + 1;
-    }
+    htop[-1].B_sysvia.t1doubled = ((htop[-1].A_sysvia.t1lh<<9) | (htop[-1].A_sysvia.t1ll<<1)) + 1;
     htop[-1].A_sysvia.aftert1 = 0;
   }
 
@@ -476,7 +471,7 @@ HOSTMAP* systemviaatzerocycles(HOSTMAP* htop)
       {
         /*on completion of the timing interval,
           T2 interrupt flag is set (IFR b5)*/
-        htop[-1].A_sysvia.ifr |= 0x20;
+        htop[-1].A_sysvia.ifrresist |= 0x20;
         htop[-1].A_sysvia.t2setint=FALSE;
       }
 
@@ -484,9 +479,10 @@ HOSTMAP* systemviaatzerocycles(HOSTMAP* htop)
     }
   }
 
+  systemviasetirqwithifrresist(htop);
+
   htop[-1].cycles.sysvia_togo = htop[-1].cycles.sysvia_original = systemviapickcyclestogo();
 
-  systemviaeventsetirq(htop);
   return htop;
 }
 
@@ -509,9 +505,8 @@ struct R6502CPUMAP* systemvia00read(struct R6502CPUMAP* ctop, uintptr_t address_
     /*clear b4,b3 (CB1,CB2)*/
     htop[-1].A_sysvia.ifr &= 0xE7;
   }
-  systemviaregistersetirq(htop);
-  /*reads output register bit in orb. pin level has no effect*/
-  nresult = (htop[-1].A_sysvia.orb & htop[-1].A_sysvia.ddrb);
+  systemviasetirqafterifrclear(htop);
+
   if (htop[-1].A_sysvia.acr & 0x02)
   {
     /*input latching enabled*/
@@ -522,15 +517,24 @@ struct R6502CPUMAP* systemvia00read(struct R6502CPUMAP* ctop, uintptr_t address_
   {
     /*input latching disabled*/
     /*read input level on PB pin*/
-    nresult |= (htop[-1].A_sysvia.portb & ~htop[-1].A_sysvia.ddrb);
+    nresult = htop[-1].A_sysvia.portb;
   }
+
   if (!beebit_button1)
     nresult |= 0x10; /*fire button 1 released*/
   if (!beebit_button2)
     nresult |= 0x20; /*fire button 2 released*/
 
   nresult |= 0xC0; /*speech system not available*/
-  /*nresult |= 0xF0;*/
+
+  /*reads output register bit in orb. pin level has no effect*/
+  nresult = (nresult & ~htop[-1].A_sysvia.ddrb) | (htop[-1].A_sysvia.orb & htop[-1].A_sysvia.ddrb);
+  if (htop[-1].A_sysvia.acr & 0x80)
+  {
+    /*T1 output enabled*/
+    nresult = htop[-1].A_sysvia.t1signal | (nresult & 0x7F);
+  }
+
   #ifdef __DEBUG__
     fprintf(htrace,"=&%X (&%X & &%X) ",nresult,htop[-1].A_sysvia.orb,htop[-1].A_sysvia.ddrb);
   #endif
@@ -558,7 +562,7 @@ struct R6502CPUMAP* systemvia01read_b(struct R6502CPUMAP* ctop, uintptr_t addres
     /*clear b2,b1 (CA1,CA2)*/
     htop[-1].A_sysvia.ifr &= 0xFC;
   }
-  systemviaregistersetirq(htop);
+  systemviasetirqafterifrclear(htop);
   if (htop[-1].A_sysvia.acr & 0x01)
   {
     /*input latching enabled*/
@@ -593,7 +597,7 @@ struct R6502CPUMAP* systemvia01read_m(struct R6502CPUMAP* ctop, uintptr_t addres
     /*clear b2,b1 (CA1,CA2)*/
     htop[-1].A_sysvia.ifr &= 0xFC;
   }
-  systemviaregistersetirq(htop);
+  systemviasetirqafterifrclear(htop);
   if (htop[-1].A_sysvia.acr & 0x01)
   {
     /*input latching enabled*/
@@ -642,7 +646,7 @@ struct R6502CPUMAP* systemvia04read(struct R6502CPUMAP* ctop, uintptr_t address_
 
   /*T1 interrupt flag is reset (IFR b6)*/
   htop[-1].A_sysvia.ifr &= 0xBF;
-  systemviaregistersetirq(htop);
+  systemviasetirqafterifrclear(htop);
   HOST_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, htop, sysvia)
   htop[-1].m = ((htop[-1].B_sysvia.t1doubled - cyclecount)>>1)&0xFF;
 
@@ -687,7 +691,7 @@ struct R6502CPUMAP* systemvia08read(struct R6502CPUMAP* ctop, uintptr_t address_
 
   /*T2 interrupt flag is cleared (IFR b5)*/
   htop[-1].A_sysvia.ifr &= 0xDF;
-  systemviaregistersetirq(htop);
+  systemviasetirqafterifrclear(htop);
   if (!(htop[-1].A_sysvia.acr & 0x20))
   {
     HOST_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, htop, sysvia)
@@ -726,7 +730,7 @@ struct R6502CPUMAP* systemvia0Aread(struct R6502CPUMAP* ctop, uintptr_t address_
   HOSTMAP* htop = (HOSTMAP*)ctop;
   /*SR interrupt flag is cleared (IFR b2)*/
   htop[-1].A_sysvia.ifr &= 0xFB;
-  systemviaregistersetirq(htop);
+  systemviasetirqafterifrclear(htop);
   htop[-1].m = htop[-1].A_sysvia.sr;
 
   return ctop;
@@ -756,7 +760,6 @@ struct R6502CPUMAP* systemvia0Dread(struct R6502CPUMAP* ctop, uintptr_t address_
   HOSTMAP* htop = (HOSTMAP*)ctop;
   /*b7 of this register will be read as a logic 1*/
   /*when an interrupt exists within the chip*/
-  systemviaregistersetirq(htop);
   htop[-1].m = htop[-1].A_sysvia.ifr;
 
   return ctop;
@@ -846,7 +849,7 @@ static inline void systemviaportbwrite(HOSTMAP* htop, uint8_t value)
     /*clear b4,b3 (CB1,CB2)*/
     htop[-1].A_sysvia.ifr &= 0xE7;
   }
-  systemviaregistersetirq(htop);
+  systemviasetirqafterifrclear(htop);
 }
 
 static inline void systemviaportawrite(HOSTMAP* htop, uint8_t value)
@@ -868,7 +871,7 @@ static inline void systemviaportawrite(HOSTMAP* htop, uint8_t value)
     /*clear b2,b1 (CA1,CA2)*/
     htop[-1].A_sysvia.ifr &= 0xFC;
   }
-  systemviaregistersetirq(htop);
+  systemviasetirqafterifrclear(htop);
 }
 
 static inline void systemviaportawritenohandshake(HOSTMAP* htop, uint8_t value)
@@ -1522,16 +1525,9 @@ struct R6502CPUMAP* systemvia05write(struct R6502CPUMAP* ctop, uintptr_t address
   htop[-1].A_sysvia.t1lh = value;
   /*clear T1 interrupt flag (b6)*/
   htop[-1].A_sysvia.ifr &= 0xBF;
-  systemviaregistersetirq(htop);
-  if ((htop[-1].A_sysvia.acr & 0xC0) == 0x80)
-  {
-    /*output enabled (b7=1) and free-run disabled (b6=0)*/
-    /*one-shot mode*/
-    /*PB7 goes low, but goes high when timer 1 times out*/
-    /*htop[-1].A_sysvia.orb &= 0x7F;
-    htop[-1].A_sysvia.irb &= 0x7F;*/
-    htop[-1].A_sysvia.portb &= 0x7F;
-  }
+  systemviasetirqafterifrclear(htop);
+  /*PB7 goes low (if output enabled), but goes high when timer 1 times out*/
+  htop[-1].A_sysvia.t1signal = 0x00;
   htop[-1].A_sysvia.t1setint = TRUE;
   htop[-1].B_sysvia.t1doubled = (htop[-1].A_sysvia.t1lh<<9) | (htop[-1].A_sysvia.t1ll<<1);
   HOST_GET_1MHZ_PERIPHERAL_TOGO_FROM_WRITE_OFFSET(expiryoffset, htop, sysvia)
@@ -1557,6 +1553,9 @@ struct R6502CPUMAP* systemvia07write(struct R6502CPUMAP* ctop, uintptr_t address
   /*T1 high order latch*/
   HOSTMAP* htop = (HOSTMAP*)ctop;
   htop[-1].A_sysvia.t1lh = value;
+  /*clear T1 interrupt flag (b6)*/
+  htop[-1].A_sysvia.ifr &= 0xBF;
+  systemviasetirqafterifrclear(htop);
 
   return ctop;
 }
@@ -1578,7 +1577,7 @@ struct R6502CPUMAP* systemvia09write(struct R6502CPUMAP* ctop, uintptr_t address
 
   /*clear T2 interrupt flag (bit 5)*/
   htop[-1].A_sysvia.ifr &= 0xDF;
-  systemviaregistersetirq(htop);
+  systemviasetirqafterifrclear(htop);
   /*provide a single interrupt*/
   htop[-1].A_sysvia.t2setint=TRUE;
   if (!(htop[-1].A_sysvia.acr & 0x20))
@@ -1606,7 +1605,7 @@ struct R6502CPUMAP* systemvia0Awrite(struct R6502CPUMAP* ctop, uintptr_t address
   HOSTMAP* htop = (HOSTMAP*)ctop;
   htop[-1].A_sysvia.sr = value;
   htop[-1].A_sysvia.ifr &= 0xFB;
-  systemviaregistersetirq(htop);
+  systemviasetirqafterifrclear(htop);
 
   return ctop;
 }
@@ -1642,30 +1641,6 @@ struct R6502CPUMAP* systemvia0Cwrite(struct R6502CPUMAP* ctop, uintptr_t address
   /*peripheral control reg*/
   HOSTMAP* htop = (HOSTMAP*)ctop;
   htop[-1].A_sysvia.pcr = value;
-  /*CA1 active edge*/
-  if (htop[-1].A_sysvia.pcr & 0x01)
-  {
-    /*set b2 (CA1)*/
-    htop[-1].A_sysvia.ifr |= 0x02;
-  }
-  /*CA2 active edge*/
-  if ((htop[-1].A_sysvia.pcr & 0x0E) == 0x04)
-  {
-    /*set b1 (CA2)*/
-    htop[-1].A_sysvia.ifr |= 0x01;
-  }
-  /*CB1 active edge*/
-  if (htop[-1].A_sysvia.pcr & 0x10)
-  {
-    /*set b5 (CB1)*/
-    htop[-1].A_sysvia.ifr |= 0x10;
-  }
-  /*CB2 active edge*/
-  if ((htop[-1].A_sysvia.pcr & 0xE0) == 0x40)
-  {
-    /*set b4 (CB2)*/
-    htop[-1].A_sysvia.ifr |= 0x08;
-  }
 
   return ctop;
 }
@@ -1674,9 +1649,8 @@ struct R6502CPUMAP* systemvia0Dwrite(struct R6502CPUMAP* ctop, uintptr_t address
 {
   /*interrupt flag reg*/
   HOSTMAP* htop = (HOSTMAP*)ctop;
-  value &= 0x7F; /*not really needed*/
   htop[-1].A_sysvia.ifr &= (~value);
-  systemviaregistersetirq(htop);
+  systemviasetirqafterifrclear(htop);
 
   return ctop;
 }
