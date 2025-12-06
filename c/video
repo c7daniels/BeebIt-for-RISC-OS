@@ -3595,6 +3595,8 @@ void videoscanline(void)
       if (m6845_interlaceon && video_field == 0)
         hmap->cycles.video_togo += (m6845_horizontaltotal>>1);
 
+      systemviasetca1(hmap);
+
       /*print screen during vertical sync*/
       if (lprintscreen !=0)
       {
@@ -3682,9 +3684,7 @@ void videoscanline(void)
         video_offset = 0;
       }
 
-      hmap->A_sysvia.ifr |= 0x02; /*CA1 flag*/
-      systemviaeventsetirq(hmap);
-      hmap->A_sysvia.ira = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) + (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
+      systemviaunsetca1(hmap);
 
       r6502startyield(cmap);
 

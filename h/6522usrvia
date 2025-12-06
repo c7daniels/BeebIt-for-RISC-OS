@@ -11,8 +11,6 @@
 
 /*User VIA*/
 extern void userviaamxmouse(void);
-extern void userviaeventsetirq(HOSTMAP* hmap);
-extern void userviaregistersetirq(HOSTMAP* hmap);
 extern void userviastartreset(int lfull);
 extern void userviafinishreset(void);
 extern void userviabeforesnapshot(void);

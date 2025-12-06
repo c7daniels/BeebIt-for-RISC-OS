@@ -73,7 +73,9 @@ typedef struct
   uint8_t t1setint; /*set interrupt when timer1 reaches 0*/
   uint8_t t2setint; /*set interrupt when timer2 reaches 0*/
   uint8_t aftert1; /*when timer1 has passed through 0*/
-  uint8_t padding[1];
+  uint8_t ifrresist;
+  uint8_t t1signal;
+  uint8_t padding[3];
 } HOSTMAPAVIA;
 
 typedef struct
@@ -226,7 +228,7 @@ typedef struct HOSTMAP
   HOSTMAPAI8271 A_i8271;
   HOSTMAPAW1770 A_w1770;
   HOSTMAPAADC A_adc;
-  uint8_t AP_unused[63*sizeof(uintptr_t)-128];
+  uint8_t AP_unused[63*sizeof(uintptr_t)-136];
 
   // AArch32 offsets &100 - &3FF
   uintptr_t interruptqueue;
