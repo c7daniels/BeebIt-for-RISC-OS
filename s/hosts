@@ -158,9 +158,9 @@
   EXPORT |host_r6502writespecial|
 
   EXPORT |hostassemblyroutinereset|
-  EXPORT |hostadvancetimers|
+  ;EXPORT |hostadvancetimers|
   EXPORT |assemblyhostadvancetimers|
-  EXPORT |hostexecute|
+  ;EXPORT |hostexecute|
   EXPORT |exex|
 
   ASSERT :INDEX:HOST_M_SHIFT == :INDEX:R6502ZONE_M_SHIFT
