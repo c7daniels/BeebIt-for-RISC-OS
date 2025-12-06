@@ -10,15 +10,10 @@
  */
 
 /*System VIA*/
-extern void systemviaeventsetirq(HOSTMAP* htop);
-extern void systemviaregistersetirq(HOSTMAP* htop);
-extern void systemviasetca1(void);
-extern void systemviavidca1(void);
-extern void systemviavidirq(void);
-extern void systemviaunsetca1(void);
+extern HOSTMAP* systemviasetca1(HOSTMAP* htop);
+extern HOSTMAP* systemviaunsetca1(HOSTMAP* htop);
 extern void systemviasetca2(void);
 extern void systemviakeyca2(void);
-extern void keyboardcheck(int);
 extern void systemviareset(void);
 extern void systemviabeforesnapshot(void);
 extern void systemviaaftersnapshot(void);
