@@ -37,7 +37,8 @@ typedef struct R6502CPUMAP
   // AArch32 offsets &00 - &FF
   uint8_t oldreset;
   uint8_t copiedvalue;
-  uint8_t AC_unused[sizeof(uintptr_t)-2];
+  uint8_t modifyoutofpage;
+  uint8_t AC_unused[sizeof(uintptr_t)-3];
   R6502_AP_ZONE AP;
 
   // AArch32 offsets &100 - &3FF

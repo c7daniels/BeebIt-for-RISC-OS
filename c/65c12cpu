@@ -485,6 +485,14 @@ R6502CPUMAP* r65c12sumlatchabslostep(R6502CPUMAP* cmap, uintptr_t incremented_cp
   R6502_CYCLE_READ_RETURN(cmap, cmap->last_pc_code)
 }
 
+R6502CPUMAP* r65c12breadcrumbloadabstomodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+  cmap->address_code = (((uintptr_t)cmap->m)<<24) | cmap->latch | ADDRESSING_BASEFLAG;
+  cmap->modifyoutofpage = 0;
+  R6502_CYCLE_READ_RETURN(cmap, cmap->address_code)
+}
+
 R6502CPUMAP* r65c12sumlatchzpgindlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
 {
   uintptr_t z_code;
@@ -555,6 +563,27 @@ R6502CPUMAP* r65c12sumloadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_
   else
   {
     cmap->cpu_state = ((R6502OP*)incremented_cpu_state)+1;
+    address_code = updated_address_code;
+  }
+  cmap->address_code = updated_address_code;
+  R6502_CYCLE_READ_RETURN(cmap, address_code)
+}
+
+R6502CPUMAP* r65c12loadabsxtomodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  uintptr_t sum = cmap->latch + (((uintptr_t)cmap->x)<<16);
+  uintptr_t updated_address_code = ((((uintptr_t)cmap->m)<<24) + sum) | ADDRESSING_BASEFLAG;
+  uintptr_t address_code;
+  if (sum & 0x01000000)
+  {
+    cmap->cpu_state = (R6502OP*)incremented_cpu_state;
+    cmap->modifyoutofpage = 1;
+    address_code = cmap->address_code;
+  }
+  else
+  {
+    cmap->cpu_state = ((R6502OP*)incremented_cpu_state)+1;
+    cmap->modifyoutofpage = 0;
     address_code = updated_address_code;
   }
   cmap->address_code = updated_address_code;
@@ -792,6 +821,14 @@ R6502CPUMAP* r65c12tomodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_sta
 {
   cmap->cpu_state = (R6502OP*)incremented_cpu_state;
   R6502_CYCLE_DISCARD_RETURN(cmap, cmap->address_code)
+}
+
+R6502CPUMAP* r65c12modifyskipstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)
+{
+  if (cmap->modifyoutofpage)
+    R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN(cmap)
+  else
+    R6502_CYCLE_ADDRESSED_FETCH_RETURN(cmap)
 }
 
 R6502CPUMAP* r65c12decastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state)

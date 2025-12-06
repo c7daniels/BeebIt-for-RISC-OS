@@ -214,6 +214,14 @@ o.host:	h.video
 o.host:	h.videoula
 o.host:	C:h.kernel
 o.host:	h.swis
+o.hosts: s.hosts
+o.hosts: h.6502zmaps
+o.hosts: h.6502cmaps
+o.hosts: h.6502cpus
+o.hosts: h.hostmaps
+o.hosts: h.hosts
+o.hosts: h.RegNames
+o.hosts: h.SWInames
 o.8271fdc:	c.8271fdc
 o.8271fdc:	h.beebit
 o.8271fdc:	h.host
@@ -241,6 +249,14 @@ o.adc:	h.6522sysvia
 o.adc:	h.adc
 o.adc:	C:h.kernel
 o.adc:	h.swis
+o.keyboard:	c.keyboard
+o.keyboard:	h.beebit
+o.keyboard:	h.hostmap
+o.keyboard:	h.6502zmap
+o.keyboard:	h.6522sysvia
+o.keyboard:	C:h.kernel
+o.keyboard:	h.riscos
+o.keyboard:	h.swis
 o.sheila:	c.sheila
 o.sheila:	h.beebit
 o.sheila:	h.host
@@ -357,3 +373,6 @@ o.snapshots:	h.video
 o.snapshots:	h.6845crtc
 o.snapshots:	h.videoula
 o.snapshots:	h.sheila
+o.RipROMs:	c.RipROMs
+o.RipROMs:	C:h.kernel
+o.RipROMs:	h.swis

@@ -268,7 +268,7 @@
     {r6502operandstep, r65c12sumlatchabslostep, r6502loadabsstep, SUM_STEP, r65c12decimalflagsstep, NULL}
 
 #define R65C12_MODIFY_ABS_SEQUENCE(MODIFY_STEP) \
-    {r6502operandstep, r6502latchabslostep, r6502breadcrumbloadabsstep, r65c12tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+    {r6502operandstep, r6502latchabslostep, r65c12breadcrumbloadabstomodifystep, r65c12tomodifystep, MODIFY_STEP, r65c12modifyskipstep, NULL}
 
 #define R65C12_LINEAR_MODIFY_ABS_SEQUENCE(MODIFY_STEP) \
     {r6502operandstep, r6502latchabslostep, r6502breadcrumbloadabsstep, r65c12tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
@@ -322,7 +322,7 @@
     {r6502operandstep, r6502breadcrumblatchabslostep, r65c12loadabsystep, r6502fixindexedstep, __VA_ARGS__, NULL}
 
 #define R65C12_MODIFY_ABSX_SEQUENCE(MODIFY_STEP) \
-    {r6502operandstep, r6502breadcrumblatchabslostep, r65c12loadabsxstep, r6502fixindexedstep, r65c12tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+    {r6502operandstep, r6502breadcrumblatchabslostep, r65c12loadabsxtomodifystep, r6502fixindexedstep, r65c12tomodifystep, MODIFY_STEP, r65c12modifyskipstep, NULL}
 
 #define R65C12_LINEAR_MODIFY_ABSX_SEQUENCE(MODIFY_STEP) \
     {r6502operandstep, r6502breadcrumblatchabslostep, r65c12linearloadabsxstep, r6502fixindexedstep, r65c12tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
@@ -763,6 +763,7 @@ extern R6502CPUMAP* r6502loadzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cp
 extern R6502CPUMAP* r65c12sumlatchabslostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502breadcrumblatchabslostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502latchabslostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12breadcrumbloadabstomodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502breadcrumbloadabsstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502loadabsstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12sumlatchzpgindlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
@@ -781,6 +782,7 @@ extern R6502CPUMAP* r6502fixindexedstep(R6502CPUMAP* cmap, uintptr_t incremented
 extern R6502CPUMAP* r65c12breadcrumbloadfullabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12sumloadabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12sumloadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12loadabsxtomodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12loadabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12loadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12sumloadzpgindystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
@@ -818,6 +820,7 @@ extern R6502CPUMAP* r6502oalstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_st
 extern R6502CPUMAP* r6502sbxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12tozpgmodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12tomodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12modifyskipstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502tozpgmodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502tomodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502aslastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);

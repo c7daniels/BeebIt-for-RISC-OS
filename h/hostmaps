@@ -56,7 +56,9 @@ HOSTAVIA_IER            # &1
 HOSTAVIA_T1SETINT       # &1
 HOSTAVIA_T2SETINT       # &1
 HOSTAVIA_AFTERT1        # &1
-                        # &1
+HOSTAVIA_IFRRESIST      # &1
+HOSTAVIA_T1SIGNAL       # &1
+                        # &3
 SIZEOF_HOSTAVIAMAP      * @
 
                         ^ 0
@@ -207,7 +209,7 @@ HOST_SERIAL             # SIZEOF_HOSTASERIAL
 HOST_AI8271             # SIZEOF_HOSTAI8271
 HOST_AW1770             # SIZEOF_HOSTAW1770
 HOST_AADC               # SIZEOF_HOSTAADC
-                        # &7C
+                        # &74
 
 ; offsets &100 - &3FF
 HOST_INTERRUPTQUEUE     # &4
