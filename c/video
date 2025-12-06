@@ -3595,6 +3595,8 @@ void videoscanline(void)
       if (m6845_interlaceon && video_field == 0)
         hmap->cycles.video_togo += (m6845_horizontaltotal>>1);
 
+      systemviasetca1(hmap);
+
       /*print screen during vertical sync*/
       if (lprintscreen !=0)
       {
@@ -3682,7 +3684,7 @@ void videoscanline(void)
         video_offset = 0;
       }
 
-      systemviasetca1(hmap);
+      systemviaunsetca1(hmap);
 
       r6502startyield(cmap);
 

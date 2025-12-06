@@ -19,7 +19,8 @@ R6502_LOG2_MAX_SEQUENCE_LENGTH EQU 3
 ; offsets &00 - &FF
 R6502_OLDRESET          # &1
 R6502_COPIEDVALUE       # &1
-                        # &2
+R6502_MODIFYOUTOFPAGE   # &1
+                        # &1
 R6502_AP                # SIZEOF_R6502_AP_ZONE
 
 ; offsets &100 - &3FF

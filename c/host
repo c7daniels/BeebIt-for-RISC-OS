@@ -1200,7 +1200,7 @@ void hostresetperipherals(void)
 
   for (i=0; i<32; i++)
   {
-      cmap->addressingandcycleops[i].addressingop = initialaddressingops[i];
+    cmap->addressingandcycleops[i].addressingop = initialaddressingops[i];
   }
 
   memcpy(hmap->read8000s, read8000s, sizeof(read8000s));

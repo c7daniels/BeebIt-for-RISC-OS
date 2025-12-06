@@ -52,12 +52,14 @@
   EXPORT |r65c12tozpgstep|
   EXPORT |r65c12sumloadzpgstep|
   EXPORT |r65c12sumlatchabslostep|
+  EXPORT |r65c12breadcrumbloadabstomodifystep|
   EXPORT |r65c12sumlatchzpgindlostep|
   EXPORT |r65c12sumloadzpgxstep|
   EXPORT |r65c12sumloadzpgindstep|
   EXPORT |r65c12breadcrumbloadfullabsxstep|
   EXPORT |r65c12sumloadabsxstep|
   EXPORT |r65c12sumloadabsystep|
+  EXPORT |r65c12loadabsxtomodifystep|
   EXPORT |r65c12loadabsxstep|
   EXPORT |r65c12loadabsystep|
   EXPORT |r65c12sumloadzpgindystep|
@@ -74,6 +76,7 @@
   EXPORT |r65c12waitstep|
   EXPORT |r65c12tozpgmodifystep|
   EXPORT |r65c12tomodifystep|
+  EXPORT |r65c12modifyskipstep|
   EXPORT |r65c12decastep|
   EXPORT |r65c12incastep|
   EXPORT |r65c12tsbzpgstep|
@@ -166,6 +169,17 @@
   R6502_CYCLE_UPDATE_POP
   R6502_CYCLE_READ_RETURN
 
+|r65c12breadcrumbloadabstomodifystep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ORR r1,r2,r1,LSL #24
+  MOV r2,#0
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  STRB r2,[r0,#:INDEX:R6502_MODIFYOUTOFPAGE]
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_READ_RETURN
+
 |r65c12sumlatchzpgindlostep|
   STR r1,[r0,#:INDEX:R6502_CPU_STATE]
   LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
@@ -237,6 +251,24 @@
   ORR r3,r3,#ADDRESSING_BASEFLAG
   LDRNE r1,[r0,#:INDEX:R6502_DECIMALFLAGS_ADDRESS_CODE]
   MOVEQ r1,r3
+  STR r3,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_READ_RETURN
+
+|r65c12loadabsxtomodifystep|
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  ADDEQ r1,r1,#1:SHL:2
+  ADD r3,r2,r3,LSL #24
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ORR r3,r3,#ADDRESSING_BASEFLAG
+  MOVEQ r2,#0
+  MOVNE r2,#1
+  LDRNE r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  MOVEQ r1,r3
+  STRB r2,[r0,#:INDEX:R6502_MODIFYOUTOFPAGE]
   STR r3,[r0,#:INDEX:R6502_ADDRESS_CODE]
   R6502_CYCLE_READ_RETURN
 
@@ -488,6 +520,14 @@ r65c12sbcstepD
   STR r1,[r0,#:INDEX:R6502_CPU_STATE]
   LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
   R6502_CYCLE_DISCARD_RETURN
+
+|r65c12modifyskipstep|
+  LDRB r2,[r0,#:INDEX:R6502_MODIFYOUTOFPAGE]
+  TST r2,r2
+  BNE r65c12modifyskipstep2
+  R6502_CYCLE_ADDRESSED_FETCH_RETURN
+r65c12modifyskipstep2
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
 
 |r65c12decastep|
   R6502_CYCLE_UPDATE_PUSH
