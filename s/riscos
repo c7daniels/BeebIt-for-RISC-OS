@@ -242,10 +242,12 @@ inttohexb
   LDR r11,=keylookup
   LDRB r9,[r11,r2] ;get bbc key code
 
-  ;check for <Break>
-  ;CMP r2,#&0F ;Break
-  CMP r9,#&80
-  BNE keyupdownF12
+  ;check for RISC OS <Break>
+  CMP r2,#&0F ;Break
+  CMPEQ r1,#1 ;and key is down
+  BNE keyupdownForBreak
+
+  MOV r8,r1
 
   ;STR lr,[sp, #-4]!  ;STMFD sp!,{lr}
   MOV r0,#129 ;scan kbd for single key
@@ -255,7 +257,7 @@ inttohexb
   ;LDR lr, [sp], #4   ;LDMFD sp!,{lr}
 
   TEQ r1,#&FF ;pressed?
-  LDMEQFD sp!,{r0-r3,r8-r12,pc} ;yes pass event on for watchdog.
+  LDMEQFD sp!,{r0-r3,r8-r12,pc} ;yes ignore event intended for watchdog.
 
   ;STR lr,[sp, #-4]!  ;STMFD sp!,{lr}
   MOV r0,#129 ;scan kbd for single key
@@ -265,7 +267,14 @@ inttohexb
   ;LDR lr, [sp], #4   ;LDMFD sp!,{lr}
 
   TEQ r1,#&FF ;pressed?
-  LDMEQFD sp!,{r0-r3,r8-r12,pc} ;yes pass event on for watchdog.
+  LDMEQFD sp!,{r0-r3,r8-r12,pc} ;yes ignore event intended for watchdog.
+
+  MOV r1,r8
+  MOV r2,#&0F
+
+keyupdownForBreak
+  CMP r9,#&80 ;Check for key mapped to Break
+  BNE keyupdownF12
 
   MOV r9,#&FF
   LDR r11,=lbreak
