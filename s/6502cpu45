@@ -26,6 +26,9 @@
 ; Import global symbols
 
   IMPORT |r6502opcodeinterruptfetchreturn|
+  IMPORT |s2_r6502implied_p|
+  IMPORT |s1_r6502implied_p|
+  IMPORT |s_r6502implied_p|
   IMPORT |s2_r6502push_p|
   IMPORT |s1_r6502push_p|
   IMPORT |s_r6502push_p|
@@ -45,6 +48,7 @@
 
   EXPORT |r6502rtiroutine|
   EXPORT |r6502pharoutine|
+  EXPORT |r6502lsraroutine|
   EXPORT |r6502jmpabsroutine|
   EXPORT |r6502bvcroutine|
 
@@ -84,6 +88,16 @@
   MEND
 
   MACRO
+  LSRA_ACTION
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORRCS r8,r8,#CFLAG
+  MEND
+
+  MACRO
   JMP_ACTION_1
   ADD r6,r7,#2:SHL:16
   MEND
@@ -119,6 +133,11 @@ s_r6502rti_p1
   R6502_OPCODE_PUSH
   PHA_ACTION
   R6502_PUSH_OPCODE_RETURN
+
+|r6502lsraroutine|
+  R6502_OPCODE_PUSH
+  LSRA_ACTION
+  R6502_IMPLIED_OPCODE_RETURN
 
 |r6502jmpabsroutine|
   R6502_OPCODE_PUSH

@@ -26,6 +26,9 @@
 ; Import global symbols
 
   IMPORT |r6502opcodeinterruptfetchreturn|
+  IMPORT |s2_r6502implied_p|
+  IMPORT |s1_r6502implied_p|
+  IMPORT |s_r6502implied_p|
   IMPORT |r6502nobranch|
   IMPORT |r6502branch|
   IMPORT |s2_r6502interruptfetch_u5p|
@@ -40,6 +43,7 @@
 
   EXPORT |r6502jsrroutine|
   EXPORT |r6502plproutine|
+  EXPORT |r6502rolaroutine|
   EXPORT |r6502bmiroutine|
 
   MACRO
@@ -92,6 +96,19 @@
   ORREQ r3,r3,#(R6502_IRQ_ENABLE<<4)|R6502_IRQ_ENABLE
   ORR r8,r2,#UFLAG|BFLAG|IFLAG
   STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  MEND
+
+  MACRO
+  ROLA_ACTION
+  TST r8,#CFLAG
+  LDR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r2,r2,#&800000
+  MOVS r2,r2,LSL #1
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
   MEND
 
 |r6502jsrroutine|
@@ -158,6 +175,11 @@ s_r6502plp_p1
   PLP_ACTION
   ADD r7,r7,#1:SHL:16
   B s_r6502interruptfetch_p
+
+|r6502rolaroutine|
+  R6502_OPCODE_PUSH
+  ROLA_ACTION
+  R6502_IMPLIED_OPCODE_RETURN
 
 |r6502bmiroutine|
   R6502_OPCODE_PUSH
