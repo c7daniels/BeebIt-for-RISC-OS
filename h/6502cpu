@@ -934,6 +934,11 @@ extern R6502CPUMAP* r6502plproutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu
 extern R6502CPUMAP* r6502pharoutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502plaroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 
+extern R6502CPUMAP* r6502aslaroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rolaroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502lsraroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502roraroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
 extern R6502CPUMAP* r6502dexroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502deyroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502inxroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);

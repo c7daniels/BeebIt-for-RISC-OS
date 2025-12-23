@@ -28,6 +28,9 @@
 ; Import global symbols
 
   IMPORT |r6502opcodeinterruptfetchreturn|
+  IMPORT |r6502implied_t2s|
+  IMPORT |r6502implied_t1s|
+  IMPORT |r6502implied_s|
   IMPORT |r6502nobranch|
   IMPORT |r6502branch|
   IMPORT |r6502interruptfetch_u5t2s|
@@ -51,6 +54,7 @@
 
   EXPORT |r6502rtsroutine|
   EXPORT |r6502plaroutine|
+  EXPORT |r6502roraroutine|
   EXPORT |r6502jmpabsindroutine|
   EXPORT |r6502bvsroutine|
   EXPORT |r6502pull_t2s|
@@ -114,6 +118,19 @@
   ORR r7,r7,r3,LSL #24
   MEND
 
+  MACRO
+  RORA_ACTION
+  TST r8,#CFLAG
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r2,r2,#&100
+  ORRNE r8,r8,#NFLAG
+  MOVS r2,r2,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORRCS r8,r8,#CFLAG
+  MEND
+
 |r6502rtsroutine|
   R6502_OPCODE_PUSH
   R6502_OPERAND_ADDRESS_FOR_READ r6502rts_s1,r6502rts_t1s1,r6502rts_t2s1
@@ -155,6 +172,11 @@ r6502rts_s2
   R6502_OPCODE_PUSH
   PLA_ACTION
   R6502_PULL_OPCODE_RETURN
+
+|r6502roraroutine|
+  R6502_OPCODE_PUSH
+  RORA_ACTION
+  R6502_IMPLIED_OPCODE_RETURN
 
 |r6502jmpabsindroutine|
   R6502_OPCODE_PUSH

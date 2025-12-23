@@ -566,7 +566,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x07
   r6502phproutine, //0x08
   NULL, //0x09
-  NULL, //0x0A
+  r6502aslaroutine, //0x0A
   NULL, //0x0B
   NULL, //0x0C
   NULL, //0x0D
@@ -600,7 +600,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x27
   r6502plproutine, //0x28
   NULL, //0x29
-  NULL, //0x2A
+  r6502rolaroutine, //0x2A
   NULL, //0x2B
   NULL, //0x2C
   NULL, //0x2D
@@ -634,7 +634,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x47
   r6502pharoutine, //0x48
   NULL, //0x49
-  NULL, //0x4A
+  r6502lsraroutine, //0x4A
   NULL, //0x4B
   r6502jmpabsroutine, //0x4C
   NULL, //0x4D
@@ -668,7 +668,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x67
   r6502plaroutine, //0x68
   NULL, //0x69
-  NULL, //0x6A
+  r6502roraroutine, //0x6A
   NULL, //0x6B
   r6502jmpabsindroutine, //0x6C
   NULL, //0x6D
