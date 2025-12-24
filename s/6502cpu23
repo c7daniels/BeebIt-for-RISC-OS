@@ -45,6 +45,7 @@
   EXPORT |r6502plproutine|
   EXPORT |r6502rolaroutine|
   EXPORT |r6502bmiroutine|
+  EXPORT |r6502secroutine|
 
   MACRO
   JSR_ACTION_1
@@ -184,6 +185,11 @@ s_r6502plp_p1
 |r6502bmiroutine|
   R6502_OPCODE_PUSH
   R6502_BRANCH_IF_SET_OPCODE_RETURN NFLAG
+
+|r6502secroutine|
+  R6502_OPCODE_PUSH
+  ORR r8,r8,#CFLAG
+  R6502_IMPLIED_OPCODE_RETURN
 
 ;Data Area
 

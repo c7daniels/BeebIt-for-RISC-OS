@@ -35,6 +35,7 @@
   EXPORT |r6502phproutine|
   EXPORT |r6502aslaroutine|
   EXPORT |r6502bplroutine|
+  EXPORT |r6502clcroutine|
   EXPORT |s2_r6502implied_p|
   EXPORT |s1_r6502implied_p|
   EXPORT |s_r6502implied_p|
@@ -211,6 +212,11 @@ s_r6502interrupt_p1
 |r6502bplroutine|
   R6502_OPCODE_PUSH
   R6502_BRANCH_IF_CLEAR_OPCODE_RETURN NFLAG
+
+|r6502clcroutine|
+  R6502_OPCODE_PUSH
+  BIC r8,r8,#CFLAG
+  R6502_IMPLIED_OPCODE_RETURN
 
 |s2_r6502implied_p|
   R6502_OPCODE_CYCLES 0,2

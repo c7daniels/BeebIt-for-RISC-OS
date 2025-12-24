@@ -37,6 +37,7 @@
   EXPORT |r6502inyroutine|
   EXPORT |r6502dexroutine|
   EXPORT |r6502bneroutine|
+  EXPORT |r6502cldroutine|
 
   MACRO
   INY_ACTION
@@ -71,6 +72,11 @@
 |r6502bneroutine|
   R6502_OPCODE_PUSH
   R6502_BRANCH_IF_CLEAR_OPCODE_RETURN ZFLAG
+
+|r6502cldroutine|
+  R6502_OPCODE_PUSH
+  BIC r8,r8,#DFLAG
+  R6502_IMPLIED_OPCODE_RETURN
 
 
 ;Data Area

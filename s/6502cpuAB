@@ -26,16 +26,73 @@
 ; Import global symbols
 
   IMPORT |r6502opcodeinterruptfetchreturn|
+  IMPORT |s2_r6502implied_p|
+  IMPORT |s1_r6502implied_p|
+  IMPORT |s_r6502implied_p|
   IMPORT |r6502nobranch|
   IMPORT |r6502branch|
 
 ; Export global symbols
 
+  EXPORT |r6502tayroutine|
+  EXPORT |r6502taxroutine|
   EXPORT |r6502bcsroutine|
+  EXPORT |r6502clvroutine|
+  EXPORT |r6502tsxroutine|
+
+  MACRO
+  TAY_ACTION
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_Y]
+  ORREQ r8,r8,#ZFLAG
+  MEND
+
+  MACRO
+  TAX_ACTION
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORREQ r8,r8,#ZFLAG
+  MEND
+
+  MACRO
+  TSX_ACTION
+  LDRB r2,[r0,#:INDEX:R6502_SP_CODE+3]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORREQ r8,r8,#ZFLAG
+  MEND
 
 |r6502bcsroutine|
   R6502_OPCODE_PUSH
   R6502_BRANCH_IF_SET_OPCODE_RETURN CFLAG
+
+|r6502tayroutine|
+  R6502_OPCODE_PUSH
+  TAY_ACTION
+  R6502_IMPLIED_OPCODE_RETURN
+
+|r6502taxroutine|
+  R6502_OPCODE_PUSH
+  TAX_ACTION
+  R6502_IMPLIED_OPCODE_RETURN
+
+|r6502clvroutine|
+  R6502_OPCODE_PUSH
+  BIC r8,r8,#VFLAG
+  R6502_IMPLIED_OPCODE_RETURN
+
+|r6502tsxroutine|
+  R6502_OPCODE_PUSH
+  TSX_ACTION
+  R6502_IMPLIED_OPCODE_RETURN
 
 
 ;Data Area
