@@ -35,7 +35,9 @@
 ; Export global symbols
 
   EXPORT |r6502inxroutine|
+  EXPORT |r6502noproutine|
   EXPORT |r6502beqroutine|
+  EXPORT |r6502sedroutine|
 
   MACRO
   INX_ACTION
@@ -52,9 +54,18 @@
   INX_ACTION
   R6502_IMPLIED_OPCODE_RETURN
 
+|r6502noproutine|
+  R6502_OPCODE_PUSH
+  R6502_IMPLIED_OPCODE_RETURN
+
 |r6502beqroutine|
   R6502_OPCODE_PUSH
   R6502_BRANCH_IF_SET_OPCODE_RETURN ZFLAG
+
+|r6502sedroutine|
+  R6502_OPCODE_PUSH
+  ORR r8,r8,#DFLAG
+  R6502_IMPLIED_OPCODE_RETURN
 
 
 ;Data Area
