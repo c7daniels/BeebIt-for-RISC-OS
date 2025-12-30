@@ -6,57 +6,65 @@
  *
  * (C) Copyright Michael J Foot, 1998-2002
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
-/*#define INITIALTIMERADDVALUE 2
-#define TIMERADDVALUE 4*/
-
 /*System VIA*/
-extern char r6522sysvia_orb; /*output register B*/
-extern char r6522sysvia_irb; /*input register B*/
-extern char r6522sysvia_ora; /*output register A*/
-extern char r6522sysvia_ira; /*input register A*/
-extern char r6522sysvia_ddrb;
-extern char r6522sysvia_ddra;
-extern char r6522sysvia_t1cl;
-extern char r6522sysvia_t1ch;
-extern char r6522sysvia_t1ll;
-extern char r6522sysvia_t1lh;
-extern char r6522sysvia_t2cl;
-extern char r6522sysvia_t2ch;
-extern char r6522sysvia_t2ll;
-extern char r6522sysvia_sr; /*status register*/
-extern char r6522sysvia_acr;
-extern char r6522sysvia_pcr;
-extern char r6522sysvia_ifr;
-extern char r6522sysvia_ier;
-extern char r6522sysvia_porta;
-extern char r6522sysvia_portb;
-extern int r6522sysvia_t1; /*timer 1 (used for speed)*/
-extern int r6522sysvia_t2; /*timer 2 (used for speed)*/
-extern int r6522sysvia_t1setint; /*set interrupt when timer1 reaches 0*/
-extern int r6522sysvia_t2setint; /*set interrupt when timer2 reaches 0*/
-/*extern int r6522sysvia_irq;*/ /*irq interrupt status*/
-extern int r6522sysvia_tick;
-
-/*extern int nkeyboardrow, nkeyboardcol;
-extern int ScreenStart;
-extern int VerticalSYNCTimer;*/
-
-extern int video_baseaddress;
-extern char video_startindex; /*screen start index (system via)*/
-
-extern void systemviasetirq(void);
+extern void systemviaeventsetirq(HOSTMAP* hmap);
+extern void systemviaregistersetirq(HOSTMAP* hmap);
 extern void systemviasetca1(void);
 extern void systemviavidca1(void);
 extern void systemviavidirq(void);
 extern void systemviaunsetca1(void);
 extern void systemviasetca2(void);
 extern void systemviakeyca2(void);
-extern void systemviasett1t2(int);
 extern void keyboardcheck(int);
-extern void systemviareset(int lfull);
-extern char systemviaread(int);
-extern void systemviawrite(int, char);
-extern int systemviamintimer(void);
+extern void systemviareset(void);
+extern void systemviabeforesnapshot(void);
+extern void systemviaaftersnapshot(void);
+extern HOSTMAP* systemviaatzerocycles(HOSTMAP* hmap);
+
+extern struct R6502CPUMAP* systemvia00read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia01read_b(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia01read_m(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia02read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia03read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia04read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia05read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia06read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia07read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia08read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia09read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia0Aread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia0Bread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia0Cread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia0Dread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia0Eread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia0Fread_b(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* systemvia0Fread_m(struct R6502CPUMAP* cmap, uintptr_t address_code);
+
+extern struct R6502CPUMAP* systemvia00write_b(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia00write_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia00write_nosoundb(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia00write_nosoundm(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia01write_b(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia01write_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia01write_nosoundb(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia01write_nosoundm(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia02write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia03write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia04write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia05write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia06write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia07write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia08write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia09write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia0Awrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia0Bwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia0Cwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia0Dwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia0Ewrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia0Fwrite_b(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia0Fwrite_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia0Fwrite_nosoundb(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* systemvia0Fwrite_nosoundm(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);

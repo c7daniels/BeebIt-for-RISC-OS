@@ -2,9 +2,9 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2000
+ * (C) Copyright Michael J Foot, 1998-2024
  *
- * Email: <mikef@voyager.co.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
 #define DFS_SECTORS_PER_TRACK 10
@@ -20,14 +20,18 @@
 #define ADFS_NON_INTERLEAVED 0x10 /*non interleaved*/
 #define ADFS_INTERLEAVED 0x11 /*interleaved*/
 
-extern int w1770_timer;
-
 extern void w1770reset(void);
 extern int w1770getsectorcount(FILE *hfile);
 extern int w1770getimagetype(FILE *hfile, int nsectorcount);
-extern void w1770poll(void);
-extern char w1770controlread(void);
-extern void w1770controlwrite(char nvalue);
-extern char w1770read(int naddress);
-extern void w1770write(int naddress, char nvalue);
-extern void w1770closedown(void);
+extern HOSTMAP* w1770poll(HOSTMAP* hmap);
+extern struct R6502CPUMAP* w1770controlread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* w1770controlwrite_bp(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* w1770controlwrite_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* w1770statusread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* w1770trackread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* w1770sectorread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* w1770dataread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* w1770commandwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* w1770trackwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* w1770sectorwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* w1770datawrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);

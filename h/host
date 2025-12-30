@@ -1,0 +1,175 @@
+/*>host.h
+ *
+ * BeebIt - BBC Micro Model B Emulator
+ *
+ * Cycle-level CPU emulation
+ *
+ * (C) Copyright Crispian Daniels, 2025
+ *
+ * Email: <convertedgames@3insdale.me.uk>
+ */
+
+#ifndef __BEEBIT_HOST_H__
+#define __BEEBIT_HOST_H__
+
+#include "hostmap.h"
+
+#define HOST_IRQ_SOURCE_MASK 0xFF
+#define HOST_IRQ_6522SYSVIA 0x01
+#define HOST_IRQ_6522USRVIA 0x02
+#define HOST_IRQ_6850ACIA 0x04
+#define HOST_IRQ_IRR 0x08
+
+#define HOST_NMI_SOURCE_MASK 0xFF00
+#define HOST_NMI_1770FDC 0x0100
+#define HOST_NMI_8271FDC 0x0200
+
+#define HOST_SETIRQ(HMAP, SOURCE) \
+  { \
+    uintptr_t interrupts = HMAP->interrupts; \
+    HMAP->interrupts = interrupts | SOURCE; \
+    if (!(interrupts & HOST_IRQ_SOURCE_MASK)) \
+    { \
+      HMAP->interruptqueue |= R6502_IRQ; \
+    } \
+  }
+
+#define HOST_CLEARIRQ(HMAP, SOURCE) \
+  { \
+    uintptr_t interrupts = HMAP->interrupts & ~SOURCE; \
+    HMAP->interrupts = interrupts; \
+    if (!(interrupts & HOST_IRQ_SOURCE_MASK)) \
+    { \
+      HMAP->interruptqueue &= ~R6502_IRQ; \
+    } \
+  }
+
+#define HOST_SETNMI(HMAP, SOURCE) \
+  { \
+    uintptr_t interrupts = HMAP->interrupts; \
+    HMAP->interrupts = interrupts | SOURCE; \
+    if (!(interrupts & HOST_NMI_SOURCE_MASK)) \
+    { \
+      HMAP->interruptqueue |= R6502_NMI; \
+    } \
+  }
+
+#define HOST_CLEARNMI(HMAP, SOURCE) \
+  { \
+    uintptr_t interrupts = HMAP->interrupts & ~SOURCE; \
+    HMAP->interrupts = interrupts; \
+    if (!(interrupts & HOST_NMI_SOURCE_MASK)) \
+    { \
+      HMAP->interruptqueue &= ~R6502_NMI; \
+    } \
+  }
+
+#define HOST_SETSHIFTEDIRQ(HMAP, SOURCE) \
+  { \
+    uintptr_t interrupts = HMAP->interrupts; \
+    HMAP->interrupts = interrupts | SOURCE; \
+    if (!(interrupts & HOST_IRQ_SOURCE_MASK)) \
+    { \
+      HMAP->interruptqueue |= ((R6502_IRQ<<4)|R6502_IRQ); \
+    } \
+  }
+
+#define HOST_CLEARSHIFTEDIRQ(HMAP, SOURCE) \
+  { \
+    uintptr_t interrupts = HMAP->interrupts & ~SOURCE; \
+    HMAP->interrupts = interrupts; \
+    if (!(interrupts & HOST_IRQ_SOURCE_MASK)) \
+    { \
+      HMAP->interruptqueue &= ~((R6502_IRQ<<4)|R6502_IRQ); \
+    } \
+  }
+
+#define HOST_SETSHIFTEDNMI(HMAP, SOURCE) \
+  { \
+    uintptr_t interrupts = HMAP->interrupts; \
+    HMAP->interrupts = interrupts | SOURCE; \
+    if (!(interrupts & HOST_NMI_SOURCE_MASK)) \
+    { \
+      HMAP->interruptqueue |= ((R6502_NMI<<4)|R6502_NMI); \
+    } \
+  }
+
+#define HOST_CLEARSHIFTEDNMI(HMAP, SOURCE) \
+  { \
+    uintptr_t interrupts = HMAP->interrupts & ~SOURCE; \
+    HMAP->interrupts = interrupts; \
+    if (!(interrupts & HOST_NMI_SOURCE_MASK)) \
+    { \
+      HMAP->interruptqueue &= ~((R6502_NMI<<4)|R6502_NMI); \
+    } \
+  }
+
+#define HOST_LIMIT_CYCLES_TO_GO(HMAP, LIMIT) \
+  { \
+    HOSTMAPCYCLES *cy = &HMAP->cycles; \
+    intptr_t excess = cy->original - (LIMIT); \
+    if (excess > 0) \
+    { \
+      cy->original -= excess; \
+      cy->togo -= excess; \
+    } \
+  }
+
+#define HOST_LIMIT_PERIPHERAL_CYCLES_TO_GO(HMAP, P, LIMIT) \
+  { \
+    HOSTMAPCYCLES *cy = &HMAP->cycles; \
+    intptr_t excess = cy->P##_original - (LIMIT); \
+    if (excess > 0) \
+    { \
+      cy->P##_original -= excess; \
+      cy->P##_togo -= excess; \
+      excess = cy->original - cy->P##_togo; \
+      if (excess > 0) \
+      { \
+        cy->original -= excess; \
+        cy->togo -= excess; \
+      } \
+    } \
+  }
+
+#define HOST_GET_PERIPHERAL_CYCLE_COUNT(OUT, HMAP, P) \
+  { \
+    HOSTMAPCYCLES *cy = &HMAP->cycles; \
+    OUT = cy->original - cy->togo + cy->P##_original - cy->P##_togo; \
+  }
+
+#define HOST_GET_1MHZ_PERIPHERAL_TOGO_FOR_SNAPSHOT_OFFSET(OUT, HMAP, P) \
+  { \
+    HOSTMAPCYCLES *cy = &HMAP->cycles; \
+    OUT = cy->original - cy->togo; \
+    OUT += (cy->odd^OUT^1)&1; \
+    OUT += cy->P##_original - cy->P##_togo; \
+  }
+
+#define HOST_GET_TOGO_FROM_WRITE_OFFSET(OUT, HMAP) \
+  { \
+    HOSTMAPCYCLES *cy = &HMAP->cycles; \
+    OUT = 1 + cy->original - cy->togo; \
+  }
+
+#define HOST_GET_1MHZ_PERIPHERAL_TOGO_FROM_WRITE_OFFSET(OUT, HMAP, P) \
+  { \
+    HOSTMAPCYCLES *cy = &HMAP->cycles; \
+    OUT = 2 + cy->original - cy->togo; \
+    OUT += cy->P##_original - cy->P##_togo; \
+  }
+
+extern HOSTMAP hostmap;
+
+extern void swappages(uint8_t *block1, uint8_t *block2, int npagecount);
+
+extern void hostinit(void);
+extern void hostapplysoundoption(void);
+extern int hostresetcpu(void);
+extern void hostresetperipherals(void);
+extern HOSTMAP* hostadvancetimers(HOSTMAP* hmap);
+extern void hostexecute(void);
+extern void hostbeforesnapshot(void);
+extern void hostaftersnapshot(void);
+
+#endif //__BEEBIT_HOST_H__

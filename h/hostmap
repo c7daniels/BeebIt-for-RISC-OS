@@ -1,0 +1,279 @@
+/*>hostmap.h
+ *
+ * BeebIt - BBC Micro Model B Emulator
+ *
+ * Cycle-level CPU emulation
+ *
+ * (C) Copyright Crispian Daniels, 2025
+ *
+ * Email: <convertedgames@3insdale.me.uk>
+ */
+
+#ifndef __BEEBIT_HOSTMAP_H__
+#define __BEEBIT_HOSTMAP_H__
+
+#include "6502zmap.h"
+
+struct HOSTMAP;
+
+typedef struct HOSTMAP* (*HOSTSWAPOP)(struct HOSTMAP* hmap); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
+
+typedef uintptr_t HOSTMAPUEFFILEPOINTERAREA[1];
+
+typedef struct
+{
+  uintptr_t monotonic; /*used by zeribeepwrite*/
+  intptr_t odd;
+  intptr_t togo;
+  intptr_t original;
+  intptr_t sysvia_togo;
+  intptr_t sysvia_original;
+  intptr_t usrvia_togo;
+  intptr_t usrvia_original;
+  intptr_t i8271_togo;
+  intptr_t w1770_togo;
+  intptr_t adc_togo;
+  intptr_t m6850_togo;
+  intptr_t video_togo;
+} HOSTMAPCYCLES;
+
+typedef struct
+{
+  R6502ADDRESSINGOP address3000_ram_x;
+  R6502ADDRESSINGOP address3000_ramram_e;
+  R6502ADDRESSINGOP address8000_ram;
+  R6502ADDRESSINGOP addressC000_y;
+  R6502ADDRESSINGOP addressFC00;
+  R6502ADDRESSINGOP addressFC00_ifj;
+  HOSTSWAPOP swapintomemory, swapoutofmemory;
+} HOSTMAPPAGING;
+
+typedef struct
+{
+  uint8_t orb; /*output register B*/
+  uint8_t irb; /*input register B*/
+  uint8_t ora; /*output register A*/
+  uint8_t ira; /*input register A*/
+  uint8_t ddrb; /*0 bit means input, 1 means output*/
+  uint8_t ddra; /*0 bit means input, 1 means output*/
+  /*these variables contain the actual values on the lines...*/
+  uint8_t porta;
+  uint8_t portb;
+  uint8_t t1ll; /*T1 low order latch*/
+  uint8_t t1lh; /*T1 high order latch*/
+  uint8_t t2ll; /*T2 low order latch*/
+  uint8_t sr; /*status register*/
+  uint8_t acr;
+  uint8_t pcr;
+  uint8_t ifr;
+  uint8_t ier;
+  uint8_t t1setint; /*set interrupt when timer1 reaches 0*/
+  uint8_t t2setint; /*set interrupt when timer2 reaches 0*/
+  uint8_t aftert1; /*when timer1 has passed through 0*/
+  uint8_t padding[1];
+} HOSTMAPAVIA;
+
+typedef struct
+{
+  uint8_t readwrite;
+  uint8_t datastrobe;
+  uint8_t addrstrobe;
+  uint8_t chipselect;
+} HOSTMAPRTC;
+
+typedef struct
+{
+  intptr_t t1doubled; /*left-shifted timer 1 (used for speed)*/
+  intptr_t t2doubled; /*left-shifted timer 2 (used for speed)*/
+} HOSTMAPBVIA;
+
+typedef struct
+{
+  intptr_t timer; /*amx mouse timer*/
+  intptr_t buttons;
+  intptr_t currentx;
+  intptr_t currenty;
+  intptr_t targetx;
+  intptr_t targety;
+} HOSTMAPAMX;
+
+typedef struct
+{
+  uint8_t m6850_controlreg;
+  uint8_t m6850_rxdatareg; /*receive data reg*/
+  uint8_t m6850_txdatareg; /*transmit data reg*/
+  uint8_t m6850_rxdatashiftreg; /*receive data shift reg*/
+  uint8_t m6850_txdatashiftreg; /*transmit data shift reg*/
+  uint8_t m6850_statusreg;
+  uint8_t ula_reg;
+  uint8_t uef_data;
+} HOSTMAPASERIAL;
+
+typedef struct
+{
+  intptr_t m6850_CTS,m6850_RTS,m6850_DCD;
+  intptr_t m6850_counterdivide;
+  intptr_t m6850_bits, m6850_parity, m6850_stop;
+  intptr_t m6850_transmittingRTS;
+  intptr_t m6850_transmittingIRQ;
+  intptr_t m6850_cleardcd;
+  intptr_t m6850_firstreset;
+  intptr_t m6850_timerreset;
+  intptr_t ula_txbaud;
+  intptr_t ula_rxbaud;
+  intptr_t uef_version;
+  HOSTMAPUEFFILEPOINTERAREA uef_filepointerarea;
+  char* uef_buffer;
+  intptr_t uef_bufferpointer;
+  intptr_t uef_chunk;
+  intptr_t uef_chunklen;
+  intptr_t uef_chunkstart;
+  intptr_t uef_tone;
+} HOSTMAPBSERIAL;
+
+typedef struct
+{
+  uint8_t commandreg;
+  uint8_t statusreg;
+  uint8_t resultreg;
+  uint8_t datareg;
+  uint8_t select;
+  uint8_t scansector;
+  uint8_t scancountmsb;
+  uint8_t scancountlsb;
+  uint8_t currenttrack[2];
+  uint8_t modereg;
+  uint8_t outputport;
+  uint8_t inputport;
+  uint8_t badtrack[2][2]; /*drive,track*/
+  uint8_t parameter[16]; /*heaps more than we need*/
+  uint8_t _padding[3];
+} HOSTMAPAI8271;
+
+typedef struct
+{
+  intptr_t steprate;
+  intptr_t headsettletime;
+  intptr_t indexcount;
+  intptr_t headloadtime;
+  intptr_t writestart;
+  intptr_t ncurrentdrive,CurrentTrack, CurrentSector, SectorsToGo, SectorLength, ByteWithinSector;
+  intptr_t ncommandid,ncommandparams;
+  intptr_t PresentParam; /* From 0 */
+  intptr_t ninerror;
+} HOSTMAPBI8271;
+
+typedef struct
+{
+  uint8_t controlreg;
+  uint8_t statusreg;
+  uint8_t trackreg;
+  uint8_t sectorreg;
+  uint8_t datareg;
+  uint8_t commandreg;
+  uint8_t track;
+  uint8_t reset;
+  uint8_t density;
+  uint8_t drive;
+  uint8_t side;
+  uint8_t padding[1];
+} HOSTMAPAW1770;
+
+typedef struct
+{
+  intptr_t stepdir;
+  intptr_t steptime;
+  intptr_t byteinsector;
+  intptr_t writegate;
+  intptr_t lastbyte;
+} HOSTMAPBW1770;
+
+typedef struct
+{
+  uint8_t channel;
+  uint8_t flag;
+  uint8_t resolution;
+  uint8_t status;
+  uint8_t highbyte;
+  uint8_t lowbyte;
+  uint8_t suppressfirst;
+  uint8_t padding[1];
+} HOSTMAPAADC;
+
+typedef struct
+{
+  intptr_t input_x_high;
+  intptr_t input_y_low;
+} HOSTMAPBADC;
+
+/*storage map specialized for peripheral emulation*/
+typedef struct HOSTMAP
+{
+  // AArch32 offsets &00 - &FF
+  R6502_AC_ZONE AC;
+  int8_t romwritable[16];
+  uint8_t romsel; /*ROMSELect*/
+  uint8_t acccon;  /*ACCCON*/
+  uint8_t lsoundlatch;
+  uint8_t screenstartindex; /*screen start index (system via)*/
+  HOSTMAPAVIA A_sysvia;
+  HOSTMAPAVIA A_usrvia;
+  HOSTMAPRTC rtc;
+  HOSTMAPASERIAL A_serial;
+  HOSTMAPAI8271 A_i8271;
+  HOSTMAPAW1770 A_w1770;
+  HOSTMAPAADC A_adc;
+  uint8_t AP_unused[63*sizeof(uintptr_t)-128];
+
+  // AArch32 offsets &100 - &3FF
+  uintptr_t interruptqueue;
+  R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
+  R6502_BC_ZONE BC;
+  uintptr_t interrupts;
+  void* zeribeep_writebyte;
+  void* zeribeep_workspace;
+  uintptr_t screenstartaddress;
+  R6502ADDRESSINGOP readmFC00;
+  R6502ADDRESSINGOP modifymFC00;
+  HOSTMAPCYCLES cycles;
+  HOSTMAPPAGING paging;
+  HOSTMAPBVIA B_sysvia;
+  HOSTMAPBVIA B_usrvia;
+  HOSTMAPAMX amx;
+  HOSTMAPBSERIAL B_serial;
+  HOSTMAPBI8271 B_i8271;
+  HOSTMAPBW1770 B_w1770;
+  HOSTMAPBADC B_adc;
+  uintptr_t B_unused[67];
+
+  // AArch32 offsets &400 - &FFF
+  R6502_CC_ZONE CC;
+  R6502_CP_ZONE CP;
+
+  // AArch32 offsets &1000 - &1BFF
+  R6502_DC_ZONE DC;
+  R6502ADDRESSINGOP read8000s[16];
+  R6502ADDRESSINGOP modify8000s[16];
+  uintptr_t DP_unused[448];
+
+  // AArch32 offsets &1C00 - &3FFF
+  R6502_EC_ZONE EC;
+
+  // AArch32 offsets &4000 - &7FFF
+  R6502ADDRESSINGOP readhigh[1024];
+  R6502ADDRESSINGOP modifyhigh[1024];
+  R6502READSPECIALOP specialreadops[1024];
+  R6502WRITESPECIALOP specialwriteops[1024];
+
+  // AArch32 offsets &8000 - &FFFF
+  uint8_t shadow[0x8000];
+
+  // AArch32 offsets &10000 - &1FFFF
+  uint8_t memory[0x10000];
+
+  // AArch32 offsets &20000 - &5FFFF
+  uint8_t roms[0x10][0x4000];
+
+} HOSTMAP;
+
+#endif //__BEEBIT_HOSTMAP_H__

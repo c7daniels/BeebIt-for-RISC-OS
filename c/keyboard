@@ -4,13 +4,13 @@
  *
  * (C) Copyright Michael J Foot, 1998-2004
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
-#include <stdio.h>
 #include <string.h>
-#include "6522sysvia.h"
 #include "beebit.h"
+#include "hostmap.h"
+#include "6522sysvia.h"
 #include "kernel.h"
 #include "riscos.h"
 #include "swis.h"
@@ -28,7 +28,6 @@ void keyboardreset(void)
   strcpy(cbuffer,"<BeebIt$Dir>.KeyMaps.");
   strcat(cbuffer,beebit_keylayout);
   keyboardload(cbuffer);
-  /*keymap[0x06] = 0xFF;*/ /*shift keyboard link*/
 }
 
 void keyboardload(char *filename)

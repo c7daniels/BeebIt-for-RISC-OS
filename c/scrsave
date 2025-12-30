@@ -4,7 +4,7 @@
  *
  * (C) Copyright Michael J Foot, 1998-2003
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
 /*
@@ -22,9 +22,9 @@
 #define ScreenStart 148
 
 #include <stdlib.h>
-#include <stdio.h>
-#include "main.h"
 #include "beebit.h"
+#include "hostmap.h"
+#include "main.h"
 #include "swis.h"
 #include "kernel.h"
 #include "video.h"

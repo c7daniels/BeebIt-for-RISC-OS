@@ -6,52 +6,52 @@
  *
  * (C) Copyright Michael J Foot, 1998-2002
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
-#include <stdio.h>
-#include "6502cpu.h"
-#include "6522sysvia.h"
+#include <stddef.h>
 #include "beebit.h"
+#include "host.h"
+#include "6522sysvia.h"
+#include "adc.h"
+#ifdef __RISCOS__
 #include "kernel.h"
 #include "swis.h"
-
-extern _kernel_swi_regs regs;
+#endif
 
 /*analog to digital converter*/
-int adc_channel;
-int adc_flag;
-int adc_resolution;
-int adc_status;
-int adc_highbyte;
-int adc_lowbyte;
-int adc_timer; /*adc timer*/
-static int adc_suppressfirst;
+
+#ifdef __RISCOS__
+extern _kernel_swi_regs regs;
+#endif
+
 static int adc_x_osunits;
 static int adc_y_osunits;
-static int adc_input_x_high;
-static int adc_input_y_low;
 static const int adc_floating_value = 0x7FFF;
 
 void adcreset(void)
 {
-  adc_channel = 0;
-  adc_flag = 0;
-  adc_resolution = 0;
-  adc_highbyte = 0;
-  adc_lowbyte = 0;
-  adc_timer = 0;
+  HOSTMAP* hmap = &hostmap;
+  hmap->A_adc.channel = 0;
+  hmap->A_adc.flag = 0;
+  hmap->A_adc.resolution = 0;
+  hmap->A_adc.highbyte = 0;
+  hmap->A_adc.lowbyte = 0;
+  hmap->cycles.adc_togo = 0;
 }
 
 void adcenter(void)
 {
-  adc_suppressfirst = 0;
+  HOSTMAP* hmap = &hostmap;
+  hmap->A_adc.suppressfirst = 0;
   adc_x_osunits = 0;
   adc_y_osunits = 0;
 }
 
 void adcmodevars(void)
 {
+#ifdef __RISCOS__
+  HOSTMAP* hmap = &hostmap;
   int xres,yres;
   int xeig,yeig;
 
@@ -72,55 +72,57 @@ void adcmodevars(void)
   if (adc_x_osunits != (xres<<xeig))
   {
     adc_x_osunits = (xres<<xeig);
-    adc_input_x_high = (adc_x_osunits>>1)+255;
+    hmap->B_adc.input_x_high = (adc_x_osunits>>1)+255;
   }
   if (adc_y_osunits != (yres<<yeig))
   {
     adc_y_osunits = (yres<<yeig);
-    adc_input_y_low = (adc_y_osunits>>1)-255;
+    hmap->B_adc.input_y_low = (adc_y_osunits>>1)-255;
   }
+#endif
 }
 
-void adcpoll(void)
+HOSTMAP* adcpoll(HOSTMAP* hmap)
 {
   int nvalue;
-  adc_status &= 0x0F;
+  hmap->A_adc.status &= 0x0F;
 
+#ifdef __RISCOS__
   if (beebit_mouseemulation == MOUSE_JOYSTICK)
   {
     /*mouse position in OS units*/
     _kernel_swi(OS_Mouse,&regs,&regs);
 
-    if (adc_suppressfirst == 0)
+    if (hmap->A_adc.suppressfirst == 0)
       beebit_button1 = 0;
     else
       beebit_button1 = ((regs.r[2] & 0x04)>>2);
 
     if (((regs.r[2] & 0x04)>>2) == 0)
-      adc_suppressfirst = 1;
+      hmap->A_adc.suppressfirst = 1;
 
     beebit_button2 = (regs.r[2] & 0x01);
-    switch (adc_status & 3)
+    switch (hmap->A_adc.status & 3)
     {
       case 0:
         /*master left/right*/
         /*sliding 512 OS unit domain*/
-        if (adc_input_x_high < regs.r[0])
-          adc_input_x_high = regs.r[0];
-        else if (adc_input_x_high - 511 > regs.r[0])
-          adc_input_x_high = regs.r[0] + 511;
+        if (hmap->B_adc.input_x_high < regs.r[0])
+          hmap->B_adc.input_x_high = regs.r[0];
+        else if (hmap->B_adc.input_x_high - 511 > regs.r[0])
+          hmap->B_adc.input_x_high = regs.r[0] + 511;
 
-        nvalue = (adc_input_x_high - regs.r[0])<<7;
+        nvalue = (hmap->B_adc.input_x_high - regs.r[0])<<7;
         break;
       case 1:
         /*master up/down*/
         /*sliding 512 OS unit domain*/
-        if (adc_input_y_low > regs.r[1])
-          adc_input_y_low = regs.r[1];
-        else if (adc_input_y_low + 511 < regs.r[1])
-          adc_input_y_low = regs.r[1] - 511;
+        if (hmap->B_adc.input_y_low > regs.r[1])
+          hmap->B_adc.input_y_low = regs.r[1];
+        else if (hmap->B_adc.input_y_low + 511 < regs.r[1])
+          hmap->B_adc.input_y_low = regs.r[1] - 511;
 
-        nvalue = (regs.r[1] - adc_input_y_low)<<7;
+        nvalue = (regs.r[1] - hmap->B_adc.input_y_low)<<7;
         break;
       case 2:
         /*secondary left/right*/
@@ -136,32 +138,35 @@ void adcpoll(void)
     }
   }
   else
+#endif
     nvalue = adc_floating_value;
 
-  adc_status |= 0x40; /*not busy*/
-  adc_status |= ((nvalue & 0xC000)>>10);
-  adc_highbyte = (nvalue>>8);
-  adc_lowbyte = (nvalue & 0xF0);
+  hmap->A_adc.status |= 0x40; /*not busy*/
+  hmap->A_adc.status |= ((nvalue & 0xC000)>>10);
+  hmap->A_adc.highbyte = (nvalue>>8);
+  hmap->A_adc.lowbyte = (nvalue & 0xF0);
 
   if (beebit_mouseemulation == MOUSE_JOYSTICK)
   {
     if (beebit_button1)
-      r6522sysvia_portb &= 0xEF;
+      hmap->A_sysvia.portb &= 0xEF;
     else
-      r6522sysvia_portb |= 0x10;
+      hmap->A_sysvia.portb |= 0x10;
 
     if (beebit_button2)
-      r6522sysvia_portb &= 0xDF;
+      hmap->A_sysvia.portb &= 0xDF;
     else
-      r6522sysvia_portb |= 0x20;
+      hmap->A_sysvia.portb |= 0x20;
   }
 
-  r6522sysvia_irb = (r6522sysvia_orb & r6522sysvia_ddrb) + (r6522sysvia_portb & ~r6522sysvia_ddrb);
+  hmap->A_sysvia.irb = (hmap->A_sysvia.orb & hmap->A_sysvia.ddrb) + (hmap->A_sysvia.portb & ~hmap->A_sysvia.ddrb);
   /*set CB1 to indicate end of conversion*/
-  r6522sysvia_ifr |= 0x10;
+  hmap->A_sysvia.ifr |= 0x10;
+
+  return hmap;
 }
 
-char adcread(int naddress)
+struct R6502CPUMAP* adc00read(struct R6502CPUMAP* cmap, uintptr_t address_code)
 {
   /*&FC00
    *b0+b1: which of the 4 input channels was selected.
@@ -172,37 +177,26 @@ char adcread(int naddress)
    *b5: 1st MSB
    *b6:
    */
-  /*char nresult;*/
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
-  naddress &= 3;
-  switch (naddress)
-  {
-    case 0:
-      return (adc_status);
-      break;
-    case 1:
-      return (adc_highbyte);
-      break;
-    case 2:
-      return (adc_lowbyte);
-      break;
-    default:
-      return (0);
-      break;
-  }
-  /*return (nresult);*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->A_adc.status;
+  return cmap;
 }
 
-void adcwrite(int naddress,int nvalue)
+struct R6502CPUMAP* adc01read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->A_adc.highbyte;
+  return cmap;
+}
+
+struct R6502CPUMAP* adc02read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->A_adc.lowbyte;
+  return cmap;
+}
+
+struct R6502CPUMAP* adcwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
 {
   /*if naddress=&FC00 then
    * b1+b0: which of the 4 input channels to select.
@@ -211,25 +205,21 @@ void adcwrite(int naddress,int nvalue)
    * b3=1: 10 bit resolution/10ms
    * interrupt is generated when conversion is done.
    */
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
-  adc_channel = (nvalue & 3);
-  adc_flag = (nvalue & 4)>>2;
-  adc_resolution = (nvalue & 8)>>3;
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  intptr_t cyclecount;
+  hmap->A_adc.channel = (value & 3);
+  hmap->A_adc.flag = (value & 4)>>2;
+  hmap->A_adc.resolution = (value & 8)>>3;
   /*busy*/
-  adc_status = (nvalue & 0x0F);
+  hmap->A_adc.status = (value & 0x0F);
   /*not complete*/
-  adc_status |= 0x80;
-  if (adc_resolution)
-    adc_timer +=  10000;
+  hmap->A_adc.status |= 0x80;
+  if (hmap->A_adc.resolution)
+    hmap->cycles.adc_togo =  10000<<1;
   else
-    adc_timer +=  4000;
+    hmap->cycles.adc_togo =   4000<<1;
+  HOST_GET_TOGO_FROM_WRITE_OFFSET(cyclecount, hmap)
+  hmap->cycles.adc_togo += 1 + cyclecount;
+  HOST_LIMIT_CYCLES_TO_GO(hmap, hmap->cycles.adc_togo)
+  return cmap;
 }

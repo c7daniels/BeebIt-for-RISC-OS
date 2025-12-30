@@ -1,11 +1,15 @@
-/*>6502.h
+/*>6502cpu.h
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998
+ * Cycle-level CPU emulation
  *
- * Email: <mikef@voyager.co.nz>
+ * (C) Copyright Crispian Daniels, 2025
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
+
+#include "6502cmap.h"
 
 #define NFLAG 0x80
 #define VFLAG 0x40
@@ -24,109 +28,912 @@
 #define NOTZFLAG 0xFD
 #define NOTCFLAG 0xFE
 
-#define STACK_START 0x100
-#define STACK_END 0x1FF
+#define ADDRESSING_MODIFYFLAG 0x01
+#define ADDRESSING_BASEFLAG 0x05
 
-/*define this to allow undocumented op-codes*/
-#define __UNDOCUMENTED__
+#define R6502_REGULAR_TRANSITION 0
+#define R6502_YIELD_TRANSITION 1
+#define R6502_RESET_TRANSITION 2
 
-/*Rockwell 6502 Central Processor Unit (CPU)*/
-extern char r6502_a, r6502_x, r6502_y; /*3 registers*/
-/*extern char r6502_n;*/ /*sign flag*/
-/*extern char r6502_v, r6502_b, r6502_d, r6502_i, r6502_z, r6502_c;*/ /*status bits*/
-extern int r6502_pc; /*program counter*/
-extern char r6502_sp; /*stack pointer*/
-extern char r6502_ps; /*processor status*/
-extern char (*r6502readoffset[0x10])(int naddress);
-extern void (*r6502writeoffset[0x10])(int naddress, char nvalue);
-extern void (*swappagesintomemory)(void);
-extern void (*swappagesoutofmemory)(void);
-extern void (*cpu_execute)(void);
+#define R6502_YIELD_SEQUENCE 256
+#define R6502_INTERRUPT_SEQUENCE 257
+#define R6502_RESET_SEQUENCE 258
+#define R6502_READ_STRETCH_SEQUENCE 259
+#define R6502_DISCARD_STRETCH_SEQUENCE 260
+#define R6502_WRITE_STRETCH_SEQUENCE 261
+#define R6502_MAIN_SEQUENCE_COUNT 262
 
-/*extern int r6502_cyclestotal;*/
-extern int r6502_cyclestogo;
-extern int r6502_cyclesoriginal;
-extern int r6502_cyclesexpired;
-extern int r6502_cyclesstored;
-extern int r6502_cycle;
-extern unsigned int r6502_cyclesmonotonic;
+#define R6502_OPCODE_07_SEQUENCE 262
+#define R6502_SEQUENCE_COUNT 263
 
-extern void r6502badopcode(void);
-extern char r6502read(int naddress);
-extern void r6502write(int naddress, char nvalue);
+#define R6502_EXTRA_SEQUENCE_COUNT (R6502_SEQUENCE_COUNT - R6502_MAIN_SEQUENCE_COUNT)
 
-extern char r6502read0000(int naddress);
-extern char r6502read3000(int naddress);
-extern char r6502read8000(int naddress);
-extern char r6502read8000_0(int naddress);
-extern char r6502read8000_1(int naddress);
-extern char r6502read8000_2(int naddress);
-extern char r6502read8000_3(int naddress);
-extern char r6502read8000_4(int naddress);
-extern char r6502read8000_5(int naddress);
-extern char r6502read8000_6(int naddress);
-extern char r6502read8000_7(int naddress);
-extern char r6502read8000_8(int naddress);
-extern char r6502read8000_9(int naddress);
-extern char r6502read8000_A(int naddress);
-extern char r6502read8000_B(int naddress);
-extern char r6502read8000_C(int naddress);
-extern char r6502read8000_D(int naddress);
-extern char r6502read8000_E(int naddress);
-extern char r6502read8000_F(int naddress);
-extern char r6502readC000(int naddress);
-extern void r6502write0000(int naddress, char nvalue);
-extern void r6502write3000(int naddress, char nvalue);
-extern void r6502write8000(int naddress, char nvalue);
-extern void r6502write8000_0(int naddress, char nvalue);
-extern void r6502write8000_1(int naddress, char nvalue);
-extern void r6502write8000_2(int naddress, char nvalue);
-extern void r6502write8000_3(int naddress, char nvalue);
-extern void r6502write8000_4(int naddress, char nvalue);
-extern void r6502write8000_5(int naddress, char nvalue);
-extern void r6502write8000_6(int naddress, char nvalue);
-extern void r6502write8000_7(int naddress, char nvalue);
-extern void r6502write8000_8(int naddress, char nvalue);
-extern void r6502write8000_9(int naddress, char nvalue);
-extern void r6502write8000_A(int naddress, char nvalue);
-extern void r6502write8000_B(int naddress, char nvalue);
-extern void r6502write8000_C(int naddress, char nvalue);
-extern void r6502write8000_D(int naddress, char nvalue);
-extern void r6502write8000_E(int naddress, char nvalue);
-extern void r6502write8000_F(int naddress, char nvalue);
-extern void r6502writeC000(int naddress, char nvalue);
+#define R6502_LOG2_MAX_SEQUENCE_LENGTH 3
 
-extern char r6502readbF000(int naddress);
-extern void r6502writebF000(int naddress, char nvalue);
-
-extern char r6502readbp3000_ram(int naddress);
-extern char r6502readbp8000_ram(int naddress);
-extern char r6502readbpF000(int naddress);
-extern void r6502writebp3000_ram(int naddress, char nvalue);
-extern void r6502writebp8000_ram(int naddress, char nvalue);
-extern void r6502writebpF000(int naddress, char nvalue);
-
-extern char r6502readm3000_x(int naddress);
-extern char r6502readm3000_e(int naddress);
-extern char r6502readm8000_ram(int naddress);
-extern char r6502readmC000_y(int naddress);
-extern char r6502readmF000(int naddress);
-extern void r6502writem3000_x(int naddress, char nvalue);
-extern void r6502writem3000_e(int naddress, char nvalue);
-extern void r6502writem8000_ram(int naddress, char nvalue);
-extern void r6502writemC000_y(int naddress, char nvalue);
-extern void r6502writemF000(int naddress, char nvalue);
-
-extern void swappages(char *address1, char *address2, int npagecount);
-
-#ifndef __RISCOS__
-  extern int r6502processorstatus(int lbreak);
+/*with optimisations applied, assembly language addressing routines are not directly callable from C*/
+#ifdef BEEBIT_NO_ASM
+#define R6502_INVOKE_ADDRESSING(MAP, ADDRCODE, CALLBACKS) \
+  MAP->addressingops[(((ADDRCODE)>>28)|((ADDRCODE)<<4))&0x1F].op(MAP, (ADDRCODE)|ADDRESSING_MODIFYFLAG, CALLBACKS);
+#else
+#define R6502_INVOKE_ADDRESSING(MAP, ADDRCODE, CALLBACKS) \
+  r6502invokeaddressing(MAP, ADDRCODE, CALLBACKS);
 #endif
-extern void r6502reset(int lfull);
-extern void r65c12reset(int lfull);
-extern void r6502doirq(void);
-extern void r6502donmi(void);
-extern void r6502execute(void);
-extern void r6512execute(void);
-extern void r65c12execute(void);
-extern void r6502showps(void);
+
+/*an assembly language version of R6502_ADDRESS_FOR_READ appears in h/6502cpus*/
+#define R6502_ADDRESS_FOR_READ(MAP, ADDRCODE, RDS, RD1S, RD2S, RD) \
+  { \
+    const R6502ADDRESSINGCALLBACKS rdcallbacks = {RDS, RD1S, RD2S, RD}; \
+    R6502_INVOKE_ADDRESSING(MAP, (ADDRCODE)&~ADDRESSING_MODIFYFLAG, &rdcallbacks) \
+  }
+
+/*an assembly language version of R6502_ADDRESS_FOR_MODIFY appears in h/6502cpus*/
+#define R6502_ADDRESS_FOR_MODIFY(MAP, ADDRCODE, MDS, MD1S, MD2S, MD) \
+  { \
+    const R6502ADDRESSINGCALLBACKS mdcallbacks = {MDS, MD1S, MD2S, MD}; \
+    R6502_INVOKE_ADDRESSING(MAP, ADDRCODE, &mdcallbacks) \
+  }
+
+#define R6502_CYCLE_STRETCH_RETURN(MAP) \
+  return (*MAP->cycleaction)(MAP);
+
+#define R6502_CYCLE_RETURN(MAP) \
+  { \
+    uintptr_t interruptqueue = cmap->interruptqueue; \
+    interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F); \
+    if (!(interruptqueue & R6502_NMI)) \
+      interruptqueue |= R6502_NMI_ENABLE; \
+    cmap->interruptqueue = interruptqueue; \
+    return (*MAP->cycleaction)(MAP); \
+  }
+
+#define R6502_CYCLE_ZPG_READ_RETURN(MAP, ZCODE) \
+  { \
+    MAP->m = MAP->pagezero[(ZCODE)>>24]; \
+    R6502_CYCLE_RETURN(MAP) \
+  }
+
+#define R6502_CYCLE_ZPG_WRITE_RETURN(MAP, ZCODE) \
+  { \
+    MAP->pagezero[(ZCODE)>>24] = MAP->m; \
+    R6502_CYCLE_RETURN(MAP) \
+  }
+
+#define R6502_CYCLE_STACK_READ_RETURN(MAP, SPCODE) \
+  { \
+    MAP->m = MAP->pageone[(SPCODE)>>24]; \
+    R6502_CYCLE_RETURN(MAP) \
+  }
+
+#define R6502_CYCLE_STACK_WRITE_RETURN(MAP, SPCODE) \
+  { \
+    MAP->pageone[(SPCODE)>>24] = MAP->m; \
+    R6502_CYCLE_RETURN(MAP) \
+  }
+
+#define R6502_CYCLE_VECTOR_READ_RETURN(MAP, ADDRCODE) \
+  { \
+    MAP->m = MAP->pageminusone[((ADDRCODE)>>16)&0xFF]; \
+    R6502_CYCLE_RETURN(MAP) \
+  }
+
+#define R6502_CYCLE_READ_RETURN(MAP, ADDRCODE) \
+  { \
+    R6502_ADDRESS_FOR_READ(MAP, ADDRCODE, r6502cyclereadspecialreturn, r6502cyclestretch1readspecialreturn, r6502cyclestretch2readspecialreturn, r6502cyclereadmappedreturn) \
+    return MAP; \
+  }
+
+#define R6502_CYCLE_DISCARD_RETURN(MAP, ADDRCODE) \
+  { \
+    R6502_ADDRESS_FOR_READ(MAP, ADDRCODE, r6502cyclediscardspecialreturn, r6502cyclestretch1discardspecialreturn, r6502cyclestretch2discardspecialreturn, r6502cyclediscardmappedreturn) \
+    return MAP; \
+  }
+
+#define R6502_CYCLE_WRITE_RETURN(MAP, ADDRCODE) \
+  { \
+    R6502_ADDRESS_FOR_MODIFY(MAP, ADDRCODE, r6502cyclewritespecialreturn, r6502cyclestretch1writespecialreturn, r6502cyclestretch2writespecialreturn, r6502cyclewritemappedreturn) \
+    return MAP; \
+  }
+
+#define R6502_CYCLE_FETCH_RETURN(MAP, PCCODE) \
+  { \
+    MAP->sync_pc_code = PCCODE; \
+    R6502_ADDRESS_FOR_READ(MAP, MAP->sync_pc_code, r6502cyclefetchspecialreturn, r6502cyclestretch1fetchspecialreturn, r6502cyclestretch2fetchspecialreturn, r6502cyclefetchmappedreturn) \
+    return MAP; \
+  }
+
+#define R6502_CYCLE_EARLY_INTERRUPT_FETCH_RETURN(MAP, PCCODE) \
+  { \
+    MAP->sync_pc_code = PCCODE; \
+    R6502_ADDRESS_FOR_READ(MAP, MAP->sync_pc_code, r6502cycleearlyinterruptfetchspecialreturn, r6502cycleearlyinterruptstretch1fetchspecialreturn, r6502cycleearlyinterruptstretch2fetchspecialreturn, r6502cycleearlyinterruptfetchmappedreturn) \
+    return MAP; \
+  }
+
+#define R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN(MAP, PCCODE) \
+  { \
+    MAP->sync_pc_code = PCCODE; \
+    R6502_ADDRESS_FOR_READ(MAP, MAP->sync_pc_code, r6502cycleinterruptfetchspecialreturn, r6502cycleinterruptstretch1fetchspecialreturn, r6502cycleinterruptstretch2fetchspecialreturn, r6502cycleinterruptfetchmappedreturn) \
+    return MAP; \
+  }
+
+#define R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN(MAP) \
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN(MAP, ((MAP)->sync_pc_code + 0x10000) & 0xFFFFFFFF);
+
+#define R6502_CYCLE_ADDRESSED_FETCH_RETURN(MAP) \
+  R6502_CYCLE_FETCH_RETURN(MAP, ((MAP)->last_pc_code + 0x10000) & 0xFFFFFFFF);
+
+#define R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN(MAP) \
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN(MAP, ((MAP)->last_pc_code + 0x10000) & 0xFFFFFFFF);
+
+#define R6502_CHECK_FOR_BREAK(MAP) \
+  { \
+    if ((MAP)->lbreak) \
+      (MAP)->transition1 = R6502_RESET_TRANSITION; \
+  }
+
+
+#define R6502_IMPLIED_SEQUENCE(IMPLIED_STEP) \
+    {r6502operandstep, IMPLIED_STEP, NULL}
+
+#define R6502_PUSH_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502operandstep, TO_ADDRESS_STEP, r6502pushedstep, NULL}
+
+#define R6502_PULL_SEQUENCE(...) \
+    {r6502operandstep, r6502beforepullstep, r6502topullstep, __VA_ARGS__, NULL}
+
+#define R6502_LOAD_IMM_SEQUENCE(...) \
+    {r6502toimmediatestep, __VA_ARGS__, NULL}
+
+#define R6502_LOAD_ZPG_SEQUENCE(...) \
+    {r6502operandstep, r6502loadzpgstep, __VA_ARGS__, NULL}
+
+#define R6502_MODIFY_ZPG_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502tozpgmodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R6502_STORE_ZPG_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502operandstep, TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R6502_LOAD_ABS_SEQUENCE(...) \
+    {r6502operandstep, r6502latchabslostep, r6502loadabsstep, __VA_ARGS__, NULL}
+
+#define R6502_LINEAR_MODIFY_ABS_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502latchabslostep, r6502breadcrumbloadabsstep, r6502tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R6502_STORE_ABS_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502latchabslostep, TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R6502_LOAD_ZPGX_SEQUENCE(...) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502loadzpgxstep, __VA_ARGS__, NULL}
+
+#define R6502_MODIFY_ZPGX_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502breadcrumbloadzpgxstep, r6502tozpgmodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R6502_STORE_ZPGX_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R6502_LOAD_ZPGY_SEQUENCE(...) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502loadzpgystep, __VA_ARGS__, NULL}
+
+#define R6502_STORE_ZPGY_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R6502_LOAD_PREINDEXED_SEQUENCE(...) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502breadcrumbloadzpgxstep, r6502latchzpgindlostep, r6502loadabsstep, __VA_ARGS__, NULL}
+
+#define R6502_LINEAR_MODIFY_PREINDEXED_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502breadcrumbloadzpgxstep, r6502latchzpgindlostep, r6502breadcrumbloadabsstep, r6502tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R6502_STORE_PREINDEXED_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502breadcrumbloadzpgxstep, r6502latchzpgindlostep, TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R6502_LOAD_ABSX_SEQUENCE(...) \
+    {r6502operandstep, r6502latchabslostep, r6502loadabsxstep, r6502fixindexedstep, __VA_ARGS__, NULL}
+
+#define R6502_LOAD_ABSY_SEQUENCE(...) \
+    {r6502operandstep, r6502latchabslostep, r6502loadabsystep, r6502fixindexedstep, __VA_ARGS__, NULL}
+
+#define R6502_LINEAR_MODIFY_ABSX_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502latchabslostep, r6502linearloadabsxstep, r6502fixindexedstep, r6502tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R6502_LINEAR_MODIFY_ABSY_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502latchabslostep, r6502linearloadabsystep, r6502fixindexedstep, r6502tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R6502_STORE_ABSX_SEQUENCE(FIX_TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502latchabslostep, r6502linearloadabsxstep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R6502_STORE_ABSY_SEQUENCE(FIX_TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502latchabslostep, r6502linearloadabsystep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R6502_LOAD_POSTINDEXED_SEQUENCE(...) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, r6502loadabsystep, r6502fixindexedstep, __VA_ARGS__, NULL}
+
+#define R6502_MODIFY_POSTINDEXED_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, r6502linearloadabsystep, r6502fixindexedstep, r6502tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R6502_STORE_POSTINDEXED_SEQUENCE(FIX_TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, r6502linearloadabsystep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R6502_BRANCH_SEQUENCE(BRANCH_STEP) \
+    {r6502operandstep, BRANCH_STEP, r6502branchtakenstep, r6502fixbranchtakenstep,  NULL}
+
+#define R65C12_SUM_LOAD_IMM_SEQUENCE(SUM_STEP) \
+    {r65c12sumtoimmediatestep, SUM_STEP, r65c12decimalflagsstep, NULL}
+
+#define R65C12_SUM_LOAD_ZPG_SEQUENCE(SUM_STEP) \
+    {r6502operandstep, r65c12sumloadzpgstep, SUM_STEP, r65c12decimalflagsstep, NULL}
+
+#define R65C12_MODIFY_ZPG_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r65c12tozpgmodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R65C12_SUM_LOAD_ABS_SEQUENCE(SUM_STEP) \
+    {r6502operandstep, r65c12sumlatchabslostep, r6502loadabsstep, SUM_STEP, r65c12decimalflagsstep, NULL}
+
+#define R65C12_MODIFY_ABS_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502latchabslostep, r6502breadcrumbloadabsstep, r65c12tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R65C12_LINEAR_MODIFY_ABS_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502latchabslostep, r6502breadcrumbloadabsstep, r65c12tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R65C12_SUM_LOAD_ZPGIND_SEQUENCE(SUM_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502breadcrumblatchzpgindlostep, r65c12sumloadzpgindstep, SUM_STEP, r65c12decimalflagsstep, NULL}
+
+#define R65C12_LOAD_ZPGIND_SEQUENCE(...) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, r6502loadabsstep, __VA_ARGS__, NULL}
+
+#define R65C12_STORE_ZPGIND_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502latchzpgindlostep, TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R65C12_SUM_LOAD_ZPGX_SEQUENCE(SUM_STEP) \
+    {r6502operandstep, r65c12tozpgstep, r65c12sumloadzpgxstep, SUM_STEP, r65c12decimalflagsstep, NULL}
+
+#define R65C12_LOAD_ZPGX_SEQUENCE(...) \
+    {r6502operandstep, r65c12tozpgstep, r6502loadzpgxstep, __VA_ARGS__, NULL}
+
+#define R65C12_MODIFY_ZPGX_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r65c12tozpgstep, r6502breadcrumbloadzpgxstep, r65c12tozpgmodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R65C12_STORE_ZPGX_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502operandstep, r65c12tozpgstep, TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R65C12_LOAD_ZPGY_SEQUENCE(...) \
+    {r6502operandstep, r65c12tozpgstep, r6502loadzpgystep, __VA_ARGS__, NULL}
+
+#define R65C12_STORE_ZPGY_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502operandstep, r65c12tozpgstep, TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R65C12_SUM_LOAD_PREINDEXED_SEQUENCE(SUM_STEP) \
+    {r6502operandstep, r65c12tozpgstep, r6502breadcrumbloadzpgxstep, r6502breadcrumblatchzpgindlostep, r65c12sumloadzpgindstep, SUM_STEP, r65c12decimalflagsstep, NULL}
+
+#define R65C12_LOAD_PREINDEXED_SEQUENCE(...) \
+    {r6502operandstep, r65c12tozpgstep, r6502breadcrumbloadzpgxstep, r6502latchzpgindlostep, r6502loadabsstep, __VA_ARGS__, NULL}
+
+#define R65C12_STORE_PREINDEXED_SEQUENCE(TO_ADDRESS_STEP) \
+    {r6502operandstep, r65c12tozpgstep, r6502breadcrumbloadzpgxstep, r6502latchzpgindlostep, TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R65C12_SUM_LOAD_ABSX_SEQUENCE(SUM_STEP) \
+    {r6502operandstep, r65c12sumlatchabslostep, r65c12sumloadabsxstep, r6502fixindexedstep, SUM_STEP, r65c12decimalflagsstep, NULL}
+
+#define R65C12_SUM_LOAD_ABSY_SEQUENCE(SUM_STEP) \
+    {r6502operandstep, r65c12sumlatchabslostep, r65c12sumloadabsystep, r6502fixindexedstep, SUM_STEP, r65c12decimalflagsstep, NULL}
+
+#define R65C12_LOAD_ABSX_SEQUENCE(...) \
+    {r6502operandstep, r6502breadcrumblatchabslostep, r65c12loadabsxstep, r6502fixindexedstep, __VA_ARGS__, NULL}
+
+#define R65C12_LOAD_ABSY_SEQUENCE(...) \
+    {r6502operandstep, r6502breadcrumblatchabslostep, r65c12loadabsystep, r6502fixindexedstep, __VA_ARGS__, NULL}
+
+#define R65C12_MODIFY_ABSX_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502breadcrumblatchabslostep, r65c12loadabsxstep, r6502fixindexedstep, r65c12tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R65C12_LINEAR_MODIFY_ABSX_SEQUENCE(MODIFY_STEP) \
+    {r6502operandstep, r6502breadcrumblatchabslostep, r65c12linearloadabsxstep, r6502fixindexedstep, r65c12tomodifystep, MODIFY_STEP, r6502skipstep, NULL}
+
+#define R65C12_STORE_ABSX_SEQUENCE(FIX_TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502breadcrumblatchabslostep, r65c12linearloadabsxstep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R65C12_STORE_ABSY_SEQUENCE(FIX_TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502breadcrumblatchabslostep, r65c12linearloadabsystep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R65C12_SUM_LOAD_POSTINDEXED_SEQUENCE(SUM_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r65c12sumlatchzpgindlostep, r65c12sumloadzpgindystep, r6502fixindexedstep, SUM_STEP, r65c12decimalflagsstep, NULL}
+
+#define R65C12_LOAD_POSTINDEXED_SEQUENCE(...) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502breadcrumblatchzpgindlostep, r65c12loadzpgindystep, r6502fixindexedstep, __VA_ARGS__, NULL}
+
+#define R65C12_STORE_POSTINDEXED_SEQUENCE(FIX_TO_ADDRESS_STEP) \
+    {r6502operandstep, r6502breadcrumbloadzpgstep, r6502breadcrumblatchzpgindlostep, r65c12linearloadzpgindystep, FIX_TO_ADDRESS_STEP, r6502skipstep, NULL}
+
+#define R65C12_BRANCH_SEQUENCE(BRANCH_STEP) \
+    {r6502operandstep, BRANCH_STEP, r65c12branchtakenstep, r6502fixbranchtakenstep, NULL}
+
+extern const R6502OP r6502_nopsequence[];
+extern const R6502OP r6502_clcsequence[];
+extern const R6502OP r6502_secsequence[];
+extern const R6502OP r6502_clisequence[];
+extern const R6502OP r6502_seisequence[];
+extern const R6502OP r6502_cldsequence[];
+extern const R6502OP r6502_sedsequence[];
+extern const R6502OP r6502_clvsequence[];
+extern const R6502OP r6502_taxsequence[];
+extern const R6502OP r6502_taysequence[];
+extern const R6502OP r6502_txasequence[];
+extern const R6502OP r6502_txssequence[];
+extern const R6502OP r6502_tyasequence[];
+extern const R6502OP r6502_tsxsequence[];
+extern const R6502OP r6502_phpsequence[];
+extern const R6502OP r6502_plpsequence[];
+extern const R6502OP r6502_phasequence[];
+extern const R6502OP r6502_plasequence[];
+extern const R6502OP r6502_hltsequence[];
+extern const R6502OP r6502_bitzpgsequence[];
+extern const R6502OP r6502_bitabssequence[];
+extern const R6502OP r6502_oraimmsequence[];
+extern const R6502OP r6502_orazpgsequence[];
+extern const R6502OP r6502_oraabssequence[];
+extern const R6502OP r6502_orazpgxsequence[];
+extern const R6502OP r6502_orapreindexedsequence[];
+extern const R6502OP r6502_oraabsxsequence[];
+extern const R6502OP r6502_oraabsysequence[];
+extern const R6502OP r6502_orapostindexedsequence[];
+extern const R6502OP r6502_andimmsequence[];
+extern const R6502OP r6502_andzpgsequence[];
+extern const R6502OP r6502_andabssequence[];
+extern const R6502OP r6502_andzpgxsequence[];
+extern const R6502OP r6502_andpreindexedsequence[];
+extern const R6502OP r6502_andabsxsequence[];
+extern const R6502OP r6502_andabsysequence[];
+extern const R6502OP r6502_andpostindexedsequence[];
+extern const R6502OP r6502_eorimmsequence[];
+extern const R6502OP r6502_eorzpgsequence[];
+extern const R6502OP r6502_eorabssequence[];
+extern const R6502OP r6502_eorzpgxsequence[];
+extern const R6502OP r6502_eorpreindexedsequence[];
+extern const R6502OP r6502_eorabsxsequence[];
+extern const R6502OP r6502_eorabsysequence[];
+extern const R6502OP r6502_eorpostindexedsequence[];
+extern const R6502OP r6502_adcimmsequence[];
+extern const R6502OP r6502_adczpgsequence[];
+extern const R6502OP r6502_adcabssequence[];
+extern const R6502OP r6502_adczpgxsequence[];
+extern const R6502OP r6502_adcpreindexedsequence[];
+extern const R6502OP r6502_adcabsxsequence[];
+extern const R6502OP r6502_adcabsysequence[];
+extern const R6502OP r6502_adcpostindexedsequence[];
+extern const R6502OP r6502_ldaimmsequence[];
+extern const R6502OP r6502_ldazpgsequence[];
+extern const R6502OP r6502_ldaabssequence[];
+extern const R6502OP r6502_ldazpgxsequence[];
+extern const R6502OP r6502_ldapreindexedsequence[];
+extern const R6502OP r6502_ldaabsxsequence[];
+extern const R6502OP r6502_ldaabsysequence[];
+extern const R6502OP r6502_ldapostindexedsequence[];
+extern const R6502OP r6502_ldximmsequence[];
+extern const R6502OP r6502_ldxzpgsequence[];
+extern const R6502OP r6502_ldxabssequence[];
+extern const R6502OP r6502_ldxzpgysequence[];
+extern const R6502OP r6502_ldxabsysequence[];
+extern const R6502OP r6502_ldyimmsequence[];
+extern const R6502OP r6502_ldyzpgsequence[];
+extern const R6502OP r6502_ldyabssequence[];
+extern const R6502OP r6502_ldyzpgxsequence[];
+extern const R6502OP r6502_ldyabsxsequence[];
+extern const R6502OP r6502_cmpimmsequence[];
+extern const R6502OP r6502_cmpzpgsequence[];
+extern const R6502OP r6502_cmpabssequence[];
+extern const R6502OP r6502_cmpzpgxsequence[];
+extern const R6502OP r6502_cmppreindexedsequence[];
+extern const R6502OP r6502_cmpabsxsequence[];
+extern const R6502OP r6502_cmpabsysequence[];
+extern const R6502OP r6502_cmppostindexedsequence[];
+extern const R6502OP r6502_cpximmsequence[];
+extern const R6502OP r6502_cpxzpgsequence[];
+extern const R6502OP r6502_cpxabssequence[];
+extern const R6502OP r6502_cpyimmsequence[];
+extern const R6502OP r6502_cpyzpgsequence[];
+extern const R6502OP r6502_cpyabssequence[];
+extern const R6502OP r6502_sbcimmsequence[];
+extern const R6502OP r6502_sbczpgsequence[];
+extern const R6502OP r6502_sbcabssequence[];
+extern const R6502OP r6502_sbczpgxsequence[];
+extern const R6502OP r6502_sbcpreindexedsequence[];
+extern const R6502OP r6502_sbcabsxsequence[];
+extern const R6502OP r6502_sbcabsysequence[];
+extern const R6502OP r6502_sbcpostindexedsequence[];
+extern const R6502OP r6502_skbimmsequence[];
+extern const R6502OP r6502_skbzpgsequence[];
+extern const R6502OP r6502_skbzpgxsequence[];
+extern const R6502OP r6502_skwabssequence[];
+extern const R6502OP r6502_skwabsxsequence[];
+extern const R6502OP r6502_laxzpgsequence[];
+extern const R6502OP r6502_laxabssequence[];
+extern const R6502OP r6502_laxzpgysequence[];
+extern const R6502OP r6502_laxpreindexedsequence[];
+extern const R6502OP r6502_laxabsysequence[];
+extern const R6502OP r6502_laxpostindexedsequence[];
+extern const R6502OP r6502_lasabsysequence[];
+extern const R6502OP r6502_ancimmsequence[];
+extern const R6502OP r6502_alrimmsequence[];
+extern const R6502OP r6502_arrimmsequence[];
+extern const R6502OP r6502_xaaimmsequence[];
+extern const R6502OP r6502_oalimmsequence[];
+extern const R6502OP r6502_sbximmsequence[];
+extern const R6502OP r6502_aslasequence[];
+extern const R6502OP r6502_aslzpgsequence[];
+extern const R6502OP r6502_aslabssequence[];
+extern const R6502OP r6502_aslzpgxsequence[];
+extern const R6502OP r6502_aslabsxsequence[];
+extern const R6502OP r6502_rolasequence[];
+extern const R6502OP r6502_rolzpgsequence[];
+extern const R6502OP r6502_rolabssequence[];
+extern const R6502OP r6502_rolzpgxsequence[];
+extern const R6502OP r6502_rolabsxsequence[];
+extern const R6502OP r6502_lsrasequence[];
+extern const R6502OP r6502_lsrzpgsequence[];
+extern const R6502OP r6502_lsrabssequence[];
+extern const R6502OP r6502_lsrzpgxsequence[];
+extern const R6502OP r6502_lsrabsxsequence[];
+extern const R6502OP r6502_rorasequence[];
+extern const R6502OP r6502_rorzpgsequence[];
+extern const R6502OP r6502_rorabssequence[];
+extern const R6502OP r6502_rorzpgxsequence[];
+extern const R6502OP r6502_rorabsxsequence[];
+extern const R6502OP r6502_dexsequence[];
+extern const R6502OP r6502_deysequence[];
+extern const R6502OP r6502_deczpgsequence[];
+extern const R6502OP r6502_decabssequence[];
+extern const R6502OP r6502_deczpgxsequence[];
+extern const R6502OP r6502_decabsxsequence[];
+extern const R6502OP r6502_inxsequence[];
+extern const R6502OP r6502_inysequence[];
+extern const R6502OP r6502_inczpgsequence[];
+extern const R6502OP r6502_incabssequence[];
+extern const R6502OP r6502_inczpgxsequence[];
+extern const R6502OP r6502_incabsxsequence[];
+extern const R6502OP r6502_asozpgsequence[];
+extern const R6502OP r6502_asoabssequence[];
+extern const R6502OP r6502_asozpgxsequence[];
+extern const R6502OP r6502_asopreindexedsequence[];
+extern const R6502OP r6502_asoabsxsequence[];
+extern const R6502OP r6502_asoabsysequence[];
+extern const R6502OP r6502_asopostindexedsequence[];
+extern const R6502OP r6502_rlazpgsequence[];
+extern const R6502OP r6502_rlaabssequence[];
+extern const R6502OP r6502_rlazpgxsequence[];
+extern const R6502OP r6502_rlapreindexedsequence[];
+extern const R6502OP r6502_rlaabsxsequence[];
+extern const R6502OP r6502_rlaabsysequence[];
+extern const R6502OP r6502_rlapostindexedsequence[];
+extern const R6502OP r6502_lsezpgsequence[];
+extern const R6502OP r6502_lseabssequence[];
+extern const R6502OP r6502_lsezpgxsequence[];
+extern const R6502OP r6502_lsepreindexedsequence[];
+extern const R6502OP r6502_lseabsxsequence[];
+extern const R6502OP r6502_lseabsysequence[];
+extern const R6502OP r6502_lsepostindexedsequence[];
+extern const R6502OP r6502_rrazpgsequence[];
+extern const R6502OP r6502_rraabssequence[];
+extern const R6502OP r6502_rrazpgxsequence[];
+extern const R6502OP r6502_rrapreindexedsequence[];
+extern const R6502OP r6502_rraabsxsequence[];
+extern const R6502OP r6502_rraabsysequence[];
+extern const R6502OP r6502_rrapostindexedsequence[];
+extern const R6502OP r6502_dcpzpgsequence[];
+extern const R6502OP r6502_dcpabssequence[];
+extern const R6502OP r6502_dcpzpgxsequence[];
+extern const R6502OP r6502_dcppreindexedsequence[];
+extern const R6502OP r6502_dcpabsxsequence[];
+extern const R6502OP r6502_dcpabsysequence[];
+extern const R6502OP r6502_dcppostindexedsequence[];
+extern const R6502OP r6502_isbzpgsequence[];
+extern const R6502OP r6502_isbabssequence[];
+extern const R6502OP r6502_isbzpgxsequence[];
+extern const R6502OP r6502_isbpreindexedsequence[];
+extern const R6502OP r6502_isbabsxsequence[];
+extern const R6502OP r6502_isbabsysequence[];
+extern const R6502OP r6502_isbpostindexedsequence[];
+extern const R6502OP r6502_stazpgsequence[];
+extern const R6502OP r6502_staabssequence[];
+extern const R6502OP r6502_stazpgxsequence[];
+extern const R6502OP r6502_stapreindexedsequence[];
+extern const R6502OP r6502_staabsxsequence[];
+extern const R6502OP r6502_staabsysequence[];
+extern const R6502OP r6502_stapostindexedsequence[];
+extern const R6502OP r6502_stxzpgsequence[];
+extern const R6502OP r6502_stxabssequence[];
+extern const R6502OP r6502_stxzpgysequence[];
+extern const R6502OP r6502_styzpgsequence[];
+extern const R6502OP r6502_styabssequence[];
+extern const R6502OP r6502_styzpgxsequence[];
+extern const R6502OP r6502_saxzpgsequence[];
+extern const R6502OP r6502_saxabssequence[];
+extern const R6502OP r6502_saxzpgysequence[];
+extern const R6502OP r6502_saxpreindexedsequence[];
+extern const R6502OP r6502_axaabsysequence[];
+extern const R6502OP r6502_axapostindexedsequence[];
+extern const R6502OP r6502_xasabsysequence[];
+extern const R6502OP r6502_sayabsxsequence[];
+extern const R6502OP r6502_tasabsysequence[];
+extern const R6502OP r6502_bplsequence[];
+extern const R6502OP r6502_bmisequence[];
+extern const R6502OP r6502_bvcsequence[];
+extern const R6502OP r6502_bvssequence[];
+extern const R6502OP r6502_bccsequence[];
+extern const R6502OP r6502_bcssequence[];
+extern const R6502OP r6502_bnesequence[];
+extern const R6502OP r6502_beqsequence[];
+extern const R6502OP r6502_jmpabssequence[];
+extern const R6502OP r6502_jmpabsindsequence[];
+extern const R6502OP r6502_yieldsequence[];
+extern const R6502OP r6502_resetsequence[];
+extern const R6502OP r6502_brksequence[];
+extern const R6502OP r6502_interruptsequence[];
+extern const R6502OP r6502_jsrsequence[];
+extern const R6502OP r6502_rtisequence[];
+extern const R6502OP r6502_rtssequence[];
+extern const R6502OP r6502_readstretchsequence[];
+extern const R6502OP r6502_discardstretchsequence[];
+extern const R6502OP r6502_writestretchsequence[];
+extern const R6502OP r65c12_fastnopsequence[];
+extern const R6502OP r65c12_phxsequence[];
+extern const R6502OP r65c12_plxsequence[];
+extern const R6502OP r65c12_physequence[];
+extern const R6502OP r65c12_plysequence[];
+extern const R6502OP r65c12_bitimmsequence[];
+extern const R6502OP r65c12_bitzpgxsequence[];
+extern const R6502OP r65c12_bitabsxsequence[];
+extern const R6502OP r65c12_orazpgindsequence[];
+extern const R6502OP r65c12_orazpgxsequence[];
+extern const R6502OP r65c12_orapreindexedsequence[];
+extern const R6502OP r65c12_oraabsxsequence[];
+extern const R6502OP r65c12_oraabsysequence[];
+extern const R6502OP r65c12_orapostindexedsequence[];
+extern const R6502OP r65c12_andzpgindsequence[];
+extern const R6502OP r65c12_andzpgxsequence[];
+extern const R6502OP r65c12_andpreindexedsequence[];
+extern const R6502OP r65c12_andabsxsequence[];
+extern const R6502OP r65c12_andabsysequence[];
+extern const R6502OP r65c12_andpostindexedsequence[];
+extern const R6502OP r65c12_eorzpgindsequence[];
+extern const R6502OP r65c12_eorzpgxsequence[];
+extern const R6502OP r65c12_eorpreindexedsequence[];
+extern const R6502OP r65c12_eorabsxsequence[];
+extern const R6502OP r65c12_eorabsysequence[];
+extern const R6502OP r65c12_eorpostindexedsequence[];
+extern const R6502OP r65c12_adcimmsequence[];
+extern const R6502OP r65c12_adczpgsequence[];
+extern const R6502OP r65c12_adcabssequence[];
+extern const R6502OP r65c12_adczpgindsequence[];
+extern const R6502OP r65c12_adczpgxsequence[];
+extern const R6502OP r65c12_adcpreindexedsequence[];
+extern const R6502OP r65c12_adcabsxsequence[];
+extern const R6502OP r65c12_adcabsysequence[];
+extern const R6502OP r65c12_adcpostindexedsequence[];
+extern const R6502OP r65c12_ldazpgindsequence[];
+extern const R6502OP r65c12_ldazpgxsequence[];
+extern const R6502OP r65c12_ldapreindexedsequence[];
+extern const R6502OP r65c12_ldaabsxsequence[];
+extern const R6502OP r65c12_ldaabsysequence[];
+extern const R6502OP r65c12_ldapostindexedsequence[];
+extern const R6502OP r65c12_ldxzpgysequence[];
+extern const R6502OP r65c12_ldxabsysequence[];
+extern const R6502OP r65c12_ldyzpgxsequence[];
+extern const R6502OP r65c12_ldyabsxsequence[];
+extern const R6502OP r65c12_cmpzpgindsequence[];
+extern const R6502OP r65c12_cmpzpgxsequence[];
+extern const R6502OP r65c12_cmppreindexedsequence[];
+extern const R6502OP r65c12_cmpabsxsequence[];
+extern const R6502OP r65c12_cmpabsysequence[];
+extern const R6502OP r65c12_cmppostindexedsequence[];
+extern const R6502OP r65c12_sbcimmsequence[];
+extern const R6502OP r65c12_sbczpgsequence[];
+extern const R6502OP r65c12_sbcabssequence[];
+extern const R6502OP r65c12_sbczpgindsequence[];
+extern const R6502OP r65c12_sbczpgxsequence[];
+extern const R6502OP r65c12_sbcpreindexedsequence[];
+extern const R6502OP r65c12_sbcabsxsequence[];
+extern const R6502OP r65c12_sbcabsysequence[];
+extern const R6502OP r65c12_sbcpostindexedsequence[];
+extern const R6502OP r65c12_skbwait1sequence[];
+extern const R6502OP r65c12_skbwait2sequence[];
+extern const R6502OP r65c12_skwwait5sequence[];
+extern const R6502OP r65c12_aslzpgsequence[];
+extern const R6502OP r65c12_aslabssequence[];
+extern const R6502OP r65c12_aslzpgxsequence[];
+extern const R6502OP r65c12_aslabsxsequence[];
+extern const R6502OP r65c12_rolzpgsequence[];
+extern const R6502OP r65c12_rolabssequence[];
+extern const R6502OP r65c12_rolzpgxsequence[];
+extern const R6502OP r65c12_rolabsxsequence[];
+extern const R6502OP r65c12_lsrzpgsequence[];
+extern const R6502OP r65c12_lsrabssequence[];
+extern const R6502OP r65c12_lsrzpgxsequence[];
+extern const R6502OP r65c12_lsrabsxsequence[];
+extern const R6502OP r65c12_rorzpgsequence[];
+extern const R6502OP r65c12_rorabssequence[];
+extern const R6502OP r65c12_rorzpgxsequence[];
+extern const R6502OP r65c12_rorabsxsequence[];
+extern const R6502OP r65c12_decasequence[];
+extern const R6502OP r65c12_deczpgsequence[];
+extern const R6502OP r65c12_decabssequence[];
+extern const R6502OP r65c12_deczpgxsequence[];
+extern const R6502OP r65c12_decabsxsequence[];
+extern const R6502OP r65c12_incasequence[];
+extern const R6502OP r65c12_inczpgsequence[];
+extern const R6502OP r65c12_incabssequence[];
+extern const R6502OP r65c12_inczpgxsequence[];
+extern const R6502OP r65c12_incabsxsequence[];
+extern const R6502OP r65c12_tsbzpgsequence[];
+extern const R6502OP r65c12_tsbabssequence[];
+extern const R6502OP r65c12_trbzpgsequence[];
+extern const R6502OP r65c12_trbabssequence[];
+extern const R6502OP r65c12_stazpgindsequence[];
+extern const R6502OP r65c12_stazpgxsequence[];
+extern const R6502OP r65c12_stapreindexedsequence[];
+extern const R6502OP r65c12_staabsxsequence[];
+extern const R6502OP r65c12_staabsysequence[];
+extern const R6502OP r65c12_stapostindexedsequence[];
+extern const R6502OP r65c12_stxzpgysequence[];
+extern const R6502OP r65c12_styzpgxsequence[];
+extern const R6502OP r65c12_stzzpgsequence[];
+extern const R6502OP r65c12_stzabssequence[];
+extern const R6502OP r65c12_stzzpgxsequence[];
+extern const R6502OP r65c12_stzabsxsequence[];
+extern const R6502OP r65c12_bplsequence[];
+extern const R6502OP r65c12_bmisequence[];
+extern const R6502OP r65c12_bvcsequence[];
+extern const R6502OP r65c12_bvssequence[];
+extern const R6502OP r65c12_bccsequence[];
+extern const R6502OP r65c12_bcssequence[];
+extern const R6502OP r65c12_bnesequence[];
+extern const R6502OP r65c12_beqsequence[];
+extern const R6502OP r65c12_brasequence[];
+extern const R6502OP r65c12_jmpabsindsequence[];
+extern const R6502OP r65c12_jmpabsxindsequence[];
+extern const R6502OP r65c12_resetsequence[];
+extern const R6502OP r65c12_brksequence[];
+extern const R6502OP r65c12_interruptsequence[];
+
+
+extern const R6502OP* const r6502sequences[R6502_MAIN_SEQUENCE_COUNT];
+extern const R6502OP* const r65c12sequences[R6502_MAIN_SEQUENCE_COUNT];
+
+#ifndef BEEBIT_NO_ASM
+extern R6502CPUMAP* r6502invokeaddressing(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+#endif
+
+extern R6502CPUMAP* r6502cyclereadmappedreturn(R6502CPUMAP* cmap, uint8_t* p);
+extern R6502CPUMAP* r6502cyclereadspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclestretch1readspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclestretch2readspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclediscardmappedreturn(R6502CPUMAP* cmap, uint8_t* p);
+extern R6502CPUMAP* r6502cyclediscardspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclestretch1discardspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclestretch2discardspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclewritemappedreturn(R6502CPUMAP* cmap, uint8_t* p);
+extern R6502CPUMAP* r6502cyclewritespecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclestretch1writespecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclestretch2writespecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+
+extern R6502CPUMAP* r6502cyclefetchmappedreturn(R6502CPUMAP* cmap, uint8_t* p);
+extern R6502CPUMAP* r6502cyclefetchspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclestretch1fetchspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclestretch2fetchspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cyclefetchafterreadspecial(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r6502cycleearlyinterruptfetchmappedreturn(R6502CPUMAP* cmap, uint8_t* p);
+extern R6502CPUMAP* r6502cycleearlyinterruptfetchspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cycleearlyinterruptstretch1fetchspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cycleearlyinterruptstretch2fetchspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cycleearlyinterruptfetchafterreadspecial(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r6502cycleinterruptfetchmappedreturn(R6502CPUMAP* cmap, uint8_t* p);
+extern R6502CPUMAP* r6502cycleinterruptfetchspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cycleinterruptstretch1fetchspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cycleinterruptstretch2fetchspecialreturn(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* r6502cycleinterruptfetchafterreadspecial(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r6502operandstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502nopstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12fastnopstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502clcstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502secstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502clistep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502seistep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502cldstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502sedstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502clvstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502taxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502taystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502txastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502txsstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502tyastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502tsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pulledastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12pulledxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12pulledystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pulledpstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502hltstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502beforepullstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502topullstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12sumtoimmediatestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502toimmediatestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502breadcrumbloadzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12tozpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12sumloadzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12sumlatchabslostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502breadcrumblatchabslostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502latchabslostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502breadcrumbloadabsstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadabsstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12sumlatchzpgindlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502breadcrumblatchzpgindlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502latchzpgindlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502breadcrumbloadzpgxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12sumloadzpgxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12sumloadzpgindstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502linearloadabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502linearloadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502fixindexedstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12breadcrumbloadfullabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12sumloadabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12sumloadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12loadabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12loadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12sumloadzpgindystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12loadzpgindystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12linearloadabsxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12linearloadabsystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12linearloadzpgindystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12bitimmediatestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bitstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502orastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502andstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502eorstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502adcstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12adcstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502ldastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502ldxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502ldystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502cmpstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502cpxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502cpystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502sbcstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12sbcstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12decimalflagsstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12skbstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12skwlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12waitstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502skipstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502laxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502lasstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502ancstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502alrstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502arrstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502xaastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502oalstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502sbxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12tozpgmodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12tomodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502tozpgmodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502tomodifystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502aslastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502aslzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502aslstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rolastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rolzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rolstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502lsrastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502lsrzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502lsrstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rorastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rorzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rorstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12decastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502dexstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502deystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502deczpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502decstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12incastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502inxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502inystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502inczpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502incstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12tsbzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12tsbstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12trbzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12trbstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502asozpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502asostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rlazpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rlastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502lsezpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502lsestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rrazpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rrastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502dcpzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502dcpstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502isbzpgstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502isbstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502topushpstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502topushastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12topushxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12topushystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgtostastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadabstostastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgxtostastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502fixindexedtostastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgtostxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadabstostxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgytostxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgtostystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadabstostystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgxtostystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12loadzpgtostzstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12loadabstostzstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12loadzpgxtostzstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12fixindexedtostzstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgtosaxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadabstosaxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadzpgytosaxstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502fixindexedtoaxastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502fixindexedtoxasstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502fixindexedtosaystep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502fixindexedtotasstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pushedstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bplstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bmistep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bvcstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bvsstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bccstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bcsstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bnestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502beqstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12brastep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502branchtakenstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12branchtakenstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502fixbranchtakenstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12latchjmpabsindlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502latchjmpabsindlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12fixjmpabsindstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadpchstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502waitonresetstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502resetstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502nooperandstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502notpushedtonotpushstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502breadcrumbnotpushedtoresetlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pushedtobrkpushpclstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pushedtopushpclstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pushedtopushpstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pushedtopushpwithoutbstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12breadcrumbpushedtoresetlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502breadcrumbpushedtointerruptlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12breadcrumbpushedtointerruptlostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12breadcrumbpushedtobrklostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502latchveclostep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502tobrkpushpchstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502topushpchstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502latchabslobeforepushstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502tojsrpushpchstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pushedtojsrpushpclstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pushedtoloadpchstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pulledptopullstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pulledpclstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502loadpchtoincrementstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502midstretchstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502stretchedreadstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502stretcheddiscardstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502stretchedwritestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+#ifndef BEEBIT_NO_ASM
+extern R6502CPUMAP* r6502yieldstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+#endif
+extern R6502CPUMAP* r6502startyield(R6502CPUMAP* cmap);
+
+extern int r6502reset(R6502CPUMAP* cmap, const R6502OP* const* mainsequences, const R6502OP* const* extrasequences);
+
+extern void r6502readmemory(R6502CPUMAP* cmap, char* buffer, uintptr_t naddress, int ncount);
+extern void r6502beforesnapshot(R6502CPUMAP* cmap);
+extern void r6502aftersnapshot(R6502CPUMAP* cmap);
