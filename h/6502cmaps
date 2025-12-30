@@ -1,0 +1,75 @@
+;>6502cmaps.h
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Cycle-level CPU emulation
+;
+; (C) Copyright Crispian Daniels, 2025
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+R6502_SEQUENCE_ALLOWANCE EQU 288
+
+R6502_LOG2_MAX_SEQUENCE_LENGTH EQU 3
+
+;storage map specialized for 6502 CPU emulation
+;a C representation of this storage map appears in 6502cmap.h
+                        ^ 0
+; offsets &00 - &FF
+R6502_OLDRESET          # &1
+R6502_COPIEDVALUE       # &1
+                        # &2
+R6502_AP                # SIZEOF_R6502_AP_ZONE
+
+; offsets &100 - &3FF
+R6502_INTERRUPTQUEUE    # &4
+R6502_M_SHIFT           # &3
+R6502_M                 # &1
+R6502_A_SHIFT           # &3
+R6502_A                 # &1
+R6502_X_SHIFT           # &3
+R6502_X                 # &1
+R6502_Y_SHIFT           # &3
+R6502_Y                 # &1
+R6502_PS_SHIFT          # &3
+R6502_PS                # &1
+R6502_SP_CODE           # &4
+R6502_SYNC_PC_CODE      # &4
+R6502_LAST_PC_CODE      # &4
+R6502_LATCH             # &4
+R6502_ADDRESS_CODE      # &4
+R6502_DECIMALFLAGS_ADDRESS_CODE # &4
+R6502_STRETCHED_ADDRESS_CODE # &4
+R6502_PAGEZERO          # &4
+R6502_PAGEONE           # &4
+R6502_PAGEMINUSONE      # &4
+R6502_CPU_STATE         # &4
+R6502_STRETCHED_CPU_STATE # &4
+R6502_EXECUTE_CPU_STATE # &4
+R6502_TRANSITION1       # &4
+R6502_TRANSITION2       # &4
+R6502_RESETSTARTINGACTION # &4
+R6502_RESETCONTINUINGACTION # &4
+R6502_CYCLEACTION       # &4
+R6502_READSPECIALACTION # &4
+R6502_WRITESPECIALACTION # &4
+R6502_YIELDLINK         # &4
+R6502_LBREAK            # &4
+                        # &40
+R6502_BP                # SIZEOF_R6502_BP_ZONE
+
+; offsets &400 - &FFF
+R6502_ADDRESSINGOPS     # &200
+R6502_CP                # SIZEOF_R6502_CP_ZONE
+
+; offsets &1000 - &1BFF
+R6502_SEQUENCES         # 4 * R6502_SEQUENCE_ALLOWANCE
+R6502_DP                # SIZEOF_R6502_DP_ZONE
+
+; offsets &1C00 - &3FFF
+R6502_STEPS             # (4:SHL:R6502_LOG2_MAX_SEQUENCE_LENGTH) * R6502_SEQUENCE_ALLOWANCE
+
+SIZEOF_R6502MAP         * @
+
+  END

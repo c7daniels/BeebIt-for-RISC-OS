@@ -6,51 +6,48 @@
  *
  * (C) Copyright Michael J Foot, 1998-2001
  *
- * Email: <mikef@voyager.co.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
-/*#define INITIALTIMERADDVALUE 2
-#define TIMERADDVALUE 4*/
-
 /*User VIA*/
-extern char r6522usrvia_orb; /*output register B*/
-extern char r6522usrvia_irb; /*input register B*/
-extern char r6522usrvia_ora; /*output register A*/
-extern char r6522usrvia_ira; /*input register A*/
-extern char r6522usrvia_ddrb;
-extern char r6522usrvia_ddra;
-extern char r6522usrvia_t1cl;
-extern char r6522usrvia_t1ch;
-extern char r6522usrvia_t1ll;
-extern char r6522usrvia_t1lh;
-extern char r6522usrvia_t2cl;
-extern char r6522usrvia_t2ch;
-extern char r6522usrvia_t2ll;
-extern char r6522usrvia_sr; /*status register*/
-extern char r6522usrvia_acr;
-extern char r6522usrvia_pcr;
-extern char r6522usrvia_ifr;
-extern char r6522usrvia_ier;
-extern char r6522usrvia_porta;
-extern char r6522usrvia_portb;
-extern int r6522usrvia_t1; /*timer 1 (used for speed)*/
-extern int r6522usrvia_t2; /*timer 2 (used for speed)*/
-extern int r6522usrvia_t1setint; /*set interrupt when timer1 reaches 0*/
-extern int r6522usrvia_t2setint; /*set interrupt when timer2 reaches 0*/
-/*extern int r6522usrvia_irq;*/ /*irq interrupt status*/
-extern int r6522usrvia_tick;
-
-extern int amx_timer; /*amx mouse timer*/
-extern int amx_buttons;
-extern int amx_currentx;
-extern int amx_currenty;
-extern int amx_targetx;
-extern int amx_targety;
-
 extern void userviaamxmouse(void);
-extern void userviareset(int lfull);
-extern void userviasetirq(void);
-extern void userviasett1t2(int);
-extern char userviaread(int);
-extern void userviawrite(int, char);
-extern int userviamintimer(void);
+extern void userviaeventsetirq(HOSTMAP* hmap);
+extern void userviaregistersetirq(HOSTMAP* hmap);
+extern void userviastartreset(int lfull);
+extern void userviafinishreset(void);
+extern void userviabeforesnapshot(void);
+extern void userviaaftersnapshot(void);
+extern HOSTMAP* userviaatzerocycles(HOSTMAP* hmap);
+
+extern struct R6502CPUMAP* uservia00read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia01read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia02read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia03read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia04read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia05read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia06read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia07read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia08read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia09read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia0Aread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia0Bread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia0Cread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia0Dread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia0Eread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia0Fread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* uservia00write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia01write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia02write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia03write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia04write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia05write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia06write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia07write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia08write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia09write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia0Awrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia0Bwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia0Cwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia0Dwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia0Ewrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* uservia0Fwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);

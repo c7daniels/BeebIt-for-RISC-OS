@@ -7,18 +7,22 @@
  * Email: <mjfoot.nz@gmail.com>
  *
  * Enhanced host screen mode compatibility (and more)
- *   contributed by Crispian Daniels in 2024
+ *   contributed by Crispian Daniels in 2024-2025
  *
  * Email: <convertedgames@3insdale.me.uk>
  */
 
-/*sheila*/
-extern char sheila_b[0x100];
+extern void sheilareset(void);
 
-void sheilareset(void);
-int sheilaread_b(int);
-int sheilaread_bp(int);
-int sheilaread_m(int);
-void sheilawrite_b(unsigned int, int);
-void sheilawrite_bp(unsigned int, int);
-void sheilawrite_m(unsigned int, int);
+extern struct R6502CPUMAP* hostconstantread00(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* hostconstantreadFE(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* hostconstantreadFF(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* romselread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* accconread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+
+extern struct R6502CPUMAP* hostnowrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* romselwrite_b(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* romselwrite_bp(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* romselwrite_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* accconwrite_bp(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* accconwrite_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);

@@ -6,7 +6,7 @@
  *
  * (C) Copyright Michael J Foot, 1998-2002
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
 /* 0xffff * 2 = 0x1fffe +2 = 0x20000 */
@@ -18,63 +18,26 @@
 /*b1 = PB latching enabled*/
 /*b0 = PA latching enabled*/
 
-#include <stdio.h>
+#include <stddef.h>
 #include <time.h>
-#include "6502cpu.h"
-#include "6522sysvia.h"
-#include "76489sound.h"
 #include "beebit.h"
-#include "kernel.h"
+#include "host.h"
+#include "6522sysvia.h"
 #include "keyboard.h"
 #include "main.h"
 #include "riscos.h"
+#ifdef __RISCOS__
+#include "kernel.h"
 #include "swis.h"
-
-/*extern char keymap[0x100];*/
-extern _kernel_swi_regs regs;
-
-/*extern int r6502_cyclecount;*/
+#endif
 
 /*System VIA*/
-char r6522sysvia_orb; /*output register B*/
-char r6522sysvia_irb; /*input register B*/
-char r6522sysvia_ora; /*output register A*/
-char r6522sysvia_ira; /*input register A*/
-char r6522sysvia_ddrb; /*0 bit means input, 1 means output*/
-char r6522sysvia_ddra; /*0 bit means input, 1 means output*/
-char r6522sysvia_t1cl; /*T1 low order counter*/
-char r6522sysvia_t1ch; /*T1 high order counter*/
-char r6522sysvia_t1ll; /*T1 low order latch*/
-char r6522sysvia_t1lh; /*T1 high order latch*/
-char r6522sysvia_t2cl; /*T2 low order counter*/
-char r6522sysvia_t2ch; /*T2 high order counter*/
-char r6522sysvia_t2ll; /*T2 low order latch*/
-char r6522sysvia_t2lh; /*T2 high order latch*/
-char r6522sysvia_sr; /*status register*/
-char r6522sysvia_acr;
-char r6522sysvia_pcr;
-char r6522sysvia_ifr;
-char r6522sysvia_ier;
-/*these variables contain the actual values on the lines...*/
-char r6522sysvia_porta;
-char r6522sysvia_portb;
-int r6522sysvia_t1; /*timer 1 (used for speed)*/
-int r6522sysvia_t2; /*timer 2 (used for speed)*/
-int r6522sysvia_t1setint; /*set interrupt when timer1 reaches 0*/
-int r6522sysvia_t2setint; /*set interrupt when timer2 reaches 0*/
-/*int r6522sysvia_irq;*/ /*irq interrupt status*/
-int r6522sysvia_tick;
 
-int video_baseaddress;
-char video_startindex; /*screen start index (system via)*/
+#ifdef __RISCOS__
+extern _kernel_swi_regs regs;
 
-char r6522sysvia_rtcreadwrite;
-char r6522sysvia_rtcdatastrobe;
-char r6522sysvia_rtcaddrstrobe;
-char r6522sysvia_rtcchipselect;
-
-int lsoundlatch; /*, nsoundtimer;*/
-/*int nwrite15 = 0;*/
+extern void zeribeepwrite(HOSTMAP* hmap, char nvalue);
+#endif
 
 static int ScreenStartArray[] = {0x4000,0x6000,0x3000,0x5800};
 
@@ -235,944 +198,1537 @@ void cmoswrite(char naddress,char nvalue)
   }
 }
 
-void systemviasetirq(void)
+void systemviaeventsetirq(HOSTMAP* hmap)
 {
-  if (r6522sysvia_ifr & r6522sysvia_ier & 0x7F)
+  if (hmap->A_sysvia.ifr & hmap->A_sysvia.ier & 0x7F)
   {
     /*if (beebit_trace)
       fprintf(htrace,"SV IRQ=&FF\n");*/
-    r6522sysvia_ifr |= 0x80;
-    /*r6522sysvia_irq = TRUE;*/
-    beebit_irq |= IRQ_6522SYSVIA;
+    hmap->A_sysvia.ifr |= 0x80;
+    HOST_SETSHIFTEDIRQ(hmap, HOST_IRQ_6522SYSVIA)
   }
   else
   {
-    r6522sysvia_ifr &= 0x7F;
-    /*r6522sysvia_irq = FALSE;*/
-    beebit_irq &= IRQ_NOT6522SYSVIA;
+    hmap->A_sysvia.ifr &= 0x7F;
+    HOST_CLEARSHIFTEDIRQ(hmap, HOST_IRQ_6522SYSVIA)
+  }
+}
+
+void systemviaregistersetirq(HOSTMAP* hmap)
+{
+  if (hmap->A_sysvia.ifr & hmap->A_sysvia.ier & 0x7F)
+  {
+    /*if (beebit_trace)
+      fprintf(htrace,"SV IRQ=&FF\n");*/
+    hmap->A_sysvia.ifr |= 0x80;
+    HOST_SETIRQ(hmap, HOST_IRQ_6522SYSVIA)
+  }
+  else
+  {
+    hmap->A_sysvia.ifr &= 0x7F;
+    HOST_CLEARIRQ(hmap, HOST_IRQ_6522SYSVIA)
   }
 }
 
 void systemviasetca1(void)
 {
+  HOSTMAP* hmap = &hostmap;
   #ifdef __DEBUG__
     fprintf(htrace,"CA1 ");
   #endif
-  r6522sysvia_ifr |= 0x02; /*CA1 flag*/
-  systemviasetirq();
+  hmap->A_sysvia.ifr |= 0x02; /*CA1 flag*/
+  systemviaeventsetirq(hmap);
 }
 
 /*void systemviavidca1(void)
 {*/
   /*CA1 flag*/
-  /*r6522sysvia_ifr |= 0x02;
-  systemviasetirq();
-  r6522sysvia_ira=(r6522sysvia_ora & r6522sysvia_ddra) | (r6522sysvia_porta & ~r6522sysvia_ddra);
+  /*hmap->A_sysvia.ifr |= 0x02;
+  systemviaeventsetirq(hmap);
+  hmap->A_sysvia.ira=(hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
 }*/
 
 /*void systemviavidirq(void)
 {
-  systemviasetirq();
-  r6522sysvia_ira=(r6522sysvia_ora & r6522sysvia_ddra) | (r6522sysvia_porta & ~r6522sysvia_ddra);
+  systemviaeventsetirq(hmap);
+  hmap->A_sysvia.ira=(hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
 }*/
 
 void systemviaunsetca1(void)
 {
-  r6522sysvia_ifr &= 0xFD; /*CA1 flag*/
-  systemviasetirq();
+  HOSTMAP* hmap = &hostmap;
+  hmap->A_sysvia.ifr &= 0xFD; /*CA1 flag*/
+  systemviaeventsetirq(hmap);
 }
 
 void systemviasetca2(void)
 {
+  HOSTMAP* hmap = &hostmap;
   #ifdef __DEBUG__
     fprintf(htrace,"CA2 ");
   #endif
-  switch (r6522sysvia_pcr & 0x0E)
+  switch (hmap->A_sysvia.pcr & 0x0E)
   {
     case 0:
     case 2:
       /*updatekeyboard();*/
-      r6522sysvia_ifr |= 0x01; /*CA2 flag*/
-      systemviasetirq();
+      hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
+      systemviaeventsetirq(hmap);
       break;
     case 4:
     case 6:
       /*updatekeyboard();*/
-      r6522sysvia_ifr |= 0x01; /*CA2 flag*/
-      systemviasetirq();
+      hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
+      systemviaeventsetirq(hmap);
       break;
   }
 }
 
 void systemviakeyca2(void)
 {
+  HOSTMAP* hmap = &hostmap;
   /*updatekeyboard();*/
   /*if (beebit_trace)
-    printf("SVK PC=%X, SP=%X %X\n", r6502_pc, r6502_sp, r6522sysvia_ifr);*/
-  r6522sysvia_ifr |= 0x01; /*CA2 flag*/
-  systemviasetirq();
+    printf("SVK PC=%X, SP=%X %X\n", r6502_pc, r6502_sp, hmap->A_sysvia.ifr);*/
+  hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
+  systemviaregistersetirq(hmap);
 }
 
 /*void systemviaunsetca2(void)
 {
-  r6522sysvia_ifr &= 0xFE;*/ /*CA2 flag*/
-  /*systemviasetirq();
+  hmap->A_sysvia.ifr &= 0xFE;*/ /*CA2 flag*/
+  /*systemviaeventsetirq(hmap);
 }*/
 
-void systemviasett1t2(int ncycles)
+static intptr_t systemviapickcyclestogo(void)
 {
-  /*we are dealing with a 1MHz device here*/
-  int lflag = FALSE;
+  HOSTMAP* hmap = &hostmap;
+  intptr_t cyclestogo;
 
-  r6522sysvia_t1 -= ncycles;
-
-  if (r6522sysvia_t1 < 0)
+  // the interrupt flag is set after the counter has passed through zero
+  if (!(hmap->A_sysvia.acr & 0x20))
   {
-    switch (r6522sysvia_acr & 0xC0)
+    if (hmap->B_sysvia.t1doubled < hmap->B_sysvia.t2doubled)
     {
-      case 0x00:
-        /*output disabled and one-shot mode*/
-        /*timed interrupt each time T1 is loaded*/
-        if (r6522sysvia_t1setint)
-        {
-          /*r6522sysvia_orb ^= 0x80;
-          r6522sysvia_irb ^= 0x80;*/
-          /*T1 interrupt flag set*/
-          r6522sysvia_ifr |= 0x40;
-          r6522sysvia_t1setint = FALSE;
-        }
-        break;
-      case 0x40:
-        /*output disabled and free-run mode*/
-        /*continuous interrupts*/
-         if (r6522sysvia_t1setint)
-          /*T1 interrupt flag set*/
-          r6522sysvia_ifr |= 0x40;
-        break;
-      case 0x80:
-        /*output enabled and one-shot mode*/
-        /*timed interrupt each time T1 is loaded*/
-        if (r6522sysvia_t1setint)
-        {
-          /*PB7 goes high*/
-          /*r6522sysvia_orb ^= 0x80;
-          r6522sysvia_irb ^= 0x80;*/
-          /*T1 interrupt flag set*/
-          r6522sysvia_ifr |= 0x40;
-          r6522sysvia_t1setint = FALSE;
-        }
-        break;
-      case 0xC0:
-        /*output enabled and free-run mode*/
-        /*continuous interrupts*/
-        if (r6522sysvia_t1setint)
-          /*T1 interrupt flag set*/
-          r6522sysvia_ifr |= 0x40;
-        break;
+      cyclestogo = hmap->B_sysvia.t1doubled + 2;
+    }
+    else
+    {
+      cyclestogo = hmap->B_sysvia.t2doubled + 2;
     }
   }
-
-  if (r6522sysvia_t1 < -1)
+  else
   {
-    /*it takes 1 1MHz cycle when the timer crosses the boundary*/
-    /*it takes 1 1MHz cycle to transfer the latches to the counter*/
-    switch (r6522sysvia_acr & 0xC0)
+    cyclestogo = hmap->B_sysvia.t1doubled + 2;
+  }
+
+  if (hmap->A_sysvia.aftert1)
+  {
+    cyclestogo = 1;
+  }
+
+  return cyclestogo;
+}
+
+void systemviareset(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  intptr_t expiryoffset;
+  HOST_GET_1MHZ_PERIPHERAL_TOGO_FOR_SNAPSHOT_OFFSET(expiryoffset, hmap, sysvia)
+
+  hmap->B_sysvia.t1doubled = expiryoffset;
+  hmap->B_sysvia.t2doubled = expiryoffset;
+  hmap->A_sysvia.sr = 0;
+
+  /*if ier is set to none, a hard reset will be done*/
+  hmap->A_sysvia.ier = 0x80;
+
+  hmap->A_sysvia.ifr = 0x00;
+  hmap->A_sysvia.ddra = 0; /*input*/
+  hmap->A_sysvia.ddrb = 0; /*input*/
+  hmap->A_sysvia.t1ll = 0xFF;
+  hmap->A_sysvia.t1lh = 0xFF;
+  hmap->A_sysvia.t2ll = 0xFF;
+  hmap->A_sysvia.acr = 0;
+  hmap->A_sysvia.pcr = 0;
+  hmap->A_sysvia.ora = 0xFF;
+  hmap->A_sysvia.ira = 0xFF;
+  hmap->A_sysvia.orb = 0xFF;
+  hmap->A_sysvia.irb = 0xFF;
+  hmap->A_sysvia.porta = 0xFF;
+  hmap->A_sysvia.portb = 0xFF;
+
+  hmap->A_sysvia.aftert1 = FALSE;
+  hmap->A_sysvia.t1setint = FALSE;
+  hmap->A_sysvia.t2setint = FALSE;
+
+  hmap->lsoundlatch = FALSE;
+  systemviaregistersetirq(hmap);
+  hmap->screenstartaddress = 0;
+  hmap->screenstartindex = 0;
+
+  hmap->cycles.sysvia_togo = systemviapickcyclestogo();
+  hmap->cycles.sysvia_original = hmap->cycles.sysvia_togo;
+
+  HOST_LIMIT_CYCLES_TO_GO(hmap, hmap->cycles.sysvia_togo)
+}
+
+void systemviabeforesnapshot(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  intptr_t expiryoffset;
+  HOST_GET_1MHZ_PERIPHERAL_TOGO_FOR_SNAPSHOT_OFFSET(expiryoffset, hmap, sysvia)
+
+  hmap->B_sysvia.t1doubled -= expiryoffset;
+  if (!(hmap->A_sysvia.acr & 0x20))
+  {
+    /*one-shot mode*/
+    hmap->B_sysvia.t2doubled -= expiryoffset;
+  }
+}
+
+void systemviaaftersnapshot(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  intptr_t expiryoffset;
+  HOST_GET_1MHZ_PERIPHERAL_TOGO_FOR_SNAPSHOT_OFFSET(expiryoffset, hmap, sysvia)
+
+  hmap->B_sysvia.t1doubled += expiryoffset;
+  HOST_LIMIT_PERIPHERAL_CYCLES_TO_GO(hmap, sysvia, hmap->B_sysvia.t1doubled + 2)
+  if (!(hmap->A_sysvia.acr & 0x20))
+  {
+    /*one-shot mode*/
+    hmap->B_sysvia.t2doubled += expiryoffset;
+    HOST_LIMIT_PERIPHERAL_CYCLES_TO_GO(hmap, sysvia, hmap->B_sysvia.t2doubled + 2)
+  }
+
+  systemviaregistersetirq(hmap);
+}
+
+HOSTMAP* systemviaatzerocycles(HOSTMAP* hmap)
+{
+  /*we are dealing with a 1MHz device here*/
+  hmap->B_sysvia.t1doubled -= hmap->cycles.sysvia_original;
+
+  if (hmap->B_sysvia.t1doubled == -2)
+  {
+    switch (hmap->A_sysvia.acr & 0xC0)
     {
       case 0x00:
         /*output disabled and one-shot mode*/
         /*timed interrupt each time T1 is loaded*/
-        /*roll the timers over*/
-        /*r6522sysvia_t1 &= 0xFFFF;*/
-        while (r6522sysvia_t1 < 0)
-          r6522sysvia_t1 += ((r6522sysvia_t1lh<<8) | r6522sysvia_t1ll) + 2;
+        if (hmap->A_sysvia.t1setint)
+        {
+          /*T1 interrupt flag set*/
+          hmap->A_sysvia.ifr |= 0x40;
+          hmap->A_sysvia.t1setint = FALSE;
+        }
         break;
       case 0x40:
         /*output disabled and free-run mode*/
         /*continuous interrupts*/
         /*ELITE uses this one*/
-        while (r6522sysvia_t1 < 0)
-          r6522sysvia_t1 += ((r6522sysvia_t1lh<<8) | r6522sysvia_t1ll) + 2;
+         if (hmap->A_sysvia.t1setint)
+          /*T1 interrupt flag set*/
+          hmap->A_sysvia.ifr |= 0x40;
         break;
       case 0x80:
         /*output enabled and one-shot mode*/
         /*timed interrupt each time T1 is loaded*/
-        /*if (r6522sysvia_ddrb & 0x80)*/
-          r6522sysvia_portb |= 0x80;
-        /*roll the timers over*/
-        /*r6522sysvia_t1 &= 0xFFFF;*/
-        while (r6522sysvia_t1 < 0)
-          r6522sysvia_t1 += ((r6522sysvia_t1lh<<8) | r6522sysvia_t1ll) + 2;
+        if (hmap->A_sysvia.t1setint)
+        {
+          /*PB7 goes high*/
+          hmap->A_sysvia.portb |= 0x80;
+          /*T1 interrupt flag set*/
+          hmap->A_sysvia.ifr |= 0x40;
+          hmap->A_sysvia.t1setint = FALSE;
+        }
         break;
       case 0xC0:
         /*output enabled and free-run mode*/
         /*continuous interrupts*/
-        /*squarewave output on PB7*/
-        /*if (r6522sysvia_ddrb & 0x80)*/
-          r6522sysvia_portb ^= 0x80;
-        /*r6522sysvia_t1 &= 0xFFFF;*/
-        /*r6522sysvia_t1 = ((r6522sysvia_t1lh<<8) | r6522sysvia_t1ll) + 2;*/
-        while (r6522sysvia_t1 < 0)
-          r6522sysvia_t1 += ((r6522sysvia_t1lh<<8) | r6522sysvia_t1ll) + 2;
+        hmap->A_sysvia.portb ^= 0x80;
+        if (hmap->A_sysvia.t1setint)
+          /*T1 interrupt flag set*/
+          hmap->A_sysvia.ifr |= 0x40;
         break;
     }
-    #ifdef __DEBUG__
-      fprintf(htrace,"T1=&%X IFR=&%X IER=&%X",r6522sysvia_t1,r6522sysvia_ifr,r6522sysvia_ier);
-    #endif
-    lflag = TRUE;
-    /*envelopes processed on timer1*/
-    /*soundprocess();*/
+
+    hmap->B_sysvia.t1doubled += 0x20000;
+    hmap->A_sysvia.aftert1 = TRUE;
+  }
+  else if (hmap->A_sysvia.aftert1)
+  {
+    if (hmap->A_sysvia.acr & 0x40)
+    {
+      hmap->B_sysvia.t1doubled = ((hmap->A_sysvia.t1lh<<9) | (hmap->A_sysvia.t1ll<<1)) + 1;
+    }
+    hmap->A_sysvia.aftert1 = 0;
   }
 
-  if (!(r6522sysvia_acr & 0x20))
+  if (!(hmap->A_sysvia.acr & 0x20))
   {
-    /*one shot mode only*/
-    /*decrement counter by 6502 system clock cycles*/
-    r6522sysvia_t2 -= ncycles;
-    if (r6522sysvia_t2 < -1)
-    {
-      r6522sysvia_t2 &= 0xFFFF;
-      #ifdef __DEBUG__
-        fprintf(htrace,"T2=&%X ",r6522sysvia_t2);
-      #endif
+    hmap->B_sysvia.t2doubled -= hmap->cycles.sysvia_original;
 
-      if (r6522sysvia_t2setint)
+    if (hmap->B_sysvia.t2doubled == -2)
+    {
+      if (hmap->A_sysvia.t2setint)
       {
         /*on completion of the timing interval,
           T2 interrupt flag is set (IFR b5)*/
-        r6522sysvia_ifr |= 0x20;
-        r6522sysvia_t2setint=FALSE;
+        hmap->A_sysvia.ifr |= 0x20;
+        hmap->A_sysvia.t2setint=FALSE;
       }
-      lflag = TRUE;
+
+      hmap->B_sysvia.t2doubled += 0x20000;
     }
   }
- else
+
+  hmap->cycles.sysvia_togo = hmap->cycles.sysvia_original = systemviapickcyclestogo();
+
+  systemviaeventsetirq(hmap);
+  return hmap;
+}
+
+struct R6502CPUMAP* systemvia00read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*input/output reg b*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  unsigned int nresult;
+
+  /*hmap->A_sysvia.pcr & 0x20 = CB2 input*/
+  /*hmap->A_sysvia.pcr & 0x40 = CB2 active edge input*/
+  /*independant mode*/
+  if (((hmap->A_sysvia.pcr & 0xE0) == 0x20) OR ((hmap->A_sysvia.pcr & 0xE0) == 0x60))
   {
-    if (r6522sysvia_portb & 0x40)
+    /*clear b4 (CB1)*/
+    hmap->A_sysvia.ifr &= 0xEF;
+  }
+  else
+  {
+    /*clear b4,b3 (CB1,CB2)*/
+    hmap->A_sysvia.ifr &= 0xE7;
+  }
+  systemviaregistersetirq(hmap);
+  /*reads output register bit in orb. pin level has no effect*/
+  nresult = (hmap->A_sysvia.orb & hmap->A_sysvia.ddrb);
+  if (hmap->A_sysvia.acr & 0x02)
+  {
+    /*input latching enabled*/
+    /*read input level on irb*/
+    nresult |= (hmap->A_sysvia.irb & ~hmap->A_sysvia.ddrb);
+  }
+  else
+  {
+    /*input latching disabled*/
+    /*read input level on PB pin*/
+    nresult |= (hmap->A_sysvia.portb & ~hmap->A_sysvia.ddrb);
+  }
+  if (!beebit_button1)
+    nresult |= 0x10; /*fire button 1 released*/
+  if (!beebit_button2)
+    nresult |= 0x20; /*fire button 2 released*/
+
+  nresult |= 0xC0; /*speech system not available*/
+  /*nresult |= 0xF0;*/
+  #ifdef __DEBUG__
+    fprintf(htrace,"=&%X (&%X & &%X) ",nresult,hmap->A_sysvia.orb,hmap->A_sysvia.ddrb);
+  #endif
+  hmap->m = nresult;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia01read_b(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*input/output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  unsigned int nresult;
+
+  /*hmap->A_sysvia.pcr & 0x02 = CA2 input*/
+  /*hmap->A_sysvia.pcr & 0x04 = CA2 active edge input*/
+  if (((hmap->A_sysvia.pcr & 0x0E) == 0x02) OR ((hmap->A_sysvia.pcr & 0x0E) == 0x06))
+  {
+    /*independant interrupt*/
+    /*clear b2 (CA1)*/
+    hmap->A_sysvia.ifr &= 0xFD;
+  }
+  else
+  {
+    /*clear b2,b1 (CA1,CA2)*/
+    hmap->A_sysvia.ifr &= 0xFC;
+  }
+  systemviaregistersetirq(hmap);
+  if (hmap->A_sysvia.acr & 0x01)
+  {
+    /*input latching enabled*/
+    nresult = hmap->A_sysvia.ira;
+  }
+  else
+  {
+    /*input latching disabled*/
+    nresult = hmap->A_sysvia.porta;
+  }
+  hmap->m = nresult;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia01read_m(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*input/output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  unsigned int nresult;
+
+  /*hmap->A_sysvia.pcr & 0x02 = CA2 input*/
+  /*hmap->A_sysvia.pcr & 0x04 = CA2 active edge input*/
+  if (((hmap->A_sysvia.pcr & 0x0E) == 0x02) OR ((hmap->A_sysvia.pcr & 0x0E) == 0x06))
+  {
+    /*independant interrupt*/
+    /*clear b2 (CA1)*/
+    hmap->A_sysvia.ifr &= 0xFD;
+  }
+  else
+  {
+    /*clear b2,b1 (CA1,CA2)*/
+    hmap->A_sysvia.ifr &= 0xFC;
+  }
+  systemviaregistersetirq(hmap);
+  if (hmap->A_sysvia.acr & 0x01)
+  {
+    /*input latching enabled*/
+    nresult = hmap->A_sysvia.ira;
+  }
+  else
+  {
+    /*input latching disabled*/
+    if (hmap->rtc.chipselect && hmap->rtc.readwrite)
     {
-      /*decrement counter by 1MHz clock cycles*/
-      r6522sysvia_t2 -= ncycles;
-      if (r6522sysvia_t2 < 0)
-      {
-        r6522sysvia_t2 &= 0xFFFF;
-        /*r6502_cyclestogo -= 2;*/
-        /*while (r6522sysvia_t2 < 0)
-          r6522sysvia_t2 += ((r6522sysvia_t2lh<<8) | r6522sysvia_t2ll) + 2;*/
-        if (r6522sysvia_t2setint)
-        {
-          /*on completion of the timing interval,
-            T2 interrupt flag is set (IFR b5)*/
-          r6522sysvia_ifr |= 0x20;
-          r6522sysvia_t2setint = FALSE;
-        }
-        lflag = TRUE;
-      }
+      hmap->A_sysvia.porta = cmosread(hmap->rtc.addrstrobe);
+      /*nresult = (hmap->A_sysvia.porta & hmap->A_sysvia.ddra);
+      if (hmap->rtc.chipselect)
+        nresult |= (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);*/
+      nresult = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
+    }
+    else
+      nresult = hmap->A_sysvia.porta;
+  }
+  hmap->m = nresult;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia02read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->A_sysvia.ddrb;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia03read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->A_sysvia.ddra;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia04read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*T1 low order counter*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  intptr_t cyclecount;
+
+  /*T1 interrupt flag is reset (IFR b6)*/
+  hmap->A_sysvia.ifr &= 0xBF;
+  systemviaregistersetirq(hmap);
+  HOST_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, hmap, sysvia)
+  hmap->m = ((hmap->B_sysvia.t1doubled - cyclecount)>>1)&0xFF;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia05read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*T1 high order counter*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  intptr_t cyclecount;
+
+  HOST_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, hmap, sysvia)
+  hmap->m = ((hmap->B_sysvia.t1doubled - cyclecount)>>9)&0xFF;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia06read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*T1 low order latch*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->A_sysvia.t1ll;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia07read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*T1 high order latch*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->A_sysvia.t1lh;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia08read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*T2 low order counter*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  intptr_t cyclecount;
+
+  /*T2 interrupt flag is cleared (IFR b5)*/
+  hmap->A_sysvia.ifr &= 0xDF;
+  systemviaregistersetirq(hmap);
+  if (!(hmap->A_sysvia.acr & 0x20))
+  {
+    HOST_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, hmap, sysvia)
+    hmap->m = ((hmap->B_sysvia.t2doubled - cyclecount)>>1)&0xFF;
+  }
+  else
+  {
+    hmap->m = (hmap->B_sysvia.t2doubled>>1)&0xFF;
+  }
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia09read(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*T2 high order counter*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  intptr_t cyclecount;
+
+  if (!(hmap->A_sysvia.acr & 0x20))
+  {
+    HOST_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, hmap, sysvia)
+    hmap->m = ((hmap->B_sysvia.t2doubled - cyclecount)>>9)&0xFF;
+  }
+  else
+  {
+    hmap->m = (hmap->B_sysvia.t2doubled>>9)&0xFF;
+  }
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Aread(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*shift register*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  /*SR interrupt flag is cleared (IFR b2)*/
+  hmap->A_sysvia.ifr &= 0xFB;
+  systemviaregistersetirq(hmap);
+  hmap->m = hmap->A_sysvia.sr;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Bread(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*auxilary control reg*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->A_sysvia.acr;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Cread(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*peripheral control reg*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->A_sysvia.pcr;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Dread(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*interrupt flag reg*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  /*b7 of this register will be read as a logic 1*/
+  /*when an interrupt exists within the chip*/
+  systemviaregistersetirq(hmap);
+  hmap->m = hmap->A_sysvia.ifr;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Eread(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*interrupt enable reg*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = (hmap->A_sysvia.ier | 0x80);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Fread_b(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*input output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  unsigned int nresult;
+
+  if (hmap->A_sysvia.acr & 0x01)
+  {
+    /*input latching enabled*/
+    nresult = hmap->A_sysvia.ira;
+  }
+  else
+  {
+    /*input latching disabled*/
+    if (keystatus[(hmap->A_sysvia.porta & hmap->A_sysvia.ddra)])
+      hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+    nresult = hmap->A_sysvia.porta;
+  }
+  hmap->m = nresult;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Fread_m(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /*input output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  unsigned int nresult;
+
+  if (hmap->A_sysvia.acr & 0x01)
+  {
+    /*input latching enabled*/
+    nresult = hmap->A_sysvia.ira;
+  }
+  else
+  {
+    /*input latching disabled*/
+    if (hmap->rtc.chipselect && hmap->rtc.readwrite)
+    {
+      hmap->A_sysvia.porta = cmosread(hmap->rtc.addrstrobe);
+      /*nresult = (hmap->A_sysvia.porta & hmap->A_sysvia.ddra);
+      if (hmap->rtc.chipselect)
+        nresult |= (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);*/
+      nresult = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
+    }
+    else
+    {
+      if (keystatus[(hmap->A_sysvia.porta & hmap->A_sysvia.ddra)])
+        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      nresult = hmap->A_sysvia.porta;
     }
   }
-  if (lflag)
-    systemviasetirq();
+  hmap->m = nresult;
+
+  return cmap;
 }
 
-void systemviareset(int lfull)
+static inline void systemviaportbwrite(HOSTMAP* hmap, uint8_t value)
 {
-  if (lfull)
+  /*input/output reg b*/
+  hmap->A_sysvia.orb = value;
+  hmap->A_sysvia.portb = (hmap->A_sysvia.orb & hmap->A_sysvia.ddrb) | (hmap->A_sysvia.portb & ~hmap->A_sysvia.ddrb);
+  /*PCR & 0x20 = CB2 input*/
+  /*PCR & 0x40 = CB2 active edge input*/
+  /*independant mode*/
+  if (((hmap->A_sysvia.pcr & 0xE0) == 0x20) OR ((hmap->A_sysvia.pcr & 0xE0) == 0x60))
   {
-    /*if ier is set, a hard reset will be done*/
-    r6522sysvia_ier = 0x80;
+    /*clear b4 (CB1)*/
+    hmap->A_sysvia.ifr &= 0xEF;
   }
-  r6522sysvia_ifr = 0x00;
-  r6522sysvia_ddra = 0; /*input*/
-  r6522sysvia_ddrb = 0; /*input*/
-  r6522sysvia_t1ll = 0xFF;
-  r6522sysvia_t1lh = 0xFF;
-  r6522sysvia_t2ll = 0xFF;
-  r6522sysvia_t2lh = 0xFF;
-  r6522sysvia_acr = 0;
-  r6522sysvia_pcr = 0;
-  r6522sysvia_ora = 0xFF;
-  r6522sysvia_ira = 0xFF;
-  r6522sysvia_orb = 0xFF;
-  r6522sysvia_irb = 0xFF;
-  r6522sysvia_porta = 0xFF;
-  r6522sysvia_portb = 0xFF;
-
-  r6522sysvia_t1 = 0x10000; /*1FFFF;*/
-  r6522sysvia_t2 = 0x10000; /*1FFFF*/
-
-  r6522sysvia_t1setint = FALSE;
-  r6522sysvia_t2setint = FALSE;
-  lsoundlatch = FALSE;
-  systemviasetirq();
-  video_baseaddress = 0;
-  video_startindex = 0;
-  r6522sysvia_tick = 0;
-}
-
-char systemviaread(int naddress)
-{
-  int ntotal;
-  char nresult;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
   else
-    r6502_cyclestogo -= 2;
-
-  switch (naddress & 0x0F)
   {
-    case 0x00:
-      /*input/output reg b*/
-      /*r6522sysvia_pcr & 0x20 = CB2 input*/
-      /*r6522sysvia_pcr & 0x40 = CB2 active edge input*/
-      /*updatetimers();*/
-      /*independant mode*/
-      if ((r6522sysvia_pcr & 0xE0 == 0x20) OR (r6522sysvia_pcr & 0xE0 == 0x60))
-      {
-        /*clear b4 (CB1)*/
-        r6522sysvia_ifr &= 0xEF;
-      }
-      else
-      {
-        /*clear b4,b3 (CB1,CB2)*/
-        r6522sysvia_ifr &= 0xE7;
-      }
-      systemviasetirq();
-      /*reads output register bit in orb. pin level has no effect*/
-      nresult = (r6522sysvia_orb & r6522sysvia_ddrb);
-      if (r6522sysvia_acr & 0x02)
-      {
-        /*input latching enabled*/
-        /*read input level on irb*/
-        nresult |= (r6522sysvia_irb & ~r6522sysvia_ddrb);
-      }
-      else
-      {
-        /*input latching disabled*/
-        /*read input level on PB pin*/
-        nresult |= (r6522sysvia_portb & ~r6522sysvia_ddrb);
-      }
-      if (!beebit_button1)
-        nresult |= 0x10; /*fire button 1 released*/
-      if (!beebit_button2)
-        nresult |= 0x20; /*fire button 2 released*/
-
-      nresult |= 0xC0; /*speech system not available*/
-      /*nresult |= 0xF0;*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"=&%X (&%X & &%X) ",nresult,r6522sysvia_orb,r6522sysvia_ddrb);
-      #endif
-      break;
-    case 0x01:
-      /*input/output reg a*/
-      /*r6522sysvia_pcr & 0x02 = CA2 input*/
-      /*r6522sysvia_pcr & 0x04 = CA2 active edge input*/
-      updatetimers();
-      if ((r6522sysvia_pcr & 0x0E == 0x02) OR (r6522sysvia_pcr & 0x0E == 0x06))
-      {
-        /*independant interrupt*/
-        /*clear b2 (CA1)*/
-        r6522sysvia_ifr &= 0xFD;
-      }
-      else
-      {
-        /*clear b2,b1 (CA1,CA2)*/
-        r6522sysvia_ifr &= 0xFC;
-      }
-      systemviasetirq();
-      if (r6522sysvia_acr & 0x01)
-      {
-        /*input latching enabled*/
-        nresult = r6522sysvia_ira;
-      }
-      else
-      {
-        /*input latching disabled*/
-        if (beebit_machinetype == MACHINE_MASTER128 OR beebit_machinetype == MACHINE_COMPACT)
-        {
-          if (r6522sysvia_rtcchipselect && r6522sysvia_rtcreadwrite)
-          {
-            r6522sysvia_porta = cmosread(r6522sysvia_rtcaddrstrobe);
-            /*nresult = (r6522sysvia_porta & r6522sysvia_ddra);
-            if (r6522sysvia_rtcchipselect)
-              nresult |= (r6522sysvia_porta & ~r6522sysvia_ddra);*/
-            nresult = (r6522sysvia_ora & r6522sysvia_ddra) | (r6522sysvia_porta & ~r6522sysvia_ddra);
-          }
-          else
-            nresult = r6522sysvia_porta;
-        }
-        else
-          nresult = r6522sysvia_porta;
-      }
-      break;
-    case 0x02:
-      nresult = r6522sysvia_ddrb;
-      break;
-    case 0x03:
-      nresult = r6522sysvia_ddra;
-      break;
-    case 0x04:
-      /*T1 low order counter*/
-      updatetimers();
-      /*if (r6522sysvia_t1 < 0)
-        r6522sysvia_t1cl = 0x00;
-      else*/
-        r6522sysvia_t1cl = (r6522sysvia_t1 & 0xFF);
-      /*T1 interrupt flag is reset (IFR b6)*/
-      r6522sysvia_ifr &= 0xBF;
-      systemviasetirq();
-      nresult = r6522sysvia_t1cl;
-      break;
-    case 0x05:
-      /*T1 high order counter*/
-      updatetimers();
-      /*if (r6522sysvia_t1 < 0)
-        r6522sysvia_t1ch = 0xFF;
-      else*/
-        r6522sysvia_t1ch = ((r6522sysvia_t1 >> 8) & 0xFF);
-      nresult = r6522sysvia_t1ch;
-      break;
-    case 0x06:
-      /*T1 low order latch*/
-      nresult = r6522sysvia_t1ll;
-      break;
-    case 0x07:
-      /*T1 high order latch*/
-      nresult = r6522sysvia_t1lh;
-      break;
-    case 0x08:
-      /*T2 low order counter*/
-      updatetimers();
-      /*if (r6522sysvia_t2 < 0)
-        r6522sysvia_t2cl = 0xFF;
-      else*/
-        r6522sysvia_t2cl = (r6522sysvia_t2 & 0xFF);
-      /*T2 interrupt flag is cleared (IFR b5)*/
-      r6522sysvia_ifr &= 0xDF;
-      systemviasetirq();
-      nresult = r6522sysvia_t2cl;
-      break;
-    case 0x09:
-      /*T2 high order counter*/
-      updatetimers();
-      /*if (r6522sysvia_t2 < 0)
-        r6522sysvia_t2ch = 0xFF;
-      else*/
-        r6522sysvia_t2ch = ((r6522sysvia_t2 >> 8) & 0xFF);
-      nresult = r6522sysvia_t2ch;
-      break;
-    case 0x0A:
-      /*shift register*/
-      /*SR interrupt flag is cleared (IFR b2)*/
-      updatetimers();
-      r6522sysvia_ifr &= 0xFB;
-      systemviasetirq();
-      nresult = r6522sysvia_sr;
-      break;
-    case 0x0B:
-      /*auxilary control reg*/
-      nresult = r6522sysvia_acr;
-      break;
-    case 0x0C:
-      /*peripheral control reg*/
-      nresult = r6522sysvia_pcr;
-      break;
-    case 0x0D:
-      /*interrupt flag reg*/
-      /*b7 of this register will be read as a logic 1*/
-      /*when an interrupt exists within the chip*/
-      updatetimers();
-      systemviasetirq();
-      nresult = r6522sysvia_ifr;
-      break;
-    case 0x0E:
-      /*interrupt enable reg*/
-      nresult = (r6522sysvia_ier | 0x80);
-      break;
-    case 0x0F:
-      /*input output reg a*/
-      updatetimers();
-      if (r6522sysvia_acr & 0x01)
-      {
-        /*input latching enabled*/
-        nresult = r6522sysvia_ira;
-      }
-      else
-      {
-        /*input latching disabled*/
-        if (beebit_machinetype == MACHINE_MASTER128 OR beebit_machinetype == MACHINE_COMPACT)
-        {
-          if (r6522sysvia_rtcchipselect && r6522sysvia_rtcreadwrite)
-          {
-            r6522sysvia_porta = cmosread(r6522sysvia_rtcaddrstrobe);
-            /*nresult = (r6522sysvia_porta & r6522sysvia_ddra);
-            if (r6522sysvia_rtcchipselect)
-              nresult |= (r6522sysvia_porta & ~r6522sysvia_ddra);*/
-            nresult = (r6522sysvia_ora & r6522sysvia_ddra) | (r6522sysvia_porta & ~r6522sysvia_ddra);
-          }
-          else
-          {
-            /*if (keynormalstatus[(r6522sysvia_porta & r6522sysvia_ddra)])*/
-            /*if (keymap[(r6522sysvia_porta & r6522sysvia_ddra)])*/
-            if (keystatus[(r6522sysvia_porta & r6522sysvia_ddra)])
-              r6522sysvia_porta = keyboardread(r6522sysvia_porta,r6522sysvia_ddra);
-            nresult = r6522sysvia_porta;
-          }
-        }
-        else
-        {
-          /*if (keynormalstatus[(r6522sysvia_porta & r6522sysvia_ddra)])*/
-          /*if (keymap[(r6522sysvia_porta & r6522sysvia_ddra)])*/
-          if (keystatus[(r6522sysvia_porta & r6522sysvia_ddra)])
-            r6522sysvia_porta = keyboardread(r6522sysvia_porta,r6522sysvia_ddra);
-          nresult = r6522sysvia_porta;
-        }
-      }
-      break;
-    default:
-      nresult = 0xFF;
-      break;
+    /*clear b4,b3 (CB1,CB2)*/
+    hmap->A_sysvia.ifr &= 0xE7;
   }
-  #ifdef __DEBUG__
-    fprintf(htrace,"SVREAD IER=&%X IFR=&%X ",r6522sysvia_ier,r6522sysvia_ifr);
-    fprintf(htrace,"ORA=&%X ",r6522sysvia_ora);
-  #endif
-
-  /*bbcvdu(83);
-  bbcvdu(32);
-  inttohex4(naddress);
-  bbcvdu(32);
-  inttohex4(nresult);
-  bbcvdu(13);
-  bbcvdu(10);*/
-
-  return (nresult);
+  systemviaregistersetirq(hmap);
 }
 
-void systemviawrite(int naddress, char nvalue)
+static inline void systemviaportawrite(HOSTMAP* hmap, uint8_t value)
 {
-  int ntotal;
+  /*input/output reg a*/
+  /*zeribeep_value = value;*/
+  hmap->A_sysvia.ora = value;
+  hmap->A_sysvia.porta = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
+  /*PCR & 0x02 = CA2 input*/
+  /*PCR & 0x04 = CA2 active edge input*/
+  /*indepandant mode*/
+  if (((hmap->A_sysvia.pcr & 0x0E) == 0x02) OR ((hmap->A_sysvia.pcr & 0x0E) == 0x06))
+  {
+    /*clear b2 (CA1)*/
+    hmap->A_sysvia.ifr &= 0xFD;
+  }
+  else
+  {
+    /*clear b2,b1 (CA1,CA2)*/
+    hmap->A_sysvia.ifr &= 0xFC;
+  }
+  systemviaregistersetirq(hmap);
+}
+
+static inline void systemviaportawritenohandshake(HOSTMAP* hmap, uint8_t value)
+{
+  /*input/output reg a*/
+  hmap->A_sysvia.ora = value;
+  hmap->A_sysvia.porta = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
+}
+
+static inline void systemviaportbwrite_latchb(HOSTMAP* hmap, uint8_t value)
+{
   int nlatch,lenabled;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
 
-  switch (naddress & 0x0F)
+  nlatch = (hmap->A_sysvia.portb & 0x07);
+  lenabled = (hmap->A_sysvia.portb & 0x08);
+
+  switch (nlatch)
   {
     case 0x00:
-      /*input/output reg b*/
-      updatetimers();
-      r6522sysvia_orb = nvalue;
-      r6522sysvia_portb = (r6522sysvia_orb & r6522sysvia_ddrb) | (r6522sysvia_portb & ~r6522sysvia_ddrb);
-      /*PCR & 0x20 = CB2 input*/
-      /*PCR & 0x40 = CB2 active edge input*/
-      /*independant mode*/
-      if ((r6522sysvia_pcr & 0xE0 == 0x20) OR (r6522sysvia_pcr & 0xE0 == 0x60))
+      /*sound write enable*/
+      if (lenabled AND !hmap->lsoundlatch)
       {
-        /*clear b4 (CB1)*/
-        r6522sysvia_ifr &= 0xEF;
+#ifdef __RISCOS__
+        zeribeepwrite(hmap, hmap->A_sysvia.ora);
+#endif
       }
-      else
-      {
-        /*clear b4,b3 (CB1,CB2)*/
-        r6522sysvia_ifr &= 0xE7;
-      }
-      systemviasetirq();
-      nlatch = (r6522sysvia_portb & 0x07);
-      lenabled = (r6522sysvia_portb & 0x08);
-
-      switch (nlatch)
-      {
-        case 0x00:
-          /*sound write enable*/
-          if (lenabled AND !lsoundlatch)
-          {
-            if (beebit_sound)
-              zeribeepwrite(r6522sysvia_ora);
-          }
-          lsoundlatch = lenabled;
-          break;
-        case 0x01:
-          switch (beebit_machinetype)
-          {
-            case MACHINE_MODELB:
-            case MACHINE_MODELBPLUS:
-              /*read speech*/
-              break;
-            case MACHINE_MASTER128:
-            case MACHINE_COMPACT:
-               /*RTC/RAM read write*/
-              r6522sysvia_rtcreadwrite = lenabled;
-              if (r6522sysvia_portb & 0x80)
-                r6522sysvia_rtcaddrstrobe = r6522sysvia_porta;
-              r6522sysvia_rtcchipselect = (r6522sysvia_portb & 0x40);
-              if (r6522sysvia_rtcchipselect)
-              {
-                if (r6522sysvia_rtcreadwrite)
-                  r6522sysvia_porta = cmosread(r6522sysvia_rtcaddrstrobe);
-                else
-                {
-                  if (r6522sysvia_rtcdatastrobe)
-                    cmoswrite(r6522sysvia_rtcaddrstrobe, r6522sysvia_porta);
-                }
-              }
-              break;
-          }
-          break;
-        case 0x02:
-          switch (beebit_machinetype)
-          {
-            case MACHINE_MODELB:
-            case MACHINE_MODELBPLUS:
-              /*write speech*/
-              break;
-            case MACHINE_MASTER128:
-            case MACHINE_COMPACT:
-              /*RTC/RAM data strobe*/
-              if (r6522sysvia_portb & 0x80)
-                r6522sysvia_rtcaddrstrobe = r6522sysvia_porta;
-              r6522sysvia_rtcchipselect = (r6522sysvia_portb & 0x40);
-              if (r6522sysvia_rtcchipselect)
-              {
-                if (r6522sysvia_rtcreadwrite)
-                  r6522sysvia_porta = cmosread(r6522sysvia_rtcaddrstrobe);
-                else
-                {
-                  if (r6522sysvia_rtcdatastrobe)
-                    cmoswrite(r6522sysvia_rtcaddrstrobe, r6522sysvia_porta);
-                }
-              }
-              r6522sysvia_rtcdatastrobe = lenabled;
-              break;
-          }
-          break;
-        case 0x03:
-          /*keyboard*/
-          if (!lenabled)
-            r6522sysvia_porta = keyboardread(r6522sysvia_porta,r6522sysvia_ddra);
-          break;
-        case 0x04:
-          /*Screen Size hi*/
-          if (!lenabled)
-          {
-            video_startindex &= 2;
-            video_baseaddress=ScreenStartArray[video_startindex];
-          }
-          else
-          {
-            video_startindex |= 1;
-            video_baseaddress=ScreenStartArray[video_startindex];
-          }
-          break;
-        case 0x05:
-          /*Screen Size lo*/
-          if (!lenabled)
-          {
-            video_startindex &= 1;
-            video_baseaddress=ScreenStartArray[video_startindex];
-          }
-          else
-          {
-            video_startindex |= 2;
-            video_baseaddress=ScreenStartArray[video_startindex];
-          }
-          break;
-        case 0x06:
-          /*caps lock on/off*/
-          /*get keyboard status*/
-          regs.r[0] = 202;
-          regs.r[1] = 0;
-          regs.r[2] = 255;
-          _kernel_swi(OS_Byte,&regs,&regs);
-
-          beebit_leds = (beebit_leds & 0xEF) | (lenabled ? 0x10 : 0x00);
-
-          if ((regs.r[1] ^ beebit_leds) & 0x10)
-          {
-            /*only update the keyboard leds if they differ*/
-
-            /*set keyboard status*/
-            regs.r[0] = 202;
-            regs.r[1] = beebit_leds & 0x10;
-            regs.r[2] = 0xEF;
-            _kernel_swi(OS_Byte,&regs,&regs);
-
-            /*set the leds*/
-            regs.r[0] = 118;
-            _kernel_swi(OS_Byte,&regs,&regs);
-          }
-          break;
-        case 0x07:
-          /*shift lock on/off*/
-          break;
-      }
+      hmap->lsoundlatch = lenabled;
       break;
     case 0x01:
-      /*input/output reg a*/
-      /*zeribeep_value = nvalue;*/
-      updatetimers();
-      r6522sysvia_ora = nvalue;
-      r6522sysvia_porta = (r6522sysvia_ora & r6522sysvia_ddra) | (r6522sysvia_porta & ~r6522sysvia_ddra);
-      /*PCR & 0x02 = CA2 input*/
-      /*PCR & 0x04 = CA2 active edge input*/
-      /*indepandant mode*/
-      if ((r6522sysvia_pcr & 0x0E == 0x02) OR (r6522sysvia_pcr & 0x0E == 0x06))
+      /*read speech*/
+      break;
+    case 0x02:
+      /*write speech*/
+      break;
+    case 0x03:
+      /*keyboard*/
+      if (!lenabled)
+        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      break;
+    case 0x04:
+      /*Screen Size hi*/
+      if (!lenabled)
       {
-        /*clear b2 (CA1)*/
-        r6522sysvia_ifr &= 0xFD;
+        hmap->screenstartindex &= 2;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
       }
       else
       {
-        /*clear b2,b1 (CA1,CA2)*/
-        r6522sysvia_ifr &= 0xFC;
+        hmap->screenstartindex |= 1;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
       }
-      systemviasetirq();
-      nlatch = (r6522sysvia_portb & 0x07);
-      lenabled = (r6522sysvia_portb & 0x08);
-      switch (nlatch)
+      break;
+    case 0x05:
+      /*Screen Size lo*/
+      if (!lenabled)
       {
-        case 0x00:
-          /*sound write enable*/
-          if (lenabled AND !lsoundlatch)
-          {
-            if (beebit_sound)
-              zeribeepwrite(r6522sysvia_ora);
-          }
-          lsoundlatch = lenabled;
-          break;
-        case 0x01:
-          switch (beebit_machinetype)
-          {
-            case MACHINE_MODELB:
-            case MACHINE_MODELBPLUS:
-              /*read speech*/
-              break;
-            case MACHINE_MASTER128:
-            case MACHINE_COMPACT:
-              /*RTC/RAM read write*/
-              r6522sysvia_rtcreadwrite = lenabled;
-              if (r6522sysvia_rtcdatastrobe && r6522sysvia_rtcreadwrite && r6522sysvia_rtcchipselect)
-                cmoswrite(r6522sysvia_rtcaddrstrobe, r6522sysvia_porta);
-              break;
-          }
-          break;
-        case 0x02:
-          switch (beebit_machinetype)
-          {
-            case MACHINE_MODELB:
-            case MACHINE_MODELBPLUS:
-              /*write speech*/
-              break;
-            case MACHINE_MASTER128:
-            case MACHINE_COMPACT:
-              /*RTC/RAM data strobe*/
-              if (r6522sysvia_rtcdatastrobe && r6522sysvia_rtcreadwrite && r6522sysvia_rtcchipselect)
-                cmoswrite(r6522sysvia_rtcaddrstrobe, r6522sysvia_porta);
-              r6522sysvia_rtcdatastrobe = lenabled;
-              break;
-          }
-          break;
-        case 0x03:
-          if (!lenabled)
-            r6522sysvia_porta = keyboardread(r6522sysvia_porta,r6522sysvia_ddra);
-          break;
+        hmap->screenstartindex &= 1;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      else
+      {
+        hmap->screenstartindex |= 2;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      break;
+    case 0x06:
+      /*caps lock on/off*/
+      /*get keyboard status*/
+#ifdef __RISCOS__
+      regs.r[0] = 202;
+      regs.r[1] = 0;
+      regs.r[2] = 255;
+      _kernel_swi(OS_Byte,&regs,&regs);
+
+      beebit_leds = (beebit_leds & 0xEF) | (lenabled ? 0x10 : 0x00);
+
+      if ((regs.r[1] ^ beebit_leds) & 0x10)
+      {
+        /*only update the keyboard leds if they differ*/
+
+        /*set keyboard status*/
+        regs.r[0] = 202;
+        regs.r[1] = beebit_leds & 0x10;
+        regs.r[2] = 0xEF;
+        _kernel_swi(OS_Byte,&regs,&regs);
+
+        /*set the leds*/
+        regs.r[0] = 118;
+        _kernel_swi(OS_Byte,&regs,&regs);
+      }
+#endif
+      break;
+    case 0x07:
+      /*shift lock on/off*/
+      break;
+  }
+}
+
+static inline void systemviaportbwrite_latchm(HOSTMAP* hmap, uint8_t value)
+{
+  int nlatch,lenabled;
+
+  nlatch = (hmap->A_sysvia.portb & 0x07);
+  lenabled = (hmap->A_sysvia.portb & 0x08);
+
+  switch (nlatch)
+  {
+    case 0x00:
+      /*sound write enable*/
+      if (lenabled AND !hmap->lsoundlatch)
+      {
+#ifdef __RISCOS__
+        zeribeepwrite(hmap, hmap->A_sysvia.ora);
+#endif
+      }
+      hmap->lsoundlatch = lenabled;
+      break;
+    case 0x01:
+      /*RTC/RAM read write*/
+      hmap->rtc.readwrite = lenabled;
+      if (hmap->A_sysvia.portb & 0x80)
+        hmap->rtc.addrstrobe = hmap->A_sysvia.porta;
+      hmap->rtc.chipselect = (hmap->A_sysvia.portb & 0x40);
+      if (hmap->rtc.chipselect)
+      {
+        if (hmap->rtc.readwrite)
+          hmap->A_sysvia.porta = cmosread(hmap->rtc.addrstrobe);
+        else
+        {
+          if (hmap->rtc.datastrobe)
+            cmoswrite(hmap->rtc.addrstrobe, hmap->A_sysvia.porta);
+        }
       }
       break;
     case 0x02:
-      r6522sysvia_ddrb = nvalue;
+      /*RTC/RAM data strobe*/
+      if (hmap->A_sysvia.portb & 0x80)
+        hmap->rtc.addrstrobe = hmap->A_sysvia.porta;
+      hmap->rtc.chipselect = (hmap->A_sysvia.portb & 0x40);
+      if (hmap->rtc.chipselect)
+      {
+        if (hmap->rtc.readwrite)
+          hmap->A_sysvia.porta = cmosread(hmap->rtc.addrstrobe);
+        else
+        {
+          if (hmap->rtc.datastrobe)
+            cmoswrite(hmap->rtc.addrstrobe, hmap->A_sysvia.porta);
+        }
+      }
+      hmap->rtc.datastrobe = lenabled;
       break;
     case 0x03:
-      r6522sysvia_ddra = nvalue;
+      /*keyboard*/
+      if (!lenabled)
+        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
       break;
     case 0x04:
-      /*T1 low order latch*/
-      r6522sysvia_t1ll = nvalue;
+      /*Screen Size hi*/
+      if (!lenabled)
+      {
+        hmap->screenstartindex &= 2;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      else
+      {
+        hmap->screenstartindex |= 1;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
       break;
     case 0x05:
-      /*T1 high order counter*/
-      updatetimers();
-      /*no effect in one-shot mode?*/
-      r6522sysvia_t1lh = r6522sysvia_t1ch = nvalue;
-      /*copy latch to counter*/
-      r6522sysvia_t1cl = r6522sysvia_t1ll;
-      /*clear T1 interrupt flag (b6)*/
-      r6522sysvia_ifr &= 0xBF;
-      systemviasetirq();
-      if ((r6522sysvia_acr & 0xC0) == 0x80)
+      /*Screen Size lo*/
+      if (!lenabled)
       {
-        /*output enabled (b7=1) and free-run disabled (b6=0)*/
-        /*one-shot mode*/
-        /*PB7 goes low, but goes high when timer 1 times out*/
-        /*r6522sysvia_orb &= 0x7F;
-        r6522sysvia_irb &= 0x7F;*/
-        r6522sysvia_portb &= 0x7F;
+        hmap->screenstartindex &= 1;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
       }
-      r6522sysvia_t1setint = TRUE;
-      /*it takes 1 1MHz cycle to transfer the latches to the counter*/
-      r6522sysvia_t1 = ((r6522sysvia_t1ch<<8) | r6522sysvia_t1cl) + 1;
+      else
+      {
+        hmap->screenstartindex |= 2;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
       break;
     case 0x06:
-      /*T1 low order latch*/
-      r6522sysvia_t1ll = nvalue;
+      /*caps lock on/off*/
+      /*get keyboard status*/
+#ifdef __RISCOS__
+      regs.r[0] = 202;
+      regs.r[1] = 0;
+      regs.r[2] = 255;
+      _kernel_swi(OS_Byte,&regs,&regs);
+
+      beebit_leds = (beebit_leds & 0xEF) | (lenabled ? 0x10 : 0x00);
+
+      if ((regs.r[1] ^ beebit_leds) & 0x10)
+      {
+        /*only update the keyboard leds if they differ*/
+
+        /*set keyboard status*/
+        regs.r[0] = 202;
+        regs.r[1] = beebit_leds & 0x10;
+        regs.r[2] = 0xEF;
+        _kernel_swi(OS_Byte,&regs,&regs);
+
+        /*set the leds*/
+        regs.r[0] = 118;
+        _kernel_swi(OS_Byte,&regs,&regs);
+      }
+#endif
       break;
     case 0x07:
-      /*T1 high order latch*/
-      /*if ((r6522sysvia_acr & 0xC0) != 0x80)
-      {*/
-        /*no effect in one-shot mode?*/
-        r6522sysvia_t1lh = nvalue;
-        /*clear t1 interrupt flag (bit 6) ??*/
-        r6522sysvia_ifr &= 0xBF;
-        systemviasetirq();
-      /*}*/
-      break;
-    case 0x08:
-      /*t2 low order latch*/
-      r6522sysvia_t2ll = nvalue;
-      break;
-    case 0x09:
-      /*T2 high order counter*/
-      updatetimers();
-      r6522sysvia_t2lh = r6522sysvia_t2ch = nvalue;
-      r6522sysvia_t2cl = r6522sysvia_t2ll;
-      /*clear T2 interrupt flag (bit 5)*/
-      r6522sysvia_ifr &= 0xDF;
-      systemviasetirq();
-      /*start the timer*/
-      /*it takes 1 1MHz cycle to transfer the latches to the counter*/
-      r6522sysvia_t2 = ((r6522sysvia_t2ch<<8) | r6522sysvia_t2cl) + 1;
-      /*provide a single interrupt*/
-      r6522sysvia_t2setint=TRUE;
-      break;
-    case 0x0A:
-      /*shift reg*/
-      r6522sysvia_sr = nvalue;
-      r6522sysvia_ifr &= 0xFB;
-      systemviasetirq();
-      break;
-    case 0x0B:
-      /*auxiliary control reg*/
-      r6522sysvia_acr = nvalue;
-      break;
-    case 0x0C:
-      /*peripheral control reg*/
-      r6522sysvia_pcr = nvalue;
-      /*CA1 active edge*/
-      if (r6522sysvia_pcr & 0x01)
-      {
-        /*set b2 (CA1)*/
-        r6522sysvia_ifr |= 0x02;
-      }
-      /*CA2 active edge*/
-      if ((r6522sysvia_pcr & 0x0E) == 0x04)
-      {
-        /*set b1 (CA2)*/
-        r6522sysvia_ifr |= 0x01;
-      }
-      /*CB1 active edge*/
-      if (r6522sysvia_pcr & 0x10)
-      {
-        /*set b5 (CB1)*/
-        r6522sysvia_ifr |= 0x10;
-      }
-      /*CB2 active edge*/
-      if ((r6522sysvia_pcr & 0xE0) == 0x40)
-      {
-        /*set b4 (CB2)*/
-        r6522sysvia_ifr |= 0x08;
-      }
-      break;
-    case 0x0D:
-      /*interrupt flag reg*/
-      nvalue &= 0x7F; /*not really needed*/
-      r6522sysvia_ifr &= (~nvalue);
-      systemviasetirq();
-      break;
-    case 0x0E:
-      /*interrupt enable reg*/
-      if (nvalue & 0x80)
-        r6522sysvia_ier |= nvalue;
-      else
-        r6522sysvia_ier &= (~nvalue);
-      r6522sysvia_ier &= 0x7F;
-      systemviasetirq();
-      break;
-    case 0x0F:
-      /*output reg a*/
-      updatetimers();
-      r6522sysvia_ora = nvalue;
-      r6522sysvia_porta = (r6522sysvia_ora & r6522sysvia_ddra) | (r6522sysvia_porta & ~r6522sysvia_ddra);
-      nlatch = (r6522sysvia_portb & 0x07);
-      lenabled = (r6522sysvia_portb & 0x08);
-      switch (nlatch)
-      {
-        case 0x00:
-          /*sound write enable*/
-          if (lenabled AND !lsoundlatch)
-          {
-            if (beebit_sound)
-            {
-              /*bbcvdu(48);
-              bbcvdu(120);
-              inttohex8(r6502_cyclecount);
-              bbcvdu(44);
-              bbcvdu(48);
-              bbcvdu(120);
-              inttohex4(r6522sysvia_ora);
-              bbcvdu(44);*/
-              zeribeepwrite(r6522sysvia_ora);
-            }
-          }
-          lsoundlatch = lenabled;
-          break;
-        case 0x01:
-          switch (beebit_machinetype)
-          {
-            case MACHINE_MODELB:
-            case MACHINE_MODELBPLUS:
-              /*read speech*/
-              break;
-            case MACHINE_MASTER128:
-            case MACHINE_COMPACT:
-              /*RTC/RAM read write*/
-              r6522sysvia_rtcreadwrite = lenabled;
-              if (r6522sysvia_rtcdatastrobe && r6522sysvia_rtcreadwrite && r6522sysvia_rtcchipselect)
-                cmoswrite(r6522sysvia_rtcaddrstrobe, r6522sysvia_porta);
-              break;
-          }
-          break;
-        case 0x02:
-          switch (beebit_machinetype)
-          {
-            case MACHINE_MODELB:
-            case MACHINE_MODELBPLUS:
-              /*write speech*/
-              break;
-            case MACHINE_MASTER128:
-            case MACHINE_COMPACT:
-              /*RTC/RAM data strobe*/
-              if (r6522sysvia_rtcdatastrobe && r6522sysvia_rtcreadwrite && r6522sysvia_rtcchipselect)
-                cmoswrite(r6522sysvia_rtcaddrstrobe, r6522sysvia_porta);
-              r6522sysvia_rtcdatastrobe = lenabled;
-              break;
-          }
-          break;
-        case 0x03:
-          /*keyboard*/
-          if (!lenabled)
-            r6522sysvia_porta = keyboardread(r6522sysvia_porta,r6522sysvia_ddra);
-          break;
-      }
+      /*shift lock on/off*/
       break;
   }
-  #ifdef __DEBUG__
-    fprintf(htrace,"SVWRITE IER=&%X IFR=&%X ",r6522sysvia_ier,r6522sysvia_ifr);
-    fprintf(htrace,"ORA=&%X ",r6522sysvia_ora);
-  #endif
+}
+
+static inline void systemviaportbwrite_nosoundlatchb(HOSTMAP* hmap, uint8_t value)
+{
+  int nlatch,lenabled;
+
+  nlatch = (hmap->A_sysvia.portb & 0x07);
+  lenabled = (hmap->A_sysvia.portb & 0x08);
+
+  switch (nlatch)
+  {
+    case 0x00:
+      /*sound write enable*/
+      hmap->lsoundlatch = lenabled;
+      break;
+    case 0x01:
+      /*read speech*/
+      break;
+    case 0x02:
+      /*write speech*/
+      break;
+    case 0x03:
+      /*keyboard*/
+      if (!lenabled)
+        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      break;
+    case 0x04:
+      /*Screen Size hi*/
+      if (!lenabled)
+      {
+        hmap->screenstartindex &= 2;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      else
+      {
+        hmap->screenstartindex |= 1;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      break;
+    case 0x05:
+      /*Screen Size lo*/
+      if (!lenabled)
+      {
+        hmap->screenstartindex &= 1;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      else
+      {
+        hmap->screenstartindex |= 2;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      break;
+    case 0x06:
+      /*caps lock on/off*/
+      /*get keyboard status*/
+#ifdef __RISCOS__
+      regs.r[0] = 202;
+      regs.r[1] = 0;
+      regs.r[2] = 255;
+      _kernel_swi(OS_Byte,&regs,&regs);
+
+      beebit_leds = (beebit_leds & 0xEF) | (lenabled ? 0x10 : 0x00);
+
+      if ((regs.r[1] ^ beebit_leds) & 0x10)
+      {
+        /*only update the keyboard leds if they differ*/
+
+        /*set keyboard status*/
+        regs.r[0] = 202;
+        regs.r[1] = beebit_leds & 0x10;
+        regs.r[2] = 0xEF;
+        _kernel_swi(OS_Byte,&regs,&regs);
+
+        /*set the leds*/
+        regs.r[0] = 118;
+        _kernel_swi(OS_Byte,&regs,&regs);
+      }
+#endif
+      break;
+    case 0x07:
+      /*shift lock on/off*/
+      break;
+  }
+}
+
+static inline void systemviaportbwrite_nosoundlatchm(HOSTMAP* hmap, uint8_t value)
+{
+  int nlatch,lenabled;
+
+  nlatch = (hmap->A_sysvia.portb & 0x07);
+  lenabled = (hmap->A_sysvia.portb & 0x08);
+
+  switch (nlatch)
+  {
+    case 0x00:
+      /*sound write enable*/
+      hmap->lsoundlatch = lenabled;
+      break;
+    case 0x01:
+      /*RTC/RAM read write*/
+      hmap->rtc.readwrite = lenabled;
+      if (hmap->A_sysvia.portb & 0x80)
+        hmap->rtc.addrstrobe = hmap->A_sysvia.porta;
+      hmap->rtc.chipselect = (hmap->A_sysvia.portb & 0x40);
+      if (hmap->rtc.chipselect)
+      {
+        if (hmap->rtc.readwrite)
+          hmap->A_sysvia.porta = cmosread(hmap->rtc.addrstrobe);
+        else
+        {
+          if (hmap->rtc.datastrobe)
+            cmoswrite(hmap->rtc.addrstrobe, hmap->A_sysvia.porta);
+        }
+      }
+      break;
+    case 0x02:
+      /*RTC/RAM data strobe*/
+      if (hmap->A_sysvia.portb & 0x80)
+        hmap->rtc.addrstrobe = hmap->A_sysvia.porta;
+      hmap->rtc.chipselect = (hmap->A_sysvia.portb & 0x40);
+      if (hmap->rtc.chipselect)
+      {
+        if (hmap->rtc.readwrite)
+          hmap->A_sysvia.porta = cmosread(hmap->rtc.addrstrobe);
+        else
+        {
+          if (hmap->rtc.datastrobe)
+            cmoswrite(hmap->rtc.addrstrobe, hmap->A_sysvia.porta);
+        }
+      }
+      hmap->rtc.datastrobe = lenabled;
+      break;
+    case 0x03:
+      /*keyboard*/
+      if (!lenabled)
+        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      break;
+    case 0x04:
+      /*Screen Size hi*/
+      if (!lenabled)
+      {
+        hmap->screenstartindex &= 2;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      else
+      {
+        hmap->screenstartindex |= 1;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      break;
+    case 0x05:
+      /*Screen Size lo*/
+      if (!lenabled)
+      {
+        hmap->screenstartindex &= 1;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      else
+      {
+        hmap->screenstartindex |= 2;
+        hmap->screenstartaddress=ScreenStartArray[hmap->screenstartindex];
+      }
+      break;
+    case 0x06:
+      /*caps lock on/off*/
+      /*get keyboard status*/
+#ifdef __RISCOS__
+      regs.r[0] = 202;
+      regs.r[1] = 0;
+      regs.r[2] = 255;
+      _kernel_swi(OS_Byte,&regs,&regs);
+
+      beebit_leds = (beebit_leds & 0xEF) | (lenabled ? 0x10 : 0x00);
+
+      if ((regs.r[1] ^ beebit_leds) & 0x10)
+      {
+        /*only update the keyboard leds if they differ*/
+
+        /*set keyboard status*/
+        regs.r[0] = 202;
+        regs.r[1] = beebit_leds & 0x10;
+        regs.r[2] = 0xEF;
+        _kernel_swi(OS_Byte,&regs,&regs);
+
+        /*set the leds*/
+        regs.r[0] = 118;
+        _kernel_swi(OS_Byte,&regs,&regs);
+      }
+#endif
+      break;
+    case 0x07:
+      /*shift lock on/off*/
+      break;
+  }
+}
+
+static inline void systemviaportawrite_latchb(HOSTMAP* hmap, uint8_t value)
+{
+  int nlatch,lenabled;
+
+  nlatch = (hmap->A_sysvia.portb & 0x07);
+  lenabled = (hmap->A_sysvia.portb & 0x08);
+  switch (nlatch)
+  {
+    case 0x00:
+      /*sound write enable*/
+      if (lenabled AND !hmap->lsoundlatch)
+      {
+#ifdef __RISCOS__
+        zeribeepwrite(hmap, hmap->A_sysvia.ora);
+#endif
+      }
+      hmap->lsoundlatch = lenabled;
+      break;
+    case 0x01:
+      /*read speech*/
+      break;
+    case 0x02:
+      /*write speech*/
+      break;
+    case 0x03:
+      /*keyboard*/
+      if (!lenabled)
+        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      break;
+  }
+}
+
+static inline void systemviaportawrite_latchm(HOSTMAP* hmap, uint8_t value)
+{
+  int nlatch,lenabled;
+
+  nlatch = (hmap->A_sysvia.portb & 0x07);
+  lenabled = (hmap->A_sysvia.portb & 0x08);
+  switch (nlatch)
+  {
+    case 0x00:
+      /*sound write enable*/
+      if (lenabled AND !hmap->lsoundlatch)
+      {
+#ifdef __RISCOS__
+        zeribeepwrite(hmap, hmap->A_sysvia.ora);
+#endif
+      }
+      hmap->lsoundlatch = lenabled;
+      break;
+    case 0x01:
+      /*RTC/RAM read write*/
+      hmap->rtc.readwrite = lenabled;
+      if (hmap->rtc.datastrobe && hmap->rtc.readwrite && hmap->rtc.chipselect)
+        cmoswrite(hmap->rtc.addrstrobe, hmap->A_sysvia.porta);
+      break;
+    case 0x02:
+      /*RTC/RAM data strobe*/
+      if (hmap->rtc.datastrobe && hmap->rtc.readwrite && hmap->rtc.chipselect)
+        cmoswrite(hmap->rtc.addrstrobe, hmap->A_sysvia.porta);
+      hmap->rtc.datastrobe = lenabled;
+      break;
+    case 0x03:
+      /*keyboard*/
+      if (!lenabled)
+        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      break;
+  }
+}
+
+static inline void systemviaportawrite_nosoundlatchb(HOSTMAP* hmap, uint8_t value)
+{
+  int nlatch,lenabled;
+
+  nlatch = (hmap->A_sysvia.portb & 0x07);
+  lenabled = (hmap->A_sysvia.portb & 0x08);
+  switch (nlatch)
+  {
+    case 0x00:
+      /*sound write enable*/
+      hmap->lsoundlatch = lenabled;
+      break;
+    case 0x01:
+      /*read speech*/
+      break;
+    case 0x02:
+      /*write speech*/
+      break;
+    case 0x03:
+      /*keyboard*/
+      if (!lenabled)
+        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      break;
+  }
+}
+
+static inline void systemviaportawrite_nosoundlatchm(HOSTMAP* hmap, uint8_t value)
+{
+  int nlatch,lenabled;
+
+  nlatch = (hmap->A_sysvia.portb & 0x07);
+  lenabled = (hmap->A_sysvia.portb & 0x08);
+  switch (nlatch)
+  {
+    case 0x00:
+      /*sound write enable*/
+      hmap->lsoundlatch = lenabled;
+      break;
+    case 0x01:
+      /*RTC/RAM read write*/
+      hmap->rtc.readwrite = lenabled;
+      if (hmap->rtc.datastrobe && hmap->rtc.readwrite && hmap->rtc.chipselect)
+        cmoswrite(hmap->rtc.addrstrobe, hmap->A_sysvia.porta);
+      break;
+    case 0x02:
+      /*RTC/RAM data strobe*/
+      if (hmap->rtc.datastrobe && hmap->rtc.readwrite && hmap->rtc.chipselect)
+        cmoswrite(hmap->rtc.addrstrobe, hmap->A_sysvia.porta);
+      hmap->rtc.datastrobe = lenabled;
+      break;
+    case 0x03:
+      /*keyboard*/
+      if (!lenabled)
+        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      break;
+  }
+}
+
+struct R6502CPUMAP* systemvia00write_b(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg b*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportbwrite(hmap, value);
+  systemviaportbwrite_latchb(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia00write_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg b*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportbwrite(hmap, value);
+  systemviaportbwrite_latchm(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia00write_nosoundb(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg b*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportbwrite(hmap, value);
+  systemviaportbwrite_nosoundlatchb(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia00write_nosoundm(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg b*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportbwrite(hmap, value);
+  systemviaportbwrite_nosoundlatchm(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia01write_b(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportawrite(hmap, value);
+  systemviaportawrite_latchb(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia01write_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportawrite(hmap, value);
+  systemviaportawrite_latchm(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia01write_nosoundb(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportawrite(hmap, value);
+  systemviaportawrite_nosoundlatchb(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia01write_nosoundm(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportawrite(hmap, value);
+  systemviaportawrite_nosoundlatchm(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia02write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_sysvia.ddrb = value;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia03write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_sysvia.ddra = value;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia04write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*T1 low order latch*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_sysvia.t1ll = value;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia05write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*T1 high order counter*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  intptr_t expiryoffset;
+
+  hmap->A_sysvia.t1lh = value;
+  /*clear T1 interrupt flag (b6)*/
+  hmap->A_sysvia.ifr &= 0xBF;
+  systemviaregistersetirq(hmap);
+  if ((hmap->A_sysvia.acr & 0xC0) == 0x80)
+  {
+    /*output enabled (b7=1) and free-run disabled (b6=0)*/
+    /*one-shot mode*/
+    /*PB7 goes low, but goes high when timer 1 times out*/
+    /*hmap->A_sysvia.orb &= 0x7F;
+    hmap->A_sysvia.irb &= 0x7F;*/
+    hmap->A_sysvia.portb &= 0x7F;
+  }
+  hmap->A_sysvia.t1setint = TRUE;
+  hmap->B_sysvia.t1doubled = (hmap->A_sysvia.t1lh<<9) | (hmap->A_sysvia.t1ll<<1);
+  HOST_GET_1MHZ_PERIPHERAL_TOGO_FROM_WRITE_OFFSET(expiryoffset, hmap, sysvia)
+  hmap->B_sysvia.t1doubled += expiryoffset;
+  // the interrupt flag is set after the counter has passed through zero
+  HOST_LIMIT_PERIPHERAL_CYCLES_TO_GO(hmap, sysvia, hmap->B_sysvia.t1doubled + 2)
+  hmap->A_sysvia.aftert1 = 0;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia06write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*T1 low order latch*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_sysvia.t1ll = value;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia07write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*T1 high order latch*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_sysvia.t1lh = value;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia08write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*T2 low order latch*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_sysvia.t2ll = value;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia09write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*T2 high order counter*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  intptr_t expiryoffset;
+
+  /*clear T2 interrupt flag (bit 5)*/
+  hmap->A_sysvia.ifr &= 0xDF;
+  systemviaregistersetirq(hmap);
+  /*provide a single interrupt*/
+  hmap->A_sysvia.t2setint=TRUE;
+  if (!(hmap->A_sysvia.acr & 0x20))
+  {
+    /*one-shot mode*/
+    hmap->B_sysvia.t2doubled = (value<<9) | (hmap->A_sysvia.t2ll<<1);
+    HOST_GET_1MHZ_PERIPHERAL_TOGO_FROM_WRITE_OFFSET(expiryoffset, hmap, sysvia)
+    hmap->B_sysvia.t2doubled += expiryoffset;
+    // the interrupt flag is set after the counter has passed through zero
+    HOST_LIMIT_PERIPHERAL_CYCLES_TO_GO(hmap, sysvia, hmap->B_sysvia.t2doubled + 2)
+  }
+  else
+  {
+    /*pulse counting mode*/
+    hmap->B_sysvia.t2doubled = (value<<9) | (hmap->A_sysvia.t2ll<<1);
+    /*speech system not available*/
+  }
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Awrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*shift reg*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_sysvia.sr = value;
+  hmap->A_sysvia.ifr &= 0xFB;
+  systemviaregistersetirq(hmap);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Bwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*auxiliary control reg*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  intptr_t expiryoffset;
+
+  if ((hmap->A_sysvia.acr ^ value) & 0x20)
+  {
+    HOST_GET_1MHZ_PERIPHERAL_TOGO_FROM_WRITE_OFFSET(expiryoffset, hmap, sysvia)
+    if (!(value & 0x20))
+    {
+      /*one-shot mode*/
+      hmap->B_sysvia.t2doubled += expiryoffset;
+      HOST_LIMIT_PERIPHERAL_CYCLES_TO_GO(hmap, sysvia, hmap->B_sysvia.t2doubled + 2)
+    }
+    else
+    {
+      /*pulse counting mode*/
+      hmap->B_sysvia.t2doubled -= expiryoffset;
+    }
+  }
+  hmap->A_sysvia.acr = value;
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Cwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*peripheral control reg*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_sysvia.pcr = value;
+  /*CA1 active edge*/
+  if (hmap->A_sysvia.pcr & 0x01)
+  {
+    /*set b2 (CA1)*/
+    hmap->A_sysvia.ifr |= 0x02;
+  }
+  /*CA2 active edge*/
+  if ((hmap->A_sysvia.pcr & 0x0E) == 0x04)
+  {
+    /*set b1 (CA2)*/
+    hmap->A_sysvia.ifr |= 0x01;
+  }
+  /*CB1 active edge*/
+  if (hmap->A_sysvia.pcr & 0x10)
+  {
+    /*set b5 (CB1)*/
+    hmap->A_sysvia.ifr |= 0x10;
+  }
+  /*CB2 active edge*/
+  if ((hmap->A_sysvia.pcr & 0xE0) == 0x40)
+  {
+    /*set b4 (CB2)*/
+    hmap->A_sysvia.ifr |= 0x08;
+  }
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Dwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*interrupt flag reg*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  value &= 0x7F; /*not really needed*/
+  hmap->A_sysvia.ifr &= (~value);
+  systemviaregistersetirq(hmap);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Ewrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*interrupt enable reg*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  if (value & 0x80)
+    hmap->A_sysvia.ier |= value;
+  else
+    hmap->A_sysvia.ier &= (~value);
+  hmap->A_sysvia.ier &= 0x7F;
+  systemviaregistersetirq(hmap);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Fwrite_b(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportawritenohandshake(hmap, value);
+  systemviaportawrite_latchb(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Fwrite_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportawritenohandshake(hmap, value);
+  systemviaportawrite_latchm(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Fwrite_nosoundb(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportawritenohandshake(hmap, value);
+  systemviaportawrite_nosoundlatchb(hmap, value);
+
+  return cmap;
+}
+
+struct R6502CPUMAP* systemvia0Fwrite_nosoundm(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*input/output reg a*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  systemviaportawritenohandshake(hmap, value);
+  systemviaportawrite_nosoundlatchm(hmap, value);
+
+  return cmap;
 }

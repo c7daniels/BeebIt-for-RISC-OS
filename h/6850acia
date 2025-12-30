@@ -6,7 +6,7 @@
  *
  * (C) Copyright Michael J Foot, 1998-2003
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
 #define PARITY_NONE 0
@@ -14,18 +14,18 @@
 #define PARITY_EVEN 2
 
 extern int m6850_bits, m6850_parity, m6850_stop;
-extern int m6850_timer;
-extern int m6850_timerreset;
 
 extern char uef_buffer[0xFF];
 
 extern void aciareset(void);
-extern void aciapoll(void);
+extern HOSTMAP* aciapoll(HOSTMAP* hmap);
 extern void aciaresettimer(void);
-extern char aciaread(int naddress);
-extern void aciawrite(int naddress,int nvalue);
-extern char serialularead(int naddress);
-extern void serialulawrite(int naddress,int nvalue);
+extern struct R6502CPUMAP* acia00read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* acia01read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* acia00write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* acia01write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* serialularead(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* serialulawrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
 extern int uefvalidate(FILE *hfile);
 extern int uefopen(void);
 extern void uefclose(void);

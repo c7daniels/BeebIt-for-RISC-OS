@@ -6,6 +6,15 @@
 ;
 ; Email: <mjfoot@paradise.net.nz>
 ;
+
+  GET h.6502zmaps
+
+  GET h.6502cmaps
+
+  GET h.6502cpus
+
+  GET h.hostmaps
+
 ; Use the GET directive to include register definitions as if typed here
 
   GET     h.RegNames
@@ -20,13 +29,10 @@
 
 ; Import global symbols
 
-  IMPORT |lbreak|
   IMPORT |beebit_exit|
   IMPORT |lprintscreen|
   IMPORT |beebit_trace|
-  IMPORT |memory|
-  IMPORT |shadow|
-  IMPORT |r6502_cyclesmonotonic|
+  IMPORT |hostmap|
 
   IMPORT |systemviasetca2|
 
@@ -39,6 +45,7 @@
   EXPORT |bbcvdu|
   EXPORT |getword|
   EXPORT |setword|
+  EXPORT |swappages|
   EXPORT |breakdisable|
   EXPORT |breakenable|
   EXPORT |escapedisable|
@@ -108,6 +115,21 @@ inttohexb
   STR r1,[r0]
   MOV pc,lr
 
+|swappages|
+;r0=first address
+;r1=second address
+;r2=number of pages
+  STMFD sp!,{r4-r10,lr}
+  MOVS r2,r2,LSL #4
+swappages1
+  LDMEQFD sp!,{r4-r10,pc}
+  LDMIA r0,{r3-r6}
+  LDMIA r1,{r7-r10}
+  STMIA r1!,{r3-r6}
+  STMIA r0!,{r7-r10}
+  SUBS r2,r2,#1
+  B swappages1
+
 |breakdisable|
  ;STMFD sp!,{lr}
   STR lr,[sp, #-4]!
@@ -169,43 +191,31 @@ inttohexb
   LDR pc, [sp], #4
 
 |zeribeepattach|
-  STMFD sp!,{r0-r12,lr}
   SWI XZeriBeep_Attach
-  LDMVSFD sp!,{r0-r12,pc} ;error
-  LDR r12,=zeribeep_writebyte
-  STR r0,[r12]
-  LDR r12,=zeribeep_workspace
-  STR r1,[r12]
-  LDMFD sp!,{r0-r12,pc}
+  MOVVS pc,lr ;error
+  LDR r3, =hostmap
+  STR r0,[r3,#:INDEX:HOST_ZERIBEEPWRITEBYTE]
+  STR r1,[r3,#:INDEX:HOST_ZERIBEEPWORKSPACE]
+  MOV pc,lr
 
 |zeribeepwrite|
-  ;r0=byte to write to SN76489
-  ;r1=6502 cycle count
-  STMFD sp!,{r1,r2,r12,lr}
-  ;STMFD sp!,{r1,r2,r12,lr}
-  ;MOV r10,r0
-  ;BL inttohex4
-  ;MOV r0,#13
-  ;SWI OS_WriteC
-  ;MOV r0,#10
-  ;SWI OS_WriteC
-  ;MOV r0,r10
-
-  LDR r1,=zeribeep_writebyte
-  LDR r2,[r1]
+  ;r0=6502 workspace
+  ;r1=byte to write to SN76489
+  LDR r2,[r0,#:INDEX:HOST_ZERIBEEPWRITEBYTE]
   CMP r2,#0
-  LDMEQFD sp!,{r1,r2,r12,pc} ;error
-
-  LDR r1,=r6502_cyclesmonotonic
-  LDR r1,[r1]
-  LDR r12,=zeribeep_workspace
-  LDR r12,[r12]
-  ;STMFD sp!,{lr}
+  MOVEQ pc,lr ;error
+  MOV r3,r0
+  STMFD sp!,{r0,lr}
+  MOV r0,r1
+  LDR r1,[r3,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
+  LDR r12,[r3,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  SUB r1,r1,r12
+  LDR r12,[r3,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_MONOTONIC]
+  ADD r1,r1,r12
+  LDR r12,[r3,#:INDEX:HOST_ZERIBEEPWORKSPACE]
   MOV lr,pc
   MOV pc,r2
-  ;LDMFD sp!,{lr}
-  ;LDMFD sp!,{r1,r2,r12,pc}
-  LDMFD sp!,{r1,r2,r12,pc}
+  LDMFD sp!,{r0,pc}
 
 |zeribeepdetach|
   SWI XZeriBeep_Detach
@@ -275,10 +285,12 @@ inttohexb
 keyupdownForBreak
   CMP r9,#&80 ;Check for key mapped to Break
   BNE keyupdownF12
-
-  MOV r9,#&FF
-  LDR r11,=lbreak
-  STR r9,[r11]
+  CMP r1,#&00 ;key is up?
+  LDR r11,=hostmap
+  MOVNE r1,#&FF
+  MOVNE r2,#R6502_RESET_TRANSITION
+  STR r1,[r11,#:INDEX:R6502_LBREAK]
+  STRNE r2,[r11,#:INDEX:R6502_TRANSITION1]
   LDMFD sp!,{r0-r3,r8-r12,pc} ;exit
 
 keyupdownF12
@@ -499,11 +511,6 @@ keyrelease1
 ;Data Area
 
   AREA    |C$$data|, DATA
-
-zeribeep_writebyte
-  DCD 0
-zeribeep_workspace
-  DCD 0
 
 screenblankdelay
   DCD 0
