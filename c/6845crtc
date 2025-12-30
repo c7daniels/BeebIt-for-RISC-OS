@@ -6,14 +6,14 @@
  *
  * (C) Copyright Michael J Foot, 1998-2003
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
-#include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
-#include "6502cpu.h"
-#include "6845crtc.h"
 #include "beebit.h"
+#include "host.h"
+#include "6845crtc.h"
 #include "main.h"
 #include "video.h"
 #include "videoula.h"
@@ -23,7 +23,7 @@
 /*extern int nlocalscreen;*/
 
 /*Motorola 6845 CRTC*/
-char m6845_r[18]; /*18 registers*/
+unsigned char m6845_r[18]; /*18 registers*/
 int m6845_vt;
 int m6845_sl;
 int m6845_slplus;
@@ -97,96 +97,31 @@ void crtcreset(void)
   /*xxx = 0;*/
 }
 
-char crtcread(int naddress)
+struct R6502CPUMAP* crtc00read(struct R6502CPUMAP* cmap, uintptr_t address_code)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
-
-  naddress &= 1;
-  if (naddress == 0)
-    return (0); /*m6845_addressreg;*/
-  else
-  {
-    /*cannot read R0-R11*/
-    if (m6845_addressreg < 12)
-      return (0);
-    else
-      return (m6845_r[m6845_addressreg]);
-  }
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = (0); /*m6845_addressreg;*/
+  return cmap;
 }
 
-void crtcwrite(int naddress,int nvalue)
+struct R6502CPUMAP* crtc01read(struct R6502CPUMAP* cmap, uintptr_t address_code)
 {
-  int ntotal;
-  /*read/write to slow 1MHz device takes 2 cycles instead of one*/
-  /*but it may be out of synchronisaton with the CPU,*/
-  /*so a single cycle is used to synchronise instead*/
-  ntotal = (r6502_cyclesoriginal-r6502_cyclestogo) + r6502_cycle;
-  if (ntotal & 1)
-    r6502_cyclestogo -= 3;
-  else
-    r6502_cyclestogo -= 2;
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = (m6845_r[m6845_addressreg]);
+  return cmap;
+}
 
-  #ifdef __DEVELOPxx__
-    int i;
-  #endif
-  /*bbcvdu(67);
-  inttohex4(naddress);
-  bbcvdu(32);
-  inttohex4(nvalue);
-  bbcvdu(13);
-  bbcvdu(10);*/
+struct R6502CPUMAP* crtc00write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  m6845_addressreg = value;
+  return cmap;
+}
 
-  /*fprintf(htrace,"CRTCWRITE(&%X,&%X)\n",naddress,nvalue);*/
-  naddress &= 0x01;
-  if (naddress == 0)
-  {
-    m6845_addressreg = nvalue;
-    return;
-  }
+struct R6502CPUMAP* crtc01write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
   if (m6845_addressreg < 16)
     /*cannot write R16-R17*/
-    m6845_r[m6845_addressreg] = nvalue;
-
-  #ifdef __DEVELOPxx__
-    if (m6845_addressreg < 12)
-    {
-      for (i=0;i<12;i++)
-      {
-        if (i == m6845_addressreg)
-          fprintf(htrace,"(%u) ",m6845_r[i]);
-        else
-          fprintf(htrace,"%u ",m6845_r[i]);
-      }
-      fprintf(htrace,"\n");
-    }
-  #endif
-  /*if (m6845_addressreg < 14)
-  {
-    inttohex4(video_scanline);
-    bbcvdu(32);
-    for (i=0;i<14;i++)
-    {
-      if (i == m6845_addressreg)
-      {
-        bbcvdu(40);
-        inttohex4(m6845_r[i]);
-        bbcvdu(41);
-      }
-      else
-        inttohex4(m6845_r[i]);
-      bbcvdu(32);
-    }
-    bbcvdu(13);
-    bbcvdu(10);
-  }*/
+    m6845_r[m6845_addressreg] = value;
 
   switch (m6845_addressreg)
   {
@@ -202,7 +137,7 @@ void crtcwrite(int naddress,int nvalue)
       /*number of characters displayed per horizontal line*/
       /*mode 0,1,2,3 = 80 (fast clock)*/
       /*mode 4,5,6,7 = 40 (slow clock)*/
-      m6845_screenwidth = nvalue;
+      m6845_screenwidth = value;
       video_width = m6845_screenwidth << 3; /*multiply by 8*/
       crtcteletextwidthextra();
       crtcwidthextra();
@@ -212,33 +147,33 @@ void crtcwrite(int naddress,int nvalue)
       /*position of the HSYNC on the horizonal line*/
       /*in terms of the character location number on the line*/
       /*determines the left-to-right location of the displayed text*/
-      m6845_hsp = nvalue;
+      m6845_hsp = value;
       break;
     case 3:
       /*8 bit*/
       /*width of HSYNC = b0-b3*/
       /*width of VSYNC = b4-b7*/
-      m6845_hsw = (nvalue & 0x0F);
-      m6845_vsw = (nvalue>>4);
+      m6845_hsw = (value & 0x0F);
+      m6845_vsw = (value>>4);
       if (m6845_vsw == 0)
         m6845_vsw = 0x10;
       break;
     case 4:
       /*total vertical size of the screen*/
-      m6845_vt = (nvalue+1);
+      m6845_vt = (value+1);
       crtcvertical();
       break;
     case 5:
-      m6845_adj = (nvalue & 31);
+      m6845_adj = (value & 31);
       crtcvertical();
       break;
     case 6:
-      m6845_vd = nvalue;
+      m6845_vd = value;
       crtcvertical();
       break;
     case 7:
       /*for character lines video*/
-      m6845_vsp = nvalue;
+      m6845_vsp = value;
       crtcvertical();
       break;
     case 8:
@@ -258,10 +193,10 @@ void crtcwrite(int naddress,int nvalue)
       /* 0  1=One character delay*/
       /* 1  0=Two character delay*/
       /* 1  1=Disable cursor output*/
-      m6845_interlaceon = (nvalue & 0x01);
-      m6845_interlacesl = (nvalue & 0x03) == 0x03;
-      m6845_displayskew = (nvalue & 0x30)>>4;
-      m6845_cursorskew = (nvalue & 0xC0)>>6;
+      m6845_interlaceon = (value & 0x01);
+      m6845_interlacesl = (value & 0x03) == 0x03;
+      m6845_displayskew = (value & 0x30)>>4;
+      m6845_cursorskew = (value & 0xC0)>>6;
       m6845_scstep = m6845_interlacesl+1;
       m6845_slplus = m6845_sl+m6845_scstep;
       /*if (!m6845_interlaceon)
@@ -283,7 +218,7 @@ void crtcwrite(int naddress,int nvalue)
     case 9:
       /*5 bit*/
       /*number of scan lines per character row*/
-      m6845_sl = (nvalue & 0x1F);
+      m6845_sl = (value & 0x1F);
       m6845_slplus = m6845_sl+m6845_scstep;
       crtcvertical();
       break;
@@ -292,29 +227,29 @@ void crtcwrite(int naddress,int nvalue)
       /*bit 5 =0 blink every 16 v blanks*/
       /*      =1 blink every 32 v blanks*/
       /*bits 4-0 = cursor start line*/
-      cursor_nondisplay = ((nvalue & 0x60) == 0x20);
-      /*fprintf(htrace,"CUR B:&%X-&%X\n",(nvalue & 0x60),cursor_nondisplay);*/
-      cursor_blink = (nvalue & 0x40);
+      cursor_nondisplay = ((value & 0x60) == 0x20);
+      /*fprintf(htrace,"CUR B:&%X-&%X\n",(value & 0x60),cursor_nondisplay);*/
+      cursor_blink = (value & 0x40);
       if (lteletextmode)
         cursor_blinktime = 25;
       else
       {
-        if (nvalue & 0x20)
+        if (value & 0x20)
           cursor_blinktime = 15; /*32 (16-1)*/
         else
           cursor_blinktime = 7; /*16 (8-1)*/
       }
-      cursor_start = (nvalue & 31);
+      cursor_start = (value & 31);
       cursor_show = (!cursor_nondisplay AND cursor_width > 0);
       /*cursor_show = !(cursor_nondisplay);*/
       break;
     case 11:
-      cursor_end = (nvalue & 31);
+      cursor_end = (value & 31);
       /*fprintf(htrace,"Cend=&%X\n",cursor_end);*/
       break;
     case 12:
       /*screen start address hi (b0-b6)*/
-      m6845_r[12] = (nvalue & 0x3F);
+      m6845_r[12] = (value & 0x3F);
       crtcscreen();
       crtccursor();
       break;
@@ -333,6 +268,7 @@ void crtcwrite(int naddress,int nvalue)
       /*cannot write R16-R17*/
       break;
   }
+  return cmap;
 }
 
 void crtcteletextwidthextra(void)

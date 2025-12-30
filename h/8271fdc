@@ -4,7 +4,7 @@
  *
  * (C) Copyright Michael J Foot, 1998-2000
  *
- * Email: <mikef@voyager.co.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
 #define DFS_SECTORS_PER_TRACK 10
@@ -23,28 +23,15 @@
 typedef char I8271_REMOVED_DATA[ADFS_SECTOR_SIZE > DFS_SECTOR_SIZE ? ADFS_SECTOR_SIZE : DFS_SECTOR_SIZE];
 
 /*Intel 8271*/
-/*extern int i8271_writeprotect[2];*/
-extern char i8271_commandreg;
-extern char i8271_statusreg;
-extern char i8271_resultreg;
-extern char i8271_datareg;
-extern char i8271_select;
-extern char i8271_scansector;
-extern char i8271_scancountmsb;
-extern char i8271_scancountlsb;
-extern char i8271_currenttrack[2];
-extern char i8271_modereg;
-extern char i8271_outputport;
-extern char i8271_inputport;
-extern char i8271_badtrack[2][2]; /*drive,track*/
-extern char i8271_parameter[16]; /*heaps more than we need*/
 extern char i8271_data[0x1000]; /*hope we don't get any sectors > 4096 bytes*/
-extern int i8271_timer;
-extern int i8271_writestart; /*indicates when writing starts*/
 
-extern void i8271readimage(FILE *hfile, int nlocation, int nlength);
+extern void i8271readimage(FILE *hfile, intptr_t nlocation, intptr_t nlength);
 extern void i8271reset(void);
-extern void i8271poll(void);
-extern char i8271read(int naddress);
-extern void i8271write(int naddress, char nvalue);
-extern void i8271closedown(void);
+extern HOSTMAP* i8271poll(HOSTMAP* hmap);
+extern struct R6502CPUMAP* i8271statusread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* i8271resultread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* i8271dataread(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* i8271commandwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* i8271parameterwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* i8271resetwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* i8271datawrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);

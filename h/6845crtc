@@ -6,11 +6,11 @@
  *
  * (C) Copyright Michael J Foot, 1998-2000
  *
- * Email: <mikef@voyager.co.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
 /*Motorola 6845 CRTC*/
-extern char m6845_r[18]; /*18 registers*/
+extern unsigned char m6845_r[18]; /*18 registers*/
 extern int m6845_vt;
 extern int m6845_sl;
 extern int m6845_slplus;
@@ -55,12 +55,14 @@ extern int cursor_timer;
 extern int cursor_on;
 extern int cursor_blinktime;
 
-void crtcreset(void);
-char crtcread(int Address);
-void crtcwrite(int Address,int Value);
-void crtcteletextwidthextra(void);
-void crtcwidthextra(void);
-void crtchorizontal(void);
-void crtcvertical(void);
-void crtcscreen(void);
-void crtccursor(void);
+extern void crtcreset(void);
+extern struct R6502CPUMAP* crtc00read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* crtc01read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* crtc00write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern struct R6502CPUMAP* crtc01write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern void crtcteletextwidthextra(void);
+extern void crtcwidthextra(void);
+extern void crtchorizontal(void);
+extern void crtcvertical(void);
+extern void crtcscreen(void);
+extern void crtccursor(void);

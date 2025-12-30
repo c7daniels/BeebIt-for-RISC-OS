@@ -77,16 +77,13 @@ void gobeebit(void);
 
 /* LIBRARIES */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "6502cpu.h"
-#include "6522sysvia.h"
-#include "6522usrvia.h"
-#include "6845crtc.h"
+#include "beebit.h"
+#include "host.h"
 #include "6850acia.h"
 #include "8271fdc.h"
-#include "beebit.h"
+#include "main.h"
 #include "sheila.h"
 #include "swis.h"
 #include "kernel.h"
@@ -96,7 +93,6 @@ void gobeebit(void);
 #include "snapshots.h"
 #include "video.h"
 #include "videoscale.h"
-#include "videoula.h"
 
 /* STRUCTURES */
 
@@ -134,26 +130,6 @@ int nconfigdiscid[0x04] = {4,9,6,11};
 char cbintohex[0x10] = {48,49,50,51,52,53,54,55,56,57,65,66,67,68,69,70};
 
 /*INTERNAL FUNCTIONS*/
-
-#ifndef __RISCOS__
-void setword(char *cblock,int nvalue)
-{
-  cblock[0] = (nvalue & 0xFF);
-  cblock[1] = (nvalue & 0xFF00) >> 8;
-  cblock[2] = (nvalue & 0xFF0000) >> 16;
-  cblock[3] = (nvalue & 0xFF000000) >> 24;
-}
-
-int getword(char *cblock)
-{
-  int nreturn;
-  nreturn = cblock[0];
-  nreturn += (cblock[1] << 8);
-  nreturn += (cblock[2] << 16);
-  nreturn += (cblock[3] << 24);
-  return nreturn;
-}
-#endif
 
 void itoa(int nvalue,char *cbuffer)
 {
@@ -625,18 +601,17 @@ int snapshotsave(void)
   for (i=0;i<0x210 -sizeof(writehdr);i++) //fill header up to 0x210
     wimpputc(0);
 
-  wimpwrite(memory,1,0x8000);
+  wimpwrite(hostmap.memory,1,0x8000);
   return TRUE;
 }
 
 int memorysave(void)
 {
-  if (beebit_machinetype != MACHINE_MODELB)
     copyselectedromintomemory();
 /* jdl** changed so bbc b saves only 64k*/
-    wimpwrite(memory,1,0x10000);
+    wimpwrite(hostmap.memory,1,0x10000);
     if (beebit_machinetype !=MACHINE_MODELB)
-      wimpwrite(shadow,1,0x8000);
+      wimpwrite(hostmap.shadow,1,0x8000);
   return TRUE;
 }
 
@@ -1609,7 +1584,6 @@ void gobeebit(void)
   if (lredraw)
   {
     /*rename lexit to beebit_exit- set by F12*/
-    /*have a beebit_yield var -set by poll needed*/
     /*loop until lexit*/
     beebit_exit = FALSE;
     do

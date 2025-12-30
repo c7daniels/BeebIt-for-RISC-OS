@@ -2,30 +2,22 @@
 ;
 ; BeebIt - BBC Micro Model B Emulator
 ;
-; (C) Copyright Michael J Foot, 1998-1999
+; Cycle-level CPU emulation
 ;
-; Email: <mikef@voyager.co.nz>
+; (C) Copyright Crispian Daniels, 2025
 ;
-; r12=pointer to variable
-; r11=pointer to variable
-; r10=pointer to variable
-; r9=PC
-; r8=PS
-; r7=Y
-; r6=X
-; r5=A
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+  GET h.6502zmaps
+
+  GET h.6502cmaps
 
   GET h.6502cpus
-
-  GET h.6502cpui
 
 ; Use the GET directive to include register definitions as if typed here
 
   GET h.RegNames
-
-; Use the GET directive to include a list of SWI names as if typed here
-
-  GET h.SWInames
 
 ; Area name C$$code advisable as wanted to link with C output
 
@@ -33,984 +25,2461 @@
 
 ; Import global symbols
 
-  IMPORT r6502opcode00
-  IMPORT r6502opcode01
-  IMPORT r6502opcode02
-  IMPORT r6502opcode03
-  IMPORT r6502opcode04
-  IMPORT r6502opcode05
-  IMPORT r6502opcode06
-  IMPORT r6502opcode07
-  IMPORT r6502opcode08
-  IMPORT r6502opcode09
-  IMPORT r6502opcode0A
-  IMPORT r6502opcode0B
-  IMPORT r6502opcode0C
-  IMPORT r6502opcode0D
-  IMPORT r6502opcode0E
-  IMPORT r6502opcode0F
-  IMPORT r6502opcode10
-  IMPORT r6502opcode11
-  IMPORT r6502opcode12
-  IMPORT r6502opcode13
-  IMPORT r6502opcode14
-  IMPORT r6502opcode15
-  IMPORT r6502opcode16
-  IMPORT r6502opcode17
-  IMPORT r6502opcode18
-  IMPORT r6502opcode19
-  IMPORT r6502opcode1A
-  IMPORT r6502opcode1B
-  IMPORT r6502opcode1C
-  IMPORT r6502opcode1D
-  IMPORT r6502opcode1E
-  IMPORT r6502opcode1F
-  IMPORT r6502opcode20
-  IMPORT r6502opcode21
-  IMPORT r6502opcode22
-  IMPORT r6502opcode23
-  IMPORT r6502opcode24
-  IMPORT r6502opcode25
-  IMPORT r6502opcode26
-  IMPORT r6502opcode27
-  IMPORT r6502opcode28
-  IMPORT r6502opcode29
-  IMPORT r6502opcode2A
-  IMPORT r6502opcode2B
-  IMPORT r6502opcode2C
-  IMPORT r6502opcode2D
-  IMPORT r6502opcode2E
-  IMPORT r6502opcode2F
-  IMPORT r6502opcode30
-  IMPORT r6502opcode31
-  IMPORT r6502opcode32
-  IMPORT r6502opcode33
-  IMPORT r6502opcode34
-  IMPORT r6502opcode35
-  IMPORT r6502opcode36
-  IMPORT r6502opcode37
-  IMPORT r6502opcode38
-  IMPORT r6502opcode39
-  IMPORT r6502opcode3A
-  IMPORT r6502opcode3B
-  IMPORT r6502opcode3C
-  IMPORT r6502opcode3D
-  IMPORT r6502opcode3E
-  IMPORT r6502opcode3F
-  IMPORT r6502opcode40
-  IMPORT r6502opcode41
-  IMPORT r6502opcode42
-  IMPORT r6502opcode43
-  IMPORT r6502opcode44
-  IMPORT r6502opcode45
-  IMPORT r6502opcode46
-  IMPORT r6502opcode47
-  IMPORT r6502opcode48
-  IMPORT r6502opcode49
-  IMPORT r6502opcode4A
-  IMPORT r6502opcode4B
-  IMPORT r6502opcode4C
-  IMPORT r6502opcode4D
-  IMPORT r6502opcode4E
-  IMPORT r6502opcode4F
-  IMPORT r6502opcode50
-  IMPORT r6502opcode51
-  IMPORT r6502opcode52
-  IMPORT r6502opcode53
-  IMPORT r6502opcode54
-  IMPORT r6502opcode55
-  IMPORT r6502opcode56
-  IMPORT r6502opcode57
-  IMPORT r6502opcode58
-  IMPORT r6502opcode59
-  IMPORT r6502opcode5A
-  IMPORT r6502opcode5B
-  IMPORT r6502opcode5C
-  IMPORT r6502opcode5D
-  IMPORT r6502opcode5E
-  IMPORT r6502opcode5F
-  IMPORT r6502opcode60
-  IMPORT r6502opcode61
-  IMPORT r6502opcode62
-  IMPORT r6502opcode63
-  IMPORT r6502opcode64
-  IMPORT r6502opcode65
-  IMPORT r6502opcode66
-  IMPORT r6502opcode67
-  IMPORT r6502opcode68
-  IMPORT r6502opcode69
-  IMPORT r6502opcode6A
-  IMPORT r6502opcode6B
-  IMPORT r6502opcode6C
-  IMPORT r6502opcode6D
-  IMPORT r6502opcode6E
-  IMPORT r6502opcode6F
-  IMPORT r6502opcode70
-  IMPORT r6502opcode71
-  IMPORT r6502opcode72
-  IMPORT r6502opcode73
-  IMPORT r6502opcode74
-  IMPORT r6502opcode75
-  IMPORT r6502opcode76
-  IMPORT r6502opcode77
-  IMPORT r6502opcode78
-  IMPORT r6502opcode79
-  IMPORT r6502opcode7A
-  IMPORT r6502opcode7B
-  IMPORT r6502opcode7C
-  IMPORT r6502opcode7D
-  IMPORT r6502opcode7E
-  IMPORT r6502opcode7F
-  IMPORT r6502opcode80
-  IMPORT r6502opcode81
-  IMPORT r6502opcode82
-  IMPORT r6502opcode83
-  IMPORT r6502opcode84
-  IMPORT r6502opcode85
-  IMPORT r6502opcode86
-  IMPORT r6502opcode87
-  IMPORT r6502opcode88
-  IMPORT r6502opcode89
-  IMPORT r6502opcode8A
-  IMPORT r6502opcode8B
-  IMPORT r6502opcode8C
-  IMPORT r6502opcode8D
-  IMPORT r6502opcode8E
-  IMPORT r6502opcode8F
-  IMPORT r6502opcode90
-  IMPORT r6502opcode91
-  IMPORT r6502opcode92
-  IMPORT r6502opcode93
-  IMPORT r6502opcode94
-  IMPORT r6502opcode95
-  IMPORT r6502opcode96
-  IMPORT r6502opcode97
-  IMPORT r6502opcode98
-  IMPORT r6502opcode99
-  IMPORT r6502opcode9A
-  IMPORT r6502opcode9B
-  IMPORT r6502opcode9C
-  IMPORT r6502opcode9D
-  IMPORT r6502opcode9E
-  IMPORT r6502opcode9F
-  IMPORT r6502opcodeA0
-  IMPORT r6502opcodeA1
-  IMPORT r6502opcodeA2
-  IMPORT r6502opcodeA3
-  IMPORT r6502opcodeA4
-  IMPORT r6502opcodeA5
-  IMPORT r6502opcodeA6
-  IMPORT r6502opcodeA7
-  IMPORT r6502opcodeA8
-  IMPORT r6502opcodeA9
-  IMPORT r6502opcodeAA
-  IMPORT r6502opcodeAB
-  IMPORT r6502opcodeAC
-  IMPORT r6502opcodeAD
-  IMPORT r6502opcodeAE
-  IMPORT r6502opcodeAF
-  IMPORT r6502opcodeB0
-  IMPORT r6502opcodeB1
-  IMPORT r6502opcodeB2
-  IMPORT r6502opcodeB3
-  IMPORT r6502opcodeB4
-  IMPORT r6502opcodeB5
-  IMPORT r6502opcodeB6
-  IMPORT r6502opcodeB7
-  IMPORT r6502opcodeB8
-  IMPORT r6502opcodeB9
-  IMPORT r6502opcodeBA
-  IMPORT r6502opcodeBB
-  IMPORT r6502opcodeBC
-  IMPORT r6502opcodeBD
-  IMPORT r6502opcodeBE
-  IMPORT r6502opcodeBF
-  IMPORT r6502opcodeC0
-  IMPORT r6502opcodeC1
-  IMPORT r6502opcodeC2
-  IMPORT r6502opcodeC3
-  IMPORT r6502opcodeC4
-  IMPORT r6502opcodeC5
-  IMPORT r6502opcodeC6
-  IMPORT r6502opcodeC7
-  IMPORT r6502opcodeC8
-  IMPORT r6502opcodeC9
-  IMPORT r6502opcodeCA
-  IMPORT r6502opcodeCB
-  IMPORT r6502opcodeCC
-  IMPORT r6502opcodeCD
-  IMPORT r6502opcodeCE
-  IMPORT r6502opcodeCF
-  IMPORT r6502opcodeD0
-  IMPORT r6502opcodeD1
-  IMPORT r6502opcodeD2
-  IMPORT r6502opcodeD3
-  IMPORT r6502opcodeD4
-  IMPORT r6502opcodeD5
-  IMPORT r6502opcodeD6
-  IMPORT r6502opcodeD7
-  IMPORT r6502opcodeD8
-  IMPORT r6502opcodeD9
-  IMPORT r6502opcodeDA
-  IMPORT r6502opcodeDB
-  IMPORT r6502opcodeDC
-  IMPORT r6502opcodeDD
-  IMPORT r6502opcodeDE
-  IMPORT r6502opcodeDF
-  IMPORT r6502opcodeE0
-  IMPORT r6502opcodeE1
-  IMPORT r6502opcodeE2
-  IMPORT r6502opcodeE3
-  IMPORT r6502opcodeE4
-  IMPORT r6502opcodeE5
-  IMPORT r6502opcodeE6
-  IMPORT r6502opcodeE7
-  IMPORT r6502opcodeE8
-  IMPORT r6502opcodeE9
-  IMPORT r6502opcodeEA
-  IMPORT r6502opcodeEB
-  IMPORT r6502opcodeEC
-  IMPORT r6502opcodeED
-  IMPORT r6502opcodeEE
-  IMPORT r6502opcodeEF
-  IMPORT r6502opcodeF0
-  IMPORT r6502opcodeF1
-  IMPORT r6502opcodeF2
-  IMPORT r6502opcodeF3
-  IMPORT r6502opcodeF4
-  IMPORT r6502opcodeF5
-  IMPORT r6502opcodeF6
-  IMPORT r6502opcodeF7
-  IMPORT r6502opcodeF8
-  IMPORT r6502opcodeF9
-  IMPORT r6502opcodeFA
-  IMPORT r6502opcodeFB
-  IMPORT r6502opcodeFC
-  IMPORT r6502opcodeFD
-  IMPORT r6502opcodeFE
-  IMPORT r6502opcodeFF
-
-  IMPORT |memory|
-  IMPORT |r6502_sp|
-  IMPORT |r6502_pc|
-  IMPORT |r6502_ps|
-  IMPORT |r6502_a|
-  IMPORT |r6502_x|
-  IMPORT |r6502_y|
-  IMPORT |r6502_cyclestogo|
-  IMPORT |r6502read|
-  IMPORT |beebit_trace|
-  IMPORT |beebit_romsel|
-  IMPORT |beebit_acccon|
-
 ; Export global symbols
 
-  EXPORT |r6502loadregs|
-  EXPORT |r6502saveregs|
-  EXPORT |r6502execute|
-  ;EXPORT |r6502adc|
-  ;EXPORT |r6502sbc|
-  EXPORT |r6502irq|
-  EXPORT |r6502nmi|
-  ;EXPORT |constFFFFFFFF|
-  EXPORT |r6502opcodes|
+  EXPORT |r6502invokeaddressing|
+  EXPORT |r6502cyclereadmappedreturn|
+  EXPORT |r6502cyclereadspecialreturn|
+  EXPORT |r6502cyclestretch1readspecialreturn|
+  EXPORT |r6502cyclestretch2readspecialreturn|
+  EXPORT |r6502cyclereadspecialpopreturn|
+  EXPORT |r6502cyclestretch1readspecialpopreturn|
+  EXPORT |r6502cyclestretch2readspecialpopreturn|
+  EXPORT |r6502cyclediscardmappedreturn|
+  EXPORT |r6502cyclediscardspecialreturn|
+  EXPORT |r6502cyclestretch1discardspecialreturn|
+  EXPORT |r6502cyclestretch2discardspecialreturn|
+  EXPORT |r6502cyclediscardspecialpopreturn|
+  EXPORT |r6502cyclestretch1discardspecialpopreturn|
+  EXPORT |r6502cyclestretch2discardspecialpopreturn|
+  EXPORT |r6502cyclewritemappedreturn|
+  EXPORT |r6502cyclewritespecialreturn|
+  EXPORT |r6502cyclestretch1writespecialreturn|
+  EXPORT |r6502cyclestretch2writespecialreturn|
+  EXPORT |r6502cyclewritespecialpopreturn|
+  EXPORT |r6502cyclestretch1writespecialpopreturn|
+  EXPORT |r6502cyclestretch2writespecialpopreturn|
+  EXPORT |r6502completecyclefetchreturn|
+  EXPORT |r6502cyclefetchmappedreturn|
+  EXPORT |r6502cyclefetchspecialreturn|
+  EXPORT |r6502cyclefetchafterreadspecial|
+  EXPORT |r6502cyclestretch1fetchspecialreturn|
+  EXPORT |r6502cyclestretch2fetchspecialreturn|
+  EXPORT |r6502cyclefetchspecialpopreturn|
+  EXPORT |r6502cyclestretch1fetchspecialpopreturn|
+  EXPORT |r6502cyclestretch2fetchspecialpopreturn|
+  EXPORT |r6502completecycleearlyinterruptfetchreturn|
+  EXPORT |r6502cycleearlyinterruptfetchmappedreturn|
+  EXPORT |r6502cycleearlyinterruptfetchspecialreturn|
+  EXPORT |r6502cycleearlyinterruptfetchafterreadspecial|
+  EXPORT |r6502cycleearlyinterruptstretch1fetchspecialreturn|
+  EXPORT |r6502cycleearlyinterruptstretch2fetchspecialreturn|
+  EXPORT |r6502cycleearlyinterruptfetchspecialpopreturn|
+  EXPORT |r6502cycleearlyinterruptstretch1fetchspecialpopreturn|
+  EXPORT |r6502cycleearlyinterruptstretch2fetchspecialpopreturn|
+  EXPORT |r6502completecycleinterruptfetchreturn|
+  EXPORT |r6502cycleinterruptfetchmappedreturn|
+  EXPORT |r6502cycleinterruptfetchspecialreturn|
+  EXPORT |r6502cycleinterruptfetchafterreadspecial|
+  EXPORT |r6502cycleinterruptstretch1fetchspecialreturn|
+  EXPORT |r6502cycleinterruptstretch2fetchspecialreturn|
+  EXPORT |r6502cycleinterruptfetchspecialpopreturn|
+  EXPORT |r6502cycleinterruptstretch1fetchspecialpopreturn|
+  EXPORT |r6502cycleinterruptstretch2fetchspecialpopreturn|
+  EXPORT |r6502toimmediatestep|
+  EXPORT |r6502operandstep|
+  EXPORT |r6502nopstep|
+  EXPORT |r6502clcstep|
+  EXPORT |r6502secstep|
+  EXPORT |r6502clistep|
+  EXPORT |r6502seistep|
+  EXPORT |r6502cldstep|
+  EXPORT |r6502sedstep|
+  EXPORT |r6502clvstep|
+  EXPORT |r6502taxstep|
+  EXPORT |r6502taystep|
+  EXPORT |r6502txastep|
+  EXPORT |r6502txsstep|
+  EXPORT |r6502tyastep|
+  EXPORT |r6502tsxstep|
+  EXPORT |r6502pulledastep|
+  EXPORT |r6502pulledpstep|
+  EXPORT |r6502hltstep|
+  EXPORT |r6502beforepullstep|
+  EXPORT |r6502topullstep|
+  EXPORT |r6502breadcrumbloadzpgstep|
+  EXPORT |r6502loadzpgstep|
+  EXPORT |r6502breadcrumblatchabslostep|
+  EXPORT |r6502latchabslostep|
+  EXPORT |r6502breadcrumbloadabsstep|
+  EXPORT |r6502loadabsstep|
+  EXPORT |r6502breadcrumblatchzpgindlostep|
+  EXPORT |r6502latchzpgindlostep|
+  EXPORT |r6502breadcrumbloadzpgxstep|
+  EXPORT |r6502loadzpgxstep|
+  EXPORT |r6502loadzpgystep|
+  EXPORT |r6502loadabsxstep|
+  EXPORT |r6502loadabsystep|
+  EXPORT |r6502linearloadabsxstep|
+  EXPORT |r6502linearloadabsystep|
+  EXPORT |r6502fixindexedstep|
+  EXPORT |r6502bitstep|
+  EXPORT |r6502orastep|
+  EXPORT |r6502andstep|
+  EXPORT |r6502eorstep|
+  EXPORT |r6502adcstep|
+  EXPORT |r6502ldastep|
+  EXPORT |r6502ldxstep|
+  EXPORT |r6502ldystep|
+  EXPORT |r6502cmpstep|
+  EXPORT |r6502cpxstep|
+  EXPORT |r6502cpystep|
+  EXPORT |r6502sbcstep|
+  EXPORT |r6502skipstep|
+  EXPORT |r6502laxstep|
+  EXPORT |r6502lasstep|
+  EXPORT |r6502ancstep|
+  EXPORT |r6502alrstep|
+  EXPORT |r6502arrstep|
+  EXPORT |r6502xaastep|
+  EXPORT |r6502oalstep|
+  EXPORT |r6502sbxstep|
+  EXPORT |r6502tozpgmodifystep|
+  EXPORT |r6502tomodifystep|
+  EXPORT |r6502aslastep|
+  EXPORT |r6502aslzpgstep|
+  EXPORT |r6502aslstep|
+  EXPORT |r6502rolastep|
+  EXPORT |r6502rolzpgstep|
+  EXPORT |r6502rolstep|
+  EXPORT |r6502lsrastep|
+  EXPORT |r6502lsrzpgstep|
+  EXPORT |r6502lsrstep|
+  EXPORT |r6502rorastep|
+  EXPORT |r6502rorzpgstep|
+  EXPORT |r6502rorstep|
+  EXPORT |r6502dexstep|
+  EXPORT |r6502deystep|
+  EXPORT |r6502deczpgstep|
+  EXPORT |r6502decstep|
+  EXPORT |r6502inxstep|
+  EXPORT |r6502inystep|
+  EXPORT |r6502inczpgstep|
+  EXPORT |r6502incstep|
+  EXPORT |r6502asozpgstep|
+  EXPORT |r6502asostep|
+  EXPORT |r6502rlazpgstep|
+  EXPORT |r6502rlastep|
+  EXPORT |r6502lsezpgstep|
+  EXPORT |r6502lsestep|
+  EXPORT |r6502rrazpgstep|
+  EXPORT |r6502rrastep|
+  EXPORT |r6502dcpzpgstep|
+  EXPORT |r6502dcpstep|
+  EXPORT |r6502isbzpgstep|
+  EXPORT |r6502isbstep|
+  EXPORT |r6502topushpstep|
+  EXPORT |r6502topushastep|
+  EXPORT |r6502loadzpgtostastep|
+  EXPORT |r6502loadabstostastep|
+  EXPORT |r6502loadzpgxtostastep|
+  EXPORT |r6502fixindexedtostastep|
+  EXPORT |r6502loadzpgtostxstep|
+  EXPORT |r6502loadabstostxstep|
+  EXPORT |r6502loadzpgytostxstep|
+  EXPORT |r6502loadzpgtostystep|
+  EXPORT |r6502loadabstostystep|
+  EXPORT |r6502loadzpgxtostystep|
+  EXPORT |r6502loadzpgtosaxstep|
+  EXPORT |r6502loadzpgytosaxstep|
+  EXPORT |r6502loadabstosaxstep|
+  EXPORT |r6502fixindexedtoaxastep|
+  EXPORT |r6502fixindexedtoxasstep|
+  EXPORT |r6502fixindexedtosaystep|
+  EXPORT |r6502fixindexedtotasstep|
+  EXPORT |r6502pushedstep|
+  EXPORT |r6502bplstep|
+  EXPORT |r6502bmistep|
+  EXPORT |r6502bvcstep|
+  EXPORT |r6502bvsstep|
+  EXPORT |r6502bccstep|
+  EXPORT |r6502bcsstep|
+  EXPORT |r6502bnestep|
+  EXPORT |r6502beqstep|
+  EXPORT |r6502branchtakenstep|
+  EXPORT |r6502fixbranchtakenstep|
+  EXPORT |r6502latchjmpabsindlostep|
+  EXPORT |r6502loadpchstep|
+  EXPORT |r6502waitonresetstep|
+  EXPORT |r6502resetstep|
+  EXPORT |r6502nooperandstep|
+  EXPORT |r6502notpushedtonotpushstep|
+  EXPORT |r6502breadcrumbnotpushedtoresetlostep|
+  EXPORT |r6502pushedtobrkpushpclstep|
+  EXPORT |r6502pushedtopushpclstep|
+  EXPORT |r6502pushedtopushpstep|
+  EXPORT |r6502pushedtopushpwithoutbstep|
+  EXPORT |r6502breadcrumbpushedtointerruptlostep|
+  EXPORT |r6502latchveclostep|
+  EXPORT |r6502tobrkpushpchstep|
+  EXPORT |r6502topushpchstep|
+  EXPORT |r6502latchabslobeforepushstep|
+  EXPORT |r6502tojsrpushpchstep|
+  EXPORT |r6502pushedtojsrpushpclstep|
+  EXPORT |r6502pushedtoloadpchstep|
+  EXPORT |r6502pulledptopullstep|
+  EXPORT |r6502pulledpclstep|
+  EXPORT |r6502loadpchtoincrementstep|
+  EXPORT |r6502midstretchstep|
+  EXPORT |r6502stretchedreadstep|
+  EXPORT |r6502stretcheddiscardstep|
+  EXPORT |r6502stretchedwritestep|
+  EXPORT |r6502yieldstep|
+  EXPORT |r6502startyield|
 
-|r6502loadregs|
-  ;STMFD sp!,{lr}
+  ASSERT :INDEX:R6502ZONE_AC == &0
+  ASSERT :INDEX:R6502ZONE_BC == &108
+  ASSERT :INDEX:R6502ZONE_CC == &400
+  ASSERT :INDEX:R6502ZONE_DC == &1000
+  ASSERT :INDEX:R6502ZONE_EC == &1C00
+  ASSERT SIZEOF_R6502ZONEMAP == &4000
+
+  ASSERT :INDEX:R6502_M_SHIFT == :INDEX:R6502ZONE_M_SHIFT
+  ASSERT :INDEX:R6502_M == :INDEX:R6502ZONE_M
+
+  ASSERT :INDEX:R6502_AP == :INDEX:R6502ZONE_AP
+  ASSERT :INDEX:R6502_BP == :INDEX:R6502ZONE_BP
+  ASSERT :INDEX:R6502_CP == :INDEX:R6502ZONE_CP
+  ASSERT :INDEX:R6502_DP == :INDEX:R6502ZONE_DP
+  ASSERT SIZEOF_R6502MAP == SIZEOF_R6502ZONEMAP
+
+  ASSERT :INDEX:R6502_ADDRESSINGOPS == (ADDRESSING_BASEFLAG-ADDRESSING_MODIFYFLAG):SHL:8
+
+  MACRO
+  R6502STARTSTRETCH1READSPECIAL
+  STR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
+  ADD r3,r0,#:INDEX:R6502_SEQUENCES
+  STR r1,[r0,#:INDEX:R6502_STRETCHED_ADDRESS_CODE]
+  LDR r1,[r3,#R6502_READ_STRETCH_SEQUENCE:SHL:2]
+  ADD r1,r1,#1:SHL:2
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  MEND
+
+  MACRO
+  R6502STARTSTRETCH2READSPECIAL
+  STR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
+  ADD r3,r0,#:INDEX:R6502_SEQUENCES
+  STR r1,[r0,#:INDEX:R6502_STRETCHED_ADDRESS_CODE]
+  LDR r1,[r3,#R6502_READ_STRETCH_SEQUENCE:SHL:2]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  MEND
+
+  MACRO
+  R6502STARTSTRETCH1DISCARDSPECIAL
+  STR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
+  ADD r3,r0,#:INDEX:R6502_SEQUENCES
+  STR r1,[r0,#:INDEX:R6502_STRETCHED_ADDRESS_CODE]
+  LDR r1,[r3,#R6502_DISCARD_STRETCH_SEQUENCE:SHL:2]
+  ADD r1,r1,#1:SHL:2
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  MEND
+
+  MACRO
+  R6502STARTSTRETCH2DISCARDSPECIAL
+  STR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
+  ADD r3,r0,#:INDEX:R6502_SEQUENCES
+  STR r1,[r0,#:INDEX:R6502_STRETCHED_ADDRESS_CODE]
+  LDR r1,[r3,#R6502_DISCARD_STRETCH_SEQUENCE:SHL:2]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  MEND
+
+  MACRO
+  R6502STARTSTRETCH1WRITESPECIAL
+  STR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
+  ADD r3,r0,#:INDEX:R6502_SEQUENCES
+  STR r1,[r0,#:INDEX:R6502_STRETCHED_ADDRESS_CODE]
+  LDR r1,[r3,#R6502_WRITE_STRETCH_SEQUENCE:SHL:2]
+  ADD r1,r1,#1:SHL:2
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  MEND
+
+  MACRO
+  R6502STARTSTRETCH2WRITESPECIAL
+  STR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
+  ADD r3,r0,#:INDEX:R6502_SEQUENCES
+  STR r1,[r0,#:INDEX:R6502_STRETCHED_ADDRESS_CODE]
+  LDR r1,[r3,#R6502_WRITE_STRETCH_SEQUENCE:SHL:2]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  MEND
+
+|r6502invokeaddressing|
+  STMFD sp!,{r2,r7,lr}
+  AND r3,r1,#&F000000F
+  ORR r1,r1,#ADDRESSING_MODIFYFLAG
+  LDR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  R6502_INVOKE_ADDRESSING r6502invokeaddressing_s,r6502invokeaddressing_1s,r6502invokeaddressing_2s
+  LDMFD sp!,{r2,r7,lr}
+  LDR pc,[r2, #12]
+|r6502invokeaddressing_s|
+  LDMFD sp!,{r2,r7,lr}
+  LDR pc,[r2]
+|r6502invokeaddressing_1s|
+  LDMFD sp!,{r2,r7,lr}
+  LDR pc,[r2, #4]
+|r6502invokeaddressing_2s|
+  LDMFD sp!,{r2,r7,lr}
+  LDR pc,[r2, #8]
+
+|r6502cyclereadmappedreturn|
+  R6502_CYCLE_READ_MAPPED_RETURN
+
+|r6502cyclereadspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclereadspecialreturn|
+  R6502_CYCLE_CALL_ACTION R6502_READSPECIALACTION
+  R6502_CYCLE_RETURN
+
+|r6502cyclestretch1readspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclestretch1readspecialreturn|
+  LDR r3,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502STARTSTRETCH1READSPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502cyclestretch2readspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclestretch2readspecialreturn|
+  LDR r3,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502STARTSTRETCH2READSPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502cyclediscardmappedreturn|
+  R6502_CYCLE_DISCARD_MAPPED_RETURN
+
+|r6502cyclediscardspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclediscardspecialreturn|
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_CALL_ACTION R6502_READSPECIALACTION
+  LDRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_RETURN
+
+|r6502cyclestretch1discardspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclestretch1discardspecialreturn|
+  LDR r3,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502STARTSTRETCH1DISCARDSPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502cyclestretch2discardspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclestretch2discardspecialreturn|
+  LDR r3,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502STARTSTRETCH2DISCARDSPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502cyclewritemappedreturn|
+  R6502_CYCLE_WRITE_MAPPED_RETURN
+
+|r6502cyclewritespecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclewritespecialreturn|
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_CALL_ACTION R6502_WRITESPECIALACTION
+  R6502_CYCLE_RETURN
+
+|r6502cyclestretch1writespecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclestretch1writespecialreturn|
+  LDR r3,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502STARTSTRETCH1WRITESPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502cyclestretch2writespecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclestretch2writespecialreturn|
+  LDR r3,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502STARTSTRETCH2WRITESPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+r6502fetchdointerrupt
+  LDR r1,[r1,#R6502_INTERRUPT_SEQUENCE:SHL:2]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502_CYCLE_RETURN
+
+r6502fetchdoyield
+  ADD r1,r0,#:INDEX:R6502_SEQUENCES
+  LDR r2,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r1,#R6502_YIELD_SEQUENCE:SHL:2]
+  STR r2,[r0,#:INDEX:R6502_EXECUTE_CPU_STATE]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502_CYCLE_RETURN
+
+|r6502completecyclefetchreturn|
+  ADD r1,r0,#:INDEX:R6502_SEQUENCES
+  LDR r1,[r1,r2,LSL #2]
+  CMP r3,#R6502_YIELD_TRANSITION
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  BEQ r6502fetchdoyield
+  R6502_CYCLE_RETURN
+
+|r6502cyclefetchmappedreturn|
+  R6502_CYCLE_FETCH_MAPPED_RETURN
+
+|r6502cyclefetchspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclefetchspecialreturn|
+  R6502_CYCLE_CALL_ACTION R6502_READSPECIALACTION
+|r6502cyclefetchafterreadspecial|
+  LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  CMP r3,#R6502_RESET_TRANSITION
+  BNE r6502completecyclefetchreturn
+  R6502_CYCLE_RESET_RETURN
+
+|r6502cyclestretch1fetchspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclestretch1fetchspecialreturn|
+  ADD r2,r0,#:INDEX:R6502_SEQUENCES
+  LDR r3,[r2,#R6502_READ_STRETCH_SEQUENCE:SHL:2]
+  ADD r3,r3,#2:SHL:2
+  R6502STARTSTRETCH1READSPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502cyclestretch2fetchspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cyclestretch2fetchspecialreturn|
+  ADD r2,r0,#:INDEX:R6502_SEQUENCES
+  LDR r3,[r2,#R6502_READ_STRETCH_SEQUENCE:SHL:2]
+  ADD r3,r3,#2:SHL:2
+  R6502STARTSTRETCH2READSPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502completecycleearlyinterruptfetchreturn|
+  TST r1,#R6502_NMI_IRQ_ENABLE:SHL:12
+  ADD r1,r0,#:INDEX:R6502_SEQUENCES
+  BNE r6502fetchdointerrupt
+  LDR r1,[r1,r2,LSL #2]
+  CMP r3,#R6502_YIELD_TRANSITION
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  BEQ r6502fetchdoyield
+  R6502_CYCLE_RETURN
+
+|r6502cycleearlyinterruptfetchmappedreturn|
+  R6502_CYCLE_EARLY_INTERRUPT_CHECK_FETCH_MAPPED_RETURN
+
+|r6502cycleearlyinterruptfetchspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cycleearlyinterruptfetchspecialreturn|
+  R6502_CYCLE_CALL_ACTION R6502_READSPECIALACTION
+|r6502cycleearlyinterruptfetchafterreadspecial|
+  LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  CMP r3,#R6502_RESET_TRANSITION
+  AND r1,r1,r1,LSR #6
+  BNE r6502completecycleearlyinterruptfetchreturn
+  R6502_CYCLE_RESET_RETURN
+
+|r6502cycleearlyinterruptstretch1fetchspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cycleearlyinterruptstretch1fetchspecialreturn|
+  ADD r2,r0,#:INDEX:R6502_SEQUENCES
+  LDR r3,[r2,#R6502_READ_STRETCH_SEQUENCE:SHL:2]
+  ADD r3,r3,#2:SHL:3
+  R6502STARTSTRETCH1READSPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502cycleearlyinterruptstretch2fetchspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cycleearlyinterruptstretch2fetchspecialreturn|
+  ADD r2,r0,#:INDEX:R6502_SEQUENCES
+  LDR r3,[r2,#R6502_READ_STRETCH_SEQUENCE:SHL:2]
+  ADD r3,r3,#2:SHL:3
+  R6502STARTSTRETCH2READSPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502completecycleinterruptfetchreturn|
+  TST r1,#R6502_NMI_IRQ_ENABLE:SHL:8
+  ADD r1,r0,#:INDEX:R6502_SEQUENCES
+  BNE r6502fetchdointerrupt
+  LDR r1,[r1,r2,LSL #2]
+  CMP r3,#R6502_YIELD_TRANSITION
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  BEQ r6502fetchdoyield
+  R6502_CYCLE_RETURN
+
+|r6502cycleinterruptfetchmappedreturn|
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_MAPPED_RETURN
+
+|r6502cycleinterruptfetchspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cycleinterruptfetchspecialreturn|
+  R6502_CYCLE_CALL_ACTION R6502_READSPECIALACTION
+|r6502cycleinterruptfetchafterreadspecial|
+  LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  CMP r3,#R6502_RESET_TRANSITION
+  AND r1,r1,r1,LSR #6
+  BNE r6502completecycleinterruptfetchreturn
+  R6502_CYCLE_RESET_RETURN
+
+|r6502cycleinterruptstretch1fetchspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cycleinterruptstretch1fetchspecialreturn|
+  ADD r2,r0,#:INDEX:R6502_SEQUENCES
+  LDR r3,[r2,#R6502_READ_STRETCH_SEQUENCE:SHL:2]
+  ADD r3,r3,#2:SHL:4
+  R6502STARTSTRETCH1READSPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502cycleinterruptstretch2fetchspecialpopreturn|
+  R6502_CYCLE_ADDRESSING_POP
+|r6502cycleinterruptstretch2fetchspecialreturn|
+  ADD r2,r0,#:INDEX:R6502_SEQUENCES
+  LDR r3,[r2,#R6502_READ_STRETCH_SEQUENCE:SHL:2]
+  ADD r3,r3,#2:SHL:4
+  R6502STARTSTRETCH2READSPECIAL
+  R6502_CYCLE_STRETCH_RETURN
+
+;// IMPLIED STEPS
+|r6502operandstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r1,r7,#1:SHL:16
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_READ_RETURN
+
+|r6502nopstep|
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502clcstep|
+  R6502_CYCLE_UPDATE_PUSH
+  BIC r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502secstep|
+  R6502_CYCLE_UPDATE_PUSH
+  ORR r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502clistep|
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  ORR r3,r3,#R6502_IRQ_ENABLE
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502seistep|
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  BIC r3,r3,#R6502_IRQ_ENABLE
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502cldstep|
+  R6502_CYCLE_UPDATE_PUSH
+  BIC r8,r8,#DFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502sedstep|
+  R6502_CYCLE_UPDATE_PUSH
+  ORR r8,r8,#DFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502clvstep|
+  R6502_CYCLE_UPDATE_PUSH
+  BIC r8,r8,#VFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502taxstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502taystep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_Y]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502txastep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502txsstep|
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  STRB r2,[r0,#:INDEX:R6502_SP_CODE+3]
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502tyastep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_Y]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502tsxstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_SP_CODE+3]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502pulledastep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502pulledpstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  TST r2,#IFLAG
+  BICNE r3,r3,#R6502_IRQ_ENABLE
+  ORREQ r3,r3,#R6502_IRQ_ENABLE
+  ORR r8,r2,#UFLAG|BFLAG|IFLAG
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502hltstep|
+  LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
+  CMP r3,#R6502_RESET_TRANSITION
+  BNE r6502hltstep2
+  ADD r1,r0,#:INDEX:R6502_SEQUENCES
+  LDR r1,[r1,#R6502_RESET_SEQUENCE:SHL:2]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502_CYCLE_RETURN
+r6502hltstep2
+  CMP r3,#R6502_YIELD_TRANSITION
+  BEQ r6502hltstep3
+  R6502_CYCLE_RETURN
+r6502hltstep3
+  ADD r1,r0,#:INDEX:R6502_SEQUENCES
+  LDR r2,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r1,#R6502_YIELD_SEQUENCE:SHL:2]
+  STR r2,[r0,#:INDEX:R6502_EXECUTE_CPU_STATE]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502_CYCLE_RETURN
+
+;// LOAD STEPS
+|r6502beforepullstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  R6502_CYCLE_STACK_READ_RETURN
+
+|r6502topullstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  ADD r1,r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  R6502_CYCLE_STACK_READ_RETURN
+
+|r6502toimmediatestep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r1,r7,#1:SHL:16
+  STR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_READ_RETURN
+
+|r6502breadcrumbloadzpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r1,r7,#1:SHL:16
+  STR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  LDR r1,[r0,#:INDEX:R6502_M_SHIFT]
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_READ_RETURN
+
+|r6502loadzpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r2,r7,#1:SHL:16
+  LDR r1,[r0,#:INDEX:R6502_M_SHIFT]
+  STR r2,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_READ_RETURN
+
+|r6502breadcrumblatchabslostep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r1,r7,#2:SHL:16
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  STR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_READ_RETURN
+
+|r6502latchabslostep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r1,r7,#2:SHL:16
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  STR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_READ_RETURN
+
+|r6502breadcrumbloadabsstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ORR r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_READ_RETURN
+
+|r6502loadabsstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ORR r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  R6502_CYCLE_READ_RETURN
+
+|r6502breadcrumblatchzpgindlostep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ADD r1,r1,#1:SHL:24
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_ZPG_READ_RETURN
+
+|r6502latchzpgindlostep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ADD r1,r1,#1:SHL:24
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_ZPG_READ_RETURN
+
+|r6502breadcrumbloadzpgxstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  ADD r1,r1,r2,LSL #24
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_ZPG_READ_RETURN
+
+|r6502loadzpgxstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  ADD r1,r1,r2,LSL #24
+  R6502_CYCLE_ZPG_READ_RETURN
+
+|r6502loadzpgystep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_Y]
+  ADD r1,r1,r2,LSL #24
+  R6502_CYCLE_ZPG_READ_RETURN
+
+|r6502loadabsxstep|
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  ADDEQ r1,r1,#1:SHL:2
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  SUBNE r1,r1,#1:SHL:24
+  R6502_CYCLE_READ_RETURN
+
+|r6502loadabsystep|
+  LDRB r3,[r0,#:INDEX:R6502_Y]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  ADDEQ r1,r1,#1:SHL:2
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  SUBNE r1,r1,#1:SHL:24
+  R6502_CYCLE_READ_RETURN
+
+|r6502linearloadabsxstep|
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  SUBNE r1,r1,#1:SHL:24
+  R6502_CYCLE_READ_RETURN
+
+|r6502linearloadabsystep|
+  LDRB r3,[r0,#:INDEX:R6502_Y]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  SUBNE r1,r1,#1:SHL:24
+  R6502_CYCLE_READ_RETURN
+
+|r6502fixindexedstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_READ_RETURN
+
+|r6502bitstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  TST r1,r2
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG
+  AND r3,r2,#NFLAG|VFLAG
+  ORREQ r8,r8,#ZFLAG
+  ORR r8,r8,r3
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502orastep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  ORRS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502andstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  ANDS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502eorstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  EORS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502adcstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  TST r8,#DFLAG
+  BNE r6502adcstepD
+  TEQ r2,r8,LSR #1   ;jdl** ARM c =6502 c
+  SUB r1,r1,#1:SHL:8
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r2,r1,ROR #8
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  ORRCS r8,r8,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+r6502adcstepD
+  TEQ r2,r8,LSR #1   ;jdl** ARM c =6502 c
+  ORR r1,r1,r1,ROR #8
+  ORR r2,r2,#&000FF000
+  AND r1,r1,#&F000000F
+  ORR r2,r2,#&00000FF0
+  ADD r1,r1,#6
+  ORR r2,r2,r2,ROR #24
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  CMPCC r1,#&A0000000
+  SUB r2,r1,#6
+  ADDCS r1,r1,#&60000000
+  ORRCS r8,r8,#CFLAG
+  TST r1,#&80
+  SUBNE r1,r1,#6
+  AND r1,r1,#&F000000F
+  TST r2,#&F000000F
+  ORR r1,r1,r1,LSR #24
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502ldastep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502ldxstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502ldystep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_Y]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502cmpstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  SUBS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502cpxstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  SUBS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502cpystep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  SUBS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502sbcstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  TST r8,#DFLAG
+  BNE r6502sbcstepD
+  TEQ r2,r8,LSR #1   ;jdl** ARM c =6502 c
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  RSCS r1,r2,r1,ROR #8
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  ORRCS r8,r8,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+r6502sbcstepD
+  TEQ r2,r8,LSR #1   ;jdl** ARM c =6502 c
+  ORR r2,r2,r2,ROR #24
+  ORR r1,r1,r1,ROR #8
+  AND r2,r2,#&F000000F
+  AND r1,r1,#&F000000F
+  MVN r2,r2
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRCS r8,r8,#CFLAG
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  MOV r2,r1
+  SUBCC r1,r1,#&60000000
+  TST r1,#&80
+  SUBNE r1,r1,#6
+  AND r1,r1,#&F000000F
+  TST r2,#&F000000F
+  ORR r1,r1,r1,LSR #24
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502skipstep|
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502laxstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r8,r8,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502lasstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  ANDS r2,r1,r2
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_SP_CODE]
+  STR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  STR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502ancstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ANDS r2,r2,r1
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  ORRMI r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502alrstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  AND r2,r2,r1
+  MOVS r1,r2,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502arrstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  MOVS r3,r8,LSL #31
+  AND r2,r2,r1
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  MOV r1,r3,LSR #24
+  ORRMI r8,r8,#NFLAG
+  ORRS r1,r1,r2,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  ORR r8,r8,r1,LSL #25
+  EORS r8,r8,r2,LSL #25
+  ORRMI r8,r8,#VFLAG
+  TST r8,#DFLAG
+  BNE r6502arrstepD
+  TST r2,#NFLAG
+  ORRNE r8,r8,#CFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+r6502arrstepD
+  CMP r2,#&50
+  ADDHS r1,r1,#&60
+  ORRHS r8,r8,#CFLAG
+  AND r2,r2,#&0F
+  CMP r2,#&05
+  MOVHS r1,r1,ROR #4
+  ADDHS r1,r1,#&60000000
+  MOVHS r1,r1,ROR #28
+  STRB r1,[r0,#:INDEX:R6502_A]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502xaastep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  ANDS r2,r1,r2
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502oalstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ORR r1,r1,#&EE000000
+  BIC r8,r8,#NFLAG|ZFLAG
+  ANDS r2,r1,r2
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  STR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502sbxstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  AND r1,r1,r2
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  SUBS r1,r1,r2
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  STR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  ORRMI r8,r8,#NFLAG
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
+
+;// MODIFY STEP
+|r6502tozpgmodifystep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502tomodifystep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502aslastep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSL #1
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502aslzpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSL #1
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502aslstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSL #1
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502rolastep|
+  R6502_CYCLE_UPDATE_PUSH
+  TST r8,#CFLAG
+  LDR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r2,r2,#&800000
+  MOVS r2,r2,LSL #1
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502rolzpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#CFLAG
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r2,r2,#&800000
+  MOVS r2,r2,LSL #1
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502rolstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#CFLAG
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r2,r2,#&800000
+  MOVS r2,r2,LSL #1
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502lsrastep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502lsrzpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_M]
+  ORRCS r8,r8,#CFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502lsrstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_M]
+  ORRCS r8,r8,#CFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502rorastep|
+  R6502_CYCLE_UPDATE_PUSH
+  TST r8,#CFLAG
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r2,r2,#&100
+  ORRNE r8,r8,#NFLAG
+  MOVS r2,r2,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502rorzpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#CFLAG
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r2,r2,#&100
+  ORRNE r8,r8,#NFLAG
+  MOVS r2,r2,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_M]
+  ORRCS r8,r8,#CFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502rorstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#CFLAG
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r2,r2,#&100
+  ORRNE r8,r8,#NFLAG
+  MOVS r2,r2,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_M]
+  ORRCS r8,r8,#CFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502dexstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  SUBS r2,r2,#1:SHL:24
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502deystep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r2,[r0,#:INDEX:R6502_Y_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  SUBS r2,r2,#1:SHL:24
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_Y_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502deczpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  SUBS r2,r2,#1:SHL:24
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502decstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  SUBS r2,r2,#1:SHL:24
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502inxstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  ADDS r2,r2,#1:SHL:24
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502inystep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r2,[r0,#:INDEX:R6502_Y_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  ADDS r2,r2,#1:SHL:24
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_Y_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+|r6502inczpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  ADDS r1,r2,#1:SHL:24
+  ORRMI r8,r8,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_M_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502incstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  ADDS r2,r2,#1:SHL:24
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502asozpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSL #1
+  ORRCS r8,r8,#CFLAG
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ORRS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502asostep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSL #1
+  ORRCS r8,r8,#CFLAG
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ORRS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502rlazpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#CFLAG
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r2,r2,#&800000
+  MOVS r1,r2,LSL #1
+  LDR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  STR r1,[r0,#:INDEX:R6502_M_SHIFT]
+  ORRCS r8,r8,#CFLAG
+  ANDS r1,r1,r2
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORRMI r8,r8,#NFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502rlastep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#CFLAG
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r2,r2,#&800000
+  MOVS r1,r2,LSL #1
+  LDR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  STR r1,[r0,#:INDEX:R6502_M_SHIFT]
+  ORRCS r8,r8,#CFLAG
+  ANDS r1,r1,r2
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORRMI r8,r8,#NFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502lsezpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSR #1
+  ORRCS r8,r8,#CFLAG
+  STRB r2,[r0,#:INDEX:R6502_M]
+  EORS r1,r1,r2,LSL #24
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORRMI r8,r8,#NFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502lsestep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r2,LSR #1
+  ORRCS r8,r8,#CFLAG
+  STRB r2,[r0,#:INDEX:R6502_M]
+  EORS r1,r1,r2,LSL #24
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORRMI r8,r8,#NFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ORREQ r8,r8,#ZFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502rrazpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#CFLAG
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  ORRNE r2,r2,#&100
+  TST r8,#DFLAG
+  BNE r6502rrazpgstepD
+  MOVS r2,r2,LSR #1
+  STRB r2,[r0,#:INDEX:R6502_M]
+  MOV r2,r2,LSL #24
+  SUB r1,r1,#1:SHL:8
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r2,r1,ROR #8
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  ORRCS r8,r8,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+r6502rrazpgstepD
+  MOVS r2,r2,LSR #1
+  ORR r1,r1,r1,ROR #8
+  STRB r2,[r0,#:INDEX:R6502_M]
+  ORR r2,r2,#&0FF00000
+  AND r1,r1,#&F000000F
+  ORR r2,r2,#&000FF000
+  ADD r1,r1,#6
+  ORR r2,r2,r2,ROR #8
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  CMPCC r1,#&A0000000
+  SUB r2,r1,#6
+  ADDCS r1,r1,#&60000000
+  ORRCS r8,r8,#CFLAG
+  TST r1,#&80
+  SUBNE r1,r1,#6
+  AND r1,r1,#&F000000F
+  ORR r1,r1,r1,LSR #24
+  TST r2,#&F000000F
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502rrastep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#CFLAG
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  ORRNE r2,r2,#&100
+  TST r8,#DFLAG
+  BNE r6502rrastepD
+  MOVS r2,r2,LSR #1
+  STRB r2,[r0,#:INDEX:R6502_M]
+  MOV r2,r2,LSL #24
+  SUB r1,r1,#1:SHL:8
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r2,r1,ROR #8
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  ORRCS r8,r8,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+r6502rrastepD
+  MOVS r2,r2,LSR #1
+  ORR r1,r1,r1,ROR #8
+  STRB r2,[r0,#:INDEX:R6502_M]
+  ORR r2,r2,#&0FF00000
+  AND r1,r1,#&F000000F
+  ORR r2,r2,#&000FF000
+  ADD r1,r1,#6
+  ORR r2,r2,r2,ROR #8
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  CMPCC r1,#&A0000000
+  SUB r2,r1,#6
+  ADDCS r1,r1,#&60000000
+  ORRCS r8,r8,#CFLAG
+  TST r1,#&80
+  SUBNE r1,r1,#6
+  AND r1,r1,#&F000000F
+  ORR r1,r1,r1,LSR #24
+  TST r2,#&F000000F
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502dcpzpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  SUB r2,r2,#1:SHL:24
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ADD r1,r1,#1:SHL:8
+  SUB r1,r1,r2,LSR #24
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r1,LSL #24
+  ORRMI r8,r8,#NFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502dcpstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  SUB r2,r2,#1:SHL:24
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  ADD r1,r1,#1:SHL:8
+  SUB r1,r1,r2,LSR #24
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r2,r1,LSL #24
+  ORRMI r8,r8,#NFLAG
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502isbzpgstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r2,r2,#1:SHL:24
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  TST r8,#DFLAG
+  BNE r6502isbzpgstepD
+  TEQ r2,r8,LSR #1   ;jdl** ARM c =6502 c
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  RSCS r1,r2,r1,ROR #8
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  ORRCS r8,r8,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+r6502isbzpgstepD
+  TEQ r2,r8,LSR #1   ;jdl** ARM c =6502 c
+  ORR r2,r2,r2,ROR #24
+  ORR r1,r1,r1,ROR #8
+  AND r2,r2,#&F000000F
+  AND r1,r1,#&F000000F
+  MVN r2,r2
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRCS r8,r8,#CFLAG
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  MOV r2,r1
+  SUBCC r1,r1,#&60000000
+  TST r1,#&80
+  SUBNE r1,r1,#6
+  AND r1,r1,#&F000000F
+  TST r2,#&F000000F
+  ORR r1,r1,r1,LSR #24
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502isbstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r2,r2,#1:SHL:24
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  STR r2,[r0,#:INDEX:R6502_M_SHIFT]
+  TST r8,#DFLAG
+  BNE r6502isbstepD
+  TEQ r2,r8,LSR #1   ;jdl** ARM c =6502 c
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  RSCS r1,r2,r1,ROR #8
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  ORRCS r8,r8,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+r6502isbstepD
+  TEQ r2,r8,LSR #1   ;jdl** ARM c =6502 c
+  ORR r2,r2,r2,ROR #24
+  ORR r1,r1,r1,ROR #8
+  AND r2,r2,#&F000000F
+  AND r1,r1,#&F000000F
+  MVN r2,r2
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRCS r8,r8,#CFLAG
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  MOV r2,r1
+  SUBCC r1,r1,#&60000000
+  TST r1,#&80
+  SUBNE r1,r1,#6
+  AND r1,r1,#&F000000F
+  TST r2,#&F000000F
+  ORR r1,r1,r1,LSR #24
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_WRITE_RETURN
+
+;// STORE STEPS
+|r6502topushpstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r3,#R6502_IRQ_ENABLE
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  BICNE r2,r8,#IFLAG
+  STREQB r8,[r0,#:INDEX:R6502_M]
+  STRNEB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_STACK_WRITE_RETURN
+
+|r6502topushastep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_STACK_WRITE_RETURN
+
+|r6502loadzpgtostastep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r1,r7,#1:SHL:16
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  STR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  LDR r1,[r0,#:INDEX:R6502_M_SHIFT]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502loadabstostastep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ORR r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502loadzpgxtostastep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  ADD r1,r1,r2,LSL #24
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502fixindexedtostastep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502loadzpgtostxstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r1,r7,#1:SHL:16
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  STR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  LDR r1,[r0,#:INDEX:R6502_M_SHIFT]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502loadabstostxstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ORR r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502loadzpgytostxstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_Y]
+  ADD r1,r1,r2,LSL #24
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502loadzpgtostystep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r1,r7,#1:SHL:16
+  LDRB r2,[r0,#:INDEX:R6502_Y]
+  STR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  LDR r1,[r0,#:INDEX:R6502_M_SHIFT]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502loadabstostystep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ORR r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  LDRB r2,[r0,#:INDEX:R6502_Y]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502loadzpgxtostystep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  ADD r1,r1,r2,LSL #24
+  LDRB r2,[r0,#:INDEX:R6502_Y]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502loadzpgtosaxstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r1,r7,#1:SHL:16
+  LDRB r3,[r0,#:INDEX:R6502_A]
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  STR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  AND r2,r3,r2
+  LDR r1,[r0,#:INDEX:R6502_M_SHIFT]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502loadzpgytosaxstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_Y]
+  ADD r1,r1,r2,LSL #24
+  LDRB r3,[r0,#:INDEX:R6502_A]
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  AND r2,r3,r2
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_ZPG_WRITE_RETURN
+
+|r6502loadabstosaxstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ORR r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  LDRB r3,[r0,#:INDEX:R6502_A]
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  AND r2,r3,r2
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502fixindexedtoaxastep|
+  LDRB r3,[r0,#:INDEX:R6502_Y]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  AND r2,r2,r3
+  ADDEQ r1,r1,#1:SHL:24
+  AND r2,r2,r1,LSR #24
+  SUBEQ r1,r1,#1:SHL:24
+  STRB r2,[r0,#:INDEX:R6502_M]
+  BICNE r1,r1,#&FF000000
+  ORRNE r1,r1,r2,LSL #24
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502fixindexedtoxasstep|
+  LDRB r3,[r0,#:INDEX:R6502_Y]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  ADDEQ r1,r1,#1:SHL:24
+  AND r2,r2,r1,LSR #24
+  SUBEQ r1,r1,#1:SHL:24
+  STRB r2,[r0,#:INDEX:R6502_M]
+  BICNE r1,r1,#&FF000000
+  ORRNE r1,r1,r2,LSL #24
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502fixindexedtosaystep|
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_Y]
+  ADDEQ r1,r1,#1:SHL:24
+  AND r2,r2,r1,LSR #24
+  SUBEQ r1,r1,#1:SHL:24
+  STRB r2,[r0,#:INDEX:R6502_M]
+  BICNE r1,r1,#&FF000000
+  ORRNE r1,r1,r2,LSL #24
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502fixindexedtotasstep|
+  LDRB r3,[r0,#:INDEX:R6502_Y]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ADD r2,r2,r3,LSL #16
+  TST r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  AND r2,r2,r3
+  STRB r2,[r0,#:INDEX:R6502_SP_CODE+3]
+  ADDEQ r1,r1,#1:SHL:24
+  AND r2,r2,r1,LSR #24
+  SUBEQ r1,r1,#1:SHL:24
+  STRB r2,[r0,#:INDEX:R6502_M]
+  BICNE r1,r1,#&FF000000
+  ORRNE r1,r1,r2,LSL #24
+  R6502_CYCLE_WRITE_RETURN
+
+|r6502pushedstep|
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r1,r1,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
+
+;// BRANCHES
+|r6502bplstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#NFLAG
+  ADD r1,r7,#2:SHL:16
+  R6502_CYCLE_UPDATE_POP
+  BEQ r6502bplstep2
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+r6502bplstep2
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_READ_RETURN
+
+|r6502bmistep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#NFLAG
+  ADD r1,r7,#2:SHL:16
+  R6502_CYCLE_UPDATE_POP
+  BNE r6502bmistep2
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+r6502bmistep2
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_READ_RETURN
+
+|r6502bvcstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#VFLAG
+  ADD r1,r7,#2:SHL:16
+  R6502_CYCLE_UPDATE_POP
+  BEQ r6502bvcstep2
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+r6502bvcstep2
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_READ_RETURN
+
+|r6502bvsstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#VFLAG
+  ADD r1,r7,#2:SHL:16
+  R6502_CYCLE_UPDATE_POP
+  BNE r6502bvsstep2
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+r6502bvsstep2
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_READ_RETURN
+
+|r6502bccstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#CFLAG
+  ADD r1,r7,#2:SHL:16
+  R6502_CYCLE_UPDATE_POP
+  BEQ r6502bccstep2
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+r6502bccstep2
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_READ_RETURN
+
+|r6502bcsstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#CFLAG
+  ADD r1,r7,#2:SHL:16
+  R6502_CYCLE_UPDATE_POP
+  BNE r6502bcsstep2
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+r6502bcsstep2
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_READ_RETURN
+
+|r6502bnestep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#ZFLAG
+  ADD r1,r7,#2:SHL:16
+  R6502_CYCLE_UPDATE_POP
+  BEQ r6502bnestep2
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+r6502bnestep2
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_READ_RETURN
+
+|r6502beqstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r8,#ZFLAG
+  ADD r1,r7,#2:SHL:16
+  R6502_CYCLE_UPDATE_POP
+  BNE r6502beqstep2
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+r6502beqstep2
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  STRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_READ_RETURN
+
+|r6502branchtakenstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r3,#&80
+  ADD r2,r7,#2:SHL:16
+  ORRNE r3,r3,#&FF00
+  ADD r1,r2,r3,LSL #16
+  EOR r3,r1,r2
+  ANDS r3,r3,#&FF000000
+  R6502_CYCLE_UPDATE_POP
+  BNE r6502branchtakenstep2
+  R6502_CYCLE_EARLY_INTERRUPT_CHECK_FETCH_RETURN
+r6502branchtakenstep2
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  EOR r1,r1,r3
+  R6502_CYCLE_READ_RETURN
+
+|r6502fixbranchtakenstep|
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+
+;// JUMPS
+|r6502latchjmpabsindlostep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  MOV r1,r1,ROR #24
+  ADD r1,r1,#1:SHL:24
+  MOV r1,r1,ROR #8
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_READ_RETURN
+
+|r6502loadpchstep|
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ORR r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+
+;// VECTORS AND SUBROUTINES
+|r6502waitonresetstep|
+  LDR r2,[r0,#:INDEX:R6502_LBREAK]
+  TST r2,r2
+  LDRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  BNE r6502waitonresetcontinuing
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  TST r2,r2
+  [ !Optimise6502Links
   STR lr,[sp, #-4]!
-  LDR r12,=r6502_a
-  LDRB ra,[r12] ;load a
-  LDR r12,=r6502_x
-  LDRB rx,[r12] ;load x
-  LDR r12,=r6502_y
-  LDRB ry,[r12] ;load y
-
-  LDR r12,=r6502_pc
-  LDR rpc,[r12] ;load pc
-  LDR r12,=r6502_ps
-  LDRB rps,[r12] ;load ps
-  LDR r12,=r6502_sp
-  LDRB rsp,[r12] ;load sp
-
-  LDR r12,=r6502_cyclestogo
-  LDR rcycles,[r12] ;load sp
-
-  LDR r12,=memory
-  ;LDMFD sp!,{pc}
-  LDR pc, [sp], #4
-  ;MOV pc,lr
-
-|r6502saveregs|
-  STMFD sp!,{r12,lr}
-  LDR r12,=r6502_a
-  STRB ra,[r12] ;save a
-  LDR r12,=r6502_x
-  STRB rx,[r12] ;save x
-  LDR r12,=r6502_y
-  STRB ry,[r12] ;save y
-
-  LDR r12,=r6502_pc
-  STR rpc,[r12] ;save pc
-  LDR r12,=r6502_ps
-  STRB rps,[r12] ;save ps
-  LDR r12,=r6502_sp
-  STRB rsp,[r12] ;save sp
-
-  LDR r12,=r6502_cyclestogo
-  STR rcycles,[r12] ;load sp
-
-  LDMFD sp!,{r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502adc|
-  ;r0=number to adc with A
-  STMFD sp!,{r0-r12,lr}
-
-  ;if not decimal
-  MOV r0,r0,LSL#24 ;n=(n<<24)
-
-  LDR r12,=r6502_a
-  LDRB ra,[r12] ;load a
-  MOV ra,ra,LSL#24 ;a=(a<<24)
-  MOV r1,#&00FFFFFF ;raFFFFFF
-  ORR ra,ra,r1
-
-  MOV r1,#1 ;bit
-  MOV r2,#0 ;bit mask
-  LDR r11,=r6502_ps
-  LDRB rps,[r11]
-
-  ;n flag
-  ;ANDS r3,rps,#NFLAG
-  ;ORRNE r2,r2,r1,LSL#31 ;set n flag in bit mask
-  ;z flag
-  ;ANDS r3,rps,#ZFLAG
-  ;ORRNE r2,r2,r1,LSL#30 ;set z flag in bit mask
-  ;c flag
-  ANDS r3,rps,#CFLAG
-  ORRNE r2,r2,r1,LSL#29 ;set c flag in bit mask
-  ;v flag
-  ;ANDS r3,rps,#VFLAG
-  ;ORRNE r2,r2,r1,LSL#28 ;set v flag in bit mask
-  ;TEQP r3,r2 ;set flags in ARM PSR
-
-  TEQ PC,PC
-  TEQNEP r3,r2 ;set flags in ARM PSR
-  MSREQ CPSR_f,R2
-
-  ADCS ra,ra,r0 ;ra=a+n+c
-
-  AND rps,rps,#&3C ;%00111100 ;clear NVubdiZC
-  ORRMI rps,rps,#NFLAG
-  ;ORREQ rps,rps,#ZFLAG
-  ORRCS rps,rps,#CFLAG
-  ORRVS rps,rps,#VFLAG
-  STRB rps,[r11]
-
-  MOV ra,ra,LSR#24 ;(a=(a>>24)
-  CMP ra,#0
-  ORREQ rps,rps,#ZFLAG
-  STRB ra,[r12] ;store a
-
-  LDMFD sp!,{r0-r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502sbc|
-  ;r0=number to sbc with A
-  STMFD sp!,{r0-r12,lr}
-
-  ;if not decimal
-  MOV r0,r0,LSL#24 ;n=(n<<24)
-
-  LDR r12,=r6502_a
-  LDRB ra,[r12] ;load a
-  MOV ra,ra,LSL#24 ;a=(a<<24)
-
-  MOV r1,#1 ;bit
-  MOV r2,#0 ;bit mask
-  LDR r11,=r6502_ps
-  LDRB rps,[r11]
-  ;n flag
-  ;ANDS r3,rps,#NFLAG
-  ;ORRNE r2,r2,r1,LSL#31 ;set n flag in bit mask
-  ;z flag
-  ;ANDS r3,rps,#ZFLAG
-  ;ORRNE r2,r2,r1,LSL#30 ;set z flag in bit mask
-  ;c flag
-  ANDS r3,rps,#CFLAG
-  ORRNE r2,r2,r1,LSL#29 ;set c flag in bit mask
-  ;v flag
-  ;ANDS r3,rps,#VFLAG
-  ;ORRNE r2,r2,r1,LSL#28 ;set v flag in bit mask
-  ;TEQP r3,r2 ;set flags in ARM PSR
-
-  TEQ PC,PC
-  TEQNEP r3,r2 ;set flags in ARM PSR
-  MSREQ CPSR_f,R2
-
-  SBCS ra,ra,r0 ;ra=a-n-c
-
-  AND rps,rps,#&3C ;%00111100 ;clear NVubdiZC
-  ;n flag
-  ORRMI rps,rps,#NFLAG
-  ;z flag
-  ;ORREQ rps,rps,#ZFLAG
-  ;c flag
-  ORRCS rps,rps,#CFLAG
-  ;v flag
-  ORRVS rps,rps,#VFLAG
-  STRB rps,[r11]
-
-  MOV ra,ra,LSR#24 ;(a=(a>>24)
-  CMP ra,#0
-  ORREQ rps,rps,#ZFLAG
-  STRB ra,[r12] ;store a
-
-  LDMFD sp!,{r0-r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502irq|
-  STMFD sp!,{r0-r12,lr}
-  LDR r12,=memory ;pointer to memory
-  LDR r11,=r6502_pc ;pointer to r6502_pc
-  LDR rpc,[r11]
-  LDR r10,=r6502_sp ;pointer to r6502_sp
-  LDRB rsp,[r10] ;load r6502_sp
-  AND r0,rpc,#&FF00
-  MOV r0,r0,LSR#8
-  STACKPUSH r0
-  AND r0,rpc,#&FF
-  STACKPUSH r0
-  ;PROCESSORSTATUS(0)
-  LDR r2,=r6502_ps
-  LDRB rps,[r2] ;load ps
-  AND rps,rps,#NOTBFLAG ;clear b flag
-  ORR r0,rps,#UFLAG ;set u flag
-  STACKPUSH r0
-  ORR rps,rps,#IFLAG ;set i flag
-  STRB rps,[r2]
-  ADD r2,r12,#&10000 ;memory+&10000
-  LDRB r0,[r2,#-2] ;&FFFE
-  LDRB r1,[r2,#-1] ;&FFFF
-  ADD rpc,r0,r1,LSL#8
-  STRB rsp,[r10]
-  STR rpc,[r11]
-
-  LDR r11,=r6502_cyclestogo
-  LDR rcycles,[r11] ;r6502_cyclestogo
-  CPU_CYCLES 7
-  STR rcycles,[r11] ;r6502_cyclestogo
-  LDMFD sp!,{r0-r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502nmi|
-  STMFD sp!,{r0-r12,lr}
-  LDR r12,=memory ;pointer to memory
-  LDR r11,=r6502_pc ;pointer to r6502_pc
-  LDR rpc,[r11]
-  LDR r10,=r6502_sp ;pointer to r6502_sp
-  LDRB rsp,[r10] ;load r6502_sp
-  AND r0,rpc,#&FF00
-  MOV r0,r0,LSR#8
-  STACKPUSH r0
-  AND r0,rpc,#&FF
-  STACKPUSH r0
-  ;PROCESSORSTATUS(0)
-  LDR r2,=r6502_ps
-  LDRB rps,[r2] ;load ps
-  AND rps,rps,#NOTBFLAG ;clear b flag
-  ORR r0,rps,#UFLAG ;set u flag
-  STACKPUSH r0
-  ORR rps,rps,#IFLAG ;set i flag
-  STRB rps,[r2]
-  ADD r2,r12,#&10000 ;memory+&10000
-  LDRB r0,[r2,#-6] ;&FFFA
-  LDRB r1,[r2,#-5] ;&FFFB
-  ADD rpc,r0,r1,LSL#8
-  STRB rsp,[r10]
-  STR rpc,[r11]
-
-  LDR r11,=r6502_cyclestogo
-  LDR rcycles,[r11] ;r6502_cyclestogo
-  CPU_CYCLES 7
-  STR rcycles,[r11] ;r6502_cyclestogo
-  LDMFD sp!,{r0-r12,pc}
-
-;
-;rockwell 6502 cpu
-;
-|r6502execute|
-  STMFD sp!,{r0-r12,lr}
-
-  ;LDR r11,=r6502_cyclestogo
-  ;LDR r0,[r11]
-  ;LDR r11,=r6502_cyclestore
-  ;STR r0,[r11]
-
-  BL r6502loadregs
-
-r6502execute_loop
-  ;-------------------
-  ;LDR r11,=beebit_trace ;trace
-  ;LDR r0,[r11]
-
-  ;CMP r0,#00
-  ;BEQ r6502execute_loop2
-
-  ;MOV r0, rpc ;get RPC
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex4 ;BinaryToDecimal
-  ;SWI OS_Write0
-  ;SWI OS_WriteI+32
-
-  ;LDRB r0,[r12,rpc] ;get opcode
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, ra ;a
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, rx ;x
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, ry ;y
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, rps ;program status
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;MOV r0, rsp ;sp
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;LDR r0,=beebit_romsel
-  ;LDR r0,[r0]
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_WriteI+32
-  ;LDR r0,=beebit_acccon
-  ;LDR r0,[r0]
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
-
-  ;SWI OS_NewLine
-  ;-------------------
-
-r6502execute_loop2
-  LDRB r3,[r12,rpc] ;get opcode
-  ADD rpc,rpc,#1
-  ;ANDS r0,rpc,#&10000
-  ;MOVNE r0,#&FF00
-  ;ORRNE r0,r0,#&00FF
-  ;ANDNE rpc,rpc,r0
-  ;STR rpc,[r11] ;pc
-
-  LDR r0,=r6502opcodes
-  ;STMFD sp!,{lr}
+  ]
+  BNE r6502waitonresetstep2
+  MOV r2,#1
+  STRB r2,[r0,#:INDEX:R6502_OLDRESET]
   MOV lr,pc
-  LDR pc,[r0,r3,LSL#2]
-  ;LDMFD sp!,{lr}
+  LDR pc,[r0,#:INDEX:R6502_RESETSTARTINGACTION]
+  LDRB r2,[r0,#:INDEX:R6502_OLDRESET]
+r6502waitonresetstep2
+  MOV r2,#0
+  STRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_RESETCONTINUINGACTION]
+  [ !Optimise6502Links
+  LDR lr, [sp], #4
+  ]
+  ADD r1,r7,#1:SHL:16
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_READ_RETURN
 
-  ;-------------------
-  ;LDR r11,=beebit_trace ;trace
-  ;LDR r0,[r11]
-  ;CMP r0,#00
-  ;BEQ r6502execute_loop3
+r6502waitonresetcontinuing
+  TST r2,r2
+  BNE r6502waitonresetcontinuing2
+  MOV r2,#1
+  STRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  R6502_CYCLE_CALL_ACTION R6502_RESETSTARTINGACTION
+r6502waitonresetcontinuing2
+  R6502_CYCLE_RETURN
 
-  ;LDR r1,=flag
-  ;LDR r0,[r1]
-  ;CMP r0,#&00
-  ;BEQ skip2
-  ;B skip2
+|r6502resetstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  R6502_CYCLE_STACK_READ_RETURN
 
-  ;SWI OS_WriteI+32
-  ;MOV r0, ra ;a
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
+|r6502nooperandstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  MOV r1,r7
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_READ_RETURN
 
-  ;SWI OS_WriteI+32
-  ;MOV r0, rx ;x
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
+|r6502notpushedtonotpushstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r1,r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  R6502_CYCLE_STACK_READ_RETURN
 
-  ;SWI OS_WriteI+32
-  ;MOV r0, ry ;y
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
+|r6502breadcrumbnotpushedtoresetlostep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r2,r2,#1:SHL:24
+  STR r2,[r0,#:INDEX:R6502_SP_CODE]
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  BIC r3,r3,#R6502_IRQ_ENABLE
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  LDR r3,[r0,#:INDEX:R6502_TRANSITION2]
+  STR r3,[r0,#:INDEX:R6502_TRANSITION1]
+  LDR r2,[r0,#:INDEX:R6502_LBREAK]
+  TST r2,r2
+  MOVNE r3,#R6502_RESET_TRANSITION
+  STRNE r3,[r0,#:INDEX:R6502_TRANSITION1]
+  MOV r1,#ADDRESSING_BASEFLAG
+  SUB r1,r1,#4:SHL:16
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_VECTOR_READ_RETURN
 
-  ;SWI OS_WriteI+32
-  ;MOV r0, rps ;program status
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
+|r6502pushedtobrkpushpclstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r1,r2,#1:SHL:24
+  ADD r2,r7,#2:SHL:16
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r2,LSR #16
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_STACK_WRITE_RETURN
 
-  ;SWI OS_WriteI+32
-  ;MOV r0, rsp ;sp
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
+|r6502pushedtopushpclstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r1,r2,#1:SHL:24
+  MOV r2,r7,LSR #16
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_STACK_WRITE_RETURN
 
-  ;SWI OS_WriteI+32
-  ;LDR r0,=beebit_romsel
-  ;LDR r0,[r0]
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
+|r6502pushedtopushpstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  TST r3,#R6502_IRQ_ENABLE
+  SUB r1,r2,#1:SHL:24
+  BICNE r2,r8,#IFLAG
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  STREQB r8,[r0,#:INDEX:R6502_M]
+  STRNEB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_STACK_WRITE_RETURN
 
-  ;SWI OS_WriteI+32
-  ;LDR r0,=beebit_acccon
-  ;LDR r0,[r0]
-  ;LDR r1,=buffer
-  ;MOV r2,#16
-  ;SWI OS_ConvertHex2 ;BinaryToDecimal
-  ;SWI OS_Write0
+|r6502pushedtopushpwithoutbstep|
+  R6502_CYCLE_UPDATE_PUSH
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  TST r3,#R6502_IRQ_ENABLE
+  SUB r1,r2,#1:SHL:24
+  BICEQ r2,r8,#BFLAG
+  BICNE r2,r8,#BFLAG|IFLAG
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_STACK_WRITE_RETURN
 
-  ;SWI OS_NewLine
+|r6502breadcrumbpushedtointerruptlostep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r2,r2,#1:SHL:24
+  STR r2,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r1,#ADDRESSING_BASEFLAG
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  TST r3,#R6502_NMI_ENABLE
+  TSTNE r3,#R6502_NMI
+  BIC r3,r3,#R6502_IRQ_ENABLE
+  BICNE r3,r3,#R6502_NMI_ENABLE
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  SUBNE r1,r1,#6:SHL:16
+  SUBEQ r1,r1,#2:SHL:16
+  STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  R6502_CYCLE_VECTOR_READ_RETURN
 
-  ;LDR r11,=r6502_cyclestogo
-  ;LDR r0,[r11]
-  ;CMP r0,#0
-  ;-------------------
-;skip2
+|r6502latchveclostep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
+  ADD r1,r1,#1:SHL:16
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_VECTOR_READ_RETURN
 
-r6502execute_loop3
-  ;SWI OS_WriteI+87
-  CMP rcycles,#0
-  ;SWI OS_WriteI+88
-  BGT r6502execute_loop
+|r6502tobrkpushpchstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  ADD r2,r7,#2:SHL:16
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r2,LSR #24
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_STACK_WRITE_RETURN
 
-;r6502execute_end
-  ;LDR r12,=r6502_cyclestore
-  ;LDA r0,[r12]
-  ;LDR r11,=r6502cyclestogo
-  ;LDR r1,[r11]
-  ;SUB r0,r0,r1
-  BL r6502saveregs
-  ;SWI OS_WriteI+90
-  LDMFD sp!,{r0-r12,pc}
+|r6502topushpchstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  MOV r2,r7,LSR #24
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_STACK_WRITE_RETURN
 
-|r6502opcodes|
-  DCD r6502opcode00
-  DCD r6502opcode01
-  DCD r6502opcode02
-  DCD r6502opcode03
-  DCD r6502opcode04
-  DCD r6502opcode05
-  DCD r6502opcode06
-  DCD r6502opcode07
-  DCD r6502opcode08
-  DCD r6502opcode09
-  DCD r6502opcode0A
-  DCD r6502opcode0B
-  DCD r6502opcode0C
-  DCD r6502opcode0D
-  DCD r6502opcode0E
-  DCD r6502opcode0F
-  DCD r6502opcode10
-  DCD r6502opcode11
-  DCD r6502opcode12
-  DCD r6502opcode13
-  DCD r6502opcode14
-  DCD r6502opcode15
-  DCD r6502opcode16
-  DCD r6502opcode17
-  DCD r6502opcode18
-  DCD r6502opcode19
-  DCD r6502opcode1A
-  DCD r6502opcode1B
-  DCD r6502opcode1C
-  DCD r6502opcode1D
-  DCD r6502opcode1E
-  DCD r6502opcode1F
-  DCD r6502opcode20
-  DCD r6502opcode21
-  DCD r6502opcode22
-  DCD r6502opcode23
-  DCD r6502opcode24
-  DCD r6502opcode25
-  DCD r6502opcode26
-  DCD r6502opcode27
-  DCD r6502opcode28
-  DCD r6502opcode29
-  DCD r6502opcode2A
-  DCD r6502opcode2B
-  DCD r6502opcode2C
-  DCD r6502opcode2D
-  DCD r6502opcode2E
-  DCD r6502opcode2F
-  DCD r6502opcode30
-  DCD r6502opcode31
-  DCD r6502opcode32
-  DCD r6502opcode33
-  DCD r6502opcode34
-  DCD r6502opcode35
-  DCD r6502opcode36
-  DCD r6502opcode37
-  DCD r6502opcode38
-  DCD r6502opcode39
-  DCD r6502opcode3A
-  DCD r6502opcode3B
-  DCD r6502opcode3C
-  DCD r6502opcode3D
-  DCD r6502opcode3E
-  DCD r6502opcode3F
-  DCD r6502opcode40
-  DCD r6502opcode41
-  DCD r6502opcode42
-  DCD r6502opcode43
-  DCD r6502opcode44
-  DCD r6502opcode45
-  DCD r6502opcode46
-  DCD r6502opcode47
-  DCD r6502opcode48
-  DCD r6502opcode49
-  DCD r6502opcode4A
-  DCD r6502opcode4B
-  DCD r6502opcode4C
-  DCD r6502opcode4D
-  DCD r6502opcode4E
-  DCD r6502opcode4F
-  DCD r6502opcode50
-  DCD r6502opcode51
-  DCD r6502opcode52
-  DCD r6502opcode53
-  DCD r6502opcode54
-  DCD r6502opcode55
-  DCD r6502opcode56
-  DCD r6502opcode57
-  DCD r6502opcode58
-  DCD r6502opcode59
-  DCD r6502opcode5A
-  DCD r6502opcode5B
-  DCD r6502opcode5C
-  DCD r6502opcode5D
-  DCD r6502opcode5E
-  DCD r6502opcode5F
-  DCD r6502opcode60
-  DCD r6502opcode61
-  DCD r6502opcode62
-  DCD r6502opcode63
-  DCD r6502opcode64
-  DCD r6502opcode65
-  DCD r6502opcode66
-  DCD r6502opcode67
-  DCD r6502opcode68
-  DCD r6502opcode69
-  DCD r6502opcode6A
-  DCD r6502opcode6B
-  DCD r6502opcode6C
-  DCD r6502opcode6D
-  DCD r6502opcode6E
-  DCD r6502opcode6F
-  DCD r6502opcode70
-  DCD r6502opcode71
-  DCD r6502opcode72
-  DCD r6502opcode73
-  DCD r6502opcode74
-  DCD r6502opcode75
-  DCD r6502opcode76
-  DCD r6502opcode77
-  DCD r6502opcode78
-  DCD r6502opcode79
-  DCD r6502opcode7A
-  DCD r6502opcode7B
-  DCD r6502opcode7C
-  DCD r6502opcode7D
-  DCD r6502opcode7E
-  DCD r6502opcode7F
-  DCD r6502opcode80
-  DCD r6502opcode81
-  DCD r6502opcode82
-  DCD r6502opcode83
-  DCD r6502opcode84
-  DCD r6502opcode85
-  DCD r6502opcode86
-  DCD r6502opcode87
-  DCD r6502opcode88
-  DCD r6502opcode89
-  DCD r6502opcode8A
-  DCD r6502opcode8B
-  DCD r6502opcode8C
-  DCD r6502opcode8D
-  DCD r6502opcode8E
-  DCD r6502opcode8F
-  DCD r6502opcode90
-  DCD r6502opcode91
-  DCD r6502opcode92
-  DCD r6502opcode93
-  DCD r6502opcode94
-  DCD r6502opcode95
-  DCD r6502opcode96
-  DCD r6502opcode97
-  DCD r6502opcode98
-  DCD r6502opcode99
-  DCD r6502opcode9A
-  DCD r6502opcode9B
-  DCD r6502opcode9C
-  DCD r6502opcode9D
-  DCD r6502opcode9E
-  DCD r6502opcode9F
-  DCD r6502opcodeA0
-  DCD r6502opcodeA1
-  DCD r6502opcodeA2
-  DCD r6502opcodeA3
-  DCD r6502opcodeA4
-  DCD r6502opcodeA5
-  DCD r6502opcodeA6
-  DCD r6502opcodeA7
-  DCD r6502opcodeA8
-  DCD r6502opcodeA9
-  DCD r6502opcodeAA
-  DCD r6502opcodeAB
-  DCD r6502opcodeAC
-  DCD r6502opcodeAD
-  DCD r6502opcodeAE
-  DCD r6502opcodeAF
-  DCD r6502opcodeB0
-  DCD r6502opcodeB1
-  DCD r6502opcodeB2
-  DCD r6502opcodeB3
-  DCD r6502opcodeB4
-  DCD r6502opcodeB5
-  DCD r6502opcodeB6
-  DCD r6502opcodeB7
-  DCD r6502opcodeB8
-  DCD r6502opcodeB9
-  DCD r6502opcodeBA
-  DCD r6502opcodeBB
-  DCD r6502opcodeBC
-  DCD r6502opcodeBD
-  DCD r6502opcodeBE
-  DCD r6502opcodeBF
-  DCD r6502opcodeC0
-  DCD r6502opcodeC1
-  DCD r6502opcodeC2
-  DCD r6502opcodeC3
-  DCD r6502opcodeC4
-  DCD r6502opcodeC5
-  DCD r6502opcodeC6
-  DCD r6502opcodeC7
-  DCD r6502opcodeC8
-  DCD r6502opcodeC9
-  DCD r6502opcodeCA
-  DCD r6502opcodeCB
-  DCD r6502opcodeCC
-  DCD r6502opcodeCD
-  DCD r6502opcodeCE
-  DCD r6502opcodeCF
-  DCD r6502opcodeD0
-  DCD r6502opcodeD1
-  DCD r6502opcodeD2
-  DCD r6502opcodeD3
-  DCD r6502opcodeD4
-  DCD r6502opcodeD5
-  DCD r6502opcodeD6
-  DCD r6502opcodeD7
-  DCD r6502opcodeD8
-  DCD r6502opcodeD9
-  DCD r6502opcodeDA
-  DCD r6502opcodeDB
-  DCD r6502opcodeDC
-  DCD r6502opcodeDD
-  DCD r6502opcodeDE
-  DCD r6502opcodeDF
-  DCD r6502opcodeE0
-  DCD r6502opcodeE1
-  DCD r6502opcodeE2
-  DCD r6502opcodeE3
-  DCD r6502opcodeE4
-  DCD r6502opcodeE5
-  DCD r6502opcodeE6
-  DCD r6502opcodeE7
-  DCD r6502opcodeE8
-  DCD r6502opcodeE9
-  DCD r6502opcodeEA
-  DCD r6502opcodeEB
-  DCD r6502opcodeEC
-  DCD r6502opcodeED
-  DCD r6502opcodeEE
-  DCD r6502opcodeEF
-  DCD r6502opcodeF0
-  DCD r6502opcodeF1
-  DCD r6502opcodeF2
-  DCD r6502opcodeF3
-  DCD r6502opcodeF4
-  DCD r6502opcodeF5
-  DCD r6502opcodeF6
-  DCD r6502opcodeF7
-  DCD r6502opcodeF8
-  DCD r6502opcodeF9
-  DCD r6502opcodeFA
-  DCD r6502opcodeFB
-  DCD r6502opcodeFC
-  DCD r6502opcodeFD
-  DCD r6502opcodeFE
-  DCD r6502opcodeFF
+|r6502latchabslobeforepushstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  ADD r2,r7,#2:SHL:16
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  STR r2,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  STRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_STACK_READ_RETURN
 
-;f113
-;  DCD &F113
-;flag
-;  DCD 00
+|r6502tojsrpushpchstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_LAST_PC_CODE+3]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_STACK_WRITE_RETURN
 
-buffer
-  DCD 0
-  DCD 0
-  DCD 0
-  DCD 0
+|r6502pushedtojsrpushpclstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r1,r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_LAST_PC_CODE+2]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_STACK_WRITE_RETURN
+
+|r6502pushedtoloadpchstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r2,r2,#1:SHL:24
+  STR r2,[r0,#:INDEX:R6502_SP_CODE]
+  LDR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  R6502_CYCLE_READ_RETURN
+
+|r6502pulledptopullstep|
+  R6502_CYCLE_UPDATE_PUSH
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  LDRB r8,[r0,#:INDEX:R6502_M]
+  ADD r1,r2,#1:SHL:24
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  TST r8,#IFLAG
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  BICNE r3,r3,#R6502_IRQ_ENABLE
+  ORREQ r3,r3,#R6502_IRQ_ENABLE
+  ORR r8,r8,#UFLAG|BFLAG|IFLAG
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  R6502_CYCLE_UPDATE_POP
+  R6502_CYCLE_STACK_READ_RETURN
+
+|r6502pulledpclstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDR r2,[r0,#:INDEX:R6502_SP_CODE]
+  ADD r1,r2,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_STACK_READ_RETURN
+
+|r6502loadpchtoincrementstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r1,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_LATCH]
+  ORR r1,r2,r1,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG
+  STR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  R6502_CYCLE_READ_RETURN
+
+|r6502midstretchstep|
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502_CYCLE_STRETCH_RETURN
+
+|r6502stretchedreadstep|
+  LDR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_STRETCHED_ADDRESS_CODE]
+  STR r3,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502_CYCLE_CALL_ACTION R6502_READSPECIALACTION
+  R6502_CYCLE_RETURN
+
+|r6502stretcheddiscardstep|
+  LDR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_STRETCHED_ADDRESS_CODE]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  STR r3,[r0,#:INDEX:R6502_CPU_STATE]
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_CYCLE_CALL_ACTION R6502_READSPECIALACTION
+  LDRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_RETURN
+
+|r6502stretchedwritestep|
+  LDR r3,[r0,#:INDEX:R6502_STRETCHED_CPU_STATE]
+  LDR r1,[r0,#:INDEX:R6502_STRETCHED_ADDRESS_CODE]
+  STR r3,[r0,#:INDEX:R6502_CPU_STATE]
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_CALL_ACTION R6502_WRITESPECIALACTION
+  R6502_CYCLE_RETURN
+
+|r6502startyield|
+  LDR r1,[r0,#:INDEX:R6502_TRANSITION1]
+  MOV r3,#R6502_YIELD_TRANSITION
+  CMP r1,#R6502_REGULAR_TRANSITION
+  STR r3,[r0,#:INDEX:R6502_TRANSITION2]
+  MOVNE pc,lr
+  STR r3,[r0,#:INDEX:R6502_TRANSITION1]
+  LDR r1,[r0,#:INDEX:R6502_LBREAK]
+  TST r1,r1
+  MOVNE r3,#R6502_RESET_TRANSITION
+  STRNE r3,[r0,#:INDEX:R6502_TRANSITION1]
+  MOV pc,lr
+
+|r6502yieldstep|
+  [ Optimise6502Links
+  LDR pc,[r0,#:INDEX:R6502_YIELDLINK]
+  |
+  MOV pc,lr
+  ]
+
 
 ;Data Area
 
 ;  AREA    |C$$data|, DATA
-
-;|constFFFFFFFF|
-;  DCD &FFFFFFFF
-
-;r6502_cyclestore
-;  DCD 0
 
   END

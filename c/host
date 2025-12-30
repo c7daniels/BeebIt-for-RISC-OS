@@ -1,0 +1,1350 @@
+/*>host.c
+ *
+ * BeebIt - BBC Micro Model B Emulator
+ *
+ * Cycle-level CPU emulation
+ *
+ * (C) Copyright Crispian Daniels, 2025
+ *
+ * Email: <convertedgames@3insdale.me.uk>
+ */
+
+#include <assert.h>
+#include <stddef.h>
+#include <string.h>
+#include "beebit.h"
+#include "host.h"
+#include "6502cpu.h"
+#include "sheila.h"
+#include "1770fdc.h"
+#include "6522sysvia.h"
+#include "6522usrvia.h"
+#include "6845crtc.h"
+#include "6850acia.h"
+#include "76489sound.h"
+#include "8271fdc.h"
+#include "adc.h"
+#include "keyboard.h"
+#include "video.h"
+#include "videoula.h"
+#ifdef __RISCOS__
+#include "kernel.h"
+#include "swis.h"
+#endif
+
+#ifdef __RISCOS__
+extern _kernel_swi_regs regs;
+#endif
+
+static_assert(offsetof(HOSTMAP, m_shift) == offsetof(R6502ZONEMAP, m_shift), "Expecting consistent data bus value offsets");
+static_assert(offsetof(HOSTMAP, m) == offsetof(R6502ZONEMAP, m), "Expecting consistent data bus value offsets");
+
+static_assert(offsetof(HOSTMAP, AC) == offsetof(R6502ZONEMAP, AC), "Expecting consistent zone offsets");
+static_assert(offsetof(HOSTMAP, BC) == offsetof(R6502ZONEMAP, BC), "Expecting consistent zone offsets");
+static_assert(offsetof(HOSTMAP, CC) == offsetof(R6502ZONEMAP, CC), "Expecting consistent zone offsets");
+static_assert(offsetof(HOSTMAP, DC) == offsetof(R6502ZONEMAP, DC), "Expecting consistent zone offsets");
+static_assert(offsetof(HOSTMAP, EC) == offsetof(R6502ZONEMAP, EC), "Expecting consistent zone offsets");
+
+extern R6502CPUMAP* host_r6502address0000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502address3000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502addressbp3000_ram(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502addressbp3000_ramram(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502addressm3000_x(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502addressm3000_e(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502addressbp8000_ram(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502addressm8000_ram(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502addressmC000_y(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502addressFE00_fast(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502addressFE00_slow(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_0(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_1(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_2(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_3(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_4(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_5(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_6(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_7(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_8(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_9(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_A(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_B(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_C(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_D(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_E(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502read8000_F(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502readC000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502readF000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502readmFC00(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_0(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_1(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_2(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_3(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_4(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_5(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_6(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_7(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_8(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_9(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_A(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_B(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_C(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_D(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_E(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modify8000_F(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modifyC000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modifyF000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+extern R6502CPUMAP* host_r6502modifymFC00(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+
+extern R6502CPUMAP* host_r6502readfred(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* host_r6502readjim(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* host_r6502writefred(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern R6502CPUMAP* host_r6502writejim(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+
+extern R6502CPUMAP* host_r6502readmfred(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* host_r6502readmjim(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* host_r6502writemfred(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+extern R6502CPUMAP* host_r6502writemjim(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+
+extern R6502CPUMAP* host_r6502cycle(R6502CPUMAP* cmap);
+extern R6502CPUMAP* host_r6502readspecial(R6502CPUMAP* cmap, uintptr_t address_code);
+extern R6502CPUMAP* host_r6502writespecial(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
+
+#ifdef BEEBIT_NO_ASM
+HOSTMAP hostmap;
+#endif
+
+extern R6502CPUMAP* host_r6502opcode07interfacestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+static inline void hoststartreset(int poweron)
+{
+  userviastartreset(poweron);
+
+  i8271reset();
+  w1770reset();
+}
+
+static inline void hostendreset(void)
+{
+  userviafinishreset();
+
+  i8271reset();
+  w1770reset();
+}
+
+static R6502CPUMAP* host_r6502onresetstart(R6502CPUMAP* cmap)
+{
+  hoststartreset(FALSE);
+  return cmap;
+}
+
+static R6502CPUMAP* host_r6502onresetcontinue(R6502CPUMAP* cmap)
+{
+  hostendreset();
+  return cmap;
+}
+
+#ifdef BEEBIT_NO_ASM
+void swappages(uint8_t *block1, uint8_t *block2, int npagecount)
+{
+  char swap[256];
+  for (; npagecount > 0; npagecount--)
+  {
+    memcpy(swap,block1,256);
+    memcpy(block1,block2,256);
+    memcpy(block2,swap,256);
+    block1 += 256;
+    block2 += 256;
+  }
+}
+
+R6502CPUMAP* host_r6502address0000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&0000 - &2FFF (RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->memory[address_code>>16]);
+}
+
+R6502CPUMAP* host_r6502address3000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&3000 - &7FFF (RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->memory[address_code>>16]);
+}
+
+R6502CPUMAP* host_r6502addressbp3000_ram(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*bbc b+*/
+  /*&3000 - &7FFF*/
+  /*shadow mode*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t pc = cmap->sync_pc_code;
+  uint8_t* block;
+  if (pc >= 0xC0000000 AND pc < 0xE0000000)
+    block = hmap->shadow;
+  else
+    block = hmap->memory;
+  return callbacks->mapped(cmap, &block[address_code>>16]);
+}
+
+R6502CPUMAP* host_r6502addressbp3000_ramram(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*bbc b+*/
+  /*&3000 - &7FFF*/
+  /*shadow mode plus 12K ram*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t pc = cmap->sync_pc_code;
+  uint8_t* block;
+  if (pc >= 0xA0000000 AND pc < 0xB0000000)
+    block = hmap->shadow;
+  else if (pc >= 0xC0000000 AND pc < 0xE0000000)
+    block = hmap->shadow;
+  else
+    block = hmap->memory;
+  return callbacks->mapped(cmap, &block[address_code>>16]);
+}
+
+R6502CPUMAP* host_r6502addressm3000_x(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*bbc master 128*/
+  /*&3000 - &7FFF (RAM)*/
+  /*LYNNE (ACCCON b2) (X)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->shadow[address_code>>16]);
+}
+
+R6502CPUMAP* host_r6502addressm3000_e(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*bbc master 128*/
+  /*&3000 - &7FFF (RAM)*/
+  /*(ACCCON b1) (E)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t pc = cmap->sync_pc_code;
+  uint8_t* block;
+  if (pc >= 0xC0000000 AND pc < 0xE0000000)
+    block = hmap->shadow;
+  else
+    block = hmap->memory;
+  return callbacks->mapped(cmap, &block[address_code>>16]);
+}
+
+R6502CPUMAP* host_r6502addressbp8000_ram(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*bbc b+*/
+  /*&8000 - &AFFF (SHADOW RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->shadow[(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502addressm8000_ram(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*bbc master 128*/
+  /*&8000 - &8FFF*/
+  /*ANDY (ROMSEL b7)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->shadow[(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502addressmC000_y(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*bbc master 128*/
+  /*&C000 - &DFFF*/
+  /*HAZEL (ACCCON b3) (Y)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->shadow[(address_code>>16)-0xB000]);
+}
+
+R6502CPUMAP* host_r6502addressFE00_fast(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  return callbacks->special(cmap, address_code);
+}
+
+R6502CPUMAP* host_r6502addressFE00_slow(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  if (!((hmap->cycles.odd ^ hmap->cycles.togo ^ hmap->cycles.original) & 1))
+    return callbacks->stretch1special(cmap, address_code);
+  else
+    return callbacks->stretch2special(cmap, address_code);
+}
+
+R6502CPUMAP* host_r6502read8000_0(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[0][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_1(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[1][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_2(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[2][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_3(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[3][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_4(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[4][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_5(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[5][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_6(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[6][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_7(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[7][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_8(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[8][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_9(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[9][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_A(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[10][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_B(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[11][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_C(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[12][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_D(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[13][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_E(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[14][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502read8000_F(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->roms[15][(address_code>>16)-0x8000]);
+}
+
+R6502CPUMAP* host_r6502readC000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&C000 - &EFFF (OS)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return callbacks->mapped(cmap, &hmap->memory[address_code>>16]);
+}
+
+R6502CPUMAP* host_r6502readF000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  if (address_code >= 0xFC000000)
+  {
+    return hmap->readhigh[(address_code>>16)-0xFC00](cmap, address_code, callbacks);
+  }
+  else
+  {
+    /*&F000 - &FBFF (OS)*/
+    return callbacks->mapped(cmap, &hmap->memory[address_code>>16]);
+  }
+}
+
+R6502CPUMAP* host_r6502readmFC00(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return hmap->readmFC00(cmap, address_code, callbacks);
+}
+
+R6502CPUMAP* host_r6502modify8000_0(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[0][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[0])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_1(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[1][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[1])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_2(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[2][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[2])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_3(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[3][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[3])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_4(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[4][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[4])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_5(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[5][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[5])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_6(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[6][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[6])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_7(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[7][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[7])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_8(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[8][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[8])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_9(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[9][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[9])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_A(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[10][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[10])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_B(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[11][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[11])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_C(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[12][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[12])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_D(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[13][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[13])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_E(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[14][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[14])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modify8000_F(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&8000 - &BFFF (SIDEWAYS RAM)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->roms[15][(address_code>>16)-0x8000];
+  /*check sideways ram write enabled*/
+  if (hmap->romwritable[15])
+    return callbacks->mapped(cmap, p);
+  else
+  {
+    cmap->copiedvalue = *p;
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modifyC000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  /*&C000 - &EFFF (OS - should not be allowed!)*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uint8_t* p = &hmap->memory[address_code>>16];
+  cmap->copiedvalue = *p;
+  return callbacks->mapped(cmap, &cmap->copiedvalue);
+}
+
+R6502CPUMAP* host_r6502modifyF000(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  if (address_code >= 0xFC000000)
+  {
+    return hmap->modifyhigh[(address_code>>16)-0xFC00](cmap, address_code, callbacks);
+  }
+  else
+  {
+    /*&F000 - &FBFF (OS - should not be allowed!)*/
+    cmap->copiedvalue = hmap->memory[address_code>>16];
+    return callbacks->mapped(cmap, &cmap->copiedvalue);
+  }
+}
+
+R6502CPUMAP* host_r6502modifymFC00(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return hmap->modifymFC00(cmap, address_code, callbacks);
+}
+
+R6502CPUMAP* host_r6502readfred(R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+#ifdef __RISCOS__
+  regs.r[0] = 0x92; /*(146) read FRED*/
+  regs.r[1] = (address_code>>16)&0xFF;
+  regs.r[2] = 0xFE; /*unimplemented*/
+  _kernel_swi(OS_Byte,&regs,&regs);
+  hmap->m = regs.r[2];
+#else
+  hmap->m = 0xFE;
+#endif
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502readjim(R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+#ifdef __RISCOS__
+  regs.r[0] = 0x94; /*(148) read JIM*/
+  regs.r[1] = (address_code>>16)&0xFF;
+  regs.r[2] = 0xFE; /*unimplemented*/
+  _kernel_swi(OS_Byte,&regs,&regs);
+  hmap->m = regs.r[2];
+#else
+  hmap->m = 0xFE;
+#endif
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502writefred(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+#ifdef __RISCOS__
+  regs.r[0] = 0x93; /*(147) write FRED*/
+  regs.r[1] = (address_code>>16)&0xFF;
+  regs.r[2] = value;
+  _kernel_swi(OS_Byte,&regs,&regs);
+#endif
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502writejim(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+#ifdef __RISCOS__
+  regs.r[0] = 0x95; /*(149) write JIM*/
+  regs.r[1] = (address_code>>16)&0xFF;
+  regs.r[2] = value;
+  _kernel_swi(OS_Byte,&regs,&regs);
+#endif
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502readmfred(R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  if (!(hmap->acccon & 0x60))
+    host_r6502readfred(cmap, address_code);
+  else
+    hmap->m = 0;
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502readmjim(R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  if (!(hmap->acccon & 0x60))
+    host_r6502readjim(cmap, address_code);
+  else
+    hmap->m = 0;
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502writemfred(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  if (!(hmap->acccon & 0x60))
+    host_r6502writefred(cmap, address_code, value);
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502writemjim(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  if (!(hmap->acccon & 0x60))
+    host_r6502writejim(cmap, address_code, value);
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502cycle(R6502CPUMAP* cmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+
+  if (--hmap->cycles.togo == 0)
+    hostadvancetimers(hmap);
+
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502readspecial(R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return hmap->specialreadops[(address_code>>16)-0xFC00](cmap, address_code);
+}
+
+R6502CPUMAP* host_r6502writespecial(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return hmap->specialwriteops[(address_code>>16)-0xFC00](cmap, address_code, value);
+}
+#endif
+
+const R6502OP host_r6502_opcode07interfacesequence[] = {host_r6502opcode07interfacestep, NULL};
+
+HOSTMAP* swappagesintomemoryb(HOSTMAP* hmap)
+{
+  int nrom;
+
+  nrom = hmap->romsel & 0x0F;
+  memcpy(&hmap->memory[0x8000],hmap->roms[nrom],0x4000);
+  return hmap;
+}
+
+HOSTMAP* swappagesintomemorybp(HOSTMAP* hmap)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  int nrom;
+  uintptr_t pc = (cmap->sync_pc_code>>16);
+
+  if ((pc >= 0xC000 AND pc < 0xE000)
+    OR ((hmap->romsel & 0x80) AND pc >= 0xA000 AND pc < 0xB000))
+  {
+    swappages(&hmap->memory[0x3000],&hmap->shadow[0x3000],0x50);
+  }
+
+  nrom = hmap->romsel & 0x0F;
+  if (nrom == 0x0F)
+    nrom = 0x0E;
+  if (hmap->romsel & 0x80)
+  {
+    memcpy(&hmap->memory[0x8000],hmap->shadow,0x3000);
+    memcpy(&hmap->memory[0xB000],&hmap->roms[nrom][0x3000],0x1000);
+  }
+  else
+    memcpy(&hmap->memory[0x8000],hmap->roms[nrom],0x4000);
+  return hmap;
+}
+
+HOSTMAP* swappagesintomemorym(HOSTMAP* hmap)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  int nrom;
+  uintptr_t pc = (cmap->sync_pc_code>>16);
+
+  if ((hmap->acccon & 0x04)
+    OR ((hmap->acccon & 0x02) AND pc >= 0xC000 AND pc < 0xE000))
+  {
+    swappages(&hmap->memory[0x3000],&hmap->shadow[0x3000],0x50);
+  }
+
+  nrom = hmap->romsel & 0x0F;
+  if (hmap->romsel & 0x80)
+  {
+    memcpy(&hmap->memory[0x8000],hmap->shadow,0x1000);
+    memcpy(&hmap->memory[0x9000],&hmap->roms[nrom][0x1000],0x3000);
+  }
+  else
+    memcpy(&hmap->memory[0x8000],hmap->roms[nrom],0x4000);
+
+  if (hmap->acccon & 0x04)
+    swappages(&hmap->memory[0xC000],&hmap->shadow[0x1000],0x20);
+
+  return hmap;
+}
+
+HOSTMAP* swappagesoutofmemoryb(HOSTMAP* hmap)
+{
+  int nrom;
+
+  nrom = hmap->romsel & 0x0F;
+  if (hmap->romwritable[nrom])
+    memcpy(hmap->roms[nrom],&hmap->memory[0x8000],0x4000);
+  return hmap;
+}
+
+HOSTMAP* swappagesoutofmemorybp(HOSTMAP* hmap)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  int nrom;
+  uintptr_t pc = (cmap->sync_pc_code>>16);
+
+  if ((pc >= 0xC000 AND pc < 0xE000)
+    OR ((hmap->romsel & 0x80) AND pc >= 0xA000 AND pc < 0xB000))
+  {
+    swappages(&hmap->memory[0x3000],&hmap->shadow[0x3000],0x50);
+  }
+
+  nrom = hmap->romsel & 0x0F;
+  if (nrom == 0x0F)
+    nrom = 0x0E;
+  if (hmap->romsel & 0x80)
+  {
+    memcpy(hmap->shadow,&hmap->memory[0x8000],0x3000);
+    if (hmap->romwritable[nrom])
+      memcpy(&hmap->roms[nrom][0x3000],&hmap->memory[0xB000],0x1000);
+  }
+  else
+  {
+    if (hmap->romwritable[nrom])
+      memcpy(hmap->roms[nrom],&hmap->memory[0x8000],0x4000);
+  }
+  return hmap;
+}
+
+HOSTMAP* swappagesoutofmemorym(HOSTMAP* hmap)
+{
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  int nrom;
+  uintptr_t pc = (cmap->sync_pc_code>>16);
+
+  if ((hmap->acccon & 0x04)
+    OR ((hmap->acccon & 0x02) AND pc >= 0xC000 AND pc < 0xE000))
+  {
+    swappages(&hmap->memory[0x3000],&hmap->shadow[0x3000],0x50);
+  }
+
+  nrom = hmap->romsel & 0x0F;
+  if (hmap->romsel & 0x80)
+  {
+    memcpy(hmap->shadow,&hmap->memory[0x8000],0x1000);
+    if (hmap->romwritable[nrom])
+      memcpy(&hmap->roms[nrom][0x1000],&hmap->memory[0x9000],0x1000);
+  }
+  else
+  {
+    if (hmap->romwritable[nrom])
+      memcpy(hmap->roms[nrom],&hmap->memory[0x8000],0x4000);
+  }
+
+  if (hmap->acccon & 0x04)
+    swappages(&hmap->memory[0xC000],&hmap->shadow[0x1000],0x20);
+
+  return hmap;
+}
+
+
+void hostinit(void)
+{
+  videoinit();
+}
+
+void hostapplysoundoption(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  R6502WRITESPECIALOP* specialwriteops = &hmap->specialwriteops[0x200];
+  int i;
+
+  for (i=0x40; i<0x60; i+=0x10)
+  {
+    if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+    {
+      if (beebit_sound)
+      {
+        specialwriteops[i] = systemvia00write_m;
+        specialwriteops[i+0x01] = systemvia01write_m;
+        specialwriteops[i+0x0F] = systemvia0Fwrite_m;
+      }
+      else
+      {
+        specialwriteops[i] = systemvia00write_nosoundm;
+        specialwriteops[i+0x01] = systemvia01write_nosoundm;
+        specialwriteops[i+0x0F] = systemvia0Fwrite_nosoundm;
+      }
+    }
+    else
+    {
+      if (beebit_sound)
+      {
+        specialwriteops[i] = systemvia00write_b;
+        specialwriteops[i+0x01] = systemvia01write_b;
+        specialwriteops[i+0x0F] = systemvia0Fwrite_b;
+      }
+      else
+      {
+        specialwriteops[i] = systemvia00write_nosoundb;
+        specialwriteops[i+0x01] = systemvia01write_nosoundb;
+        specialwriteops[i+0x0F] = systemvia0Fwrite_nosoundb;
+      }
+    }
+  }
+}
+
+int hostresetcpu(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  const R6502OP* const *mainsequences;
+  const R6502OP* const extrasequences[R6502_EXTRA_SEQUENCE_COUNT] = {
+    host_r6502_opcode07interfacesequence
+  };
+
+  cmap->pagezero = &hmap->memory[0];
+  cmap->pageone = &hmap->memory[0x100];
+  cmap->pageminusone = &hmap->memory[0xFF00];
+
+  switch (beebit_machinetype)
+  {
+    case MACHINE_MODELB:
+    case MACHINE_MODELBPLUS:
+      mainsequences = r6502sequences;
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      mainsequences = r65c12sequences;
+      break;
+  }
+
+  if (r6502reset(cmap, mainsequences, extrasequences))
+      return TRUE;
+
+  cmap->interruptqueue = 0;
+  cmap->resetstartingaction = host_r6502onresetstart;
+  cmap->resetcontinuingaction = host_r6502onresetcontinue;
+
+  return FALSE;
+}
+
+void hostresetperipherals(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+  const R6502ADDRESSINGOP initialaddressingops[32] = {
+    host_r6502address0000, host_r6502address0000, host_r6502address0000,
+    host_r6502address3000, host_r6502address3000, host_r6502address3000, host_r6502address3000, host_r6502address3000,
+    host_r6502read8000_0, host_r6502read8000_0, host_r6502read8000_0, host_r6502read8000_0,
+    host_r6502readC000, host_r6502readC000, host_r6502readC000,
+    host_r6502readF000,
+    host_r6502address0000, host_r6502address0000, host_r6502address0000,
+    host_r6502address3000, host_r6502address3000, host_r6502address3000, host_r6502address3000, host_r6502address3000,
+    host_r6502modify8000_0, host_r6502modify8000_0, host_r6502modify8000_0, host_r6502modify8000_0,
+    host_r6502modifyC000, host_r6502modifyC000, host_r6502modifyC000,
+    host_r6502modifyF000
+  };
+  const R6502ADDRESSINGOP read8000s[0x10] =
+  {
+    host_r6502read8000_0, host_r6502read8000_1,
+    host_r6502read8000_2, host_r6502read8000_3,
+    host_r6502read8000_4, host_r6502read8000_5,
+    host_r6502read8000_6, host_r6502read8000_7,
+    host_r6502read8000_8, host_r6502read8000_9,
+    host_r6502read8000_A, host_r6502read8000_B,
+    host_r6502read8000_C, host_r6502read8000_D,
+    host_r6502read8000_E, host_r6502read8000_F
+  };
+  R6502ADDRESSINGOP modify8000s[0x10] =
+  {
+    host_r6502modify8000_0, host_r6502modify8000_1,
+    host_r6502modify8000_2, host_r6502modify8000_3,
+    host_r6502modify8000_4, host_r6502modify8000_5,
+    host_r6502modify8000_6, host_r6502modify8000_7,
+    host_r6502modify8000_8, host_r6502modify8000_9,
+    host_r6502modify8000_A, host_r6502modify8000_B,
+    host_r6502modify8000_C, host_r6502modify8000_D,
+    host_r6502modify8000_E, host_r6502modify8000_F
+  };
+  R6502ADDRESSINGOP readFC00, modifyFC00;
+  R6502READSPECIALOP readfred, readjim;
+  R6502WRITESPECIALOP writefred, writejim;
+  const int slow_mask = 0x0F00FF0F;
+  int i;
+
+  cmap->oldreset = 1;
+
+  hmap->cycles.odd = 0;
+  hmap->cycles.togo = 0x10000;
+  hmap->cycles.original = hmap->cycles.togo;
+  hmap->interrupts = 0;
+
+  cmap->cycleaction = host_r6502cycle;
+  cmap->readspecialaction = host_r6502readspecial;
+  cmap->writespecialaction = host_r6502writespecial;
+
+  for (i=0; i<32; i++)
+  {
+    cmap->addressingops[i].op = initialaddressingops[i];
+  }
+
+  memcpy(hmap->read8000s, read8000s, sizeof(read8000s));
+  memcpy(hmap->modify8000s, modify8000s, sizeof(modify8000s));
+
+  if (beebit_machinetype == MACHINE_MODELBPLUS)
+  {
+    /*make rom F use rom E*/
+    hmap->read8000s[0xF] = read8000s[0xE];
+    hmap->modify8000s[0xF] = modify8000s[0xE];
+  }
+
+  hmap->paging.address3000 = host_r6502address3000;
+
+  switch (beebit_machinetype)
+  {
+    default:
+      hmap->paging.address3000_ram = NULL;
+      hmap->paging.address3000_ramram = NULL;
+      break;
+    case MACHINE_MODELBPLUS:
+      hmap->paging.address3000_ram = host_r6502addressbp3000_ram;
+      hmap->paging.address3000_ramram = host_r6502addressbp3000_ramram;
+      break;
+  }
+
+  switch (beebit_machinetype)
+  {
+    default:
+      hmap->paging.address3000_e = NULL;
+      hmap->paging.address3000_x = NULL;
+      hmap->paging.addressC000_y = NULL;
+      readFC00 = host_r6502addressFE00_slow;
+      modifyFC00 = host_r6502addressFE00_slow;
+      readfred = host_r6502readfred;
+      readjim = host_r6502readjim;
+      writefred = host_r6502writefred;
+      writejim = host_r6502writejim;
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      hmap->paging.address3000 = host_r6502address3000;
+      hmap->paging.address3000_e = host_r6502addressm3000_e;
+      hmap->paging.address3000_x = host_r6502addressm3000_x;
+      hmap->paging.addressC000_y = host_r6502addressmC000_y;
+      readFC00 = host_r6502readmFC00;
+      modifyFC00 = host_r6502modifymFC00;
+      readfred = host_r6502readmfred;
+      readjim = host_r6502readmjim;
+      writefred = host_r6502writemfred;
+      writejim = host_r6502writemjim;
+      break;
+  }
+
+  switch (beebit_machinetype)
+  {
+    default:
+      hmap->paging.address8000_ram = NULL;
+      hmap->paging.swapintomemory = swappagesintomemoryb;
+      hmap->paging.swapoutofmemory = swappagesoutofmemoryb;
+      break;
+    case MACHINE_MODELBPLUS:
+      hmap->paging.address8000_ram = host_r6502addressbp8000_ram;
+      hmap->paging.swapintomemory = swappagesintomemorybp;
+      hmap->paging.swapoutofmemory = swappagesoutofmemorybp;
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      hmap->paging.address8000_ram = host_r6502addressm8000_ram;
+      hmap->paging.swapintomemory = swappagesintomemorym;
+      hmap->paging.swapoutofmemory = swappagesoutofmemorym;
+      break;
+  }
+
+  hmap->paging.addressFC00 = host_r6502addressFE00_slow;
+  hmap->paging.addressFC00_ifj = host_r6502addressFE00_fast;
+  hmap->readmFC00 = host_r6502addressFE00_slow;
+  hmap->modifymFC00 = host_r6502addressFE00_slow;
+
+  for (i=0; i<0x200; i++)
+  {
+    hmap->readhigh[i] = readFC00;
+    hmap->modifyhigh[i] = modifyFC00;
+  }
+  for (i=0; i<0x100; i++)
+  {
+    if (slow_mask & (1<<(i>>3)))
+    {
+      hmap->readhigh[0x200+i] = host_r6502addressFE00_slow;
+      hmap->modifyhigh[0x200+i] = host_r6502addressFE00_slow;
+    }
+    else
+    {
+      hmap->readhigh[0x200+i] = host_r6502addressFE00_fast;
+      hmap->modifyhigh[0x200+i] = host_r6502addressFE00_fast;
+    }
+  }
+  for (i=0; i<0x100; i++)
+  {
+    hmap->readhigh[0x300+i] = host_r6502readC000;
+    hmap->modifyhigh[0x300+i] = host_r6502modifyC000;
+  }
+
+  for (i=0; i<0x100; i++)
+  {
+    hmap->specialreadops[i] = readfred;
+    hmap->specialwriteops[i] = writefred;
+  }
+  for (i=0; i<0x100; i++)
+  {
+    hmap->specialreadops[0x100+i] = readjim;
+    hmap->specialwriteops[0x100+i] = writejim;
+  }
+
+  sheilareset();
+  aciareset();
+  adcreset();
+  videoulareset();
+  crtcreset();
+  keyboardreset();
+  systemviareset();
+  videoreset();
+  soundreset();
+  hoststartreset(TRUE);
+}
+
+#ifdef BEEBIT_NO_ASM
+HOSTMAP* hostadvancetimers(HOSTMAP* hmap)
+{
+  intptr_t cyclesoriginal, fewestcyclestogo, cyclestogo;
+
+  cyclesoriginal = hmap->cycles.original;
+  hmap->cycles.original = 0;
+  hmap->cycles.odd ^= (cyclesoriginal & 1);
+  hmap->cycles.monotonic += cyclesoriginal;
+  fewestcyclestogo = (1<<16);
+
+  cyclestogo = hmap->cycles.sysvia_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.sysvia_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      systemviaatzerocycles(hmap);
+      cyclestogo = hmap->cycles.sysvia_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.usrvia_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.usrvia_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      userviaatzerocycles(hmap);
+      cyclestogo = hmap->cycles.usrvia_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.i8271_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.i8271_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      i8271poll(hmap);
+      cyclestogo = hmap->cycles.i8271_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.w1770_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.w1770_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      w1770poll(hmap);
+      cyclestogo = hmap->cycles.w1770_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.adc_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.adc_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      adcpoll(hmap);
+      cyclestogo = hmap->cycles.adc_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.m6850_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.m6850_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      aciapoll(hmap);
+      cyclestogo = hmap->cycles.m6850_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  cyclestogo = hmap->cycles.video_togo - cyclesoriginal;
+  if (cyclestogo >= 0)
+  {
+    hmap->cycles.video_togo = cyclestogo;
+    if (cyclestogo == 0)
+    {
+      videoatzerocycles(hmap);
+      cyclestogo = hmap->cycles.video_togo;
+    }
+    if (fewestcyclestogo > cyclestogo && cyclestogo > 0)
+      fewestcyclestogo = cyclestogo;
+  }
+
+  hmap->cycles.original = fewestcyclestogo;
+  hmap->cycles.togo = fewestcyclestogo;
+  return hmap;
+}
+
+void hostexecute(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+
+  cmap->cpu_state = cmap->execute_cpu_state;
+  cmap->transition1 = R6502_REGULAR_TRANSITION;
+  cmap->transition2 = R6502_REGULAR_TRANSITION;
+
+  while (cmap->cpu_state != cmap->sequences[R6502_YIELD_SEQUENCE])
+  {
+    (*cmap->cpu_state)(cmap, (intptr_t)(cmap->cpu_state+1));
+  }
+}
+#endif
+
+void hostbeforesnapshot(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+
+  systemviabeforesnapshot();
+  userviabeforesnapshot();
+
+  r6502beforesnapshot(cmap);
+}
+
+void hostaftersnapshot(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)hmap;
+
+  systemviaaftersnapshot();
+  userviaaftersnapshot();
+
+  switch (beebit_machinetype)
+  {
+    default:
+      romselwrite_b(cmap, 0xFE300000, hmap->romsel);
+      break;
+    case MACHINE_MODELBPLUS:
+      romselwrite_bp(cmap, 0xFE300000, hmap->romsel);
+      accconwrite_bp(cmap, 0xFE340000, hmap->acccon);
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      romselwrite_m(cmap, 0xFE300000, hmap->romsel);
+      accconwrite_m(cmap, 0xFE340000, hmap->acccon);
+      break;
+  }
+
+  cmap->oldreset = 0;
+
+  r6502aftersnapshot(cmap);
+}

@@ -1,20 +1,21 @@
-/*>8271.c
+/*>8271fdc.c
  *
  * BeebIt - BBC Micro Model B Emulator
  *
  * (C) Copyright Michael J Foot, 1998-2003
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
 /*reads/writes one byte every 80us (160 2MHz cycles)*/
 
-#include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include "6502cpu.h"
-#include "8271fdc.h"
 #include "beebit.h"
+#include "host.h"
+#include "8271fdc.h"
+#include "riscos.h"
 #include "keyboard.h"
 
 #ifdef __DEVELOP__
@@ -26,34 +27,7 @@
 #endif
 
 /*Intel 8271*/
-/*int i8271_writeprotect[2];*/
-char i8271_commandreg;
-char i8271_statusreg;
-char i8271_resultreg;
-char i8271_datareg;
-char i8271_select;
-char i8271_scansector;
-char i8271_scancountmsb;
-char i8271_scancountlsb;
-char i8271_currenttrack[2];
-char i8271_modereg;
-char i8271_outputport;
-char i8271_inputport;
-int i8271_steprate;
-int i8271_headsettletime;
-int i8271_indexcount;
-int i8271_headloadtime;
-char i8271_badtrack[2][2]; /*drive,track*/
-char i8271_parameter[16]; /*heaps more than we need*/
 char i8271_data[0x1000]; /*hope we don't get any sectors > 4096 bytes*/
-int i8271_timer;
-int i8271_writestart; /*indicates when writing starts*/
-
-int ncurrentdrive,CurrentTrack, CurrentSector, SectorsToGo, SectorLength, ByteWithinSector;
-
-int ncommandid,ncommandparams;
-int PresentParam=0; /* From 0 */
-int ninerror;
 
 /* The following table is used to parse commands from the command number written into
 the command register - it can't distinguish between subcommands selected from the
@@ -82,43 +56,70 @@ int acommandlookup[20][2] = {
   {0,    0}  /*Terminator due to 0 mask matching all*/
 };
 
-void i8271setnmi(void)
+void i8271eventsetnmi(void)
 {
-  if (i8271_statusreg & 8)
-    beebit_nmi = TRUE; /*|= (1<<0);*/
+  HOSTMAP* hmap = &hostmap;
+  if (hmap->A_i8271.statusreg & 8)
+    HOST_SETSHIFTEDNMI(hmap, HOST_NMI_8271FDC)
   else
-    beebit_nmi = FALSE; /*&= ~(1<<0);*/
-  /*fprintf(htrace,"NMI=&%X\n",nmiinterrupt);*/
+    HOST_CLEARSHIFTEDNMI(hmap, HOST_NMI_8271FDC)
+}
+
+void i8271registersetnmi(void)
+{
+  HOSTMAP* hmap = &hostmap;
+  if (hmap->A_i8271.statusreg & 8)
+    HOST_SETNMI(hmap, HOST_NMI_8271FDC)
+  else
+    HOST_CLEARNMI(hmap, HOST_NMI_8271FDC)
+}
+
+static void i8271addtotimer(int cycles)
+{
+  HOSTMAP* hmap = &hostmap;
+  intptr_t cyclesin;
+
+  if (hmap->cycles.i8271_togo > 0)
+  {
+    hmap->cycles.i8271_togo += cycles;
+  }
+  else
+  {
+    cyclesin = hmap->cycles.original - hmap->cycles.togo;
+
+    hmap->cycles.i8271_togo = cyclesin + cycles;
+
+    HOST_LIMIT_CYCLES_TO_GO(hmap, hmap->cycles.i8271_togo)
+  }
 }
 
 void i8271reset(void)
 {
-  /*static onetime_initdisc=0;
-  char *DiscString;*/
-  i8271_resultreg = 0;
-  i8271_statusreg = 0;
-  i8271_writestart = FALSE;
-  i8271setnmi();
-  ncommandid=-1;
-  ncommandparams=0;
-  PresentParam=0;
-  ninerror = FALSE;
-  i8271_scansector = 0;
-  i8271_scancountmsb = 0;
-  i8271_scancountlsb = 0;
-  i8271_modereg = 0;
-  i8271_outputport = 0;
-  i8271_inputport = 0;
-  i8271_timer = 0;
+  HOSTMAP* hmap = &hostmap;
+  hmap->A_i8271.resultreg = 0;
+  hmap->A_i8271.statusreg = 0;
+  hmap->B_i8271.writestart = FALSE;
+  i8271registersetnmi();
+  hmap->B_i8271.ncommandid=-1;
+  hmap->B_i8271.ncommandparams=0;
+  hmap->B_i8271.PresentParam=0;
+  hmap->B_i8271.ninerror = FALSE;
+  hmap->A_i8271.scansector = 0;
+  hmap->A_i8271.scancountmsb = 0;
+  hmap->A_i8271.scancountlsb = 0;
+  hmap->A_i8271.modereg = 0;
+  hmap->A_i8271.outputport = 0;
+  hmap->A_i8271.inputport = 0;
+  hmap->cycles.i8271_togo = 0;
 
   /*0/1 for surface number*/
-  i8271_currenttrack[0] = 0;
-  i8271_currenttrack[1] = 0;
+  hmap->A_i8271.currenttrack[0] = 0;
+  hmap->A_i8271.currenttrack[1] = 0;
   /*[surface 0/1][badtrack 0/1]*/
-  i8271_badtrack[0][0] = 0xFF;
-  i8271_badtrack[0][1] = 0xFF;
-  i8271_badtrack[1][0] = 0xFF;
-  i8271_badtrack[1][1] = 0xFF;
+  hmap->A_i8271.badtrack[0][0] = 0xFF;
+  hmap->A_i8271.badtrack[0][1] = 0xFF;
+  hmap->A_i8271.badtrack[1][0] = 0xFF;
+  hmap->A_i8271.badtrack[1][1] = 0xFF;
 }
 
 void i8271closedown(void)
@@ -131,13 +132,14 @@ void i8271closedown(void)
 
 void inerror(int nerror)
 {
-  ninerror = nerror;
-  i8271_statusreg = 0x80;
-  i8271setnmi();
-  i8271_timer += (r6502_cyclestogo+50);
+  HOSTMAP* hmap = &hostmap;
+  hmap->B_i8271.ninerror = nerror;
+  hmap->A_i8271.statusreg = 0x80;
+  i8271registersetnmi();
+  i8271addtotimer(50<<1);
 }
 
-void i8271readimage(FILE *hfile, int nlocation, int nlength)
+void i8271readimage(FILE *hfile, intptr_t nlocation, intptr_t nlength)
 {
   if (hfile != NULL)
   {
@@ -148,36 +150,37 @@ void i8271readimage(FILE *hfile, int nlocation, int nlength)
 
 int discload(void)
 {
-  /*ncurrentdrive = drive number (0-3)*/
-  int ndrive, nlocation;
-  if (beebit_imagetype[ncurrentdrive] != DFS_NONE)
+  HOSTMAP* hmap = &hostmap;
+  /*hmap->B_i8271.ncurrentdrive = drive number (0-3)*/
+  intptr_t ndrive, nlocation;
+  if (beebit_imagetype[hmap->B_i8271.ncurrentdrive] != DFS_NONE)
   {
-    ndrive = ncurrentdrive;
+    ndrive = hmap->B_i8271.ncurrentdrive;
     switch (beebit_imagetype[ndrive])
     {
       case DFS_SSD:
-        nlocation = (CurrentTrack*DFS_SECTORS_PER_TRACK)+CurrentSector;
+        nlocation = (hmap->B_i8271.CurrentTrack*DFS_SECTORS_PER_TRACK)+hmap->B_i8271.CurrentSector;
         break;
       case DFS_DSD_TRACK:
         ndrive = ((ndrive>>1) & 1);
-        nlocation = ((CurrentTrack*2)*DFS_SECTORS_PER_TRACK)+CurrentSector;
+        nlocation = ((hmap->B_i8271.CurrentTrack*2)*DFS_SECTORS_PER_TRACK)+hmap->B_i8271.CurrentSector;
         nlocation += (ndrive*DFS_SECTORS_PER_TRACK);
-        ndrive = (ncurrentdrive & 1);
+        ndrive = (hmap->B_i8271.ncurrentdrive & 1);
         break;
       case DFS_DSD_SIDE:
         ndrive = ((ndrive>>1) & 1);
-        nlocation = (CurrentTrack*DFS_SECTORS_PER_TRACK)+CurrentSector;
+        nlocation = (hmap->B_i8271.CurrentTrack*DFS_SECTORS_PER_TRACK)+hmap->B_i8271.CurrentSector;
         if (ndrive > 0)
-          nlocation += beebit_sectorcount[ncurrentdrive];
-        ndrive = (ncurrentdrive & 1);
+          nlocation += beebit_sectorcount[hmap->B_i8271.ncurrentdrive];
+        ndrive = (hmap->B_i8271.ncurrentdrive & 1);
         break;
     }
-    nlocation = nlocation*SectorLength;
-    /*inttohex8(CurrentTrack);
+    nlocation = nlocation*hmap->B_i8271.SectorLength;
+    /*inttohex8(hmap->B_i8271.CurrentTrack);
     bbcvdu(32);
-    inttohex8(CurrentSector);
+    inttohex8(hmap->B_i8271.CurrentSector);
     bbcvdu(32);
-    inttohex8(SectorLength);
+    inttohex8(hmap->B_i8271.SectorLength);
     bbcvdu(32);
     inttohex8(nlocation);
     bbcvdu(13);
@@ -186,7 +189,7 @@ int discload(void)
       return (FALSE);
     else
     {*/
-      i8271readimage(beebit_driveimage[ndrive], nlocation, SectorLength);
+      i8271readimage(beebit_driveimage[ndrive], nlocation, hmap->B_i8271.SectorLength);
       return (TRUE);
     /*}*/
   }
@@ -196,33 +199,35 @@ int discload(void)
 
 void discsave(void)
 {
-  /*ncurrentdrive = drive number (0-3)*/
-  int ndrive, nlocation;
-  if (beebit_imagetype[ncurrentdrive] != DFS_NONE)
+  HOSTMAP* hmap = &hostmap;
+  /*hmap->B_i8271.ncurrentdrive = drive number (0-3)*/
+  intptr_t ndrive;
+  intptr_t nlocation;
+  if (beebit_imagetype[hmap->B_i8271.ncurrentdrive] != DFS_NONE)
   {
-    ndrive = ncurrentdrive;
+    ndrive = hmap->B_i8271.ncurrentdrive;
     switch (beebit_imagetype[ndrive])
     {
       case DFS_SSD:
-        nlocation = (CurrentTrack*DFS_SECTORS_PER_TRACK)+CurrentSector;
+        nlocation = (hmap->B_i8271.CurrentTrack*DFS_SECTORS_PER_TRACK)+hmap->B_i8271.CurrentSector;
         break;
       case DFS_DSD_TRACK:
         ndrive = ((ndrive>>1) & 1);
-        nlocation = ((CurrentTrack*2)*DFS_SECTORS_PER_TRACK)+CurrentSector;
+        nlocation = ((hmap->B_i8271.CurrentTrack*2)*DFS_SECTORS_PER_TRACK)+hmap->B_i8271.CurrentSector;
         nlocation += (ndrive*DFS_SECTORS_PER_TRACK);
-        ndrive = (ncurrentdrive & 1);
+        ndrive = (hmap->B_i8271.ncurrentdrive & 1);
         break;
       case DFS_DSD_SIDE:
         ndrive = ((ndrive>>1) & 1);
-        nlocation = (CurrentTrack*DFS_SECTORS_PER_TRACK)+CurrentSector;
+        nlocation = (hmap->B_i8271.CurrentTrack*DFS_SECTORS_PER_TRACK)+hmap->B_i8271.CurrentSector;
         if (ndrive > 0)
-          nlocation += beebit_sectorcount[ncurrentdrive];
-        ndrive = (ncurrentdrive & 1);
+          nlocation += beebit_sectorcount[hmap->B_i8271.ncurrentdrive];
+        ndrive = (hmap->B_i8271.ncurrentdrive & 1);
         break;
     }
-    nlocation = nlocation*SectorLength;
+    nlocation = nlocation*hmap->B_i8271.SectorLength;
     fseek(beebit_driveimage[ndrive],nlocation,SEEK_SET);
-    fwrite(i8271_data,1,SectorLength,beebit_driveimage[ndrive]);
+    fwrite(i8271_data,1,hmap->B_i8271.SectorLength,beebit_driveimage[ndrive]);
   }
 }
 
@@ -230,82 +235,83 @@ void discsave(void)
  */
 void i8271interrupt0B(void)
 {
+  HOSTMAP* hmap = &hostmap;
   int nlastbyte;
-  if (SectorsToGo < 0)
+  if (hmap->B_i8271.SectorsToGo < 0)
   {
     /*result and interrupt*/
-    i8271_statusreg = 0x18;
-    i8271setnmi();
+    hmap->A_i8271.statusreg = 0x18;
+    i8271eventsetnmi();
     return;
   }
-  i8271_resultreg = 0;
+  hmap->A_i8271.resultreg = 0;
   nlastbyte = FALSE;
-  if (i8271_writestart)
-    i8271_writestart = FALSE;
+  if (hmap->B_i8271.writestart)
+    hmap->B_i8271.writestart = FALSE;
   else
   {
-    i8271_data[ByteWithinSector++] = i8271_datareg;
-    if (ByteWithinSector >= SectorLength)
+    i8271_data[hmap->B_i8271.ByteWithinSector++] = hmap->A_i8271.datareg;
+    if (hmap->B_i8271.ByteWithinSector >= hmap->B_i8271.SectorLength)
     {
-      ByteWithinSector = 0;
+      hmap->B_i8271.ByteWithinSector = 0;
       /* I don't know if this can cause the thing to step - I presume not for the moment */
-      /*fprintf(htrace,"writeinterrupt1 STG=%u\n",SectorsToGo);*/
-      /*fprintf(htrace,"WRITE %u %u %u\n",CurrentTrack,CurrentSector,SectorsToGo);*/
+      /*fprintf(htrace,"writeinterrupt1 STG=%u\n",hmap->B_i8271.SectorsToGo);*/
+      /*fprintf(htrace,"WRITE %u %u %u\n",hmap->B_i8271.CurrentTrack,hmap->B_i8271.CurrentSector,hmap->B_i8271.SectorsToGo);*/
       discsave();
-      /*SectorsToGo--;*/
-      if (--SectorsToGo)
+      /*hmap->B_i8271.SectorsToGo--;*/
+      if (--hmap->B_i8271.SectorsToGo)
       {
-        CurrentSector++;
+        hmap->B_i8271.CurrentSector++;
       }
       else
       {
         /*last sector done*/
         nlastbyte = TRUE;
         /*turn drive select off*/
-        /*i8271_select = (i8271_select & !(1<<ncurrentdrive));*/
-        i8271_statusreg = 0x10;
-        SectorsToGo = -1; /* To let us bail out */
-        i8271setnmi();
-        /*i8271_timer += i8271_steprate;*/
-        /*i8271_timer += (r6502_cyclestogo+160);*/
-        i8271_timer += 160;
+        /*hmap->A_i8271.select = (hmap->A_i8271.select & !(1<<hmap->B_i8271.ncurrentdrive));*/
+        hmap->A_i8271.statusreg = 0x10;
+        hmap->B_i8271.SectorsToGo = -1; /* To let us bail out */
+        i8271eventsetnmi();
+        /*i8271_timer += hmap->B_i8271.steprate;*/
+        hmap->cycles.i8271_togo += (80<<1);
       }
     }
   }
   /*fprintf(htrace,"LAST BYTE=&%X\n",nlastbyte);
-  fprintf(htrace,"writeinterrupt2 STG=%u\n",SectorsToGo);*/
+  fprintf(htrace,"writeinterrupt2 STG=%u\n",hmap->B_i8271.SectorsToGo);*/
   if (!nlastbyte)
   {
-    i8271_statusreg = 0x8C; /* Command busy, */
-    i8271setnmi();
-    i8271_timer += 160; /*(r6502_cyclestogo+160);*/
+    hmap->A_i8271.statusreg = 0x8C; /* Command busy, */
+    i8271eventsetnmi();
+    hmap->cycles.i8271_togo += (80<<1);
   }
-  /*fprintf(htrace,"RESULTREG=%u\n",i8271_resultreg);*/
+  /*fprintf(htrace,"RESULTREG=%u\n",hmap->A_i8271.resultreg);*/
 }
 
 /* read interrupt
  */
 void i8271interrupt13(void)
 {
+  HOSTMAP* hmap = &hostmap;
   int nlastbyte;
-  if (SectorsToGo < 0)
+  if (hmap->B_i8271.SectorsToGo < 0)
   {
-    i8271_statusreg = 0x18; /* Result and interrupt */
-    i8271setnmi();
+    hmap->A_i8271.statusreg = 0x18; /* Result and interrupt */
+    i8271eventsetnmi();
     return;
   }
 
   nlastbyte = FALSE;
-  i8271_datareg = i8271_data[ByteWithinSector++];
-  i8271_resultreg = 0;
-  if (ByteWithinSector >= SectorLength)
+  hmap->A_i8271.datareg = i8271_data[hmap->B_i8271.ByteWithinSector++];
+  hmap->A_i8271.resultreg = 0;
+  if (hmap->B_i8271.ByteWithinSector >= hmap->B_i8271.SectorLength)
   {
-    ByteWithinSector = 0;
+    hmap->B_i8271.ByteWithinSector = 0;
     /*I don't know if this can cause the thing to step - I presume not for the moment*/
-    if (--SectorsToGo)
+    if (--hmap->B_i8271.SectorsToGo)
     {
-      CurrentSector++;
-      /*fprintf(htrace,"READ %u %u\n",CurrentTrack,CurrentSector);*/
+      hmap->B_i8271.CurrentSector++;
+      /*fprintf(htrace,"READ %u %u\n",hmap->B_i8271.CurrentTrack,hmap->B_i8271.CurrentSector);*/
       discload();
     }
     else
@@ -313,21 +319,20 @@ void i8271interrupt13(void)
       /* Last sector done */
       nlastbyte = TRUE;
       /*turn drive select off*/
-      i8271_select = (i8271_select & !(1<<ncurrentdrive));
-      i8271_statusreg = 0x9C;
-      SectorsToGo = -1; /* To let us bail out */
-      i8271setnmi();
-      /*i8271_timer += i8271_steprate;*/
-      /*i8271_timer += (r6502_cyclestogo+160);*/
-      i8271_timer += 160;
+      hmap->A_i8271.select = (hmap->A_i8271.select & !(1<<hmap->B_i8271.ncurrentdrive));
+      hmap->A_i8271.statusreg = 0x9C;
+      hmap->B_i8271.SectorsToGo = -1; /* To let us bail out */
+      i8271eventsetnmi();
+      /*i8271_timer += hmap->B_i8271.steprate;*/
+      hmap->cycles.i8271_togo += (80<<1);
     }
   }
 
   if (!nlastbyte)
   {
-    i8271_statusreg = 0x8C; /* Command busy, */
-    i8271setnmi();
-    i8271_timer += (r6502_cyclestogo+160);
+    hmap->A_i8271.statusreg = 0x8C; /* Command busy, */
+    i8271eventsetnmi();
+    hmap->cycles.i8271_togo += (80<<1);
   }
 }
 
@@ -335,99 +340,101 @@ void i8271interrupt13(void)
  */
 void i8271interrupt1F(void)
 {
+  HOSTMAP* hmap = &hostmap;
   /*result with interrupt*/
-  i8271_statusreg = 0x18;
-  i8271setnmi();
+  hmap->A_i8271.statusreg = 0x18;
+  i8271eventsetnmi();
   /*all ok*/
-  i8271_resultreg = 0;
+  hmap->A_i8271.resultreg = 0;
 }
 
 /*format interrupt
  */
 void i8271interrupt23(void)
 {
+  HOSTMAP* hmap = &hostmap;
   int nlastbyte;
-  if (SectorsToGo < 0)
+  if (hmap->B_i8271.SectorsToGo < 0)
   {
     /*result and interrupt*/
-    i8271_statusreg = 0x18;
-    i8271setnmi();
+    hmap->A_i8271.statusreg = 0x18;
+    i8271eventsetnmi();
     return;
   }
-  i8271_resultreg = 0;
+  hmap->A_i8271.resultreg = 0;
   nlastbyte = FALSE;
-  if (i8271_writestart)
-    i8271_writestart = FALSE;
+  if (hmap->B_i8271.writestart)
+    hmap->B_i8271.writestart = FALSE;
   else
   {
-    i8271_data[ByteWithinSector++] = 0xE5;
-    if (ByteWithinSector >= SectorLength)
+    i8271_data[hmap->B_i8271.ByteWithinSector++] = 0xE5;
+    if (hmap->B_i8271.ByteWithinSector >= hmap->B_i8271.SectorLength)
     {
-      ByteWithinSector = 0;
+      hmap->B_i8271.ByteWithinSector = 0;
       /* I don't know if this can cause the thing to step - I presume not for the moment */
-      /*fprintf(htrace,"writeinterrupt1 STG=%u\n",SectorsToGo);*/
-      /*fprintf(htrace,"WRITE %u %u %u\n",CurrentTrack,CurrentSector,SectorsToGo);*/
+      /*fprintf(htrace,"writeinterrupt1 STG=%u\n",hmap->B_i8271.SectorsToGo);*/
+      /*fprintf(htrace,"WRITE %u %u %u\n",hmap->B_i8271.CurrentTrack,hmap->B_i8271.CurrentSector,hmap->B_i8271.SectorsToGo);*/
       discsave();
-      /*SectorsToGo--;*/
-      if (--SectorsToGo)
+      /*hmap->B_i8271.SectorsToGo--;*/
+      if (--hmap->B_i8271.SectorsToGo)
       {
-        CurrentSector++;
+        hmap->B_i8271.CurrentSector++;
       }
       else
       {
         /*last sector done*/
         nlastbyte = TRUE;
         /*turn drive select off*/
-        /*i8271_select = (i8271_select & !(1<<ncurrentdrive));*/
-        i8271_statusreg = 0x10;
-        SectorsToGo = -1; /* To let us bail out */
-        i8271setnmi();
-        /*i8271_timer += i8271_steprate;*/
-        /*i8271_timer += (r6502_cyclestogo+160);*/
-        i8271_timer += 160;
+        /*hmap->A_i8271.select = (hmap->A_i8271.select & !(1<<hmap->B_i8271.ncurrentdrive));*/
+        hmap->A_i8271.statusreg = 0x10;
+        hmap->B_i8271.SectorsToGo = -1; /* To let us bail out */
+        i8271eventsetnmi();
+        /*i8271_timer += hmap->B_i8271.steprate;*/
+        hmap->cycles.i8271_togo += (80<<1);
       }
     }
   }
   /*fprintf(htrace,"LAST BYTE=&%X\n",nlastbyte);
-  fprintf(htrace,"writeinterrupt2 STG=%u\n",SectorsToGo);*/
+  fprintf(htrace,"writeinterrupt2 STG=%u\n",hmap->B_i8271.SectorsToGo);*/
   if (!nlastbyte)
   {
-    i8271_statusreg = 0x8C; /* Command busy, */
-    i8271setnmi();
-    i8271_timer += 160; /*(r6502_cyclestogo+160);*/
+    hmap->A_i8271.statusreg = 0x8C; /* Command busy, */
+    i8271eventsetnmi();
+    hmap->cycles.i8271_togo += (80<<1);
   }
-  /*fprintf(htrace,"RESULTREG=%u\n",i8271_resultreg);*/
+  /*fprintf(htrace,"RESULTREG=%u\n",hmap->A_i8271.resultreg);*/
 }
 
 /* seek interrupt
  */
 void i8271interrupt29(void)
 {
+  HOSTMAP* hmap = &hostmap;
   /*result with interrupt*/
-  i8271_statusreg = 0x18;
-  i8271setnmi();
+  hmap->A_i8271.statusreg = 0x18;
+  i8271eventsetnmi();
   /*all ok*/
-  i8271_resultreg = 0;
+  hmap->A_i8271.resultreg = 0;
 }
 
-void i8271poll(void)
+HOSTMAP* i8271poll(HOSTMAP* hmap)
 {
-  /*fprintf(htrace,"POLL &%X\n",acommandlookup[ncommandid][0]);*/
-  i8271_statusreg |= 8;
-  if (ninerror)
+  /*fprintf(htrace,"POLL &%X\n",acommandlookup[hmap->B_i8271.ncommandid][0]);*/
+  hmap->A_i8271.statusreg |= 8;
+  if (hmap->B_i8271.ninerror)
   {
-    i8271_resultreg = ninerror;
-    i8271_statusreg = 0x18;
-    i8271setnmi();
-    ninerror = 0;
+    hmap->A_i8271.resultreg = hmap->B_i8271.ninerror;
+    hmap->A_i8271.statusreg = 0x18;
+    i8271eventsetnmi();
+    hmap->B_i8271.ninerror = 0;
   }
   else
   {
-    i8271setnmi();
+    i8271eventsetnmi();
     #ifdef __DEBUG__
-      fprintf(htrace,"8271poll &%X\n",acommandlookup[ncommandid][0]);
+      fprintf(htrace,"8271poll &%X\n",acommandlookup[hmap->B_i8271.ncommandid][0]);
     #endif
-    switch (acommandlookup[ncommandid][0])
+    switch (acommandlookup[hmap->B_i8271.ncommandid][0])
     {
       case 0x00:
         #ifdef __DEVELOP__
@@ -522,11 +529,13 @@ void i8271poll(void)
         break;
       default:
         #ifdef __DEVELOP__
-          fprintf(htrace,"UNKNOWN &%X\n",ncommandid);
+          fprintf(htrace,"UNKNOWN &%X\n",hmap->B_i8271.ncommandid);
         #endif
         break;
     }
   }
+
+  return hmap;
 }
 
 /* scan data var len
@@ -539,9 +548,10 @@ void i8271poll(void)
  */
 void i8271command00(void)
 {
-  int ndrive;
+  HOSTMAP* hmap = &hostmap;
+  intptr_t ndrive;
 
-  switch (i8271_select)
+  switch (hmap->A_i8271.select)
   {
     case 0:
       /*drive not ready*/
@@ -549,10 +559,10 @@ void i8271command00(void)
       return;
       break;
     case 1:
-      ncurrentdrive = 0;
+      hmap->B_i8271.ncurrentdrive = 0;
       break;
     case 2:
-      ncurrentdrive = 1;
+      hmap->B_i8271.ncurrentdrive = 1;
       break;
     default:
       /*sector not found*/
@@ -561,9 +571,9 @@ void i8271command00(void)
       break;
   }
 
-  ndrive = ncurrentdrive;
-  if (beebit_imagetype[ncurrentdrive] == DFS_SSD)
-    ndrive += ((i8271_outputport & 0x20)>>4);
+  ndrive = hmap->B_i8271.ncurrentdrive;
+  if (beebit_imagetype[hmap->B_i8271.ncurrentdrive] == DFS_SSD)
+    ndrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
   if (!beebit_driveimage[ndrive])
   {
@@ -572,16 +582,17 @@ void i8271command00(void)
     return;
   }
 
-  ncurrentdrive += ((i8271_outputport & 0x20)>>4);
+  hmap->B_i8271.ncurrentdrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 }
 
 /* write data
  */
 void i8271command0B(void)
 {
-  int ndrive;
+  HOSTMAP* hmap = &hostmap;
+  intptr_t ndrive;
 
-  switch (i8271_select)
+  switch (hmap->A_i8271.select)
   {
     case 0:
       /*drive not ready*/
@@ -589,10 +600,10 @@ void i8271command0B(void)
       return;
       break;
     case 1:
-      ncurrentdrive = 0;
+      hmap->B_i8271.ncurrentdrive = 0;
       break;
     case 2:
-      ncurrentdrive = 1;
+      hmap->B_i8271.ncurrentdrive = 1;
       break;
     default:
       /*sector not found*/
@@ -601,9 +612,9 @@ void i8271command0B(void)
       break;
   }
 
-  ndrive = ncurrentdrive;
-  if (beebit_imagetype[ncurrentdrive] == DFS_SSD)
-    ndrive += ((i8271_outputport & 0x20)>>4);
+  ndrive = hmap->B_i8271.ncurrentdrive;
+  if (beebit_imagetype[hmap->B_i8271.ncurrentdrive] == DFS_SSD)
+    ndrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
   if (!beebit_driveimage[ndrive])
   {
@@ -619,20 +630,20 @@ void i8271command0B(void)
     return;
   }
 
-  i8271_currenttrack[ncurrentdrive] = i8271_parameter[0];
+  hmap->A_i8271.currenttrack[hmap->B_i8271.ncurrentdrive] = hmap->A_i8271.parameter[0];
 
-  ncurrentdrive += ((i8271_outputport & 0x20)>>4);
+  hmap->B_i8271.ncurrentdrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
-  CurrentTrack = i8271_parameter[0];
-  CurrentSector = i8271_parameter[1];
-  SectorsToGo = i8271_parameter[2] & 31;
-  SectorLength = 1<<(7+((i8271_parameter[2] >> 5) & 7));
-  ByteWithinSector=0;
-  i8271_writestart = TRUE;
+  hmap->B_i8271.CurrentTrack = hmap->A_i8271.parameter[0];
+  hmap->B_i8271.CurrentSector = hmap->A_i8271.parameter[1];
+  hmap->B_i8271.SectorsToGo = hmap->A_i8271.parameter[2] & 31;
+  hmap->B_i8271.SectorLength = 1<<(7+((hmap->A_i8271.parameter[2] >> 5) & 7));
+  hmap->B_i8271.ByteWithinSector=0;
+  hmap->B_i8271.writestart = TRUE;
   /*command busy*/
-  i8271_statusreg = 0x80;
-  i8271setnmi();
-  i8271_timer += (r6502_cyclestogo+160);
+  hmap->A_i8271.statusreg = 0x80;
+  i8271registersetnmi();
+  i8271addtotimer(160<<1);
 }
 
 /* readdatavarlen
@@ -643,9 +654,10 @@ void i8271command0B(void)
  */
 void i8271command13(void)
 {
-  int ndrive;
+  HOSTMAP* hmap = &hostmap;
+  intptr_t ndrive;
 
-  switch (i8271_select)
+  switch (hmap->A_i8271.select)
   {
     case 0:
       /*drive not ready*/
@@ -653,10 +665,10 @@ void i8271command13(void)
       return;
       break;
     case 1:
-      ncurrentdrive = 0;
+      hmap->B_i8271.ncurrentdrive = 0;
       break;
     case 2:
-      ncurrentdrive = 1;
+      hmap->B_i8271.ncurrentdrive = 1;
       break;
     default:
       /*sector not found*/
@@ -665,9 +677,9 @@ void i8271command13(void)
       break;
   }
 
-  ndrive = ncurrentdrive;
-  if (beebit_imagetype[ncurrentdrive] == DFS_SSD)
-    ndrive += ((i8271_outputport & 0x20)>>4);
+  ndrive = hmap->B_i8271.ncurrentdrive;
+  if (beebit_imagetype[hmap->B_i8271.ncurrentdrive] == DFS_SSD)
+    ndrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
   if (!beebit_driveimage[ndrive])
   {
@@ -676,17 +688,17 @@ void i8271command13(void)
     return;
   }
 
-  i8271_currenttrack[ncurrentdrive] = CurrentTrack;
+  hmap->A_i8271.currenttrack[hmap->B_i8271.ncurrentdrive] = hmap->B_i8271.CurrentTrack;
 
-  ncurrentdrive += ((i8271_outputport & 0x20)>>4);
+  hmap->B_i8271.ncurrentdrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
-  CurrentTrack = i8271_parameter[0];
-  CurrentSector = i8271_parameter[1];
-  SectorsToGo = i8271_parameter[2] & 31;
-  SectorLength = 1<<(7+((i8271_parameter[2] >> 5) & 7));
+  hmap->B_i8271.CurrentTrack = hmap->A_i8271.parameter[0];
+  hmap->B_i8271.CurrentSector = hmap->A_i8271.parameter[1];
+  hmap->B_i8271.SectorsToGo = hmap->A_i8271.parameter[2] & 31;
+  hmap->B_i8271.SectorLength = 1<<(7+((hmap->A_i8271.parameter[2] >> 5) & 7));
 
-  /*fprintf(htrace,"TR: &%X SR: &%X\n",CurrentTrack,CurrentSector);*/
-  /*fprintf(htrace,"SL: &%X STG: &%X\n",SectorLength,SectorsToGo);*/
+  /*fprintf(htrace,"TR: &%X SR: &%X\n",hmap->B_i8271.CurrentTrack,hmap->B_i8271.CurrentSector);*/
+  /*fprintf(htrace,"SL: &%X STG: &%X\n",hmap->B_i8271.SectorLength,hmap->B_i8271.SectorsToGo);*/
 
   if (!discload())
   {
@@ -695,12 +707,12 @@ void i8271command13(void)
     return;
   }
 
-  /*if (ValidateSector(CommandStatus.CurrentSectorPtr,CommandStatus.TrackAddr,CommandStatus.SectorLength))
+  /*if (ValidateSector(CommandStatus.hmap->B_i8271.CurrentSectorPtr,CommandStatus.TrackAddr,CommandStatus.hmap->B_i8271.SectorLength))
   {*/
-    ByteWithinSector = 0;
-    i8271_statusreg = 0x80; /* Command busy */
-    i8271setnmi();
-    i8271_timer += (r6502_cyclestogo+160);
+    hmap->B_i8271.ByteWithinSector = 0;
+    hmap->A_i8271.statusreg = 0x80; /* Command busy */
+    i8271registersetnmi();
+    i8271addtotimer(160<<1);
   /*}
   else
   {
@@ -716,9 +728,10 @@ void i8271command13(void)
  */
 void i8271command1F(void)
 {
-  int ndrive;
+  HOSTMAP* hmap = &hostmap;
+  intptr_t ndrive;
 
-  switch (i8271_select)
+  switch (hmap->A_i8271.select)
   {
     case 0:
       /*drive not ready*/
@@ -726,10 +739,10 @@ void i8271command1F(void)
       return;
       break;
     case 1:
-      ncurrentdrive = 0;
+      hmap->B_i8271.ncurrentdrive = 0;
       break;
     case 2:
-      ncurrentdrive = 1;
+      hmap->B_i8271.ncurrentdrive = 1;
       break;
     default:
       /*sector not found*/
@@ -738,9 +751,9 @@ void i8271command1F(void)
       break;
   }
 
-  ndrive = ncurrentdrive;
-  if (beebit_imagetype[ncurrentdrive] == DFS_SSD)
-    ndrive += ((i8271_outputport & 0x20)>>4);
+  ndrive = hmap->B_i8271.ncurrentdrive;
+  if (beebit_imagetype[hmap->B_i8271.ncurrentdrive] == DFS_SSD)
+    ndrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
   if (!beebit_driveimage[ndrive])
   {
@@ -749,16 +762,16 @@ void i8271command1F(void)
     return;
   }
 
-  i8271_currenttrack[ncurrentdrive] = i8271_parameter[0];
+  hmap->A_i8271.currenttrack[hmap->B_i8271.ncurrentdrive] = hmap->A_i8271.parameter[0];
 
-  ncurrentdrive += ((i8271_outputport & 0x20)>>4);
+  hmap->B_i8271.ncurrentdrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
   /*check track and sector range*/
 
   /*command busy*/
-  i8271_statusreg = 0x80;
-  i8271setnmi();
-  i8271_timer += (r6502_cyclestogo+100);
+  hmap->A_i8271.statusreg = 0x80;
+  i8271registersetnmi();
+  i8271addtotimer(160<<1);
 }
 
 /* format command
@@ -768,9 +781,10 @@ void i8271command1F(void)
  */
 void i8271command23(void)
 {
-  int ndrive;
+  HOSTMAP* hmap = &hostmap;
+  intptr_t ndrive;
 
-  switch (i8271_select)
+  switch (hmap->A_i8271.select)
   {
     case 0:
       /*drive not ready*/
@@ -778,10 +792,10 @@ void i8271command23(void)
       return;
       break;
     case 1:
-      ncurrentdrive = 0;
+      hmap->B_i8271.ncurrentdrive = 0;
       break;
     case 2:
-      ncurrentdrive = 1;
+      hmap->B_i8271.ncurrentdrive = 1;
       break;
     default:
       /*sector not found*/
@@ -790,9 +804,9 @@ void i8271command23(void)
       break;
   }
 
-  ndrive = ncurrentdrive;
-  if (beebit_imagetype[ncurrentdrive] == DFS_SSD)
-    ndrive += ((i8271_outputport & 0x20)>>4);
+  ndrive = hmap->B_i8271.ncurrentdrive;
+  if (beebit_imagetype[hmap->B_i8271.ncurrentdrive] == DFS_SSD)
+    ndrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
   if (!beebit_driveimage[ndrive])
   {
@@ -808,29 +822,30 @@ void i8271command23(void)
     return;
   }
 
-  i8271_currenttrack[ncurrentdrive] = i8271_parameter[0];
+  hmap->A_i8271.currenttrack[hmap->B_i8271.ncurrentdrive] = hmap->A_i8271.parameter[0];
 
-  ncurrentdrive += ((i8271_outputport & 0x20)>>4);
+  hmap->B_i8271.ncurrentdrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
-  CurrentTrack = i8271_parameter[0];
-  CurrentSector = 0; /*i8271_parameter[1];*/
-  SectorsToGo = i8271_parameter[2] & 31;
-  SectorLength = 1<<(7+((i8271_parameter[2] >> 5) & 7));
-  ByteWithinSector=0;
-  i8271_writestart = TRUE;
+  hmap->B_i8271.CurrentTrack = hmap->A_i8271.parameter[0];
+  hmap->B_i8271.CurrentSector = 0; /*hmap->A_i8271.parameter[1];*/
+  hmap->B_i8271.SectorsToGo = hmap->A_i8271.parameter[2] & 31;
+  hmap->B_i8271.SectorLength = 1<<(7+((hmap->A_i8271.parameter[2] >> 5) & 7));
+  hmap->B_i8271.ByteWithinSector=0;
+  hmap->B_i8271.writestart = TRUE;
   /*command busy*/
-  i8271_statusreg = 0x80;
-  i8271setnmi();
-  i8271_timer += (r6502_cyclestogo+160);
+  hmap->A_i8271.statusreg = 0x80;
+  i8271registersetnmi();
+  i8271addtotimer(160<<1);
 }
 
 /* seek command
  */
 void i8271command29(void)
 {
-  int ndrive;
+  HOSTMAP* hmap = &hostmap;
+  intptr_t ndrive;
 
-  switch (i8271_select)
+  switch (hmap->A_i8271.select)
   {
     case 0:
       /*drive not ready*/
@@ -838,10 +853,10 @@ void i8271command29(void)
       return;
       break;
     case 1:
-      ncurrentdrive = 0;
+      hmap->B_i8271.ncurrentdrive = 0;
       break;
     case 2:
-      ncurrentdrive = 1;
+      hmap->B_i8271.ncurrentdrive = 1;
       break;
     default:
       /*sector not found*/
@@ -850,9 +865,9 @@ void i8271command29(void)
       break;
   }
 
-  ndrive = ncurrentdrive;
-  if (beebit_imagetype[ncurrentdrive] == DFS_SSD)
-    ndrive += ((i8271_outputport & 0x20)>>4);
+  ndrive = hmap->B_i8271.ncurrentdrive;
+  if (beebit_imagetype[hmap->B_i8271.ncurrentdrive] == DFS_SSD)
+    ndrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
   if (!beebit_driveimage[ndrive])
   {
@@ -861,13 +876,13 @@ void i8271command29(void)
     return;
   }
 
-  i8271_currenttrack[ncurrentdrive] = i8271_parameter[0];
+  hmap->A_i8271.currenttrack[hmap->B_i8271.ncurrentdrive] = hmap->A_i8271.parameter[0];
 
-  ncurrentdrive += ((i8271_outputport & 0x20)>>4);
+  hmap->B_i8271.ncurrentdrive += ((hmap->A_i8271.outputport & 0x20)>>4);
 
-  i8271_statusreg = 0x80; /*command busy*/
-  i8271setnmi();
-  i8271_timer += (r6502_cyclestogo+100);
+  hmap->A_i8271.statusreg = 0x80; /*command busy*/
+  i8271registersetnmi();
+  i8271addtotimer(160<<1);
 }
 
 /* read drive status command
@@ -881,15 +896,16 @@ void i8271command29(void)
  */
 void i8271command2C(void)
 {
+  HOSTMAP* hmap = &hostmap;
   int Track0,WriteProt;
-  switch (i8271_select)
+  switch (hmap->A_i8271.select)
   {
     case 1:
-      Track0 = (i8271_currenttrack[0] == 0);
+      Track0 = (hmap->A_i8271.currenttrack[0] == 0);
       WriteProt = (!beebit_discwritable[0]);
       break;
     case 2:
-      Track0 = (i8271_currenttrack[1] == 0);
+      Track0 = (hmap->A_i8271.currenttrack[1] == 0);
       WriteProt = (!beebit_discwritable[1]);
       break;
     default:
@@ -897,42 +913,43 @@ void i8271command2C(void)
       WriteProt = TRUE;
       break;
   }
-  i8271_resultreg = 0x80;
-  if (i8271_select & 0x02)
-    i8271_resultreg |= 0x40;
+  hmap->A_i8271.resultreg = 0x80;
+  if (hmap->A_i8271.select & 0x02)
+    hmap->A_i8271.resultreg |= 0x40;
   if (WriteProt)
-    i8271_resultreg |= 0x08;
-  if (i8271_select & 0x01)
-    i8271_resultreg |= 0x04;
+    hmap->A_i8271.resultreg |= 0x08;
+  if (hmap->A_i8271.select & 0x01)
+    hmap->A_i8271.resultreg |= 0x04;
   if (Track0)
-    i8271_resultreg |= 0x02;
+    hmap->A_i8271.resultreg |= 0x02;
 
-  /*fprintf(htrace,"RES:&%X\n",i8271_resultreg);*/
-  i8271_statusreg |= 0x10; /* Result */
+  /*fprintf(htrace,"RES:&%X\n",hmap->A_i8271.resultreg);*/
+  hmap->A_i8271.statusreg |= 0x10; /* Result */
 }
 
 void i8271command35(void)
 {
+  HOSTMAP* hmap = &hostmap;
   /*specify command*/
-  /*fprintf(htrace,"SPECIFY &%X &%X\n",i8271_parameter[0],i8271_parameter[1]);*/
-  switch (i8271_parameter[0])
+  /*fprintf(htrace,"SPECIFY &%X &%X\n",hmap->A_i8271.parameter[0],hmap->A_i8271.parameter[1]);*/
+  switch (hmap->A_i8271.parameter[0])
   {
     case 0x0D:
       /*specify initialization*/
-      i8271_steprate = (i8271_parameter[1] << 1); /*2MHz clock*/
-      i8271_headsettletime = (i8271_parameter[2] << 1); /*2MHz clock*/
-      i8271_indexcount = ((i8271_parameter[3] & 0xF0) >> 4);
-      i8271_headloadtime = ((i8271_parameter[3] & 0x0F) << 3); /*2MHz clock*/
+      hmap->B_i8271.steprate = (hmap->A_i8271.parameter[1] << 1); /*2MHz clock*/
+      hmap->B_i8271.headsettletime = (hmap->A_i8271.parameter[2] << 1); /*2MHz clock*/
+      hmap->B_i8271.indexcount = ((hmap->A_i8271.parameter[3] & 0xF0) >> 4);
+      hmap->B_i8271.headloadtime = ((hmap->A_i8271.parameter[3] & 0x0F) << 3); /*2MHz clock*/
       break;
     case 0x10:
       /*load bad tracks surface 0*/
-      i8271_badtrack[0][0] = i8271_parameter[1];
-      i8271_badtrack[0][1] = i8271_parameter[2];
+      hmap->A_i8271.badtrack[0][0] = hmap->A_i8271.parameter[1];
+      hmap->A_i8271.badtrack[0][1] = hmap->A_i8271.parameter[2];
       break;
     case 0x18:
       /*load bad tracks surface 1*/
-      i8271_badtrack[1][0] = i8271_parameter[1];
-      i8271_badtrack[1][1] = i8271_parameter[2];
+      hmap->A_i8271.badtrack[1][0] = hmap->A_i8271.parameter[1];
+      hmap->A_i8271.badtrack[1][1] = hmap->A_i8271.parameter[2];
       break;
   }
 }
@@ -941,26 +958,27 @@ void i8271command35(void)
  */
 void i8271command3A(void)
 {
-  /*fprintf(htrace,"WS:&%X &%X\n",i8271_parameter[0],i8271_parameter[1]);*/
-  switch (i8271_parameter[0])
+  HOSTMAP* hmap = &hostmap;
+  /*fprintf(htrace,"WS:&%X &%X\n",hmap->A_i8271.parameter[0],hmap->A_i8271.parameter[1]);*/
+  switch (hmap->A_i8271.parameter[0])
   {
     case 0x06:
-      i8271_scansector = i8271_parameter[1];
+      hmap->A_i8271.scansector = hmap->A_i8271.parameter[1];
       break;
     case 0x14:
-      i8271_scancountmsb = i8271_parameter[1];
+      hmap->A_i8271.scancountmsb = hmap->A_i8271.parameter[1];
       break;
     case 0x13:
-      i8271_scancountlsb = i8271_parameter[1];
+      hmap->A_i8271.scancountlsb = hmap->A_i8271.parameter[1];
       break;
     case 0x12:
-      i8271_currenttrack[0]=i8271_parameter[1];
+      hmap->A_i8271.currenttrack[0]=hmap->A_i8271.parameter[1];
       break;
     case 0x1a:
-      i8271_currenttrack[1]=i8271_parameter[1];
+      hmap->A_i8271.currenttrack[1]=hmap->A_i8271.parameter[1];
       break;
     case 0x17:
-      i8271_modereg = i8271_parameter[1];
+      hmap->A_i8271.modereg = hmap->A_i8271.parameter[1];
       break;
     case 0x23:
       /*drive control output port*/
@@ -976,83 +994,85 @@ void i8271command3A(void)
        *drive 1 = &88
        *drive 2 = &68
        *drive 3 = &A8*/
-      i8271_outputport = i8271_parameter[1];
-      i8271_select = (i8271_outputport & 0xC0)>>6;
+      hmap->A_i8271.outputport = hmap->A_i8271.parameter[1];
+      hmap->A_i8271.select = (hmap->A_i8271.outputport & 0xC0)>>6;
       break;
     case 0x22:
-      i8271_inputport = i8271_parameter[1];
+      hmap->A_i8271.inputport = hmap->A_i8271.parameter[1];
       break;
     case 0x10:
-      i8271_badtrack[0][0] = i8271_parameter[1];
+      hmap->A_i8271.badtrack[0][0] = hmap->A_i8271.parameter[1];
       break;
     case 0x11:
-      i8271_badtrack[0][1] = i8271_parameter[1];
+      hmap->A_i8271.badtrack[0][1] = hmap->A_i8271.parameter[1];
       break;
     case 0x18:
-      i8271_badtrack[1][0] = i8271_parameter[1];
+      hmap->A_i8271.badtrack[1][0] = hmap->A_i8271.parameter[1];
       break;
     case 0x19:
-      i8271_badtrack[1][1] = i8271_parameter[1];
+      hmap->A_i8271.badtrack[1][1] = hmap->A_i8271.parameter[1];
       break;
   }
 }
 
 void i8271command3D(void)
 {
+  HOSTMAP* hmap = &hostmap;
   /*read special command*/
-  switch(i8271_parameter[0])
+  switch(hmap->A_i8271.parameter[0])
   {
     case 0x06:
-      i8271_resultreg = i8271_scansector;
+      hmap->A_i8271.resultreg = hmap->A_i8271.scansector;
       break;
     case 0x14:
-      i8271_resultreg = i8271_scancountmsb;
+      hmap->A_i8271.resultreg = hmap->A_i8271.scancountmsb;
       break;
     case 0x13:
-      i8271_resultreg = i8271_scancountlsb;
+      hmap->A_i8271.resultreg = hmap->A_i8271.scancountlsb;
       break;
     case 0x12:
-      i8271_resultreg = i8271_currenttrack[0];
+      hmap->A_i8271.resultreg = hmap->A_i8271.currenttrack[0];
       break;
     case 0x1a:
-      i8271_resultreg = i8271_currenttrack[1];
+      hmap->A_i8271.resultreg = hmap->A_i8271.currenttrack[1];
       break;
     case 0x17:
-      i8271_resultreg = i8271_modereg;
+      hmap->A_i8271.resultreg = hmap->A_i8271.modereg;
       break;
     case 0x23:
-      i8271_resultreg = i8271_outputport;
+      hmap->A_i8271.resultreg = hmap->A_i8271.outputport;
       break;
     case 0x22:
-      i8271_resultreg = i8271_inputport;
+      hmap->A_i8271.resultreg = hmap->A_i8271.inputport;
       break;
     case 0x10:
-      i8271_resultreg = i8271_badtrack[0][0];
+      hmap->A_i8271.resultreg = hmap->A_i8271.badtrack[0][0];
       break;
     case 0x11:
-      i8271_resultreg = i8271_badtrack[0][1];
+      hmap->A_i8271.resultreg = hmap->A_i8271.badtrack[0][1];
       break;
     case 0x18:
-      i8271_resultreg = i8271_badtrack[1][0];
+      hmap->A_i8271.resultreg = hmap->A_i8271.badtrack[1][0];
       break;
     case 0x19:
-      i8271_resultreg = i8271_badtrack[1][1];
+      hmap->A_i8271.resultreg = hmap->A_i8271.badtrack[1][1];
       break;
   }
 
-  i8271_statusreg |= 16; /* Result reg full */
-  i8271setnmi();
+  hmap->A_i8271.statusreg |= 16; /* Result reg full */
+  i8271registersetnmi();
 }
 
 void callcommand(void)
 {
+  HOSTMAP* hmap = &hostmap;
   #ifdef __DEBUG__
   #endif
-  switch (acommandlookup[ncommandid][0])
+  switch (acommandlookup[hmap->B_i8271.ncommandid][0])
   {
     case 0x00:
       /*Scan Data (Variable Length/Multi-Record)*/
-      i8271_select = (i8271_commandreg & 0xC0)>>6;
+      hmap->A_i8271.select = (hmap->A_i8271.commandreg & 0xC0)>>6;
       i8271command00();
       break;
     case 0x04:
@@ -1067,7 +1087,7 @@ void callcommand(void)
       break;
     case 0x0B:
       /*write data*/
-      i8271_select = (i8271_commandreg & 0xC0)>>6;
+      hmap->A_i8271.select = (hmap->A_i8271.commandreg & 0xC0)>>6;
       i8271command0B();
       break;
     case 0x0E:
@@ -1087,7 +1107,7 @@ void callcommand(void)
       break;
     case 0x13:
       /*read data*/
-      i8271_select = (i8271_commandreg & 0xC0)>>6;
+      hmap->A_i8271.select = (hmap->A_i8271.commandreg & 0xC0)>>6;
       i8271command13();
       break;
     case 0x16:
@@ -1112,7 +1132,7 @@ void callcommand(void)
       break;
     case 0x1F:
       /*verify data and deleted data*/
-      i8271_select = (i8271_commandreg & 0xC0)>>6;
+      hmap->A_i8271.select = (hmap->A_i8271.commandreg & 0xC0)>>6;
       i8271command1F();
       break;
     case 0x23:
@@ -1124,7 +1144,7 @@ void callcommand(void)
       break;
     case 0x29:
       /*seek*/
-      i8271_select = (i8271_commandreg & 0xC0)>>6;
+      hmap->A_i8271.select = (hmap->A_i8271.commandreg & 0xC0)>>6;
       i8271command29();
       break;
     case 0x2C:
@@ -1144,7 +1164,7 @@ void callcommand(void)
       break;
     default:
       #ifdef __DEVELOP__
-        fprintf(htrace,"UNKNOWN &%X\n",ncommandid);
+        fprintf(htrace,"UNKNOWN &%X\n",hmap->B_i8271.ncommandid);
       #endif
       break;
   }
@@ -1156,25 +1176,26 @@ void i8271commandregwrite(char nvalue)
    *b0-b5=command
    *b6-b7=drive select
    */
+  HOSTMAP* hmap = &hostmap;
   int i;
-  i8271_commandreg = nvalue;
+  hmap->A_i8271.commandreg = nvalue;
   i = 0;
-  while (i < 20 AND acommandlookup[i][0] != (i8271_commandreg & 0x3F))
+  while (i < 20 AND acommandlookup[i][0] != (hmap->A_i8271.commandreg & 0x3F))
     i++;
   if (i < 20)
   {
     #ifdef __DEBUG__
       fprintf(htrace,"LU: &%X\n",acommandlookup[i][0]);
     #endif
-    ncommandid = i;
-    ncommandparams = acommandlookup[i][1];
-    PresentParam = 0;
-    i8271_statusreg |= 0x90; /*Observed on beeb for read special*/
-    i8271setnmi();
-    if (ncommandparams == 0)
+    hmap->B_i8271.ncommandid = i;
+    hmap->B_i8271.ncommandparams = acommandlookup[i][1];
+    hmap->B_i8271.PresentParam = 0;
+    hmap->A_i8271.statusreg |= 0x90; /*Observed on beeb for read special*/
+    i8271registersetnmi();
+    if (hmap->B_i8271.ncommandparams == 0)
     {
-      i8271_statusreg &= 0x7E;
-      i8271setnmi();
+      hmap->A_i8271.statusreg &= 0x7E;
+      i8271registersetnmi();
       callcommand();
     }
   }
@@ -1182,114 +1203,111 @@ void i8271commandregwrite(char nvalue)
 
 void i8271paramregwrite(char nvalue)
 {
-  if (PresentParam < ncommandparams)
+  HOSTMAP* hmap = &hostmap;
+  if (hmap->B_i8271.PresentParam < hmap->B_i8271.ncommandparams)
   {
     #ifdef __DEBUG__
-      fprintf(htrace,"PA: &%X &%X\n",PresentParam,nvalue);
+      fprintf(htrace,"PA: &%X &%X\n",hmap->B_i8271.PresentParam,nvalue);
     #endif
-    i8271_parameter[PresentParam++] = nvalue;
-    i8271_statusreg &= 0xFE; /* Observed on beeb */
-    i8271setnmi();
-    if (PresentParam >= ncommandparams)
+    hmap->A_i8271.parameter[hmap->B_i8271.PresentParam++] = nvalue;
+    hmap->A_i8271.statusreg &= 0xFE; /* Observed on beeb */
+    i8271registersetnmi();
+    if (hmap->B_i8271.PresentParam >= hmap->B_i8271.ncommandparams)
     {
-      i8271_statusreg &= 0x7E; /* Observed on beeb */
-      i8271setnmi();
+      hmap->A_i8271.statusreg &= 0x7E; /* Observed on beeb */
+      i8271registersetnmi();
       callcommand();
     }
   }
 }
 
-char i8271read(int naddress)
+struct R6502CPUMAP* i8271statusread(struct R6502CPUMAP* cmap, uintptr_t address_code)
 {
-  /*Address is in the range 0-7 - with the fe80 etc stripped out*/
-  char nvalue;
-  switch (naddress & 0x07)
-  {
-    case 0:
-      nvalue = i8271_statusreg;
-      break;
-    case 1:
-      /* Clear interrupt request and result reg full flag*/
-      i8271_statusreg &= ~18;
-      i8271setnmi();
-      nvalue=i8271_resultreg;
-      /* Register goes to 0 after its read */
-      i8271_resultreg = 0;
-  #ifdef __DEBUG__
-  fprintf(htrace,"8271R=&%X",naddress);
-    fprintf(htrace,",&%X\n", nvalue);
-  #endif
-      break;
-    case 2:
-      i8271reset();
-      nvalue = 0xF9;
-      break;
-    case 3:
-      nvalue = 0xF7;
-      break;
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-      /* Clear interrupt and non-dma request - not stated but DFS never looks at result reg!*/
-      i8271_statusreg &= ~0x0C;
-      i8271setnmi();
-      nvalue=i8271_datareg;
-  #ifdef __DEBUG__
-  fprintf(htrace,"8271D=&%X",naddress);
-    fprintf(htrace,",&%X %c\n", nvalue, nvalue);
-  #endif
-      break;
-    default:
-      nvalue = 0xFE;
-      break;
-  };
-  /*fprintf(htrace,"SR:&%X RR:&%X DR:&%X NMI:&%X\n",i8271_statusreg, i8271_resultreg, i8271_datareg, nmiinterrupt);*/
-  /*#ifdef __DEVELOP__
-    fprintf(htrace,"=&%X\n",nvalue);
-  #endif*/
-  return(nvalue);
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->A_i8271.statusreg;
+  return cmap;
 }
 
-void i8271write(int naddress, char nvalue)
+struct R6502CPUMAP* i8271resultread(struct R6502CPUMAP* cmap, uintptr_t address_code)
 {
-  #ifdef __DEBUG__
-    fprintf(htrace,"WR:&%X,&%X\n",naddress, nvalue);
-  #endif
-  switch (naddress & 0x0F)
+  /* Clear interrupt request, result reg full and non-dma request flags*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_i8271.statusreg &= ~0x1C;
+  i8271registersetnmi();
+  hmap->m = hmap->A_i8271.resultreg;
+  return cmap;
+}
+
+struct R6502CPUMAP* i8271dataread(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  /* Clear interrupt and non-dma request - not stated but DFS never looks at result reg!*/
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_i8271.statusreg &= ~0x0C;
+  i8271registersetnmi();
+  hmap->m = hmap->A_i8271.datareg;
+  return cmap;
+}
+
+struct R6502CPUMAP* i8271commandwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*command register
+   *b0-b5=command
+   *b6-b7=drive select
+   */
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  int i;
+  hmap->A_i8271.commandreg = value;
+  i = 0;
+  while (i < 20 AND acommandlookup[i][0] != (hmap->A_i8271.commandreg & 0x3F))
+    i++;
+  if (i < 20)
   {
-    case 0:
-      /*inttohex4(0x00);
-      bbcvdu(32);
-      inttohex8(nvalue);
-      bbcvdu(13);
-      bbcvdu(10);*/
-      i8271commandregwrite(nvalue);
-      break;
-    case 1:
-      /*inttohex4(0x01);
-      bbcvdu(32);
-      inttohex8(nvalue);
-      bbcvdu(13);
-      bbcvdu(10);*/
-      i8271paramregwrite(nvalue);
-      break;
-    case 2:
-      /*The caller should write a 1 and then >10 cycles later a 0 - but I'm just going to reset on both edges*/
-      i8271reset();
-      break;
-    case 3:
-      break;
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-      i8271_datareg=nvalue;
-      i8271_statusreg &= ~0x0C;
-      i8271setnmi();
-      break;
-    default:
-      break;
+    #ifdef __DEBUG__
+      fprintf(htrace,"LU: &%X\n",acommandlookup[i][0]);
+    #endif
+    hmap->B_i8271.ncommandid = i;
+    hmap->B_i8271.ncommandparams = acommandlookup[i][1];
+    hmap->B_i8271.PresentParam = 0;
+    hmap->A_i8271.statusreg |= 0x90; /*Observed on beeb for read special*/
+    if (hmap->B_i8271.ncommandparams == 0)
+    {
+      hmap->A_i8271.statusreg &= 0x7C;
+      callcommand();
+    }
   }
-  /*fprintf(htrace,"SR:&%X RR:&%X DR:&%X NMI:&%X\n",i8271_statusreg, i8271_resultreg, i8271_datareg, nmiinterrupt);*/
+  return cmap;
+}
+
+struct R6502CPUMAP* i8271parameterwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  if (hmap->B_i8271.PresentParam < hmap->B_i8271.ncommandparams)
+  {
+    #ifdef __DEBUG__
+      fprintf(htrace,"PA: &%X &%X\n",hmap->B_i8271.PresentParam,nvalue);
+    #endif
+    hmap->A_i8271.parameter[hmap->B_i8271.PresentParam++] = value;
+    if (hmap->B_i8271.PresentParam >= hmap->B_i8271.ncommandparams)
+    {
+      hmap->A_i8271.statusreg &= 0x7C; /* Observed on beeb */
+      callcommand();
+    }
+  }
+  return cmap;
+}
+
+struct R6502CPUMAP* i8271resetwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  /*The caller should write a 1 and then >10 cycles later a 0 - but I'm just going to reset on both edges*/
+  i8271reset();
+  return cmap;
+}
+
+struct R6502CPUMAP* i8271datawrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->A_i8271.datareg = value;
+  hmap->A_i8271.statusreg &= ~0x0C;
+  i8271registersetnmi();
+  return cmap;
 }

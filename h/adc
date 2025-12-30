@@ -4,21 +4,15 @@
  *
  * (C) Copyright Michael J Foot, 1998-2007
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
 /*analog to digital converter*/
-extern int adc_channel;
-extern int adc_flag;
-extern int adc_resolution;
-extern int adc_status;
-extern int adc_highbyte;
-extern int adc_lowbyte;
-extern int adc_timer; /*adc timer*/
-
 extern void adcreset(void);
 extern void adcenter(void);
 extern void adcmodevars(void);
-extern void adcpoll(void);
-extern char adcread(int naddress);
-extern void adcwrite(int naddress,int nvalue);
+extern HOSTMAP* adcpoll(HOSTMAP* hmap);
+extern struct R6502CPUMAP* adc00read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* adc01read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* adc02read(struct R6502CPUMAP* cmap, uintptr_t address_code);
+extern struct R6502CPUMAP* adcwrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);

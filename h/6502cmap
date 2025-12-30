@@ -1,0 +1,86 @@
+/*>6502cmap.h
+ *
+ * BeebIt - BBC Micro Model B Emulator
+ *
+ * Cycle-level CPU emulation
+ *
+ * (C) Copyright Crispian Daniels, 2025
+ *
+ * Email: <convertedgames@3insdale.me.uk>
+ */
+
+#ifndef __BEEBIT_6502CMAP_H__
+#define __BEEBIT_6502CMAP_H__
+
+#include "6502zmap.h"
+
+#define R6502_SEQUENCE_ALLOWANCE 288
+
+#define R6502_LOG2_MAX_SEQUENCE_LENGTH 3
+
+struct R6502CPUMAP;
+
+typedef struct R6502CPUMAP* (*R6502OP)(struct R6502CPUMAP* cmap, uintptr_t incremented_cpu_state); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
+
+typedef struct R6502CPUMAP* (*R6502TRANSITIONOP)(struct R6502CPUMAP* cmap, uintptr_t pc_code); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
+
+/*addressing op spaced for an AArch32 access optimization*/
+typedef struct
+{
+  R6502ADDRESSINGOP op;
+  uintptr_t _unused[3];
+} R6502PADDEDADDRESSINGOP;
+
+/*storage map specialized for 6502 CPU emulation*/
+typedef struct R6502CPUMAP
+{
+  // AArch32 offsets &00 - &FF
+  uint8_t oldreset;
+  uint8_t copiedvalue;
+  uint8_t AC_unused[sizeof(uintptr_t)-2];
+  R6502_AP_ZONE AP;
+
+  // AArch32 offsets &100 - &3FF
+  uintptr_t interruptqueue;
+  R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
+  R6502BYTESHIFT a_shift; uint8_t a; /*register*/
+  R6502BYTESHIFT x_shift; uint8_t x; /*register*/
+  R6502BYTESHIFT y_shift; uint8_t y; /*register*/
+  R6502BYTESHIFT ps_shift; uint8_t ps; /*processor status*/
+  uintptr_t sp_code; /*shifted stack pointer*/
+  uintptr_t sync_pc_code; /*shifted program counter with bits for an AArch32 access optimization*/
+  uintptr_t last_pc_code;
+  uintptr_t latch; /*shifted addressing temporary byte*/
+  uintptr_t address_code;
+  uintptr_t decimalflags_address_code;
+  uintptr_t stretched_address_code;
+  uint8_t* pagezero;
+  uint8_t* pageone;
+  uint8_t* pageminusone;
+  R6502OP* cpu_state; /*pointer to current step*/
+  R6502OP* stretched_cpu_state; /*pointer to stretched step*/
+  R6502OP* execute_cpu_state;
+  uintptr_t transition1, transition2;
+  R6502PERIPHERALOP resetstartingaction,resetcontinuingaction;
+  R6502PERIPHERALOP cycleaction;
+  R6502READSPECIALOP readspecialaction;
+  R6502WRITESPECIALOP writespecialaction;
+  uintptr_t yieldlink; /*storage for the Optimise6502Links optimisation*/
+  uintptr_t lbreak;
+  uintptr_t BC_unused[16];
+  R6502_BP_ZONE BP;
+
+  // AArch32 offsets &400 - &FFF
+  R6502PADDEDADDRESSINGOP addressingops[32];
+  R6502_CP_ZONE CP;
+
+  // AArch32 offsets &1000 - &1BFF
+  R6502OP* sequences[R6502_SEQUENCE_ALLOWANCE];
+  R6502_DP_ZONE DP;
+
+  // AArch32 offsets &1C00 - &3FFF
+  R6502OP steps[R6502_SEQUENCE_ALLOWANCE<<R6502_LOG2_MAX_SEQUENCE_LENGTH];
+
+} R6502CPUMAP;
+
+#endif //__BEEBIT_6502CMAP_H__

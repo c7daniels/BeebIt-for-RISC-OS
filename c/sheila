@@ -7,21 +7,23 @@
  * Email: <mjfoot.nz@gmail.com>
  *
  * Enhanced host screen mode compatibility (and more)
- *   contributed by Crispian Daniels in 2024
+ *   contributed by Crispian Daniels in 2024-2025
  *
  * Email: <convertedgames@3insdale.me.uk>
  */
 
-#include <stdio.h>
+#include <stddef.h>
 #include <string.h>
+#include "beebit.h"
+#include "host.h"
 #include "6502cpu.h"
+#include "sheila.h"
 #include "6522sysvia.h"
 #include "6522usrvia.h"
 #include "6845crtc.h"
 #include "6850acia.h"
 #include "8271fdc.h"
 #include "adc.h"
-#include "beebit.h"
 /*#include "kernel.h"*/
 #include "main.h"
 #include "riscos.h"
@@ -32,1180 +34,591 @@
 
 /*extern _kernel_swi_regs regs;*/
 
-/*extern char opcode;*/
-
 /*sheila*/
 /*char sheila_b[0x100];*/
 
-char (*r6502read8000s[0x10])(int naddress) =
-{
-  r6502read8000_0,
-  r6502read8000_1,
-  r6502read8000_2,
-  r6502read8000_3,
-  r6502read8000_4,
-  r6502read8000_5,
-  r6502read8000_6,
-  r6502read8000_7,
-  r6502read8000_8,
-  r6502read8000_9,
-  r6502read8000_A,
-  r6502read8000_B,
-  r6502read8000_C,
-  r6502read8000_D,
-  r6502read8000_E,
-  r6502read8000_F
-};
-void (*r6502write8000s[0x10])(int naddress, char nvalue) =
-{
-  r6502write8000_0,
-  r6502write8000_1,
-  r6502write8000_2,
-  r6502write8000_3,
-  r6502write8000_4,
-  r6502write8000_5,
-  r6502write8000_6,
-  r6502write8000_7,
-  r6502write8000_8,
-  r6502write8000_9,
-  r6502write8000_A,
-  r6502write8000_B,
-  r6502write8000_C,
-  r6502write8000_D,
-  r6502write8000_E,
-  r6502write8000_F
-};
-
 void sheilareset(void)
 {
-  /*int i;
-  for (i=0;i<=0x100;i++)
-    sheila_b[i] = 0xFE;*/
-}
+  int i,j;
+  R6502READSPECIALOP* specialreadops = &hostmap.specialreadops[0x200];
+  R6502WRITESPECIALOP* specialwriteops = &hostmap.specialwriteops[0x200];
 
-char sheilaread_b(int naddress)
-{
-  char nresult;
-
-  #ifdef __DEBUG__
-    fprintf(htrace,"READsheila>&%X\n",naddress);
-    fprintf(htrace,"PC=&%X OP=&%X\n",r6502_pc-1,opcode);
-  #endif
-
-  switch (naddress & 0xFC)
+  /*&FE00 - &FE07 (CRTC)*/
+  for (i=0x00; i<0x08; i+=0x02)
   {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07 (CRTC)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readcrtc()");
-      #endif
-      nresult = crtcread(naddress);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      nresult = aciaread(naddress);
-      break;
-    case 0x10:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readserialula()");
-      #endif
-      nresult = serialularead(naddress);
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      nresult = serialularead(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readvideoula()");
-      #endif
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x30:
-    case 0x34:
-    case 0x38:
-    case 0x3C:
-      /*&FE30 - &FE3F (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,beebit_romsel);
-      #endif
-      nresult = 0xFE;
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40-&FE5F*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviaread(%X)",(naddress & 0x0F));
-      #endif
-      nresult = systemviaread(naddress);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60-&FE7F*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"readuservia(&%X)",(naddress & 0x0F));
-      #endif
-      nresult = userviaread(naddress);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80-&FE9F (8271 or 1770)*/
-      nresult = i8271read(naddress);
-      /*nresult = w1770read(naddress);*/
-      if (beebit_nmi AND !beebit_oldnmi)
-      {
-        #ifdef __RISCOS__
-          r6502nmi();
-        #else
-          r6502donmi();
-        #endif
-      }
-      beebit_oldnmi = beebit_nmi;
-      #ifdef __DEBUG__
-        fprintf(htrace,"read8271(&%X)=&%X\n",(naddress & 0x0F),nresult);
-      #endif
-      break;
-    case 0xA0:
-    case 0xA4:
-    case 0xA8:
-    case 0xAC:
-      /*&FEA0-&FEAF (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB0:
-    case 0xB4:
-      /*&FEB0-&FEB7 (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB8:
-    case 0xBC:
-      /*&FEB8-&FEBF (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*FEC0-&FEDF (ADC)*/
-      nresult = adcread(naddress);
-      #ifdef __DEBUG__
-        fprintf(htrace,"readadc()");
-      #endif
-      break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFE;
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFE;
-      /*nresult = tuberead(naddress);*/
-      break;
-    default:
-      nresult = memory[naddress];
-      break;
+    specialreadops[i] = crtc00read;
+    specialreadops[i+1] = crtc01read;
+    specialwriteops[i] = crtc00write;
+    specialwriteops[i+1] = crtc01write;
   }
-  return (nresult);
-}
 
-char sheilaread_bp(int naddress)
-{
-  char nresult;
-
-  #ifdef __DEBUG__
-    fprintf(htrace,"READsheila>&%X\n",naddress);
-    fprintf(htrace,"PC=&%X OP=&%X\n",r6502_pc-1,opcode);
-  #endif
-
-  switch (naddress & 0xFC)
+  /*&FE08 - &FE0F (ACIA)*/
+  for (i=0x08; i<0x10; i+=0x02)
   {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07 (CRTC)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readcrtc()");
-      #endif
-      nresult = crtcread(naddress);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      nresult = aciaread(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x10:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readserialula()");
-      #endif
-      nresult = serialularead(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      nresult = serialularead(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readvideoula()");
-      #endif
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      nresult = 0xFE; /*videoularead(naddress);*/
-      break;
-    case 0x30:
-    case 0x38:
-      /*&FE30 - &FE33, &FE38 - &FE3B (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,beebit_romsel);
-      #endif
-      nresult = beebit_romsel;
-      break;
-    case 0x34:
-    case 0x3C:
-      /*&FE34-&FE37, &FE3C-&FE3F (ACCCON)*/
-      #ifdef __DEVELOPXX__
-        fprintf(htrace," &%X ACCCON=&%X\n",naddress,beebit_acccon);
-      #endif
-      nresult = beebit_acccon;
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40-&FE5F*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviaread(%X)",(naddress & 0x0F));
-      #endif
-      nresult = systemviaread(naddress);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60-&FE7F*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"readuservia(&%X)",(naddress & 0x0F));
-      #endif
-      nresult = userviaread(naddress);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80-&FE9F (8271 or 1770)*/
-      if (naddress & 0x04)
-        nresult = w1770read(naddress);
-      else
-        nresult = w1770controlread();
-      break;
-    case 0xA0:
-    case 0xA4:
-    case 0xA8:
-    case 0xAC:
-      /*&FEA0-&FEAF (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB0:
-    case 0xB4:
-      /*&FEB0-&FEB7 (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB8:
-    case 0xBC:
-      /*&FEB8-&FEBF (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*FEC0-&FEDF (ADC)*/
-      nresult = adcread(naddress);
-      #ifdef __DEBUG__
-        fprintf(htrace,"readadc()");
-      #endif
-      break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFE;
-      /*nresult = tuberead(naddress);*/
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFE;
-      /*nresult = tuberead(naddress);*/
-      break;
-    default:
-      nresult = memory[naddress];
-      break;
+    specialreadops[i] = acia00read;
+    specialreadops[i+1] = acia01read;
+    specialwriteops[i] = acia00write;
+    specialwriteops[i+1] = acia01write;
   }
-  return (nresult);
-}
 
-char sheilaread_m(int naddress)
-{
-  char nresult;
-
-  #ifdef __DEBUG__
-    fprintf(htrace,"READsheila>&%X\n",naddress);
-    fprintf(htrace,"PC=&%X OP=&%X\n",r6502_pc-1,opcode);
-  #endif
-  switch (naddress & 0xFC)
+  /*&FE10 - &FE17 (SERIALULA)*/
+  for (i=0x10; i<0x18; i+=0x01)
   {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07 (CRTC)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readcrtc()");
-      #endif
-      nresult = crtcread(naddress);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      nresult = aciaread(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x10:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readserialula()");
-      #endif
-      nresult = serialularead(naddress);
-      /*nresult = 0x00;*/
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      nresult = adcread(naddress);
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"readvideoula()");
-      #endif
-      /*nresult = videoularead(naddress);*/
-      nresult = 0;
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      nresult = w1770controlread();
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      nresult = w1770read(naddress);
-      break;
-    case 0x30:
+    specialreadops[i] = serialularead;
+    specialwriteops[i] = serialulawrite;
+  }
+
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    /*&FE18 - &FE1F (ADC)*/
+    for (i=0x18; i<0x20; i+=0x04)
+    {
+      specialreadops[i] = adc00read;
+      specialreadops[i+1] = adc01read;
+      specialreadops[i+2] = adc02read;
+      specialreadops[i+3] = adc02read;
+      specialwriteops[i] = adcwrite;
+      specialwriteops[i+1] = adcwrite;
+      specialwriteops[i+2] = adcwrite;
+      specialwriteops[i+3] = adcwrite;
+    }
+  }
+  else
+  {
+    /*&FE18 - &FE1F (ECONET STATION NUMBER/INTOFF)*/
+    for (i=0x18; i<0x20; i+=0x01)
+    {
+      specialreadops[i] = hostconstantreadFE;
+      specialwriteops[i] = hostnowrite;
+    }
+  }
+
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    /*&FE20 - &FE23 (VIDEOULA)*/
+    for (i=0x20; i<0x24; i+=0x02)
+    {
+      specialreadops[i] = hostconstantread00;
+      specialreadops[i+1] = hostconstantread00;
+      specialwriteops[i] = videoula00write;
+      specialwriteops[i+1] = videoula01write;
+    }
+    /*&FE24 - &FE27 (FDC INTERFACE CONTROL REG)*/
+    for (i=0x24; i<0x28; i+=0x01)
+    {
+      specialreadops[i] = w1770controlread;
+      specialwriteops[i] = w1770controlwrite_m;
+    }
+    /*&FE28 - &FE2F (FDC INTERFACE)*/
+    for (i=0x28; i<0x30; i+=0x04)
+    {
+      specialreadops[i] = w1770statusread;
+      specialreadops[i+1] = w1770trackread;
+      specialreadops[i+2] = w1770sectorread;
+      specialreadops[i+3] = w1770dataread;
+      specialwriteops[i] = w1770commandwrite;
+      specialwriteops[i+1] = w1770trackwrite;
+      specialwriteops[i+2] = w1770sectorwrite;
+      specialwriteops[i+3] = w1770datawrite;
+    }
+  }
+  else
+  {
+    /*&FE20 - &FE2F (VIDEOULA/INTON)*/
+    for (i=0x20; i<0x30; i+=0x02)
+    {
+      specialreadops[i] = hostconstantreadFE;
+      specialreadops[i+1] = hostconstantreadFE;
+      specialwriteops[i] = videoula00write;
+      specialwriteops[i+1] = videoula01write;
+    }
+  }
+
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    /*&FE30 - &FE33 (ROMSEL)*/
+    for (i=0x30; i<0x34; i++)
+    {
+      specialreadops[i] = romselread;
+      specialwriteops[i] = romselwrite_m;
+    }
+    /*&FE34 - &FE37 (ACCCON)*/
+    for (i=0x34; i<0x38; i++)
+    {
+      specialreadops[i] = accconread;
+      specialwriteops[i] = accconwrite_m;
+    }
+    /*&FE38 - &FE3B (INTOFF)*/
+    for (i=0x38; i<0x3C; i++)
+    {
+      specialreadops[i] = hostconstantread00;
+      specialwriteops[i] = hostnowrite;
+    }
+    /*&FE3C - &FE3F (INTON)*/
+    for (i=0x3C; i<0x40; i++)
+    {
+      specialreadops[i] = hostconstantread00;
+      specialwriteops[i] = hostnowrite;
+    }
+  }
+  else if (beebit_machinetype == MACHINE_MODELBPLUS)
+  {
+    for (j=0x30; j<0x40; j+=0x08)
+    {
       /*&FE30 - &FE33 (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"&%X ROMSEL=&%X\n",naddress,beebit_romsel);
-      #endif
-      nresult = beebit_romsel;
-      break;
-    case 0x34:
-      /*FE34-&FE37 (ACCCON)*/
-      #ifdef __DEVELOPXX__
-        fprintf(htrace," &%X ACCCON=&%X\n",naddress,beebit_acccon);
-      #endif
-      nresult = beebit_acccon;
-      break;
-    case 0x38:
-      /*FE38-&FE3B (INTOFF)*/
-      nresult = 0;
-      break;
-    case 0x3C:
-      /*FE3C-&FE3F (INTON)*/
-      nresult = 0;
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40-&FE5F*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviaread(%X)",(naddress & 0x0F));
-      #endif
-      nresult = systemviaread(naddress);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60-&FE7F*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"readuservia(&%X)",(naddress & 0x0F));
-      #endif
-      nresult = userviaread(naddress);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80-&FE9F (8271 or 1770)*/
-      nresult = i8271read(naddress);
-      if (beebit_nmi AND !beebit_oldnmi)
+      for (i=0x00; i<0x04; i++)
       {
-        #ifdef __RISCOS__
-          r6502nmi();
-        #else
-          r6502donmi();
-        #endif
+        specialreadops[j+i] = romselread;
+        specialwriteops[j+i] = romselwrite_bp;
       }
-      beebit_oldnmi = beebit_nmi;
-      break;
-    case 0xA0:
-    case 0xA4:
-    case 0xA8:
-    case 0xAC:
-      /*&FEA0-&FEAF (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB0:
-    case 0xB4:
-      /*&FEB0-&FEB7 (ECONET)*/
-      nresult = 0xFE;
-      break;
-    case 0xB8:
-    case 0xBC:
-      /*&FEB8-&FEBF (ECONET)*/
-      nresult = 0xFF;
-      break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*FEC0-&FEDF (ADC)*/
-      nresult = 0xFF;
-      break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFF;
-      /*nresult = tuberead(naddress);*/
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*&FEE0-&FEFF (TUBE)*/
-      nresult = 0xFF;
-      /*nresult = tuberead(naddress);*/
-      break;
-    default:
-      nresult = memory[naddress];
-      break;
-  }
-  return (nresult);
-}
-
-void sheilawrite_b(int naddress, char nvalue)
-{
-  #ifdef __DEBUG__
-    fprintf(htrace,"WRITEsheila=&%X,&%X\n",naddress,nvalue);
-  #endif
-  /*sheila address space FE00-&FEFF*/
-  /*these values are only used for snapshots*/
-  /*sheila_b[naddress-0xFE00] = nvalue;*/
-
-  switch (naddress & 0xFC)
-  {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writecrtc(%X)",nvalue);
-      #endif
-      crtcwrite(naddress,nvalue);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      aciawrite(naddress,nvalue);
-      break;
-    case 0x10:
-    case 0x14:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      serialulawrite(naddress,nvalue);
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      serialulawrite(naddress,nvalue);
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writevideoula(&%X,&%X)\n",naddress,nvalue);
-      #endif
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x30:
-      /*&FE30 - &FE33 (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
-      #endif
-      if (beebit_romselected != nvalue)
-      {
-        beebit_romsel = nvalue;
-        pageinrom(beebit_romsel & 0x0F, FALSE);
-      }
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"=&%X\n",beebit_romsel);
-      #endif
-      break;
-    case 0x34:
-      /*&FE34 - &FE37 (ROMSEL in place of ACCCON)*/
-      /*ignoring writes directed at B+ or Master*/
-      break;
-    case 0x38:
-      /*&FE38 - &FE3B (ROMSEL in place of INTOFF)*/
-      /*ignoring writes directed at Master*/
-      break;
-    case 0x3C:
-      /*&FE3C - &FE3F (ROMSEL in place of INTON)*/
-      /*ignoring writes directed at Master*/
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40 - &FE5F (SYSTEMVIA)*/
-      /*printf(" &FE40 ");*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviawrite(%X,%X)",(naddress & 0x0F),nvalue);
-      #endif
-      systemviawrite(naddress,nvalue);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60 - &FE7F (USERVIA)*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"writeuservia(&%X,&%X)",(naddress & 0x0F),nvalue);
-      #endif
-      userviawrite(naddress, nvalue);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80 - &FE9F (8271 or 1770)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"write8271(&%X,&%X)\n",(naddress & 0x0F),nvalue);
-      #endif
-      i8271write(naddress, nvalue);
-      /*w1770write(naddress, nvalue);*/
-      if (beebit_nmi AND !beebit_oldnmi)
-      {
-        #ifdef __RISCOS__
-          r6502nmi();
-        #else
-          r6502donmi();
-        #endif
-      }
-      beebit_oldnmi = beebit_nmi;
-      break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*&FEC0 - &FEDF (ADC)*/
-      adcwrite(naddress,nvalue);
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeadc()");
-      #endif
-      break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
-      break;
-  }
-}
-
-void sheilawrite_bp(int naddress, char nvalue)
-{
-  #ifdef __DEBUG__
-    fprintf(htrace,"WRITEsheila=&%X,&%X\n",naddress,nvalue);
-  #endif
-  /*sheila address space FE00-&FEFF*/
-  /*these values are only used for snapshots*/
-  /*sheila_b[naddress-0xFE00] = nvalue;*/
-
-  switch (naddress & 0xFC)
-  {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writecrtc(%X)",nvalue);
-      #endif
-      crtcwrite(naddress,nvalue);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      aciawrite(naddress,nvalue);
-      break;
-    case 0x10:
-    case 0x14:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      serialulawrite(naddress,nvalue);
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      serialulawrite(naddress,nvalue);
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      /*fprintf(htrace,"UW:&%X,&%X - PC=&%x\n",naddress,nvalue,r6502_pc);*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writevideoula(&%X,&%X)\n",naddress,nvalue);
-      #endif
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x30:
-    case 0x38:
-      /*&FE30 - &FE33, &FE38 - &FE3B (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
-      #endif
-      {
-        /*make rom F use rom E*/
-        int nrom = (nvalue & 0x0F) == 0x0F ? 0x0E : (nvalue & 0x0F);
-        char (*read8000)(int) = r6502read8000s[nrom];
-        void (*write8000)(int, char) = r6502write8000s[nrom];
-        if (nvalue & 0x80)
-        {
-          /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
-          r6502readoffset[0x8] = r6502readbp8000_ram;
-          r6502readoffset[0x9] = r6502readbp8000_ram;
-          r6502readoffset[0xA] = r6502readbp8000_ram;
-          r6502writeoffset[0x8] = r6502writebp8000_ram;
-          r6502writeoffset[0x9] = r6502writebp8000_ram;
-          r6502writeoffset[0xA] = r6502writebp8000_ram;
-        }
-        else
-        {
-          r6502readoffset[0x8] = read8000;
-          r6502readoffset[0x9] = read8000;
-          r6502readoffset[0xA] = read8000;
-          r6502writeoffset[0x8] = write8000;
-          r6502writeoffset[0x9] = write8000;
-          r6502writeoffset[0xA] = write8000;
-        }
-        r6502readoffset[0xB] = read8000;
-        r6502writeoffset[0xB] = write8000;
-      }
-      beebit_romsel = nvalue;
-      break;
-    case 0x34:
-    case 0x3C:
-      /*&FE34 - &FE37, &FE3C - &FE3F (ACCCON)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ACCCON(&%X,&%X)\n",naddress,nvalue);
-      #endif
-      if (nvalue & 0x80)
-      {
-        /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
-        r6502readoffset[0x3] = r6502readbp3000_ram;
-        r6502readoffset[0x4] = r6502readbp3000_ram;
-        r6502readoffset[0x5] = r6502readbp3000_ram;
-        r6502readoffset[0x6] = r6502readbp3000_ram;
-        r6502readoffset[0x7] = r6502readbp3000_ram;
-        r6502writeoffset[0x3] = r6502writebp3000_ram;
-        r6502writeoffset[0x4] = r6502writebp3000_ram;
-        r6502writeoffset[0x5] = r6502writebp3000_ram;
-        r6502writeoffset[0x6] = r6502writebp3000_ram;
-        r6502writeoffset[0x7] = r6502writebp3000_ram;
-      }
-      else
-      {
-        r6502readoffset[0x3] = r6502read3000;
-        r6502readoffset[0x4] = r6502read3000;
-        r6502readoffset[0x5] = r6502read3000;
-        r6502readoffset[0x6] = r6502read3000;
-        r6502readoffset[0x7] = r6502read3000;
-        r6502writeoffset[0x3] = r6502write3000;
-        r6502writeoffset[0x4] = r6502write3000;
-        r6502writeoffset[0x5] = r6502write3000;
-        r6502writeoffset[0x6] = r6502write3000;
-        r6502writeoffset[0x7] = r6502write3000;
-      }
-      beebit_acccon = nvalue;
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40 - &FE5F (SYSTEMVIA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviawrite(%X,%X)",(naddress & 0x0F),nvalue);
-      #endif
-      systemviawrite(naddress,nvalue);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60 - &FE7F (USERVIA)*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"writeuservia(&%X,&%X)",(naddress & 0x0F),nvalue);
-      #endif
-      userviawrite(naddress, nvalue);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80 - &FE9F (8271 or 1770)*/
-      if (naddress & 0x04)
-        w1770write(naddress,nvalue);
-      else
-        w1770controlwrite(nvalue);
-      break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*&FEC0 - &FEDF (ADC)*/
-      adcwrite(naddress,nvalue);
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeadc()");
-      #endif
-      break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
-      break;
-  }
-}
-
-void sheilawrite_m(int naddress, char nvalue)
-{
-  #ifdef __DEBUG__
-    fprintf(htrace,"WRITEsheila=&%X,&%X\n",naddress,nvalue);
-  #endif
-  /*sheila address space FE00-&FEFF*/
-  /*these values are only used for snapshots*/
-  /*sheila_b[naddress-0xFE00] = nvalue;*/
-  switch (naddress & 0xFC)
-  {
-    case 0x00:
-    case 0x04:
-      /*&FE00 - &FE07*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writecrtc(%X)",nvalue);
-      #endif
-      crtcwrite(naddress,nvalue);
-      break;
-    case 0x08:
-    case 0x0C:
-      /*&FE08 - &FE0F (ACIA)*/
-      aciawrite(naddress,nvalue);
-      break;
-    case 0x10:
-    case 0x14:
-      /*&FE10 - &FE17 (SERIALULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      serialulawrite(naddress,nvalue);
-      break;
-    case 0x18:
-    case 0x1C:
-      /*&FE18 - &FE1F (SERIALULA/ADC)*/
-      adcwrite(naddress,nvalue);
-      #ifdef __DEBUG__
-        fprintf(htrace,"writeserialula()");
-      #endif
-      break;
-    case 0x20:
-      /*&FE20 - &FE23 (VIDEOULA)*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"writevideoula(&%X,&%X)\n",naddress,nvalue);
-      #endif
-      videoulawrite(naddress, nvalue);
-      break;
-    case 0x24:
-      /*&FE24 - &FE27 (VIDEOULA/FDC INTERFACE CONTROL REG)*/
-      w1770controlwrite(nvalue);
-      break;
-    case 0x28:
-    case 0x2C:
-      /*&FE28 - &FE2F (VIDEOULA/FDC INTERFACE)*/
-      w1770write(naddress,nvalue);
-      break;
-    case 0x30:
-      /*&FE30 - &FE33 (ROMSEL)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ROMSEL(&%X,&%X)",naddress,nvalue);
-      #endif
-      {
-        int nrom = (nvalue & 0x0F);
-        char (*read8000)(int) = r6502read8000s[nrom];
-        void (*write8000)(int, char) = r6502write8000s[nrom];
-        if (nvalue & 0x80)
-        {
-          /*ROMSEL b7 (RAM) (&8000-&8FFF)*/
-          r6502readoffset[0x8] = r6502readm8000_ram;
-          r6502writeoffset[0x8] = r6502writem8000_ram;
-        }
-        else
-        {
-          r6502readoffset[0x8] = read8000;
-          r6502writeoffset[0x8] = write8000;
-        }
-        r6502readoffset[0x9] = read8000;
-        r6502readoffset[0xA] = read8000;
-        r6502readoffset[0xB] = read8000;
-        r6502writeoffset[0xB] = write8000;
-        r6502writeoffset[0x9] = write8000;
-        r6502writeoffset[0xA] = write8000;
-      }
-      beebit_romsel = nvalue;
-      break;
-    case 0x34:
       /*&FE34 - &FE37 (ACCCON)*/
-      #ifdef __DEVELOPxx__
-        fprintf(htrace,"ACCCON(&%X,&%X)\n",naddress,nvalue);
-      #endif
-      switch (nvalue & 0x06)
+      for (i=0x04; i<0x08; i++)
       {
-        case 0x00:
-          /*RAM*/
-          r6502readoffset[0x3] = r6502read3000;
-          r6502readoffset[0x4] = r6502read3000;
-          r6502readoffset[0x5] = r6502read3000;
-          r6502readoffset[0x6] = r6502read3000;
-          r6502readoffset[0x7] = r6502read3000;
-          r6502writeoffset[0x3] = r6502write3000;
-          r6502writeoffset[0x4] = r6502write3000;
-          r6502writeoffset[0x5] = r6502write3000;
-          r6502writeoffset[0x6] = r6502write3000;
-          r6502writeoffset[0x7] = r6502write3000;
-          break;
-        case 0x02:
-          /*ACCCON b1 (E)*/
-          r6502readoffset[0x3] = r6502readm3000_e;
-          r6502readoffset[0x4] = r6502readm3000_e;
-          r6502readoffset[0x5] = r6502readm3000_e;
-          r6502readoffset[0x6] = r6502readm3000_e;
-          r6502readoffset[0x7] = r6502readm3000_e;
-          r6502writeoffset[0x3] = r6502writem3000_e;
-          r6502writeoffset[0x4] = r6502writem3000_e;
-          r6502writeoffset[0x5] = r6502writem3000_e;
-          r6502writeoffset[0x6] = r6502writem3000_e;
-          r6502writeoffset[0x7] = r6502writem3000_e;
-          break;
-        case 0x04:
-        case 0x06:
-          /*ACCCON b2 (X)*/
-          r6502readoffset[0x3] = r6502readm3000_x;
-          r6502readoffset[0x4] = r6502readm3000_x;
-          r6502readoffset[0x5] = r6502readm3000_x;
-          r6502readoffset[0x6] = r6502readm3000_x;
-          r6502readoffset[0x7] = r6502readm3000_x;
-          r6502writeoffset[0x3] = r6502writem3000_x;
-          r6502writeoffset[0x4] = r6502writem3000_x;
-          r6502writeoffset[0x5] = r6502writem3000_x;
-          r6502writeoffset[0x6] = r6502writem3000_x;
-          r6502writeoffset[0x7] = r6502writem3000_x;
-          break;
+        specialreadops[j+i] = accconread;
+        specialwriteops[j+i] = accconwrite_bp;
       }
+    }
+  }
+  else
+  {
+    /*&FE30 - &FE33 (ROMSEL)*/
+    for (i=0x30; i<0x34; i++)
+    {
+      specialreadops[i] = hostconstantreadFE;
+      specialwriteops[i] = romselwrite_b;
+    }
+    /*&FE34 - &FE3F (ROMSEL in place of ACCCON, INTOFF and INTON)*/
+    /*ignoring writes directed at Master*/
+    for (i=0x34; i<0x40; i++)
+    {
+      specialreadops[i] = hostconstantreadFE;
+      specialwriteops[i] = hostnowrite;
+    }
+  }
 
-      if (nvalue & 0x08)
-      {
-        /*ACCCON b3 (Y)*/
-        /*&C000-&DFFF*/
-        r6502readoffset[0xC] = r6502readmC000_y;
-        r6502readoffset[0xD] = r6502readmC000_y;
-        r6502writeoffset[0xC] = r6502writemC000_y;
-        r6502writeoffset[0xD] = r6502writemC000_y;
-      }
-      else
-      {
-        /*&C000-&DFFF*/
-        r6502readoffset[0xC] = r6502readC000;
-        r6502readoffset[0xD] = r6502readC000;
-        r6502writeoffset[0xC] = r6502writeC000;
-        r6502writeoffset[0xD] = r6502writeC000;
-      }
+  /*&FE40-&FE5F*/
+  for (i=0x40; i<0x60; i+=0x10)
+  {
+    specialreadops[i] = systemvia00read;
+    specialreadops[i+0x02] = systemvia02read;
+    specialreadops[i+0x03] = systemvia03read;
+    specialreadops[i+0x04] = systemvia04read;
+    specialreadops[i+0x05] = systemvia05read;
+    specialreadops[i+0x06] = systemvia06read;
+    specialreadops[i+0x07] = systemvia07read;
+    specialreadops[i+0x08] = systemvia08read;
+    specialreadops[i+0x09] = systemvia09read;
+    specialreadops[i+0x0A] = systemvia0Aread;
+    specialreadops[i+0x0B] = systemvia0Bread;
+    specialreadops[i+0x0C] = systemvia0Cread;
+    specialreadops[i+0x0D] = systemvia0Dread;
+    specialreadops[i+0x0E] = systemvia0Eread;
+    specialwriteops[i+0x02] = systemvia02write;
+    specialwriteops[i+0x03] = systemvia03write;
+    specialwriteops[i+0x04] = systemvia04write;
+    specialwriteops[i+0x05] = systemvia05write;
+    specialwriteops[i+0x06] = systemvia06write;
+    specialwriteops[i+0x07] = systemvia07write;
+    specialwriteops[i+0x08] = systemvia08write;
+    specialwriteops[i+0x09] = systemvia09write;
+    specialwriteops[i+0x0A] = systemvia0Awrite;
+    specialwriteops[i+0x0B] = systemvia0Bwrite;
+    specialwriteops[i+0x0C] = systemvia0Cwrite;
+    specialwriteops[i+0x0D] = systemvia0Dwrite;
+    specialwriteops[i+0x0E] = systemvia0Ewrite;
+    if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+    {
+      specialreadops[i+0x01] = systemvia01read_m;
+      specialreadops[i+0x0F] = systemvia0Fread_m;
+      specialwriteops[i] = systemvia00write_m;
+      specialwriteops[i+0x01] = systemvia01write_m;
+      specialwriteops[i+0x0F] = systemvia0Fwrite_m;
+    }
+    else
+    {
+      specialreadops[i+0x01] = systemvia01read_b;
+      specialreadops[i+0x0F] = systemvia0Fread_b;
+      specialwriteops[i] = systemvia00write_b;
+      specialwriteops[i+0x01] = systemvia01write_b;
+      specialwriteops[i+0x0F] = systemvia0Fwrite_b;
+    }
+  }
 
-      if (nvalue & 0x80)
+  /*&FE60-&FE7F*/
+  for (i=0x60; i<0x80; i+=0x10)
+  {
+    specialreadops[i] = uservia00read;
+    specialreadops[i+0x01] = uservia01read;
+    specialreadops[i+0x02] = uservia02read;
+    specialreadops[i+0x03] = uservia03read;
+    specialreadops[i+0x04] = uservia04read;
+    specialreadops[i+0x05] = uservia05read;
+    specialreadops[i+0x06] = uservia06read;
+    specialreadops[i+0x07] = uservia07read;
+    specialreadops[i+0x08] = uservia08read;
+    specialreadops[i+0x09] = uservia09read;
+    specialreadops[i+0x0A] = uservia0Aread;
+    specialreadops[i+0x0B] = uservia0Bread;
+    specialreadops[i+0x0C] = uservia0Cread;
+    specialreadops[i+0x0D] = uservia0Dread;
+    specialreadops[i+0x0E] = uservia0Eread;
+    specialreadops[i+0x0F] = uservia0Fread;
+    specialwriteops[i] = uservia00write;
+    specialwriteops[i+0x01] = uservia01write;
+    specialwriteops[i+0x02] = uservia02write;
+    specialwriteops[i+0x03] = uservia03write;
+    specialwriteops[i+0x04] = uservia04write;
+    specialwriteops[i+0x05] = uservia05write;
+    specialwriteops[i+0x06] = uservia06write;
+    specialwriteops[i+0x07] = uservia07write;
+    specialwriteops[i+0x08] = uservia08write;
+    specialwriteops[i+0x09] = uservia09write;
+    specialwriteops[i+0x0A] = uservia0Awrite;
+    specialwriteops[i+0x0B] = uservia0Bwrite;
+    specialwriteops[i+0x0C] = uservia0Cwrite;
+    specialwriteops[i+0x0D] = uservia0Dwrite;
+    specialwriteops[i+0x0E] = uservia0Ewrite;
+    specialwriteops[i+0x0F] = uservia0Fwrite;
+  }
+
+  if (beebit_machinetype == MACHINE_MODELBPLUS)
+  {
+    /*&FE80-&FE9F (8271 or 1770)*/
+    for (j=0x80; j<0xA0; j+=0x08)
+    {
+      /*&FE80 - &FE83 (FDC INTERFACE CONTROL REG)*/
+      for (i=0x00; i<0x04; i+=0x01)
       {
-        /*IRR*/
-        #ifdef __RISCOS__
-          r6502irq();
-        #else
-          r6502doirq();
-        #endif
-        nvalue &= 0x7F;
+        specialreadops[j+i] = w1770controlread;
+        specialwriteops[j+i] = w1770controlwrite_bp;
       }
-      beebit_acccon = nvalue;
-      break;
-    case 0x38:
-      /*&FE38 - &FE3B (INTOFF)*/
-      break;
-    case 0x3C:
-      /*&FE3C - &FE3F (INTON)*/
-      break;
-    case 0x40:
-    case 0x44:
-    case 0x48:
-    case 0x4C:
-    case 0x50:
-    case 0x54:
-    case 0x58:
-    case 0x5C:
-      /*&FE40 - &FE5F (SYSTEMVIA)*/
-      /*printf(" &FE40 ");*/
-      #ifdef __DEBUG__
-        fprintf(htrace,"systemviawrite(%X,%X)",(naddress & 0x0F),nvalue);
-      #endif
-      systemviawrite(naddress,nvalue);
-      break;
-    case 0x60:
-    case 0x64:
-    case 0x68:
-    case 0x6C:
-    case 0x70:
-    case 0x74:
-    case 0x78:
-    case 0x7C:
-      /*&FE60 - &FE7F (USERVIA)*/
-      #ifdef __DEBUG__
-        if (beebit_trace)
-          fprintf(htrace,"writeuservia(&%X,&%X)",(naddress & 0x0F),nvalue);
-      #endif
-      userviawrite(naddress, nvalue);
-      break;
-    case 0x80:
-    case 0x84:
-    case 0x88:
-    case 0x8C:
-    case 0x90:
-    case 0x94:
-    case 0x98:
-    case 0x9C:
-      /*&FE80 - &FE9F (8271 or 1770)*/
-      i8271write(naddress, nvalue);
-      if (beebit_nmi AND !beebit_oldnmi)
+      /*&FE84 - &FE87 (FDC INTERFACE)*/
+      specialreadops[j+0x04] = w1770statusread;
+      specialreadops[j+0x05] = w1770trackread;
+      specialreadops[j+0x06] = w1770sectorread;
+      specialreadops[j+0x07] = w1770dataread;
+      specialwriteops[j+0x04] = w1770commandwrite;
+      specialwriteops[j+0x05] = w1770trackwrite;
+      specialwriteops[j+0x06] = w1770sectorwrite;
+      specialwriteops[j+0x07] = w1770datawrite;
+    }
+  }
+  else if (beebit_machinetype == MACHINE_MODELB)
+  {
+    /*&FE80-&FE9F (8271 or 1770)*/
+    for (j=0x80; j<0xA0; j+=0x08)
+    {
+      specialreadops[j] = i8271statusread;
+      specialreadops[j+1] = i8271resultread;
+      specialreadops[j+2] = hostconstantreadFE;
+      specialreadops[j+3] = hostconstantreadFE;
+      specialwriteops[j] = i8271commandwrite;
+      specialwriteops[j+1] = i8271parameterwrite;
+      specialwriteops[j+2] = i8271resetwrite;
+      specialwriteops[j+3] = hostnowrite;
+
+      for (i=0x04; i<0x08; i+=0x01)
       {
-        #ifdef __RISCOS__
-          r6502nmi();
-        #else
-          r6502donmi();
-        #endif
+        specialreadops[j+i] = i8271dataread;
+        specialwriteops[j+i] = i8271datawrite;
       }
-      beebit_oldnmi = beebit_nmi;
+    }
+  }
+  else
+  {
+    for (i=0x80; i<0xA0; i+=0x01)
+    {
+      specialreadops[i] = hostconstantread00;
+      specialwriteops[i] = hostnowrite;
+    }
+  }
+
+  /*&FEA0-&FEBF (ECONET)*/
+  for (i=0xA0; i<0xC0; i+=0x01)
+  {
+    specialreadops[i] = hostconstantreadFE;
+    specialwriteops[i] = hostnowrite;
+  }
+
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    /*&FEC0-&FEDF (ECONET)*/
+    for (i=0xC0; i<0xE0; i++)
+    {
+      specialreadops[i] = hostconstantreadFF;
+      specialwriteops[i] = hostnowrite;
+    }
+  }
+  else
+  {
+    /*FEC0-&FEDF (ADC)*/
+    for (i=0xC0; i<0xE0; i+=0x04)
+    {
+      specialreadops[i] = adc00read;
+      specialreadops[i+1] = adc01read;
+      specialreadops[i+2] = adc02read;
+      specialreadops[i+3] = adc02read;
+      specialwriteops[i] = adcwrite;
+      specialwriteops[i+1] = adcwrite;
+      specialwriteops[i+2] = adcwrite;
+      specialwriteops[i+3] = adcwrite;
+    }
+  }
+
+  /*FEE0-&FEFF (TUBE)*/
+  if (beebit_machinetype == MACHINE_MASTER128 || beebit_machinetype == MACHINE_COMPACT)
+  {
+    for (i=0xE0; i<0x100; i+=0x01)
+    {
+      specialreadops[i] = hostconstantreadFF;
+      specialwriteops[i] = hostnowrite;
+    }
+  }
+  else
+  {
+    for (i=0xE0; i<0x100; i+=0x01)
+    {
+      specialreadops[i] = hostconstantreadFE;
+      specialwriteops[i] = hostnowrite;
+    }
+  }
+}
+
+struct R6502CPUMAP* hostconstantread00(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = 0x00;
+  return cmap;
+}
+
+struct R6502CPUMAP* hostconstantreadFE(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = 0xFE;
+  return cmap;
+}
+
+struct R6502CPUMAP* hostconstantreadFF(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = 0xFF;
+  return cmap;
+}
+
+struct R6502CPUMAP* romselread(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->romsel;
+  return cmap;
+}
+
+struct R6502CPUMAP* accconread(struct R6502CPUMAP* cmap, uintptr_t address_code)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  hmap->m = hmap->acccon;
+  return cmap;
+}
+
+struct R6502CPUMAP* hostnowrite(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  return cmap;
+}
+
+struct R6502CPUMAP* romselwrite_b(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  int nrom = (value & 0x0F);
+  cmap->addressingops[0x0B].op = cmap->addressingops[0x0A].op
+      = cmap->addressingops[0x09].op = cmap->addressingops[0x08].op = hmap->read8000s[nrom];
+  cmap->addressingops[0x1B].op = cmap->addressingops[0x1A].op
+      = cmap->addressingops[0x19].op = cmap->addressingops[0x18].op = hmap->modify8000s[nrom];
+  hmap->romsel = value;
+  return cmap;
+}
+
+struct R6502CPUMAP* romselwrite_bp(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  int nrom = (value & 0x0F);
+  if (value & 0x80)
+  {
+    /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
+    cmap->addressingops[0x0A].op = cmap->addressingops[0x09].op
+        = cmap->addressingops[0x08].op = hmap->paging.address8000_ram;
+    cmap->addressingops[0x1A].op = cmap->addressingops[0x19].op
+        = cmap->addressingops[0x18].op = hmap->paging.address8000_ram;
+    if (hmap->acccon & 0x80)
+    {
+      /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
+      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
+      = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
+      = cmap->addressingops[0x03].op = hmap->paging.address3000_ramram;
+      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
+      = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
+      = cmap->addressingops[0x13].op = hmap->paging.address3000_ramram;
+    }
+  }
+  else
+  {
+    cmap->addressingops[0x0A].op = cmap->addressingops[0x09].op
+        = cmap->addressingops[0x08].op = hmap->read8000s[nrom];
+    cmap->addressingops[0x1A].op = cmap->addressingops[0x19].op
+        = cmap->addressingops[0x18].op = hmap->modify8000s[nrom];
+    if (hmap->acccon & 0x80)
+    {
+      /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
+      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
+      = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
+      = cmap->addressingops[0x03].op = hmap->paging.address3000_ram;
+      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
+      = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
+      = cmap->addressingops[0x13].op = hmap->paging.address3000_ram;
+    }
+  }
+  cmap->addressingops[0x0B].op = hmap->read8000s[nrom];
+  cmap->addressingops[0x1B].op = hmap->modify8000s[nrom];
+  hmap->romsel = value;
+  return cmap;
+}
+
+struct R6502CPUMAP* romselwrite_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  int nrom = (value & 0x0F);
+  if (value & 0x80)
+  {
+    /*ROMSEL b7 (RAM) (&8000-&8FFF)*/
+    cmap->addressingops[0x08].op = hmap->paging.address8000_ram;
+    cmap->addressingops[0x18].op = hmap->paging.address8000_ram;
+  }
+  else
+  {
+    cmap->addressingops[0x08].op = hmap->read8000s[nrom];
+    cmap->addressingops[0x18].op = hmap->modify8000s[nrom];
+  }
+  cmap->addressingops[0x0B].op = cmap->addressingops[0x0A].op
+      = cmap->addressingops[0x09].op = hmap->read8000s[nrom];
+  cmap->addressingops[0x1B].op = cmap->addressingops[0x1A].op
+      = cmap->addressingops[0x19].op = hmap->modify8000s[nrom];
+  hmap->romsel = value;
+  return cmap;
+}
+
+struct R6502CPUMAP* accconwrite_bp(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  if (value & 0x80)
+  {
+    /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
+    if (hmap->romsel & 0x80)
+    {
+      /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
+      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
+      = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
+      = cmap->addressingops[0x03].op = hmap->paging.address3000_ramram;
+      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
+      = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
+      = cmap->addressingops[0x13].op = hmap->paging.address3000_ramram;
+    }
+    else
+    {
+      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
+      = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
+      = cmap->addressingops[0x03].op = hmap->paging.address3000_ram;
+      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
+      = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
+      = cmap->addressingops[0x13].op = hmap->paging.address3000_ram;
+    }
+  }
+  else
+  {
+    cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
+        = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
+        = cmap->addressingops[0x03].op = hmap->paging.address3000;
+    cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
+        = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
+        = cmap->addressingops[0x13].op = hmap->paging.address3000;
+  }
+  hmap->acccon = value;
+  return cmap;
+}
+
+struct R6502CPUMAP* accconwrite_m(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  switch (value & 0x06)
+  {
+    case 0x00:
+      /*RAM*/
+      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
+          = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
+          = cmap->addressingops[0x03].op = hmap->paging.address3000;
+      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
+          = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
+          = cmap->addressingops[0x13].op = hmap->paging.address3000;
       break;
-    case 0xC0:
-    case 0xC4:
-    case 0xC8:
-    case 0xCC:
-    case 0xD0:
-    case 0xD4:
-    case 0xD8:
-    case 0xDC:
-      /*&FEC0 - &FEDF (ADC)*/
+    case 0x02:
+      /*ACCCON b1 (E)*/
+      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
+          = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
+          = cmap->addressingops[0x03].op = hmap->paging.address3000_e;
+      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
+          = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
+          = cmap->addressingops[0x13].op = hmap->paging.address3000_e;
       break;
-    case 0xE0:
-    case 0xE4:
-    case 0xE8:
-    case 0xEC:
-      /*&FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
-      break;
-    case 0xF0:
-    case 0xF4:
-    case 0xF8:
-    case 0xFC:
-      /*FEE0-&FEFF (TUBE)*/
-      /*tubewrite(naddress,nvalue);*/
+    case 0x04:
+    case 0x06:
+      /*ACCCON b2 (X)*/
+      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
+          = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
+          = cmap->addressingops[0x03].op = hmap->paging.address3000_x;
+      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
+          = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
+          = cmap->addressingops[0x13].op = hmap->paging.address3000_x;
       break;
   }
+  if (value & 0x08)
+  {
+    /*ACCCON b3 (Y)*/
+    /*&C000-&DFFF*/
+    cmap->addressingops[0x0D].op = cmap->addressingops[0x0C].op = hmap->paging.addressC000_y;
+    cmap->addressingops[0x1D].op = cmap->addressingops[0x1C].op = hmap->paging.addressC000_y;
+  }
+  else
+  {
+    /*&C000-&DFFF*/
+    cmap->addressingops[0x0D].op = cmap->addressingops[0x0C].op = cmap->addressingops[0x0E].op;
+    cmap->addressingops[0x1D].op = cmap->addressingops[0x1C].op = cmap->addressingops[0x1E].op;
+  }
+  switch (value & 0x60)
+  {
+    case 0x00:
+      /*FRED, JIM*/
+      hmap->readmFC00 = hmap->paging.addressFC00;
+      hmap->modifymFC00 = hmap->paging.addressFC00;
+      break;
+    case 0x20:
+      /*IFJ*/
+      hmap->readmFC00 = hmap->paging.addressFC00_ifj;
+      hmap->modifymFC00 = hmap->paging.addressFC00_ifj;
+      break;
+    case 0x40:
+    case 0x60:
+      /*TST*/
+      hmap->readmFC00 = cmap->addressingops[0x0E].op;
+      hmap->modifymFC00 = cmap->addressingops[0x1E].op;
+      break;
+  }
+
+  if (value & 0x80)
+  {
+    /*IRR*/
+    HOST_SETIRQ(hmap, HOST_IRQ_IRR)
+  }
+  else
+  {
+    HOST_CLEARIRQ(hmap, HOST_IRQ_IRR)
+  }
+  hmap->acccon = value;
+  return cmap;
 }
