@@ -25,12 +25,32 @@
 
 ; Import global symbols
 
+  IMPORT |r6502opcodefetchreturn|
   IMPORT |r6502opcodeinterruptfetchreturn|
-  IMPORT |r6502nobranch|
-  IMPORT |r65c12branch|
+  IMPORT |r6502ror|
   IMPORT |r6502pull_t2s|
   IMPORT |r6502pull_t1s|
   IMPORT |r6502pull_s|
+  IMPORT |r6502operandread_t2sl|
+  IMPORT |r6502operandread_t1sl|
+  IMPORT |r6502operandread_sl|
+  IMPORT |r65c12modifyabs_u1t2s2l|
+  IMPORT |r65c12modifyabs_u1t1s2l|
+  IMPORT |r65c12modifyabs_u1s2l|
+  IMPORT |r65c12modifyabs_u2t2s3l|
+  IMPORT |r65c12modifyabs_u2t1s3l|
+  IMPORT |r65c12modifyabs_u2s3l|
+  IMPORT |r65c12linearmodifyabs_u3t2s3l|
+  IMPORT |r65c12linearmodifyabs_u3t1s3l|
+  IMPORT |r65c12linearmodifyabs_u3s3l|
+  IMPORT |r65c12modifyabsx_u1t2s2l|
+  IMPORT |r65c12modifyabsx_u1t1s2l|
+  IMPORT |r65c12modifyabsx_u1s2l|
+  IMPORT |r6502nobranch|
+  IMPORT |r65c12branch|
+  IMPORT |r6502fetch_u1t2s|
+  IMPORT |r6502fetch_u1t1s|
+  IMPORT |r6502fetch_u1s|
   IMPORT |r6502interruptfetch_u5t2s|
   IMPORT |r6502interruptfetch_u5t1s|
   IMPORT |r6502interruptfetch_u5s|
@@ -47,9 +67,22 @@
 ; Export global symbols
 
   EXPORT |r65c12jmpabsindroutine|
+  EXPORT |r65c12rorabsroutine|
   EXPORT |r65c12bvsroutine|
   EXPORT |r65c12plyroutine|
   EXPORT |r65c12jmpabsxindroutine|
+  EXPORT |r65c12rorabsxroutine|
+
+  MACRO
+  ROR_ACTION
+  TST r8,#CFLAG
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  ORRNE r4,r4,#&100
+  ORRNE r8,r8,#NFLAG
+  MOVS r4,r4,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  MEND
 
   MACRO
   JMP_ACTION_1
@@ -216,6 +249,12 @@ r65c12jmpabsind_s4
   R6502_OPCODE_CYCLES 2,0
   B r6502opcodeinterruptfetchreturn
 
+|r65c12rorabsroutine|
+  R6502_OPCODE_PUSH
+  R65C12_MODIFY_ABS_OPCODE_START r6502ror
+  ROR_ACTION
+  R65C12_MODIFY_ABS_OPCODE_FINISH
+
 |r65c12plyroutine|
   R6502_OPCODE_PUSH
   PLY_ACTION
@@ -277,6 +316,12 @@ r65c12jmpabsxind_s2
   LDRB r4,[r1]
   R6502_OPCODE_CYCLES 5,0
   B r6502opcodeinterruptfetchreturn
+
+|r65c12rorabsxroutine|
+  R6502_OPCODE_PUSH
+  R65C12_MODIFY_ABSX_OPCODE_START r6502ror
+  ROR_ACTION
+  R65C12_MODIFY_ABS_OPCODE_FINISH
 
 
 ;Data Area

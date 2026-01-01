@@ -210,15 +210,48 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   MEND
 
   MACRO
+  R6502_INVOKE_ADDRESSING_WITH_LINK $rs,$r1s,$r2s,$l
+  [ Optimise6502Links
+  ADR lr,.+24
+  |
+  ADR r2,.+12
+  ]
+  LDR pc,[r0,r3,ROR #24]
+  DCD $l
+  R6502_ADDRESSING_CALLBACKS $rs,$r1s,$r2s
+  MEND
+
+  MACRO
+  R6502_LOAD_ADDRESSING_LINK $ra
+  [ Optimise6502Links
+  LDR $ra,[lr, #-16]
+  |
+  LDR $ra,[r2, #-4]
+  ]
+  MEND
+
+  MACRO
   R6502_ADDRESS_FOR_READ $rds,$rd1s,$rd2s
   AND r3,r6,#&F000000F-ADDRESSING_MODIFYFLAG
   R6502_INVOKE_ADDRESSING $rds,$rd1s,$rd2s
   MEND
 
   MACRO
+  R6502_ADDRESS_FOR_READ_WITH_LINK $rds,$rd1s,$rd2s,$l
+  AND r3,r6,#&F000000F-ADDRESSING_MODIFYFLAG
+  R6502_INVOKE_ADDRESSING_WITH_LINK $rds,$rd1s,$rd2s,$l
+  MEND
+
+  MACRO
   R6502_ADDRESS_FOR_MODIFY $mds,$md1s,$md2s
   AND r3,r6,#&F000000F
   R6502_INVOKE_ADDRESSING $mds,$md1s,$md2s
+  MEND
+
+  MACRO
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK $mds,$md1s,$md2s,$l
+  AND r3,r6,#&F000000F
+  R6502_INVOKE_ADDRESSING_WITH_LINK $mds,$md1s,$md2s,$l
   MEND
 
   MACRO
@@ -439,6 +472,12 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   MEND
 
   MACRO
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK $rds,$rd1s,$rd2s,$l
+  ADD r6,r7,#1:SHL:16
+  R6502_ADDRESS_FOR_READ_WITH_LINK $rds,$rd1s,$rd2s,$l
+  MEND
+
+  MACRO
   R6502_OPCODE_CYCLES $n,$ns
   LCLA counter
   MOV lr,pc
@@ -552,6 +591,354 @@ counter SETA counter-1
   |
   DCD r65c12branch-16
   ]
+  MEND
+
+  MACRO
+  R6502_MODIFY_ZPG_OPCODE_START
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
+  ADD r6,r3,r4
+  LDRB r4,[r6]
+  MEND
+
+  MACRO
+  R6502_MODIFY_ZPG_OPCODE_FINISH
+  STRB r4,[r6]
+  ADD r6,r7,#2:SHL:16
+  ADD r7,r7,#2:SHL:16
+  R6502_ADDRESS_FOR_READ r6502interruptfetch_u4s,r6502interruptfetch_u4t1s,r6502interruptfetch_u4t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 5,0
+  B r6502opcodeinterruptfetchreturn
+  MEND
+
+  MACRO
+  R65C12_MODIFY_ABS_OPCODE_START $a
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  ADD r6,r7,#2:SHL:16
+  R6502_ADDRESS_FOR_READ_WITH_LINK r65c12modifyabs_u1s2l,r65c12modifyabs_u1t1s2l,r65c12modifyabs_u1t2s2l,$a
+  LDRB r3,[r1]
+  MOV r6,#ADDRESSING_BASEFLAG
+  ORR r6,r6,r4,LSL #16
+  ORR r6,r6,r3,LSL #24
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r65c12modifyabs_u2s3l,r65c12modifyabs_u2t1s3l,r65c12modifyabs_u2t2s3l,$a
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 4,0
+  MEND
+
+  MACRO
+  R65C12_LINEAR_MODIFY_ABS_OPCODE_START $a
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  ADD r6,r7,#2:SHL:16
+  R6502_ADDRESS_FOR_READ_WITH_LINK r65c12linearmodifyabs_u1s2l,r65c12linearmodifyabs_u1t1s2l,r65c12linearmodifyabs_u1t2s2l,$a
+  LDRB r3,[r1]
+  MOV r6,#ADDRESSING_BASEFLAG
+  ORR r6,r6,r4,LSL #16
+  ORR r6,r6,r3,LSL #24
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r65c12linearmodifyabs_u2s3l,r65c12linearmodifyabs_u2t1s3l,r65c12linearmodifyabs_u2t2s3l,$a
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 4,0
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_ABS_OPCODE_START $a
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  ADD r6,r7,#2:SHL:16
+  R6502_ADDRESS_FOR_READ_WITH_LINK r6502linearmodifyabs_u1s2l,r6502linearmodifyabs_u1t1s2l,r6502linearmodifyabs_u1t2s2l,$a
+  LDRB r3,[r1]
+  MOV r6,#ADDRESSING_BASEFLAG
+  ORR r6,r6,r4,LSL #16
+  ORR r6,r6,r3,LSL #24
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r6502linearmodifyabs_u2s3l,r6502linearmodifyabs_u2t1s3l,r6502linearmodifyabs_u2t2s3l,$a
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 4,0
+  MEND
+
+  MACRO
+  R6502_MODIFY_ABS_OPCODE_COMMON_FINISH
+  ADD r6,r7,#3:SHL:16
+  ADD r7,r7,#3:SHL:16
+  R6502_ADDRESS_FOR_READ r6502fetch_u1s,r6502fetch_u1t1s,r6502fetch_u1t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 2,0
+  B r6502opcodefetchreturn
+  MEND
+
+  MACRO
+  R65C12_MODIFY_ABS_OPCODE_FINISH
+  STRB r4,[r6]
+  R6502_MODIFY_ABS_OPCODE_COMMON_FINISH
+  MEND
+
+  MACRO
+  R6502_MODIFY_SPECIAL_ABS_OPCODE_FINISH
+  MOV lr,pc
+  MOV pc,r5
+  MOV r1,r6
+  MOV r2,r4
+  R6502_OPCODE_CALL_ACTION R6502_WRITESPECIALACTION
+  R6502_MODIFY_ABS_OPCODE_COMMON_FINISH
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_ABS_OPCODE_COMMON_FINISH
+  ADD r6,r7,#3:SHL:16
+  ADD r7,r7,#3:SHL:16
+  R6502_ADDRESS_FOR_READ r6502interruptfetch_u1s,r6502interruptfetch_u1t1s,r6502interruptfetch_u1t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 2,0
+  B r6502opcodeinterruptfetchreturn
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+  STRB r4,[r6]
+  R6502_LINEAR_MODIFY_ABS_OPCODE_COMMON_FINISH
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_SPECIAL_ABS_OPCODE_FINISH
+  MOV lr,pc
+  MOV pc,r5
+  MOV r1,r6
+  MOV r2,r4
+  R6502_OPCODE_CALL_ACTION R6502_WRITESPECIALACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_COMMON_FINISH
+  MEND
+
+  MACRO
+  R6502_MODIFY_ZPGX_OPCODE_START
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  LDR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r2,r4,LSL #24
+  LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
+  ADD r6,r3,r2,LSR #24
+  LDRB r4,[r6]
+  MEND
+
+  MACRO
+  R6502_MODIFY_ZPGX_OPCODE_FINISH
+  STRB r4,[r6]
+  ADD r6,r7,#2:SHL:16
+  ADD r7,r7,#2:SHL:16
+  R6502_ADDRESS_FOR_READ r6502interruptfetch_u5s,r6502interruptfetch_u5t1s,r6502interruptfetch_u5t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 6,0
+  B r6502opcodeinterruptfetchreturn
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_START $a
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  LDR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
+  ADD r4,r2,r4,LSL #24
+  MOV r6,#ADDRESSING_BASEFLAG
+  LDR r2,[r3,r4,LSR #24]
+  ADD r4,r4,#1:SHL:24
+  ORR r6,r6,r2,LSL #16
+  LDR r2,[r3,r4,LSR #24]
+  ORR r6,r6,r2,LSL #24
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r6502linearmodifypreindexed_u4s2l,r6502linearmodifypreindexed_u4t1s2l,r6502linearmodifypreindexed_u4t2s2l,$a
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 6,0
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_COMMON_FINISH
+  ADD r6,r7,#2:SHL:16
+  ADD r7,r7,#2:SHL:16
+  R6502_ADDRESS_FOR_READ r6502interruptfetch_u1s,r6502interruptfetch_u1t1s,r6502interruptfetch_u1t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 2,0
+  B r6502opcodeinterruptfetchreturn
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_FINISH
+  STRB r4,[r6]
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_COMMON_FINISH
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_SPECIAL_PREINDEXED_OPCODE_FINISH
+  MOV lr,pc
+  MOV pc,r5
+  MOV r1,r6
+  MOV r2,r4
+  R6502_OPCODE_CALL_ACTION R6502_WRITESPECIALACTION
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_COMMON_FINISH
+  MEND
+
+  MACRO
+  R65C12_MODIFY_ABSX_OPCODE_START $a
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  ADD r6,r7,#2:SHL:16
+  R6502_ADDRESS_FOR_READ_WITH_LINK r65c12modifyabsx_u1s2l,r65c12modifyabsx_u1t1s2l,r65c12modifyabsx_u1t2s2l,$a
+  LDR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  LDRB r3,[r1]
+  ADDS r4,r2,r4,LSL #24
+  ORR r4,r3,r4
+  ORR r4,r4,#ADDRESSING_BASEFLAG:SHL:8
+  MOV r6,r4,ROR #8
+  BCC %F1
+  ADD r6,r6,#1:SHL:24
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r65c12linearmodifyabs_u3s3l,r65c12linearmodifyabs_u3t1s3l,r65c12linearmodifyabs_u3t2s3l,$a
+  R6502_LOAD_ADDRESSING_LINK r5
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 5,0
+  MOV lr,pc
+  MOV pc,r5
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+1
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r65c12modifyabs_u2s3l,r65c12modifyabs_u2t1s3l,r65c12modifyabs_u2t2s3l,$a
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 4,0
+  MEND
+
+  MACRO
+  R65C12_LINEAR_MODIFY_ABSX_OPCODE_START $a
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  ADD r6,r7,#2:SHL:16
+  R6502_ADDRESS_FOR_READ_WITH_LINK r65c12linearmodifyabsx_u1s2l,r65c12linearmodifyabsx_u1t1s2l,r65c12linearmodifyabsx_u1t2s2l,$a
+  LDR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  LDRB r3,[r1]
+  ADDS r4,r2,r4,LSL #24
+  ORR r4,r3,r4
+  ORR r4,r4,#ADDRESSING_BASEFLAG:SHL:8
+  MOV r6,r4,ROR #8
+  BCC %F1
+  ADD r6,r6,#1:SHL:24
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r65c12linearmodifyabs_u3s3l,r65c12linearmodifyabs_u3t1s3l,r65c12linearmodifyabs_u3t2s3l,$a
+  R6502_LOAD_ADDRESSING_LINK r5
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 5,0
+  MOV lr,pc
+  MOV pc,r5
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+1
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r65c12linearmodifyabsx_u2s3l,r65c12linearmodifyabsx_u2t1s3l,r65c12linearmodifyabsx_u2t2s3l,$a
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 5,0
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_ABSX_OPCODE_START $a
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  ADD r6,r7,#2:SHL:16
+  R6502_ADDRESS_FOR_READ_WITH_LINK r6502linearmodifyabsx_u1s2l,r6502linearmodifyabsx_u1t1s2l,r6502linearmodifyabsx_u1t2s2l,$a
+  LDR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  LDRB r3,[r1]
+  ADDS r4,r2,r4,LSL #24
+  ORR r4,r3,r4
+  ORR r4,r4,#ADDRESSING_BASEFLAG:SHL:8
+  MOV r6,r4,ROR #8
+  BCC %F1
+  R6502_ADDRESS_FOR_READ_WITH_LINK r6502linearmodifyabsxoutofpage_u2s3l,r6502linearmodifyabsxoutofpage_u2t1s3l,r6502linearmodifyabsxoutofpage_u2t2s3l,$a
+  ADD r6,r6,#1:SHL:24
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r6502linearmodifyabs_u3s3l,r6502linearmodifyabs_u3t1s3l,r6502linearmodifyabs_u3t2s3l,$a
+  R6502_LOAD_ADDRESSING_LINK r5
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 5,0
+  MOV lr,pc
+  MOV pc,r5
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+1
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r6502linearmodifyabsx_u2s3l,r6502linearmodifyabsx_u2t1s3l,r6502linearmodifyabsx_u2t2s3l,$a
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 5,0
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_ABSY_OPCODE_START $a
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  ADD r6,r7,#2:SHL:16
+  R6502_ADDRESS_FOR_READ_WITH_LINK r6502linearmodifyabsy_u1s2l,r6502linearmodifyabsy_u1t1s2l,r6502linearmodifyabsy_u1t2s2l,$a
+  LDR r2,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r3,[r1]
+  ADDS r4,r2,r4,LSL #24
+  ORR r4,r3,r4
+  ORR r4,r4,#ADDRESSING_BASEFLAG:SHL:8
+  MOV r6,r4,ROR #8
+  BCC %F1
+  R6502_ADDRESS_FOR_READ_WITH_LINK r6502linearmodifyabsxoutofpage_u2s3l,r6502linearmodifyabsxoutofpage_u2t1s3l,r6502linearmodifyabsxoutofpage_u2t2s3l,$a
+  ADD r6,r6,#1:SHL:24
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r6502linearmodifyabs_u3s3l,r6502linearmodifyabs_u3t1s3l,r6502linearmodifyabs_u3t2s3l,$a
+  R6502_LOAD_ADDRESSING_LINK r5
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 5,0
+  MOV lr,pc
+  MOV pc,r5
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+1
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r6502linearmodifyabsx_u2s3l,r6502linearmodifyabsx_u2t1s3l,r6502linearmodifyabsx_u2t2s3l,$a
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 5,0
+  MEND
+
+  MACRO
+  R6502_LINEAR_MODIFY_POSTINDEXED_OPCODE_START $a
+  R6502_OPERAND_ADDRESS_FOR_READ_WITH_LINK r6502operandread_sl,r6502operandread_t1sl,r6502operandread_t2sl,%F0
+  LDRB r4,[r1]
+0
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
+  MOV r4,r4,LSL #24
+  ORR r1,r1,#ADDRESSING_BASEFLAG:SHL:8
+  LDR r2,[r3,r4,LSR #24]
+  ADD r4,r4,#1:SHL:24
+  ADDS r1,r1,r2,LSL #24
+  LDR r2,[r3,r4,LSR #24]
+  MOV r1,r1,LSR #8
+  ORR r6,r1,r2,LSL #24
+  BCC %F1
+  R6502_ADDRESS_FOR_READ_WITH_LINK r6502linearmodifypostindexedoutofpage_u3s3l,r6502linearmodifypostindexedoutofpage_u3t1s3l,r6502linearmodifypostindexedoutofpage_u3t2s3l,$a
+  ADD r6,r6,#1:SHL:24
+  R6502_ADDRESS_FOR_MODIFY_WITH_LINK r6502linearmodifypreindexed_u4s2l,r6502linearmodifypreindexed_u4t1s2l,r6502linearmodifypreindexed_u4t2s2l,$a
+  R6502_LOAD_ADDRESSING_LINK r5
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 6,0
+  MOV lr,pc
+  MOV pc,r5
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_FINISH
+1
+  R6502_ADDRESS_FOR_READ_WITH_LINK r6502linearmodifypostindexed_u3s3l,r6502linearmodifypostindexed_u3t1s3l,r6502linearmodifypostindexed_u3t2s3l,$a
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 6,0
   MEND
 
   MACRO
