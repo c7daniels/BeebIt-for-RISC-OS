@@ -395,7 +395,11 @@ void tickmafile(void)
   if (mafile && ++maticks == 20000)
   {
     fclose(mafile);
-    opennextmafile();
+
+    if (mafn == 399)
+      mafile = 0;
+    else
+      opennextmafile();
   }
 }
 
