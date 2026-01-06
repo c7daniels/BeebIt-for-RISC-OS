@@ -25,6 +25,8 @@
 
 ; Import global symbols
 
+  IMPORT |logcycles|
+
   IMPORT |r6502nobranch|
   IMPORT |r65c12branch|
 

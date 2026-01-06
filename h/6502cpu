@@ -74,10 +74,18 @@
   }
 
 #define R6502_CYCLE_STRETCH_RETURN(MAP) \
-  return (*MAP->addressingandcycleops[8].cycleop)(MAP);
+  { \
+    (*MAP->addressingandcycleops[8].cycleop)(MAP); \
+    logcycles(MAP, 1); \
+    return MAP; \
+  }
 
 #define R6502_CYCLE_RETURN(MAP) \
-  return (*MAP->addressingandcycleops[1].cycleop)(MAP);
+  { \
+    (*MAP->addressingandcycleops[1].cycleop)(MAP); \
+    logcycles(MAP, 1); \
+    return MAP; \
+  }
 
 #define R6502_CYCLE_ZPG_READ_RETURN(MAP, ZCODE) \
   { \

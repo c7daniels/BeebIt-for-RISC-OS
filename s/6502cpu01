@@ -25,6 +25,8 @@
 
 ; Import global symbols
 
+  IMPORT |logcycles|
+
   IMPORT |r6502opcodefetchreturn|
   IMPORT |r6502opcodeearlyinterruptfetchreturn|
   IMPORT |r6502opcodeinterruptfetchreturn|
@@ -929,6 +931,7 @@ r6502branchoutofpage_s3
   R6502_OPCODE_CALL_ACTION R6502_READSPECIALACTION
   LDRB r4,[r0,#:INDEX:R6502_M]
   R6502_OPCODE_CYCLES 1,0
+  MOV r1,r6
   B r6502opcodefetchreturn
 
 |r6502earlyinterruptfetch_u2t2s|
@@ -953,6 +956,7 @@ r6502branchoutofpage_s3
   R6502_OPCODE_CALL_ACTION R6502_READSPECIALACTION
   LDRB r4,[r0,#:INDEX:R6502_M]
   R6502_OPCODE_CYCLES 1,0
+  MOV r1,r6
   B r6502opcodeearlyinterruptfetchreturn
 
 |r6502interruptfetch_u5t2s|
@@ -1010,6 +1014,7 @@ r6502branchoutofpage_s3
   R6502_OPCODE_CALL_ACTION R6502_READSPECIALACTION
   LDRB r4,[r0,#:INDEX:R6502_M]
   R6502_OPCODE_CYCLES 1,0
+  MOV r1,r6
   B r6502opcodeinterruptfetchreturn
 
 
