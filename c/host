@@ -155,6 +155,32 @@ static R6502CPUMAP* host_r6502onresetcontinue(R6502CPUMAP* cmap)
   return cmap;
 }
 
+static uintptr_t stored_ks;
+
+void storekeyscanstate(R6502CPUMAP* cmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+
+  stored_ks = hmap->keyscanstate;
+}
+
+void logkeyscanstate(R6502CPUMAP* cmap)
+{
+  extern FILE* mafile;
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t ks = hmap->keyscanstate;
+
+  if (mafile)
+  {
+#ifdef __RISCOS__
+    fprintf(mafile, "  KS [%08X] -> [%08X]\n", stored_ks, ks);
+#else
+    fprintf(mafile, "  KS [%08lX] -> [%08lX]\n", stored_ks, ks);
+#endif
+    fflush(mafile);
+  }
+}
+
 #ifdef BEEBIT_NO_ASM
 void swappages(uint8_t *block1, uint8_t *block2, int npagecount)
 {
@@ -845,8 +871,12 @@ R6502CPUMAP* host_r6502cycle0s1(R6502CPUMAP* cmap)
   uintptr_t keyscanstate = hmap->keyscanstate;
   int rotation = keyscanstate&31;
 
+  storekeyscanstate(cmap);
+
   columnflags = (((columnflags<<(32-rotation))&0xFFFFFFFF)|(columnflags>>rotation));
   keyscanandtimercycle(hmap, R6502_IRQ, keyscanstate, columnflags);
+
+  logkeyscanstate(cmap);
   return cmap;
 }
 
@@ -858,6 +888,8 @@ R6502CPUMAP* host_r6502cycle1(R6502CPUMAP* cmap)
   uintptr_t keyscanstate = hmap->keyscanstate;
   int rotation = keyscanstate&31;
 
+  storekeyscanstate(cmap);
+
   interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F);
   if (!(interruptqueue & R6502_NMI))
     interruptqueue |= R6502_NMI_ENABLE;
@@ -865,6 +897,8 @@ R6502CPUMAP* host_r6502cycle1(R6502CPUMAP* cmap)
 
   columnflags = (((columnflags<<(32-rotation))&0xFFFFFFFF)|(columnflags>>rotation));
   keyscanandtimercycle(hmap, (R6502_IRQ<<4)|R6502_IRQ, keyscanstate, columnflags);
+
+  logkeyscanstate(cmap);
   return cmap;
 }
 

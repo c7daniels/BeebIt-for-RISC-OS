@@ -21,6 +21,11 @@ Optimise6502WorkAreas SETL {FALSE}
 Optimise6502Timing SETL {TRUE}
 
 
+  GBLL LogCycles
+  GBLL LogCyclesBatched
+LogCycles SETL {TRUE}
+LogCyclesBatched SETL {TRUE}
+
 NFLAG EQU &80
 VFLAG EQU &40
 UFLAG EQU &20
@@ -266,8 +271,16 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   LDR lr,[r0,#:INDEX:R6502_CONTINUELINK]
   ]
   STR lr,[sp, #-4]!
+  [ LogCycles
+  MOV r1,#0
+  MOV r2,#1
+  BL logstartofcycles
+  ]
   MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+132]
+  [ LogCycles
+  BL logendofcycles
+  ]
   MOV r1,#1
   BL logcycles
   LDR lr, [sp], #4
@@ -280,8 +293,16 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   LDR lr,[r0,#:INDEX:R6502_CONTINUELINK]
   ]
   STR lr,[sp, #-4]!
+  [ LogCycles
+  MOV r1,#1
+  MOV r2,#0
+  BL logstartofcycles
+  ]
   MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+20]
+  [ LogCycles
+  BL logendofcycles
+  ]
   MOV r1,#1
   BL logcycles
   LDR lr, [sp], #4
@@ -565,30 +586,86 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   R6502_OPCODE_CYCLES $n,$ns
   LCLA counter
   STR r1,[sp, #-4]!
+  [ LogCycles && LogCyclesBatched
+  MOV r1,#$n
+  MOV r2,#$ns
+  BL logstartofcycles
+  ]
 counter SETA $n
   IF Optimise6502Timing
   WHILE counter>6
+  [ LogCycles && !LogCyclesBatched
+  MOV r1,#6
+  MOV r2,#0
+  BL logstartofcycles
+  ]
   MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+4+(6:SHL:4)]
+  [ LogCycles && !LogCyclesBatched
+  BL logendofcycles
+  ]
+  [ !(LogCycles && LogCyclesBatched)
+  MOV r1,#6
+  BL logcycles
+  ]
 counter SETA counter-6
   WEND
+  [ LogCycles && !LogCyclesBatched
+  MOV r1,#$counter
+  MOV r2,#$ns
+  BL logstartofcycles
+  ]
   MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+4+($counter:SHL:4)+($ns:SHL:7)]
+  [ LogCycles && !LogCyclesBatched
+  BL logendofcycles
+  ]
+  [ !(LogCycles && LogCyclesBatched)
+  MOV r1,#$counter+$ns
+  BL logcycles
+  ]
   ELSE
   WHILE counter>0
+  [ LogCycles && !LogCyclesBatched
+  MOV r1,#1
+  MOV r2,#0
+  BL logstartofcycles
+  ]
   MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+20]
+  [ LogCycles && !LogCyclesBatched
+  BL logendofcycles
+  ]
+  [ !(LogCycles && LogCyclesBatched)
+  MOV r1,#1
+  BL logcycles
+  ]
 counter SETA counter-1
   WEND
 counter SETA $ns
   WHILE counter>0
+  [ LogCycles && !LogCyclesBatched
+  MOV r1,#0
+  MOV r2,#1
+  BL logstartofcycles
+  ]
   MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+132]
+  [ LogCycles && !LogCyclesBatched
+  BL logendofcycles
+  ]
+  [ !(LogCycles && LogCyclesBatched)
+  MOV r1,#1
+  BL logcycles
+  ]
 counter SETA counter-1
   WEND
   ENDIF
+  [ LogCycles && LogCyclesBatched
+  BL logendofcycles
   MOV r1,#$n+$ns
   BL logcycles
+  ]
   LDR r1, [sp], #4
   MEND
 

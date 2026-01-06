@@ -26,6 +26,8 @@
 ; Import global symbols
 
   IMPORT |logcycles|
+  IMPORT |logstartofcycles|
+  IMPORT |logendofcycles|
 
   IMPORT |r6502opcodeinterruptfetchreturn|
   IMPORT |s2_r6502storeabs_p1|

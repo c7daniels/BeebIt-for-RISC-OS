@@ -30,6 +30,8 @@
 ; Import global symbols
 
   IMPORT |logcycles|
+  IMPORT |logstartofcycles|
+  IMPORT |logendofcycles|
 
   IMPORT |r6502completecycleinterruptfetchreturn|
   IMPORT |r6502cycleinterruptfetchspecialpopreturn|

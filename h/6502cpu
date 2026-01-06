@@ -11,6 +11,8 @@
 
 #include "6502cmap.h"
 
+#define LOG_CYCLE_COUNTS
+
 #define NFLAG 0x80
 #define VFLAG 0x40
 #define UFLAG 0x20
@@ -73,6 +75,25 @@
     R6502_INVOKE_ADDRESSING(MAP, ADDRCODE, &mdcallbacks) \
   }
 
+#ifdef LOG_CYCLE_COUNTS
+#define R6502_CYCLE_STRETCH_RETURN(MAP) \
+  { \
+    logstartofcycles(MAP, 0, 1); \
+    (*MAP->addressingandcycleops[8].cycleop)(MAP); \
+    logendofcycles(MAP); \
+    logcycles(MAP, 1); \
+    return MAP; \
+  }
+
+#define R6502_CYCLE_RETURN(MAP) \
+  { \
+    logstartofcycles(MAP, 1, 0); \
+    (*MAP->addressingandcycleops[1].cycleop)(MAP); \
+    logendofcycles(MAP); \
+    logcycles(MAP, 1); \
+    return MAP; \
+  }
+#else
 #define R6502_CYCLE_STRETCH_RETURN(MAP) \
   { \
     (*MAP->addressingandcycleops[8].cycleop)(MAP); \
@@ -86,6 +107,7 @@
     logcycles(MAP, 1); \
     return MAP; \
   }
+#endif
 
 #define R6502_CYCLE_ZPG_READ_RETURN(MAP, ZCODE) \
   { \

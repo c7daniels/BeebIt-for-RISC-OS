@@ -19,6 +19,8 @@
 #include "6502cpu.h"
 
 extern R6502CPUMAP* logcycles(R6502CPUMAP* cmap, int ncycles);
+extern R6502CPUMAP* logstartofcycles(R6502CPUMAP* cmap, int n, int ns);
+extern R6502CPUMAP* logendofcycles(R6502CPUMAP* cmap);
 
 const R6502OP r65c12_fastnopsequence[] = {r65c12fastnopstep, NULL};
 const R6502OP r65c12_phxsequence[] = R6502_PUSH_SEQUENCE(r65c12topushxstep);
