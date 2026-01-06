@@ -928,6 +928,54 @@ extern R6502CPUMAP* r6502stretcheddiscardstep(R6502CPUMAP* cmap, uintptr_t incre
 extern R6502CPUMAP* r6502stretchedwritestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 #ifndef BEEBIT_NO_ASM
 extern R6502CPUMAP* r6502yieldstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r6502phproutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502plproutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502pharoutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502plaroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r6502dexroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502deyroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502inxroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502inyroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r6502bplroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bmiroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bvcroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bvsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bccroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bcsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502bneroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502beqroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502jmpabsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502jmpabsindroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r6502brkroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502interruptroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502jsrroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rtiroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502rtsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r65c12phxroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12plxroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12phyroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12plyroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12decaroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12incaroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r65c12bplroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12bmiroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12bvcroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12bvsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12bccroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12bcsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12bneroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12beqroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12braroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12jmpabsindroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12jmpabsxindroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12brkroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12interruptroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 #endif
 extern R6502CPUMAP* r6502startyield(R6502CPUMAP* cmap);
 

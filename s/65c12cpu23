@@ -26,8 +26,35 @@
 ; Import global symbols
 
   IMPORT |r6502opcodeinterruptfetchreturn|
+  IMPORT |s2_r6502implied_p|
+  IMPORT |s1_r6502implied_p|
+  IMPORT |s_r6502implied_p|
+  IMPORT |r6502nobranch|
+  IMPORT |r65c12branch|
 
 ; Export global symbols
+
+  EXPORT |r65c12bmiroutine|
+  EXPORT |r65c12decaroutine|
+
+  MACRO
+  DECA_ACTION
+  LDR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG
+  SUBS r2,r2,#1:SHL:24
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  MEND
+
+|r65c12bmiroutine|
+  R6502_OPCODE_PUSH
+  R65C12_BRANCH_IF_SET_OPCODE_RETURN NFLAG
+
+|r65c12decaroutine|
+  R6502_OPCODE_PUSH
+  DECA_ACTION
+  R6502_IMPLIED_OPCODE_RETURN
 
 
 ;Data Area

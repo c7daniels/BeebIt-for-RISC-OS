@@ -26,9 +26,142 @@
 ; Import global symbols
 
   IMPORT |r6502opcodeinterruptfetchreturn|
+  IMPORT |r6502nobranch|
+  IMPORT |r6502branch|
+  IMPORT |s2_r6502interruptfetch_u5p|
+  IMPORT |s1_r6502interruptfetch_u5p|
+  IMPORT |s_r6502interruptfetch_u5p|
+  IMPORT |s2_r6502interruptfetch_u1p|
+  IMPORT |s1_r6502interruptfetch_u1p|
+  IMPORT |s_r6502interruptfetch_u1p|
+  IMPORT |s_r6502interruptfetch_p|
 
 ; Export global symbols
 
+  EXPORT |r6502jsrroutine|
+  EXPORT |r6502plproutine|
+  EXPORT |r6502bmiroutine|
+
+  MACRO
+  JSR_ACTION_1
+  ADD r6,r7,#2:SHL:16
+  LDR r3,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r6,LSR #24
+  LDR r5,[r0,#:INDEX:R6502_PAGEONE]
+  STRB r2,[r5,r3,LSR #24]
+  SUB r3,r3,#1:SHL:24
+  MOV r2,r6,LSR #16
+  SUB r1,r3,#1:SHL:24
+  STRB r2,[r5,r3,LSR #24]
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MEND
+
+  MACRO
+  JSR_ACTION_2
+  MOV r7,#ADDRESSING_BASEFLAG
+  ORR r7,r7,r4,LSL #16
+  ORR r6,r7,r3,LSL #24
+  ORR r7,r7,r3,LSL #24
+  MEND
+
+  MACRO
+  PLP_ACTION
+  LDR r3,[r0,#:INDEX:R6502_SP_CODE]
+  ADD r3,r3,#1:SHL:24
+  LDR r5,[r0,#:INDEX:R6502_PAGEONE]
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  LDRB r2,[r5,r3,LSR #24]
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  TST r2,#IFLAG
+  BICNE r3,r3,#R6502_IRQ_ENABLE
+  ORREQ r3,r3,#R6502_IRQ_ENABLE
+  ORR r8,r2,#UFLAG|BFLAG|IFLAG
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  MEND
+
+  MACRO
+  PLP_SHIFTED_ACTION
+  LDR r3,[r0,#:INDEX:R6502_SP_CODE]
+  ADD r3,r3,#1:SHL:24
+  LDR r5,[r0,#:INDEX:R6502_PAGEONE]
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  LDRB r2,[r5,r3,LSR #24]
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  TST r2,#IFLAG
+  BICNE r3,r3,#(R6502_IRQ_ENABLE<<4)|R6502_IRQ_ENABLE
+  ORREQ r3,r3,#(R6502_IRQ_ENABLE<<4)|R6502_IRQ_ENABLE
+  ORR r8,r2,#UFLAG|BFLAG|IFLAG
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  MEND
+
+|r6502jsrroutine|
+  R6502_OPCODE_PUSH
+  R6502_OPERAND_READ_BRANCH r6502jsr_p1
+  LDRB r4,[r1]
+r6502jsr_rs1
+  JSR_ACTION_1
+  R6502_READ_BRANCH r6502jsr_u4p2
+  LDRB r3,[r1]
+  JSR_ACTION_2
+  R6502_READ_BRANCH r6502interruptfetch_u5p
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 6,0
+  B r6502opcodeinterruptfetchreturn
+s2_r6502jsr_p1
+  R6502_OPCODE_CYCLES 0,2
+  B s_r6502jsr_p1
+s1_r6502jsr_p1
+  R6502_OPCODE_CYCLES 0,1
+s_r6502jsr_p1
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  B r6502jsr_rs1
+s2_r6502jsr_u4p2
+  R6502_OPCODE_CYCLES 4,2
+  B s_r6502jsr_p2
+s1_r6502jsr_u4p2
+  R6502_OPCODE_CYCLES 4,1
+  B s_r6502jsr_p2
+s_r6502jsr_u4p2
+  R6502_OPCODE_CYCLES 4,0
+s_r6502jsr_p2
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  JSR_ACTION_2
+  R6502_READ_BRANCH r6502interruptfetch_u1p
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 2,0
+  B r6502opcodeinterruptfetchreturn
+
+|r6502plproutine|
+  R6502_OPCODE_PUSH
+  R6502_OPERAND_READ_BRANCH r6502plp_p1
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 4,0
+  PLP_SHIFTED_ACTION
+  ADD r7,r7,#1:SHL:16
+  B r6502opcodeinterruptfetchreturn
+s2_r6502plp_p1
+  R6502_OPCODE_CYCLES 0,2
+  B sc_r6502plp_p1
+s1_r6502plp_p1
+  R6502_OPCODE_CYCLES 0,1
+sc_r6502plp_p1
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 3,1
+  PLP_ACTION
+  ADD r7,r7,#1:SHL:16
+  B s_r6502interruptfetch_p
+s_r6502plp_p1
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 3,0
+  PLP_ACTION
+  ADD r7,r7,#1:SHL:16
+  B s_r6502interruptfetch_p
+
+|r6502bmiroutine|
+  R6502_OPCODE_PUSH
+  R6502_BRANCH_IF_SET_OPCODE_RETURN NFLAG
 
 ;Data Area
 

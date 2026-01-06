@@ -26,8 +26,35 @@
 ; Import global symbols
 
   IMPORT |r6502opcodeinterruptfetchreturn|
+  IMPORT |s2_r6502push_p|
+  IMPORT |s1_r6502push_p|
+  IMPORT |s_r6502push_p|
+  IMPORT |r6502nobranch|
+  IMPORT |r65c12branch|
 
 ; Export global symbols
+
+  EXPORT |r65c12bneroutine|
+  EXPORT |r65c12phxroutine|
+
+|r65c12bneroutine|
+  R6502_OPCODE_PUSH
+  R65C12_BRANCH_IF_CLEAR_OPCODE_RETURN ZFLAG
+
+  MACRO
+  PHX_ACTION
+  LDR r4,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r3,r4,#1:SHL:24
+  LDR r5,[r0,#:INDEX:R6502_PAGEONE]
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  STRB r2,[r5,r4,LSR #24]
+  MEND
+
+|r65c12phxroutine|
+  R6502_OPCODE_PUSH
+  PHX_ACTION
+  R6502_PUSH_OPCODE_RETURN
 
 
 ;Data Area

@@ -56,7 +56,7 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   MACRO
   R6502_EXECUTE_PUSH
   [ Optimise6502WorkAreas
-  STMFD sp!,{r6-r8,lr}
+  STMFD sp!,{r4-r8,lr}
   LDR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
   LDRB r8,[r0,#:INDEX:R6502_PS]
   |
@@ -69,7 +69,7 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   [ Optimise6502WorkAreas
   STR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
   STRB r8,[r0,#:INDEX:R6502_PS]
-  LDMFD sp!,{r6-r8,pc}
+  LDMFD sp!,{r4-r8,pc}
   |
   LDR pc, [sp], #4
   ]
@@ -141,10 +141,10 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   MACRO
   R6502_OPCODE_PUSH
   [ !Optimise6502WorkAreas && Optimise6502Links
-  STMFD sp!,{r6-r8}
+  STMFD sp!,{r4-r8}
   ]
   [ !Optimise6502WorkAreas && !Optimise6502Links
-  STMFD sp!,{r6-r8,lr}
+  STMFD sp!,{r4-r8,lr}
   ]
   [ !Optimise6502WorkAreas
   LDR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
@@ -162,10 +162,10 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   STRB r8,[r0,#:INDEX:R6502_PS]
   ]
   [ !Optimise6502WorkAreas && Optimise6502Links
-  LDMFD sp!,{r6-r8}
+  LDMFD sp!,{r4-r8}
   ]
   [ !Optimise6502WorkAreas && !Optimise6502Links
-  LDMFD sp!,{r6-r8,lr}
+  LDMFD sp!,{r4-r8,lr}
   ]
   [ Optimise6502WorkAreas && !Optimise6502Links
   LDR lr, [sp], #4
@@ -498,7 +498,7 @@ counter SETA counter-1
 
   MACRO
   R6502_IMPLIED_OPCODE_RETURN
-  R6502_OPERAND_ADDRESS_FOR_READ r6502implied_s1,r6502implied_t1s1,r6502implied_t2s1
+  R6502_OPERAND_READ_BRANCH r6502implied_p
   MOV r7,r6
   LDRB r4,[r1]
   R6502_OPCODE_CYCLES 2,0
@@ -507,7 +507,7 @@ counter SETA counter-1
 
   MACRO
   R6502_PUSH_OPCODE_RETURN
-  R6502_OPERAND_ADDRESS_FOR_READ r6502push_s1,r6502push_t1s1,r6502push_t2s1
+  R6502_OPERAND_READ_BRANCH r6502push_p
   MOV r7,r6
   LDRB r4,[r1]
   R6502_OPCODE_CYCLES 3,0
@@ -516,7 +516,7 @@ counter SETA counter-1
 
   MACRO
   R6502_PULL_OPCODE_RETURN
-  R6502_OPERAND_ADDRESS_FOR_READ r6502pull_s1,r6502pull_t1s1,r6502pull_t2s1
+  R6502_OPERAND_READ_BRANCH r6502pull_p
   MOV r7,r6
   LDRB r4,[r1]
   R6502_OPCODE_CYCLES 4,0
@@ -530,13 +530,13 @@ counter SETA counter-1
   |
   $la r2,.+20
   ]
-  ADD r1,r7,#1:SHL:16
+  ADD r6,r7,#1:SHL:16
   [ Optimise6502Links
   $lb lr,.+16
   |
   $lb r2,.+16
   ]
-  AND r3,r1,#&F000000F-ADDRESSING_MODIFYFLAG
+  AND r3,r6,#&F000000F-ADDRESSING_MODIFYFLAG
   LDR pc,[r0,r3,ROR #24]
   [ Optimise6502Links
   DCD $ca
@@ -573,13 +573,13 @@ counter SETA counter-1
 
   MACRO
   R65C12_BRANCH_ALWAYS_OPCODE_RETURN
-  ADD r1,r7,#1:SHL:16
+  ADD r6,r7,#1:SHL:16
   [ Optimise6502Links
   LDR lr,.+12
   |
   LDR r2,.+12
   ]
-  AND r3,r1,#&F000000F-ADDRESSING_MODIFYFLAG
+  AND r3,r6,#&F000000F-ADDRESSING_MODIFYFLAG
   LDR pc,[r0,r3,ROR #24]
   [ Optimise6502Links
   DCD r65c12branch

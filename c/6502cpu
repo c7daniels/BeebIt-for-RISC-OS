@@ -556,7 +556,7 @@ const R6502OP* const r6502sequences[R6502_MAIN_SEQUENCE_COUNT] =
 #ifndef BEEBIT_NO_ASM
 const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
 {
-  NULL, //0x00
+  r6502brkroutine, //0x00
   NULL, //0x01
   NULL, //0x02
   NULL, //0x03
@@ -564,7 +564,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x05
   NULL, //0x06
   NULL, //0x07
-  NULL, //0x08
+  r6502phproutine, //0x08
   NULL, //0x09
   NULL, //0x0A
   NULL, //0x0B
@@ -573,7 +573,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x0E
   NULL, //0x0F
 
-  NULL, //0x10
+  r6502bplroutine, //0x10
   NULL, //0x11
   NULL, //0x12
   NULL, //0x13
@@ -590,7 +590,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x1E
   NULL, //0x1F
 
-  NULL, //0x20
+  r6502jsrroutine, //0x20
   NULL, //0x21
   NULL, //0x22
   NULL, //0x23
@@ -598,7 +598,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x25
   NULL, //0x26
   NULL, //0x27
-  NULL, //0x28
+  r6502plproutine, //0x28
   NULL, //0x29
   NULL, //0x2A
   NULL, //0x2B
@@ -607,7 +607,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x2E
   NULL, //0x2F
 
-  NULL, //0x30
+  r6502bmiroutine, //0x30
   NULL, //0x31
   NULL, //0x32
   NULL, //0x33
@@ -624,7 +624,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x3E
   NULL, //0x3F
 
-  NULL, //0x40
+  r6502rtiroutine, //0x40
   NULL, //0x41
   NULL, //0x42
   NULL, //0x43
@@ -632,16 +632,16 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x45
   NULL, //0x46
   NULL, //0x47
-  NULL, //0x48
+  r6502pharoutine, //0x48
   NULL, //0x49
   NULL, //0x4A
   NULL, //0x4B
-  NULL, //0x4C
+  r6502jmpabsroutine, //0x4C
   NULL, //0x4D
   NULL, //0x4E
   NULL, //0x4F
 
-  NULL, //0x50
+  r6502bvcroutine, //0x50
   NULL, //0x51
   NULL, //0x52
   NULL, //0x53
@@ -658,7 +658,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x5E
   NULL, //0x5F
 
-  NULL, //0x60
+  r6502rtsroutine, //0x60
   NULL, //0x61
   NULL, //0x62
   NULL, //0x63
@@ -666,16 +666,16 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x65
   NULL, //0x66
   NULL, //0x67
-  NULL, //0x68
+  r6502plaroutine, //0x68
   NULL, //0x69
   NULL, //0x6A
   NULL, //0x6B
-  NULL, //0x6C
+  r6502jmpabsindroutine, //0x6C
   NULL, //0x6D
   NULL, //0x6E
   NULL, //0x6F
 
-  NULL, //0x70
+  r6502bvsroutine, //0x70
   NULL, //0x71
   NULL, //0x72
   NULL, //0x73
@@ -700,7 +700,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x85
   NULL, //0x86
   NULL, //0x87
-  NULL, //0x88
+  r6502deyroutine, //0x88
   NULL, //0x89
   NULL, //0x8A
   NULL, //0x8B
@@ -709,7 +709,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x8E
   NULL, //0x8F
 
-  NULL, //0x90
+  r6502bccroutine, //0x90
   NULL, //0x91
   NULL, //0x92
   NULL, //0x93
@@ -743,7 +743,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xAE
   NULL, //0xAF
 
-  NULL, //0xB0
+  r6502bcsroutine, //0xB0
   NULL, //0xB1
   NULL, //0xB2
   NULL, //0xB3
@@ -768,16 +768,16 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xC5
   NULL, //0xC6
   NULL, //0xC7
-  NULL, //0xC8
+  r6502inyroutine, //0xC8
   NULL, //0xC9
-  NULL, //0xCA
+  r6502dexroutine, //0xCA
   NULL, //0xCB
   NULL, //0xCC
   NULL, //0xCD
   NULL, //0xCE
   NULL, //0xCF
 
-  NULL, //0xD0
+  r6502bneroutine, //0xD0
   NULL, //0xD1
   NULL, //0xD2
   NULL, //0xD3
@@ -802,7 +802,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xE5
   NULL, //0xE6
   NULL, //0xE7
-  NULL, //0xE8
+  r6502inxroutine, //0xE8
   NULL, //0xE9
   NULL, //0xEA
   NULL, //0xEB
@@ -811,7 +811,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xEE
   NULL, //0xEF
 
-  NULL, //0xF0
+  r6502beqroutine, //0xF0
   NULL, //0xF1
   NULL, //0xF2
   NULL, //0xF3
@@ -829,7 +829,7 @@ const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xFF
 
   NULL,
-  NULL,
+  r6502interruptroutine,
   NULL,
   NULL,
   NULL
