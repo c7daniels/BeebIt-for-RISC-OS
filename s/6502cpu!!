@@ -26,6 +26,8 @@
 ; Import global symbols
 
   IMPORT |logcycles|
+  IMPORT |logstartofcycles|
+  IMPORT |logendofcycles|
 
   IMPORT |deferlogfetch|
   IMPORT |logfetch|

@@ -158,6 +158,32 @@ static R6502CPUMAP* host_r6502onresetcontinue(R6502CPUMAP* cmap)
   return cmap;
 }
 
+static uintptr_t stored_ks;
+
+void storekeyboardstate(R6502CPUMAP* cmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+
+  stored_ks = hmap->keyboard_state;
+}
+
+void logkeyboardstate(R6502CPUMAP* cmap)
+{
+  extern FILE* mafile;
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t ks = hmap->keyboard_state;
+
+  if (mafile)
+  {
+#ifdef __RISCOS__
+    fprintf(mafile, "  KS [%08X] -> [%08X]\n", stored_ks, ks);
+#else
+    fprintf(mafile, "  KS [%08lX] -> [%08lX]\n", stored_ks, ks);
+#endif
+    fflush(mafile);
+  }
+}
+
 #ifdef BEEBIT_NO_ASM
 void swappages(uint8_t *block1, uint8_t *block2, int npagecount)
 {
@@ -857,12 +883,16 @@ R6502CPUMAP* host_r6502cycle0s1b(R6502CPUMAP* cmap)
   uintptr_t keyboard_state = hmap->keyboard_state;
   uint8_t scan;
 
+  storekeyboardstate(cmap);
+
   if (keyboard_state < (10U<<28))
     scan = hmap->keystatus[keyboard_state>>28];
   else
     scan = 0;
 
   do1cycle(hmap, R6502_IRQ, scan, keyboard_state);
+
+  logkeyboardstate(cmap);
 
   return cmap;
 }
@@ -874,6 +904,8 @@ R6502CPUMAP* host_r6502cycle1b(R6502CPUMAP* cmap)
   uintptr_t keyboard_state = hmap->keyboard_state;
   uint8_t scan;
 
+  storekeyboardstate(cmap);
+
   interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F);
   if (!(interruptqueue & R6502_NMI))
     interruptqueue |= R6502_NMI_ENABLE;
@@ -886,6 +918,8 @@ R6502CPUMAP* host_r6502cycle1b(R6502CPUMAP* cmap)
 
   do1cycle(hmap, (R6502_IRQ<<4)|R6502_IRQ, scan, keyboard_state);
 
+  logkeyboardstate(cmap);
+
   return cmap;
 }
 
@@ -895,12 +929,16 @@ R6502CPUMAP* host_r6502cycle0s1m(R6502CPUMAP* cmap)
   uintptr_t keyboard_state = hmap->keyboard_state;
   uint8_t scan;
 
+  storekeyboardstate(cmap);
+
   if (keyboard_state < (13U<<28))
     scan = hmap->keystatus[keyboard_state>>28];
   else
     scan = 0;
 
   do1cycle(hmap, R6502_IRQ, scan, keyboard_state);
+
+  logkeyboardstate(cmap);
 
   return cmap;
 }
@@ -911,6 +949,8 @@ R6502CPUMAP* host_r6502cycle1m(R6502CPUMAP* cmap)
   uintptr_t interruptqueue = cmap->interruptqueue;
   uintptr_t keyboard_state = hmap->keyboard_state;
   uint8_t scan;
+
+  storekeyboardstate(cmap);
 
   interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F);
   if (!(interruptqueue & R6502_NMI))
@@ -923,6 +963,8 @@ R6502CPUMAP* host_r6502cycle1m(R6502CPUMAP* cmap)
     scan = 0;
 
   do1cycle(hmap, (R6502_IRQ<<4)|R6502_IRQ, scan, keyboard_state);
+
+  logkeyboardstate(cmap);
 
   return cmap;
 }
