@@ -26,8 +26,16 @@
 ; Import global symbols
 
   IMPORT |r6502opcodeinterruptfetchreturn|
+  IMPORT |r6502nobranch|
+  IMPORT |r6502branch|
 
 ; Export global symbols
+
+  EXPORT |r6502bcsroutine|
+
+|r6502bcsroutine|
+  R6502_OPCODE_PUSH
+  R6502_BRANCH_IF_SET_OPCODE_RETURN CFLAG
 
 
 ;Data Area

@@ -25,7 +25,16 @@
 
 ; Import global symbols
 
+  IMPORT |r6502nobranch|
+  IMPORT |r65c12branch|
+
 ; Export global symbols
+
+  EXPORT |r65c12bcsroutine|
+
+|r65c12bcsroutine|
+  R6502_OPCODE_PUSH
+  R65C12_BRANCH_IF_SET_OPCODE_RETURN CFLAG
 
 
 ;Data Area

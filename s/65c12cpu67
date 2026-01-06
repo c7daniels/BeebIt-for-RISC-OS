@@ -26,8 +26,257 @@
 ; Import global symbols
 
   IMPORT |r6502opcodeinterruptfetchreturn|
+  IMPORT |r6502nobranch|
+  IMPORT |r65c12branch|
+  IMPORT |r6502pull_t2s|
+  IMPORT |r6502pull_t1s|
+  IMPORT |r6502pull_s|
+  IMPORT |r6502interruptfetch_u5t2s|
+  IMPORT |r6502interruptfetch_u5t1s|
+  IMPORT |r6502interruptfetch_u5s|
+  IMPORT |r6502interruptfetch_u4t2s|
+  IMPORT |r6502interruptfetch_u4t1s|
+  IMPORT |r6502interruptfetch_u4s|
+  IMPORT |r6502interruptfetch_u3t2s|
+  IMPORT |r6502interruptfetch_u3t1s|
+  IMPORT |r6502interruptfetch_u3s|
+  IMPORT |r6502interruptfetch_u1t2s|
+  IMPORT |r6502interruptfetch_u1t1s|
+  IMPORT |r6502interruptfetch_u1s|
 
 ; Export global symbols
+
+  EXPORT |r65c12jmpabsindroutine|
+  EXPORT |r65c12bvsroutine|
+  EXPORT |r65c12plyroutine|
+  EXPORT |r65c12jmpabsxindroutine|
+
+  MACRO
+  JMP_ACTION_1
+  ADD r6,r7,#2:SHL:16
+  MEND
+
+  MACRO
+  JMP_ACTION_2
+  MOV r6,#ADDRESSING_BASEFLAG
+  ORR r6,r6,r4,LSL #16
+  ORR r6,r6,r3,LSL #24
+  MEND
+
+  MACRO
+  JMP_ACTION_2X
+  MOV r6,#ADDRESSING_BASEFLAG
+  ORR r6,r6,r4,LSL #16
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  ORR r6,r6,r3,LSL #24
+  ADD r6,r6,r2,LSL #16
+  MEND
+
+  MACRO
+  JMP_ACTION_3
+  ADD r6,r6,#1:SHL:16
+  MEND
+
+  MACRO
+  JMP_ACTION_4
+  MOV r7,#ADDRESSING_BASEFLAG
+  ORR r7,r7,r4,LSL #16
+  ORR r6,r7,r3,LSL #24
+  ORR r7,r7,r3,LSL #24
+  MEND
+
+  MACRO
+  PLY_ACTION
+  LDR r4,[r0,#:INDEX:R6502_SP_CODE]
+  ADD r4,r4,#1:SHL:24
+  LDR r5,[r0,#:INDEX:R6502_PAGEONE]
+  STR r4,[r0,#:INDEX:R6502_SP_CODE]
+  LDRB r2,[r5,r4,LSR #24]
+  MOVS r4,r2,LSL #24
+  BIC r8,r8,#NFLAG|ZFLAG
+  STRB r2,[r0,#:INDEX:R6502_Y]
+  ORRMI r8,r8,#NFLAG
+  ORREQ r8,r8,#ZFLAG
+  MEND
+
+|r65c12jmpabsindroutine|
+  R6502_OPCODE_PUSH
+  R6502_OPERAND_ADDRESS_FOR_READ r65c12jmpabsind_s1,r65c12jmpabsind_t1s1,r65c12jmpabsind_t2s1
+  LDRB r4,[r1]
+r65c12jmpabsind_rs1
+  JMP_ACTION_1
+  R6502_ADDRESS_FOR_READ r65c12jmpabsind_u1s2,r65c12jmpabsind_u1t1s2,r65c12jmpabsind_u1t2s2
+  LDRB r3,[r1]
+  JMP_ACTION_2
+  R6502_ADDRESS_FOR_READ r65c12jmpabsind_u2s3,r65c12jmpabsind_u2t1s3,r65c12jmpabsind_u2t2s3
+  LDRB r4,[r1]
+  JMP_ACTION_3
+  R6502_ADDRESS_FOR_READ r65c12jmpabsind_u4s4,r65c12jmpabsind_u4t1s4,r65c12jmpabsind_u4t2s4
+  LDRB r3,[r1]
+  JMP_ACTION_4
+  R6502_ADDRESS_FOR_READ r6502interruptfetch_u5s,r6502interruptfetch_u5t1s,r6502interruptfetch_u5t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 6,0
+  B r6502opcodeinterruptfetchreturn
+r65c12jmpabsind_t2s1
+  R6502_OPCODE_CYCLES 0,2
+  B r65c12jmpabsind_s1
+r65c12jmpabsind_t1s1
+  R6502_OPCODE_CYCLES 0,1
+r65c12jmpabsind_s1
+  MOV r1,r6
+  R6502_OPCODE_CALL_ACTION R6502_READSPECIALACTION
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  B r65c12jmpabsind_rs1
+r65c12jmpabsind_u1t2s2
+  R6502_OPCODE_CYCLES 1,1
+  B r65c12jmpabsind_s2
+r65c12jmpabsind_u1t1s2
+  R6502_OPCODE_CYCLES 1,2
+  B r65c12jmpabsind_s2
+r65c12jmpabsind_u1s2
+  R6502_OPCODE_CYCLES 1,0
+r65c12jmpabsind_s2
+  MOV r1,r6
+  R6502_OPCODE_CALL_ACTION R6502_READSPECIALACTION
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  JMP_ACTION_2
+  R6502_ADDRESS_FOR_READ r65c12jmpabsind_u1s3,r65c12jmpabsind_u1t1s3,r65c12jmpabsind_u1t2s3
+  LDRB r4,[r1]
+  JMP_ACTION_3
+  R6502_ADDRESS_FOR_READ r65c12jmpabsind_u3s4,r65c12jmpabsind_u3t1s4,r65c12jmpabsind_u3t2s4
+  LDRB r3,[r1]
+  JMP_ACTION_4
+  R6502_ADDRESS_FOR_READ r6502interruptfetch_u4s,r6502interruptfetch_u4t1s,r6502interruptfetch_u4t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 5,0
+  B r6502opcodeinterruptfetchreturn
+r65c12jmpabsind_u2t2s3
+  R6502_OPCODE_CYCLES 2,2
+  B r65c12jmpabsind_s3
+r65c12jmpabsind_u2t1s3
+  R6502_OPCODE_CYCLES 2,1
+  B r65c12jmpabsind_s3
+r65c12jmpabsind_u2s3
+  R6502_OPCODE_CYCLES 2,0
+  B r65c12jmpabsind_s3
+r65c12jmpabsind_u1t2s3
+  R6502_OPCODE_CYCLES 1,1
+  B r65c12jmpabsind_s3
+r65c12jmpabsind_u1t1s3
+  R6502_OPCODE_CYCLES 1,2
+  B r65c12jmpabsind_s3
+r65c12jmpabsind_u1s3
+  R6502_OPCODE_CYCLES 1,0
+r65c12jmpabsind_s3
+  MOV r1,r6
+  R6502_OPCODE_CALL_ACTION R6502_READSPECIALACTION
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  JMP_ACTION_3
+  R6502_ADDRESS_FOR_READ r65c12jmpabsind_u2s4,r65c12jmpabsind_u2t1s4,r65c12jmpabsind_u2t2s4
+  LDRB r3,[r1]
+  JMP_ACTION_4
+  R6502_ADDRESS_FOR_READ r6502interruptfetch_u3s,r6502interruptfetch_u3t1s,r6502interruptfetch_u3t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 4,0
+  B r6502opcodeinterruptfetchreturn
+r65c12jmpabsind_u4t2s4
+  R6502_OPCODE_CYCLES 4,2
+  B r65c12jmpabsind_s4
+r65c12jmpabsind_u4t1s4
+  R6502_OPCODE_CYCLES 4,1
+  B r65c12jmpabsind_s4
+r65c12jmpabsind_u4s4
+  R6502_OPCODE_CYCLES 4,0
+  B r65c12jmpabsind_s4
+r65c12jmpabsind_u3t2s4
+  R6502_OPCODE_CYCLES 3,1
+  B r65c12jmpabsind_s4
+r65c12jmpabsind_u3t1s4
+  R6502_OPCODE_CYCLES 3,2
+  B r65c12jmpabsind_s4
+r65c12jmpabsind_u3s4
+  R6502_OPCODE_CYCLES 3,0
+  B r65c12jmpabsind_s4
+r65c12jmpabsind_u2t2s4
+  R6502_OPCODE_CYCLES 2,2
+  B r65c12jmpabsind_s4
+r65c12jmpabsind_u2t1s4
+  R6502_OPCODE_CYCLES 2,1
+  B r65c12jmpabsind_s4
+r65c12jmpabsind_u2s4
+  R6502_OPCODE_CYCLES 2,0
+r65c12jmpabsind_s4
+  MOV r1,r6
+  R6502_OPCODE_CALL_ACTION R6502_READSPECIALACTION
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  JMP_ACTION_4
+  R6502_ADDRESS_FOR_READ r6502interruptfetch_u1s,r6502interruptfetch_u1t1s,r6502interruptfetch_u1t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 2,0
+  B r6502opcodeinterruptfetchreturn
+
+|r65c12plyroutine|
+  R6502_OPCODE_PUSH
+  PLY_ACTION
+  R6502_PULL_OPCODE_RETURN
+
+|r65c12bvsroutine|
+  R6502_OPCODE_PUSH
+  R65C12_BRANCH_IF_SET_OPCODE_RETURN VFLAG
+
+|r65c12jmpabsxindroutine|
+  R6502_OPCODE_PUSH
+  R6502_OPERAND_ADDRESS_FOR_READ r65c12jmpabsxind_s1,r65c12jmpabsxind_t1s1,r65c12jmpabsxind_t2s1
+  LDRB r4,[r1]
+r65c12jmpabsxind_rs1
+  JMP_ACTION_1
+  R6502_ADDRESS_FOR_READ r65c12jmpabsxind_u1s2,r65c12jmpabsxind_u1t1s2,r65c12jmpabsxind_u1t2s2
+  LDRB r3,[r1]
+  JMP_ACTION_2X
+  R6502_ADDRESS_FOR_READ r65c12jmpabsind_u2s3,r65c12jmpabsind_u2t1s3,r65c12jmpabsind_u2t2s3
+  LDRB r4,[r1]
+  JMP_ACTION_3
+  R6502_ADDRESS_FOR_READ r65c12jmpabsind_u4s4,r65c12jmpabsind_u4t1s4,r65c12jmpabsind_u4t2s4
+  LDRB r3,[r1]
+  JMP_ACTION_4
+  R6502_ADDRESS_FOR_READ r6502interruptfetch_u5s,r6502interruptfetch_u5t1s,r6502interruptfetch_u5t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 6,0
+  B r6502opcodeinterruptfetchreturn
+r65c12jmpabsxind_t2s1
+  R6502_OPCODE_CYCLES 0,2
+  B r65c12jmpabsxind_s1
+r65c12jmpabsxind_t1s1
+  R6502_OPCODE_CYCLES 0,1
+r65c12jmpabsxind_s1
+  MOV r1,r6
+  R6502_OPCODE_CALL_ACTION R6502_READSPECIALACTION
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  B r65c12jmpabsxind_rs1
+r65c12jmpabsxind_u1t2s2
+  R6502_OPCODE_CYCLES 1,1
+  B r65c12jmpabsxind_s2
+r65c12jmpabsxind_u1t1s2
+  R6502_OPCODE_CYCLES 1,2
+  B r65c12jmpabsxind_s2
+r65c12jmpabsxind_u1s2
+  R6502_OPCODE_CYCLES 1,0
+r65c12jmpabsxind_s2
+  MOV r1,r6
+  R6502_OPCODE_CALL_ACTION R6502_READSPECIALACTION
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  JMP_ACTION_2X
+  R6502_ADDRESS_FOR_READ r65c12jmpabsind_u1s3,r65c12jmpabsind_u1t1s3,r65c12jmpabsind_u1t2s3
+  LDRB r4,[r1]
+  JMP_ACTION_3
+  R6502_ADDRESS_FOR_READ r65c12jmpabsind_u3s4,r65c12jmpabsind_u3t1s4,r65c12jmpabsind_u3t2s4
+  LDRB r3,[r1]
+  JMP_ACTION_4
+  R6502_ADDRESS_FOR_READ r6502interruptfetch_u4s,r6502interruptfetch_u4t1s,r6502interruptfetch_u4t2s
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 5,0
+  B r6502opcodeinterruptfetchreturn
 
 
 ;Data Area
