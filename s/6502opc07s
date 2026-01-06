@@ -29,10 +29,14 @@
 
 ; Import global symbols
 
+  IMPORT |logcycles|
+
   IMPORT |r6502completecycleinterruptfetchreturn|
   IMPORT |r6502cycleinterruptfetchspecialpopreturn|
   IMPORT |r6502cycleinterruptstretch1fetchspecialpopreturn|
   IMPORT |r6502cycleinterruptstretch2fetchspecialpopreturn|
+  IMPORT |deferlogfetch|
+  IMPORT |logfetch|
 
 ; Export global symbols
 

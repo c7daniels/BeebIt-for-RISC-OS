@@ -27,6 +27,8 @@
 
 ; Import global symbols
 
+  IMPORT |logcycles|
+
   IMPORT |r6502opcodeinterruptfetchreturn|
   IMPORT |s2_r6502implied_p|
   IMPORT |s1_r6502implied_p|

@@ -265,7 +265,13 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   [ Optimise6502Links
   LDR lr,[r0,#:INDEX:R6502_CONTINUELINK]
   ]
+  STR lr,[sp, #-4]!
+  MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+132]
+  MOV r1,#1
+  BL logcycles
+  LDR lr, [sp], #4
+  MOV pc,lr
   MEND
 
   MACRO
@@ -273,7 +279,13 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   [ Optimise6502Links
   LDR lr,[r0,#:INDEX:R6502_CONTINUELINK]
   ]
+  STR lr,[sp, #-4]!
+  MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+20]
+  MOV r1,#1
+  BL logcycles
+  LDR lr, [sp], #4
+  MOV pc,lr
   MEND
 
   MACRO
@@ -380,6 +392,11 @@ R6502_OPCODE_07_SEQUENCE EQU 262
 
   MACRO
   R6502_CYCLE_FETCH_MAPPED_RETURN
+
+  STMFD sp!,{r1,lr}
+  BL deferlogfetch
+  LDMFD sp!,{r1,lr}
+
   LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
   LDRB r2,[r1]
   CMP r3,#R6502_RESET_TRANSITION
@@ -397,6 +414,11 @@ R6502_OPCODE_07_SEQUENCE EQU 262
 
   MACRO
   R6502_CYCLE_EARLY_INTERRUPT_CHECK_FETCH_MAPPED_RETURN
+
+  STMFD sp!,{r1,lr}
+  BL deferlogfetch
+  LDMFD sp!,{r1,lr}
+
   LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
   LDRB r2,[r1]
   LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
@@ -416,6 +438,11 @@ R6502_OPCODE_07_SEQUENCE EQU 262
 
   MACRO
   R6502_CYCLE_INTERRUPT_CHECK_FETCH_MAPPED_RETURN
+
+  STMFD sp!,{r1,lr}
+  BL deferlogfetch
+  LDMFD sp!,{r1,lr}
+
   LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
   LDRB r2,[r1]
   LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
@@ -537,7 +564,7 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   MACRO
   R6502_OPCODE_CYCLES $n,$ns
   LCLA counter
-  MOV lr,pc
+  STR r1,[sp, #-4]!
 counter SETA $n
   IF Optimise6502Timing
   WHILE counter>6
@@ -560,23 +587,29 @@ counter SETA $ns
 counter SETA counter-1
   WEND
   ENDIF
+  MOV r1,#$n+$ns
+  BL logcycles
+  LDR r1, [sp], #4
   MEND
 
   MACRO
   R6502_OPCODE_UNINTERRUPTED_FETCH_RETURN $n
   R6502_OPCODE_CYCLES $n,0
+  MOV r1,r6
   B r6502opcodefetchreturn
   MEND
 
   MACRO
   R6502_OPCODE_EARLY_INTERRUPT_FETCH_RETURN $n
   R6502_OPCODE_CYCLES $n,0
+  MOV r1,r6
   B r6502opcodeearlyinterruptfetchreturn
   MEND
 
   MACRO
   R6502_OPCODE_INTERRUPT_FETCH_RETURN $n
   R6502_OPCODE_CYCLES $n,0
+  MOV r1,r6
   B r6502opcodeinterruptfetchreturn
   MEND
 

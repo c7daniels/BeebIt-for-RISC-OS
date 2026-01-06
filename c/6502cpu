@@ -17,6 +17,8 @@
 #include "beebit.h"
 #include "6502cpu.h"
 
+extern R6502CPUMAP* logcycles(R6502CPUMAP* cmap, int ncycles);
+
 static_assert(offsetof(R6502ZONEMAP, AC) == 0, "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, BC) == ((0x100>>2)+2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, CC) == (0x400>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
@@ -951,10 +953,56 @@ R6502CPUMAP* r6502cyclestretch2writespecialreturn(R6502CPUMAP* cmap, uintptr_t a
   r6502startstretch2writespecial(cmap, address_code, cmap->cpu_state);
   R6502_CYCLE_STRETCH_RETURN(cmap)
 }
+#endif
 
+static int dlf_active = 0;
+static uint8_t dlf_p[4];
+
+R6502CPUMAP* deferlogfetch(R6502CPUMAP* cmap, uint8_t* p)
+{
+  dlf_active = 1;
+  dlf_p[0] = p[0];
+  dlf_p[1] = p[1];
+  dlf_p[2] = p[2];
+  return cmap;
+}
+
+R6502CPUMAP* logfetch(R6502CPUMAP* cmap, uint8_t* p)
+{
+  uint32_t cc;
+  extern FILE* mafile;
+  extern uint32_t host_getcyclecount(R6502CPUMAP* cmap);
+
+  if (mafile)
+  {
+    cc = host_getcyclecount(cmap);
+    fprintf(mafile, "%04X %08X %02X %02X %02X %08X\n", (uint32_t)(cmap->sync_pc_code>>16), (uint32_t)cmap->interruptqueue, p[0], p[1], p[2], cc);
+  }
+  return cmap;
+}
+
+R6502CPUMAP* logcycles(R6502CPUMAP* cmap, int ncycles)
+{
+  extern void tickmafile(void);
+
+  for (; ncycles-->0;)
+  {
+    tickmafile();
+  }
+  if (dlf_active)
+  {
+    dlf_active = 0;
+    logfetch(cmap, dlf_p);
+  }
+  return cmap;
+}
+
+#ifdef BEEBIT_NO_ASM
 R6502CPUMAP* r6502cyclefetchmappedreturn(R6502CPUMAP* cmap, uint8_t* p)
 {
   cmap->cpu_state = cmap->sequences[*p];
+
+  deferlogfetch(cmap, p);
 
   if (cmap->transition1 == R6502_RESET_TRANSITION)
   {
@@ -996,6 +1044,8 @@ R6502CPUMAP* r6502cycleearlyinterruptfetchmappedreturn(R6502CPUMAP* cmap, uint8_
   uintptr_t interruptqueue = cmap->interruptqueue;
 
   cmap->cpu_state = cmap->sequences[*p];
+
+  deferlogfetch(cmap, p);
 
   if (cmap->transition1 == R6502_RESET_TRANSITION)
   {
@@ -1041,6 +1091,8 @@ R6502CPUMAP* r6502cycleinterruptfetchmappedreturn(R6502CPUMAP* cmap, uint8_t* p)
   uintptr_t interruptqueue = cmap->interruptqueue;
 
   cmap->cpu_state = cmap->sequences[*p];
+
+  deferlogfetch(cmap, p);
 
   if (cmap->transition1 == R6502_RESET_TRANSITION)
   {

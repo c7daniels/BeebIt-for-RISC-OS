@@ -25,6 +25,11 @@
 
 ; Import global symbols
 
+  IMPORT |logcycles|
+
+  IMPORT |deferlogfetch|
+  IMPORT |logfetch|
+
 ; Export global symbols
 
   EXPORT |r6502invokeaddressing|
@@ -430,6 +435,14 @@ r6502cyclefetchdoyield
   BEQ r6502cyclefetchdoyield
   R6502_CYCLE_RETURN
 
+  MACRO
+  CYCLELOGSPECIALFETCH
+  STMFD sp!,{r4,lr}
+  MOV r1,sp
+  BL deferlogfetch
+  LDMFD sp!,{r4,lr}
+  MEND
+
 |r6502cyclefetchmappedreturn|
   R6502_CYCLE_FETCH_MAPPED_RETURN
 
@@ -439,6 +452,7 @@ r6502cyclefetchdoyield
 |r6502cyclefetchspecialreturn|
   R6502_CYCLE_READSPECIAL
 |r6502cyclefetchafterreadspecial|
+  CYCLELOGSPECIALFETCH
   LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
   LDRB r2,[r0,#:INDEX:R6502_M]
   CMP r3,#R6502_RESET_TRANSITION
@@ -484,6 +498,7 @@ r6502cyclefetchdoyield
 |r6502cycleearlyinterruptfetchspecialreturn|
   R6502_CYCLE_READSPECIAL
 |r6502cycleearlyinterruptfetchafterreadspecial|
+  CYCLELOGSPECIALFETCH
   LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
   LDRB r2,[r0,#:INDEX:R6502_M]
   LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
@@ -531,6 +546,7 @@ r6502cyclefetchdoyield
 |r6502cycleinterruptfetchspecialreturn|
   R6502_CYCLE_READSPECIAL
 |r6502cycleinterruptfetchafterreadspecial|
+  CYCLELOGSPECIALFETCH
   LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
   LDRB r2,[r0,#:INDEX:R6502_M]
   LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
@@ -2583,7 +2599,18 @@ r6502opcodefetchdoyield
   LDR r1,[r1,#R6502_YIELD_SEQUENCE:SHL:2]
   R6502_OPCODE_RETURN
 
+  MACRO
+  OPCODELOGFETCH
+  STMFD sp!,{r4,lr}
+  CMP r1,r6
+  MOVEQ r1,sp
+  STR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  BL logfetch
+  LDMFD sp!,{r4,lr}
+  MEND
+
 |r6502opcodefetchreturn|
+  OPCODELOGFETCH
   LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
   CMP r3,#R6502_RESET_TRANSITION
   BEQ r6502opcodefetchdoreset
@@ -2594,6 +2621,7 @@ r6502opcodefetchdoyield
   R6502_OPCODE_RETURN
 
 |r6502opcodeearlyinterruptfetchreturn|
+  OPCODELOGFETCH
   LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
   LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
   CMP r3,#R6502_RESET_TRANSITION
@@ -2608,6 +2636,7 @@ r6502opcodefetchdoyield
   R6502_OPCODE_RETURN
 
 |r6502opcodeinterruptfetchreturn|
+  OPCODELOGFETCH
   LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
   LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
   CMP r3,#R6502_RESET_TRANSITION

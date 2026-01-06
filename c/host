@@ -119,6 +119,12 @@ extern R6502CPUMAP* host_r6502writespecial(R6502CPUMAP* cmap, uintptr_t address_
 HOSTMAP hostmap;
 #endif
 
+uint32_t host_getcyclecount(R6502CPUMAP* cmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  return (uint32_t)(hmap->cycles.original - hmap->cycles.togo + hmap->cycles.monotonic);
+}
+
 extern R6502CPUMAP* host_r6502opcode07interfacestep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 
 static inline void hoststartreset(int poweron)
@@ -1423,8 +1429,6 @@ void hostexecute(void)
 
   while (cmap->cpu_state != cmap->sequences[R6502_YIELD_SEQUENCE])
   {
-    extern void tickmafile(void);
-    tickmafile();
     (*cmap->cpu_state)(cmap, (intptr_t)(cmap->cpu_state+1));
   }
 }
