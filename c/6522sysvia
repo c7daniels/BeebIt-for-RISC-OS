@@ -198,10 +198,8 @@ void cmoswrite(char naddress,char nvalue)
   }
 }
 
-void systemviaeventsetirq(void)
+static inline void systemviaeventsetirq(HOSTMAP* hmap)
 {
-  HOSTMAP* hmap = &hostmap;
-
   if (hmap->A_sysvia.ifr & hmap->A_sysvia.ier & 0x7F)
   {
     /*if (beebit_trace)
@@ -216,10 +214,8 @@ void systemviaeventsetirq(void)
   }
 }
 
-void systemviaregistersetirq(void)
+static inline void systemviaregistersetirq(HOSTMAP* hmap)
 {
-  HOSTMAP* hmap = &hostmap;
-
   if (hmap->A_sysvia.ifr & hmap->A_sysvia.ier & 0x7F)
   {
     /*if (beebit_trace)
@@ -234,27 +230,27 @@ void systemviaregistersetirq(void)
   }
 }
 
-void systemviasetca1(void)
+void systemviasetca1(HOSTMAP* hmap)
 {
-  HOSTMAP* hmap = &hostmap;
   #ifdef __DEBUG__
     fprintf(htrace,"CA1 ");
   #endif
   hmap->A_sysvia.ifr |= 0x02; /*CA1 flag*/
-  systemviaeventsetirq();
+  systemviaeventsetirq(hmap);
+  hmap->A_sysvia.ira = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) + (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
 }
 
 /*void systemviavidca1(void)
 {*/
   /*CA1 flag*/
   /*hmap->A_sysvia.ifr |= 0x02;
-  systemviaeventsetirq();
+  systemviaeventsetirq(hmap);
   hmap->A_sysvia.ira=(hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
 }*/
 
 /*void systemviavidirq(void)
 {
-  systemviaeventsetirq();
+  systemviaeventsetirq(hmap);
   hmap->A_sysvia.ira=(hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
 }*/
 
@@ -262,47 +258,51 @@ void systemviaunsetca1(void)
 {
   HOSTMAP* hmap = &hostmap;
   hmap->A_sysvia.ifr &= 0xFD; /*CA1 flag*/
-  systemviaeventsetirq();
+  systemviaeventsetirq(hmap);
 }
 
-void systemviasetca2(void)
+HOSTMAP* systemviasetca2(HOSTMAP* hmap, uint32_t irqbits)
 {
-  HOSTMAP* hmap = &hostmap;
-  #ifdef __DEBUG__
-    fprintf(htrace,"CA2 ");
-  #endif
-  switch (hmap->A_sysvia.pcr & 0x0E)
+#ifdef __DEBUG__
+  fprintf(htrace,"CA2 ");
+#endif
+  if (!(hmap->A_sysvia.ifr & 0x01))
   {
-    case 0:
-    case 2:
-      /*updatekeyboard();*/
-      hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
-      systemviaeventsetirq();
-      break;
-    case 4:
-    case 6:
-      /*updatekeyboard();*/
-      hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
-      systemviaeventsetirq();
-      break;
+    switch (hmap->A_sysvia.pcr & 0x0E)
+    {
+      case 4:
+      case 6:
+        hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
+        if (hmap->A_sysvia.ier & 0x01)
+        {
+          hmap->interrupts |= HOST_IRQ_6522SYSVIA;
+          hmap->interruptqueue |= irqbits;
+        }
+        break;
+    }
   }
+  return hmap;
 }
 
-void systemviakeyca2(void)
+HOSTMAP* systemviaunsetca2(HOSTMAP* hmap, uint32_t irqbits)
 {
-  HOSTMAP* hmap = &hostmap;
-  /*updatekeyboard();*/
-  /*if (beebit_trace)
-    printf("SVK PC=%X, SP=%X %X\n", r6502_pc, r6502_sp, hmap->A_sysvia.ifr);*/
-  hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
-  systemviaregistersetirq();
+  if (!(hmap->A_sysvia.ifr & 0x01))
+  {
+    switch (hmap->A_sysvia.pcr & 0x0E)
+    {
+      case 0:
+      case 2:
+        hmap->A_sysvia.ifr |= 0x01; /*CA2 flag*/
+        if (hmap->A_sysvia.ier & 0x01)
+        {
+          hmap->interrupts |= HOST_IRQ_6522SYSVIA;
+          hmap->interruptqueue |= irqbits;
+        }
+        break;
+    }
+  }
+  return hmap;
 }
-
-/*void systemviaunsetca2(void)
-{
-  hmap->A_sysvia.ifr &= 0xFE;*/ /*CA2 flag*/
-  /*systemviaeventsetirq();
-}*/
 
 static intptr_t systemviapickcyclestogo(void)
 {
@@ -367,7 +367,7 @@ void systemviareset(void)
   hmap->A_sysvia.t2setint = FALSE;
 
   hmap->lsoundlatch = FALSE;
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
   hmap->screenstartaddress = 0;
   hmap->screenstartindex = 0;
 
@@ -406,7 +406,9 @@ void systemviaaftersnapshot(void)
     HOST_LIMIT_PERIPHERAL_CYCLES_TO_GO(hmap, sysvia, hmap->B_sysvia.t2doubled + 2)
   }
 
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
+
+  hmap->keyboard_state = KEYBOARDNOTWRITEENABLEFLAG;
 }
 
 HOSTMAP* systemviaatzerocycles(HOSTMAP* hmap)
@@ -490,8 +492,45 @@ HOSTMAP* systemviaatzerocycles(HOSTMAP* hmap)
 
   hmap->cycles.sysvia_togo = hmap->cycles.sysvia_original = systemviapickcyclestogo();
 
-  systemviaeventsetirq();
+  systemviaeventsetirq(hmap);
   return hmap;
+}
+
+static inline void setkeyboardnotwriteenable(HOSTMAP* hmap, int notwriteenable)
+{
+  uintptr_t keyboard_state = hmap->keyboard_state;
+  uintptr_t porta;
+
+  if (keyboard_state&KEYBOARDNOTWRITEENABLEFLAG)
+  {
+    if (!notwriteenable)
+    {
+      porta = hmap->A_sysvia.porta & hmap->A_sysvia.ddra;
+      hmap->keybit = hmap->keybit = (1<<((porta>>4)&0x07));
+      hmap->keyboard_state = ((porta&0x0F)<<28) | (hmap->keyboard_state & (0x0FFFFFFF - KEYBOARDNOTWRITEENABLEFLAG));
+    }
+  }
+  else
+  {
+    if (notwriteenable)
+    {
+      hmap->keyboard_state += KEYBOARDNOTWRITEENABLEFLAG;
+      hmap->A_sysvia.porta &= (hmap->A_sysvia.ddra | 0x7F);
+    }
+  }
+}
+
+static inline void setkeyboardscanposition(HOSTMAP* hmap)
+{
+  uintptr_t keyboard_state = hmap->keyboard_state;
+  uintptr_t porta;
+
+  if (!(keyboard_state&KEYBOARDNOTWRITEENABLEFLAG))
+  {
+    porta = hmap->A_sysvia.porta & hmap->A_sysvia.ddra;
+    hmap->keybit = hmap->keybit = (1<<((porta>>4)&0x07));
+    hmap->keyboard_state = ((porta&0x0F)<<28) | (hmap->keyboard_state & 0x0FFFFFFF);
+  }
 }
 
 struct R6502CPUMAP* systemvia00read(struct R6502CPUMAP* cmap, uintptr_t address_code)
@@ -513,7 +552,7 @@ struct R6502CPUMAP* systemvia00read(struct R6502CPUMAP* cmap, uintptr_t address_
     /*clear b4,b3 (CB1,CB2)*/
     hmap->A_sysvia.ifr &= 0xE7;
   }
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
   /*reads output register bit in orb. pin level has no effect*/
   nresult = (hmap->A_sysvia.orb & hmap->A_sysvia.ddrb);
   if (hmap->A_sysvia.acr & 0x02)
@@ -562,7 +601,7 @@ struct R6502CPUMAP* systemvia01read_b(struct R6502CPUMAP* cmap, uintptr_t addres
     /*clear b2,b1 (CA1,CA2)*/
     hmap->A_sysvia.ifr &= 0xFC;
   }
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
   if (hmap->A_sysvia.acr & 0x01)
   {
     /*input latching enabled*/
@@ -597,7 +636,7 @@ struct R6502CPUMAP* systemvia01read_m(struct R6502CPUMAP* cmap, uintptr_t addres
     /*clear b2,b1 (CA1,CA2)*/
     hmap->A_sysvia.ifr &= 0xFC;
   }
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
   if (hmap->A_sysvia.acr & 0x01)
   {
     /*input latching enabled*/
@@ -615,7 +654,9 @@ struct R6502CPUMAP* systemvia01read_m(struct R6502CPUMAP* cmap, uintptr_t addres
       nresult = (hmap->A_sysvia.ora & hmap->A_sysvia.ddra) | (hmap->A_sysvia.porta & ~hmap->A_sysvia.ddra);
     }
     else
+    {
       nresult = hmap->A_sysvia.porta;
+    }
   }
   hmap->m = nresult;
 
@@ -646,7 +687,7 @@ struct R6502CPUMAP* systemvia04read(struct R6502CPUMAP* cmap, uintptr_t address_
 
   /*T1 interrupt flag is reset (IFR b6)*/
   hmap->A_sysvia.ifr &= 0xBF;
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
   HOST_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, hmap, sysvia)
   hmap->m = ((hmap->B_sysvia.t1doubled - cyclecount)>>1)&0xFF;
 
@@ -691,7 +732,7 @@ struct R6502CPUMAP* systemvia08read(struct R6502CPUMAP* cmap, uintptr_t address_
 
   /*T2 interrupt flag is cleared (IFR b5)*/
   hmap->A_sysvia.ifr &= 0xDF;
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
   if (!(hmap->A_sysvia.acr & 0x20))
   {
     HOST_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, hmap, sysvia)
@@ -730,7 +771,7 @@ struct R6502CPUMAP* systemvia0Aread(struct R6502CPUMAP* cmap, uintptr_t address_
   HOSTMAP* hmap = (HOSTMAP*)cmap;
   /*SR interrupt flag is cleared (IFR b2)*/
   hmap->A_sysvia.ifr &= 0xFB;
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
   hmap->m = hmap->A_sysvia.sr;
 
   return cmap;
@@ -760,7 +801,7 @@ struct R6502CPUMAP* systemvia0Dread(struct R6502CPUMAP* cmap, uintptr_t address_
   HOSTMAP* hmap = (HOSTMAP*)cmap;
   /*b7 of this register will be read as a logic 1*/
   /*when an interrupt exists within the chip*/
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
   hmap->m = hmap->A_sysvia.ifr;
 
   return cmap;
@@ -789,8 +830,6 @@ struct R6502CPUMAP* systemvia0Fread_b(struct R6502CPUMAP* cmap, uintptr_t addres
   else
   {
     /*input latching disabled*/
-    if (keystatus[(hmap->A_sysvia.porta & hmap->A_sysvia.ddra)])
-      hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
     nresult = hmap->A_sysvia.porta;
   }
   hmap->m = nresult;
@@ -822,8 +861,6 @@ struct R6502CPUMAP* systemvia0Fread_m(struct R6502CPUMAP* cmap, uintptr_t addres
     }
     else
     {
-      if (keystatus[(hmap->A_sysvia.porta & hmap->A_sysvia.ddra)])
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
       nresult = hmap->A_sysvia.porta;
     }
   }
@@ -850,7 +887,7 @@ static inline void systemviaportbwrite(HOSTMAP* hmap, uint8_t value)
     /*clear b4,b3 (CB1,CB2)*/
     hmap->A_sysvia.ifr &= 0xE7;
   }
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
 }
 
 static inline void systemviaportawrite(HOSTMAP* hmap, uint8_t value)
@@ -872,7 +909,7 @@ static inline void systemviaportawrite(HOSTMAP* hmap, uint8_t value)
     /*clear b2,b1 (CA1,CA2)*/
     hmap->A_sysvia.ifr &= 0xFC;
   }
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
 }
 
 static inline void systemviaportawritenohandshake(HOSTMAP* hmap, uint8_t value)
@@ -909,8 +946,7 @@ static inline void systemviaportbwrite_latchb(HOSTMAP* hmap, uint8_t value)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardnotwriteenable(hmap, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1026,8 +1062,7 @@ static inline void systemviaportbwrite_latchm(HOSTMAP* hmap, uint8_t value)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardnotwriteenable(hmap, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1109,8 +1144,7 @@ static inline void systemviaportbwrite_nosoundlatchb(HOSTMAP* hmap, uint8_t valu
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardnotwriteenable(hmap, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1220,8 +1254,7 @@ static inline void systemviaportbwrite_nosoundlatchm(HOSTMAP* hmap, uint8_t valu
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardnotwriteenable(hmap, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1308,8 +1341,7 @@ static inline void systemviaportawrite_latchb(HOSTMAP* hmap, uint8_t value)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardscanposition(hmap);
       break;
   }
 }
@@ -1346,8 +1378,7 @@ static inline void systemviaportawrite_latchm(HOSTMAP* hmap, uint8_t value)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardscanposition(hmap);
       break;
   }
 }
@@ -1372,8 +1403,7 @@ static inline void systemviaportawrite_nosoundlatchb(HOSTMAP* hmap, uint8_t valu
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardscanposition(hmap);
       break;
   }
 }
@@ -1404,8 +1434,7 @@ static inline void systemviaportawrite_nosoundlatchm(HOSTMAP* hmap, uint8_t valu
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        hmap->A_sysvia.porta = keyboardread(hmap->A_sysvia.porta,hmap->A_sysvia.ddra);
+      setkeyboardscanposition(hmap);
       break;
   }
 }
@@ -1501,6 +1530,15 @@ struct R6502CPUMAP* systemvia02write(struct R6502CPUMAP* cmap, uintptr_t address
 struct R6502CPUMAP* systemvia03write(struct R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value)
 {
   HOSTMAP* hmap = (HOSTMAP*)cmap;
+
+  if ((hmap->A_sysvia.ddra ^ value) & 0x80)
+  {
+    if (value & 0x80)
+      hmap->keyboard_state += KEYBOARDNOTINPUTFLAG;
+    else
+      hmap->keyboard_state -= KEYBOARDNOTINPUTFLAG;
+  }
+
   hmap->A_sysvia.ddra = value;
 
   return cmap;
@@ -1524,7 +1562,7 @@ struct R6502CPUMAP* systemvia05write(struct R6502CPUMAP* cmap, uintptr_t address
   hmap->A_sysvia.t1lh = value;
   /*clear T1 interrupt flag (b6)*/
   hmap->A_sysvia.ifr &= 0xBF;
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
   if ((hmap->A_sysvia.acr & 0xC0) == 0x80)
   {
     /*output enabled (b7=1) and free-run disabled (b6=0)*/
@@ -1580,7 +1618,7 @@ struct R6502CPUMAP* systemvia09write(struct R6502CPUMAP* cmap, uintptr_t address
 
   /*clear T2 interrupt flag (bit 5)*/
   hmap->A_sysvia.ifr &= 0xDF;
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
   /*provide a single interrupt*/
   hmap->A_sysvia.t2setint=TRUE;
   if (!(hmap->A_sysvia.acr & 0x20))
@@ -1608,7 +1646,7 @@ struct R6502CPUMAP* systemvia0Awrite(struct R6502CPUMAP* cmap, uintptr_t address
   HOSTMAP* hmap = (HOSTMAP*)cmap;
   hmap->A_sysvia.sr = value;
   hmap->A_sysvia.ifr &= 0xFB;
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
 
   return cmap;
 }
@@ -1678,7 +1716,7 @@ struct R6502CPUMAP* systemvia0Dwrite(struct R6502CPUMAP* cmap, uintptr_t address
   HOSTMAP* hmap = (HOSTMAP*)cmap;
   value &= 0x7F; /*not really needed*/
   hmap->A_sysvia.ifr &= (~value);
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
 
   return cmap;
 }
@@ -1692,7 +1730,7 @@ struct R6502CPUMAP* systemvia0Ewrite(struct R6502CPUMAP* cmap, uintptr_t address
   else
     hmap->A_sysvia.ier &= (~value);
   hmap->A_sysvia.ier &= 0x7F;
-  systemviaregistersetirq();
+  systemviaregistersetirq(hmap);
 
   return cmap;
 }

@@ -15,8 +15,6 @@ extern void userviastartreset(int lfull);
 extern void userviafinishreset(void);
 extern void userviabeforesnapshot(void);
 extern void userviaaftersnapshot(void);
-extern void userviaeventsetirq(void);
-extern void userviaregistersetirq(void);
 extern HOSTMAP* userviaatzerocycles(HOSTMAP* hmap);
 
 extern struct R6502CPUMAP* uservia00read(struct R6502CPUMAP* cmap, uintptr_t address_code);

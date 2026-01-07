@@ -42,6 +42,16 @@
   IMPORT |adcpoll|
   IMPORT |aciapoll|
   IMPORT |videoatzerocycles|
+  IMPORT |keyboardf1p0i|
+  IMPORT |keyboardf1p0I|
+  IMPORT |keyboardf1p0c|
+  IMPORT |keyboardf1p0C|
+  IMPORT |keyboardb1|
+  IMPORT |keyboardf1|
+  IMPORT |keyboardf1p1i|
+  IMPORT |keyboardf1p1I|
+  IMPORT |keyboardf1p1c|
+  IMPORT |keyboardf1p1C|
 
 ; Export global symbols
 
@@ -107,7 +117,11 @@
   EXPORT |host_r6502writemfred|
   EXPORT |host_r6502writemjim|
 
-  EXPORT |host_r6502cycle|
+  EXPORT |host_r6502cycle0s1b|
+  EXPORT |host_r6502cycle1b|
+  EXPORT |host_r6502cycle0s1m|
+  EXPORT |host_r6502cycle1m|
+
   EXPORT |host_r6502readspecial|
   EXPORT |host_r6502writespecial|
 
@@ -535,20 +549,87 @@ host_r6502writejim
   LDR r0, [sp], #4
   MOV pc,lr
 
-|host_r6502cycle|
-  LDR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  SUBS r2,r2,#1
-  STR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  [ Optimise6502Links
-  LDR r1,[r0,#:INDEX:R6502_CPU_STATE]
-  LDRNE pc, [r1], #4
-  BL hostadvancetimers
-  LDR r1,[r0,#:INDEX:R6502_CPU_STATE]
-  LDR pc, [r1], #4
-  |
-  MOVNE pc,lr
+host_r6502cycle0s1routines
+  DCD keyboardf1p0i, keyboardf1p0I
+  DCD keyboardf1p0c, keyboardf1p0C
+  DCD keyboardf1p0c, keyboardf1p0C
+  DCD keyboardf1p0c, keyboardf1p0C
+  DCD keyboardb1, keyboardb1
+  DCD keyboardf1, keyboardf1
+  DCD keyboardb1, keyboardb1
+  DCD keyboardf1, keyboardf1
+
+host_r6502cycle1routines
+  DCD keyboardf1p1i, keyboardf1p1I
+  DCD keyboardf1p1c, keyboardf1p1C
+  DCD keyboardf1p1c, keyboardf1p1C
+  DCD keyboardf1p1c, keyboardf1p1C
+  DCD keyboardb1, keyboardb1
+  DCD keyboardf1, keyboardf1
+  DCD keyboardb1, keyboardb1
+  DCD keyboardf1, keyboardf1
+
+  MACRO
+  CYCLE1TICK
+  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  LDR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  SUBS r3,r3,#1
+  ADD r2,r0,#:INDEX:HOST_KEYSTATUS
+  STR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  MEND
+
+  MACRO
+  CYCLE1TICKANDSHIFT
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  TST r3,#R6502_NMI
+  AND r2,r3,#&0F
+  ORREQ r2,r2,#R6502_NMI_ENABLE
+  ORR r2,r2,r3,LSL #4
+  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  STR r2,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  LDR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  SUBS r3,r3,#1
+  ADD r2,r0,#:INDEX:HOST_KEYSTATUS
+  STR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  MEND
+
+  MACRO
+  CYCLE1RETURN $columns,$routines
+  BLE %F0
+  CMP r1,#$columns:SHL:28
+  ADR r3,$routines
+  LDRLOB r2,[r2,r1,LSR #28]
+  MOV r1,r1,ROR #28
+  MOVHS r2,#0
+  LDR pc,[r3,r1,LSR #26]
+0
+  CMP r1,#$columns:SHL:28
+  ADR r3,$routines
+  LDRLOB r2,[r2,r1,LSR #28]
+  MOV r1,r1,ROR #28
+  MOVHS r2,#0
+  STR lr,[sp, #-4]!
+  MOV lr,pc
+  LDR pc,[r3,r1,LSR #26]
+  LDR lr, [sp], #4
   B hostadvancetimers
-  ]
+  MEND
+
+|host_r6502cycle0s1b|
+  CYCLE1TICK
+  CYCLE1RETURN 10,host_r6502cycle0s1routines
+
+|host_r6502cycle1b|
+  CYCLE1TICKANDSHIFT
+  CYCLE1RETURN 10,host_r6502cycle1routines
+
+|host_r6502cycle0s1m|
+  CYCLE1TICK
+  CYCLE1RETURN 13,host_r6502cycle0s1routines
+
+|host_r6502cycle1m|
+  CYCLE1TICKANDSHIFT
+  CYCLE1RETURN 13,host_r6502cycle1routines
 
 |host_r6502readspecial|
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALREADOPS
@@ -670,8 +751,10 @@ advancetimers8
   STR r3,[r0,#:INDEX:R6502_TRANSITION1]
   STR r3,[r0,#:INDEX:R6502_TRANSITION2]
   [ Optimise6502Links
-  ADR r2,hostexecute2
-  STR r2,[r0,#:INDEX:R6502_YIELDLINK]
+  ADR r2,hostexecute1
+  ADR r3,hostexecute2
+  STR r2,[r0,#:INDEX:R6502_CONTINUELINK]
+  STR r3,[r0,#:INDEX:R6502_YIELDLINK]
   ]
 hostexecute1
   [ Optimise6502Links

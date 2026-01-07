@@ -9,6 +9,11 @@
 ; Email: <convertedgames@3insdale.me.uk>
 ;
 
+KEYBOARDIDLEFLAG EQU &08000000
+KEYBOARDNOTINPUTFLAG EQU &04000000
+KEYBOARDNOTWRITEENABLEFLAG EQU &02000000
+KEYBOARDCA2FLAG EQU &01000000
+
                         ^ 0
 HOSTCYCLES_MONOTONIC    # &4
 HOSTCYCLES_ODD          # &4
@@ -198,6 +203,7 @@ SIZEOF_HOSTBADC         * @
                         ^ 0
 ; offsets &00 - &FF
 HOST_AC                 # SIZEOF_R6502_AC_ZONE
+HOST_KEYSTATUS          # &10
 HOST_ROMWRITABLE        # &10
 HOST_ROMSEL             # &1
 HOST_ACCCON             # &1
@@ -210,7 +216,8 @@ HOST_SERIAL             # SIZEOF_HOSTASERIAL
 HOST_AI8271             # SIZEOF_HOSTAI8271
 HOST_AW1770             # SIZEOF_HOSTAW1770
 HOST_AADC               # SIZEOF_HOSTAADC
-                        # &7C
+HOST_KEYBIT             # &1
+                        # &6B
 
 ; offsets &100 - &3FF
 HOST_INTERRUPTQUEUE     # &4
@@ -218,6 +225,7 @@ HOST_M_SHIFT            # &3
 HOST_M                  # &1
 HOST_BC                 # SIZEOF_R6502_BC_ZONE
 HOST_INTERRUPTS         # &4
+HOST_KEYBOARD_STATE     # &4
 HOST_ZERIBEEPWRITEBYTE  # &4
 HOST_ZERIBEEPWORKSPACE  # &4
 HOST_SCREENSTARTADDRESS # &4
@@ -254,12 +262,15 @@ HOST_SPECIALREADOPS     # &1000
 HOST_SPECIALWRITEOPS    # &1000
 
 ; offsets &8000 - &FFFF
-HOST_SHADOW             # &8000
+                        # &8000
 
 ; offsets &10000 - &1FFFF
 HOST_MEMORY             # &10000
 
-; offsets &20000 - &5FFFF
+; offsets &20000 - &27FFF
+HOST_SHADOW             # &8000
+
+; offsets &28000 - &67FFF
 HOST_ROMS               # &40000
 
 SIZEOF_HOSTMAP          * @

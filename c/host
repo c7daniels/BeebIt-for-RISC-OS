@@ -4,7 +4,7 @@
  *
  * Cycle-level CPU emulation
  *
- * (C) Copyright Crispian Daniels, 2025
+ * (C) Copyright Crispian Daniels, 2025-2026
  *
  * Email: <convertedgames@3insdale.me.uk>
  */
@@ -105,7 +105,11 @@ extern R6502CPUMAP* host_r6502readmjim(R6502CPUMAP* cmap, uintptr_t address_code
 extern R6502CPUMAP* host_r6502writemfred(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
 extern R6502CPUMAP* host_r6502writemjim(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
 
-extern R6502CPUMAP* host_r6502cycle(R6502CPUMAP* cmap);
+extern R6502CPUMAP* host_r6502cycle0s1b(R6502CPUMAP* cmap);
+extern R6502CPUMAP* host_r6502cycle1b(R6502CPUMAP* cmap);
+extern R6502CPUMAP* host_r6502cycle0s1m(R6502CPUMAP* cmap);
+extern R6502CPUMAP* host_r6502cycle1m(R6502CPUMAP* cmap);
+
 extern R6502CPUMAP* host_r6502readspecial(R6502CPUMAP* cmap, uintptr_t address_code);
 extern R6502CPUMAP* host_r6502writespecial(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
 
@@ -764,12 +768,150 @@ R6502CPUMAP* host_r6502writemjim(R6502CPUMAP* cmap, uintptr_t address_code, uint
   return cmap;
 }
 
-R6502CPUMAP* host_r6502cycle(R6502CPUMAP* cmap)
+static inline void do1cycle(HOSTMAP* hmap, const uint32_t irqbits, uint8_t scanbyte, uintptr_t keyboard_state)
 {
-  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  switch ((keyboard_state>>24) & 0x0F)
+  {
+    default:
+      if (scanbyte & hmap->keybit)
+        hmap->A_sysvia.porta |= 0x80;
+      else
+        hmap->A_sysvia.porta &= ~0x80;
+      if (scanbyte <= 1)
+        keyboard_state += KEYBOARDIDLEFLAG;
+      else
+      {
+        keyboard_state += KEYBOARDIDLEFLAG + KEYBOARDCA2FLAG;
+        systemviasetca2(hmap, irqbits);
+      }
+      break;
+    case (KEYBOARDCA2FLAG>>24):
+      if (scanbyte & hmap->keybit)
+        hmap->A_sysvia.porta |= 0x80;
+      else
+        hmap->A_sysvia.porta &= ~0x80;
+      if (scanbyte > 1)
+        keyboard_state += KEYBOARDIDLEFLAG;
+      else
+      {
+        keyboard_state += KEYBOARDIDLEFLAG - KEYBOARDCA2FLAG;
+        systemviaunsetca2(hmap, irqbits);
+      }
+      break;
+    case (KEYBOARDNOTWRITEENABLEFLAG>>24):
+    case ((KEYBOARDNOTINPUTFLAG|KEYBOARDNOTWRITEENABLEFLAG)>>24):
+    case (KEYBOARDNOTINPUTFLAG>>24):
+      if (scanbyte <= 1)
+        keyboard_state += (1<<28) - KEYBOARDIDLEFLAG;
+      else
+      {
+        keyboard_state += (1<<28) - KEYBOARDIDLEFLAG + KEYBOARDCA2FLAG;
+        systemviasetca2(hmap, irqbits);
+      }
+      break;
+    case ((KEYBOARDNOTWRITEENABLEFLAG|KEYBOARDCA2FLAG)>>24):
+    case ((KEYBOARDNOTINPUTFLAG|KEYBOARDCA2FLAG)>>24):
+    case ((KEYBOARDNOTINPUTFLAG|KEYBOARDNOTWRITEENABLEFLAG|KEYBOARDCA2FLAG)>>24):
+      if (scanbyte > 1)
+        keyboard_state += (1<<28) - KEYBOARDIDLEFLAG;
+      else
+      {
+        keyboard_state += (1<<28) - KEYBOARDIDLEFLAG - KEYBOARDCA2FLAG;
+        systemviaunsetca2(hmap, irqbits);
+      }
+      break;
+    case (KEYBOARDIDLEFLAG>>24):
+    case ((KEYBOARDIDLEFLAG|KEYBOARDCA2FLAG)>>24):
+    case ((KEYBOARDIDLEFLAG|KEYBOARDNOTINPUTFLAG)>>24):
+    case ((KEYBOARDIDLEFLAG|KEYBOARDNOTINPUTFLAG|KEYBOARDCA2FLAG)>>24):
+      keyboard_state -= KEYBOARDIDLEFLAG;
+      break;
+    case ((KEYBOARDIDLEFLAG|KEYBOARDNOTWRITEENABLEFLAG)>>24):
+    case ((KEYBOARDIDLEFLAG|KEYBOARDNOTWRITEENABLEFLAG|KEYBOARDCA2FLAG)>>24):
+    case ((KEYBOARDIDLEFLAG|KEYBOARDNOTINPUTFLAG|KEYBOARDNOTWRITEENABLEFLAG)>>24):
+    case ((KEYBOARDIDLEFLAG|KEYBOARDNOTINPUTFLAG|KEYBOARDNOTWRITEENABLEFLAG|KEYBOARDCA2FLAG)>>24):
+      keyboard_state += KEYBOARDIDLEFLAG;
+      break;
+  }
+
+  hmap->keyboard_state = keyboard_state & 0xFFFFFFFF;
 
   if (--hmap->cycles.togo == 0)
     hostadvancetimers(hmap);
+}
+
+R6502CPUMAP* host_r6502cycle0s1b(R6502CPUMAP* cmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t keyboard_state = hmap->keyboard_state;
+  uint8_t scan;
+
+  if (keyboard_state < (10U<<28))
+    scan = hmap->keystatus[keyboard_state>>28];
+  else
+    scan = 0;
+
+  do1cycle(hmap, R6502_IRQ, scan, keyboard_state);
+
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502cycle1b(R6502CPUMAP* cmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t interruptqueue = cmap->interruptqueue;
+  uintptr_t keyboard_state = hmap->keyboard_state;
+  uint8_t scan;
+
+  interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F);
+  if (!(interruptqueue & R6502_NMI))
+    interruptqueue |= R6502_NMI_ENABLE;
+  cmap->interruptqueue = interruptqueue;
+
+  if (keyboard_state < (10U<<28))
+    scan = hmap->keystatus[keyboard_state>>28];
+  else
+    scan = 0;
+
+  do1cycle(hmap, (R6502_IRQ<<4)|R6502_IRQ, scan, keyboard_state);
+
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502cycle0s1m(R6502CPUMAP* cmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t keyboard_state = hmap->keyboard_state;
+  uint8_t scan;
+
+  if (keyboard_state < (13U<<28))
+    scan = hmap->keystatus[keyboard_state>>28];
+  else
+    scan = 0;
+
+  do1cycle(hmap, R6502_IRQ, scan, keyboard_state);
+
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502cycle1m(R6502CPUMAP* cmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t interruptqueue = cmap->interruptqueue;
+  uintptr_t keyboard_state = hmap->keyboard_state;
+  uint8_t scan;
+
+  interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F);
+  if (!(interruptqueue & R6502_NMI))
+    interruptqueue |= R6502_NMI_ENABLE;
+  cmap->interruptqueue = interruptqueue;
+
+  if (keyboard_state < (13U<<28))
+    scan = hmap->keystatus[keyboard_state>>28];
+  else
+    scan = 0;
+
+  do1cycle(hmap, (R6502_IRQ<<4)|R6502_IRQ, scan, keyboard_state);
 
   return cmap;
 }
@@ -1053,13 +1195,12 @@ void hostresetperipherals(void)
   hmap->cycles.original = hmap->cycles.togo;
   hmap->interrupts = 0;
 
-  cmap->cycleaction = host_r6502cycle;
   cmap->readspecialaction = host_r6502readspecial;
   cmap->writespecialaction = host_r6502writespecial;
 
   for (i=0; i<32; i++)
   {
-    cmap->addressingops[i].op = initialaddressingops[i];
+      cmap->addressingandcycleops[i].addressingop = initialaddressingops[i];
   }
 
   memcpy(hmap->read8000s, read8000s, sizeof(read8000s));
@@ -1173,6 +1314,22 @@ void hostresetperipherals(void)
     hmap->specialreadops[0x100+i] = readjim;
     hmap->specialwriteops[0x100+i] = writejim;
   }
+
+  switch (beebit_machinetype)
+  {
+    default:
+      cmap->addressingandcycleops[1].cycleop = host_r6502cycle1b;
+      cmap->addressingandcycleops[8].cycleop = host_r6502cycle0s1b;
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      cmap->addressingandcycleops[1].cycleop = host_r6502cycle1m;
+      cmap->addressingandcycleops[8].cycleop = host_r6502cycle0s1m;
+      break;
+  }
+
+  hmap->keyboard_state = 0;
+  hmap->keybit = 1;
 
   sheilareset();
   aciareset();

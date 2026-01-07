@@ -36,6 +36,34 @@
 extern _kernel_swi_regs regs;
 #endif
 
+static inline void userviaeventsetirq(HOSTMAP* hmap)
+{
+  if (hmap->A_usrvia.ifr & hmap->A_usrvia.ier & 0x7F)
+  {
+    hmap->A_usrvia.ifr |= 0x80;
+    HOST_SETSHIFTEDIRQ(hmap, HOST_IRQ_6522USRVIA)
+  }
+  else
+  {
+    hmap->A_usrvia.ifr &= 0x7F;
+    HOST_CLEARSHIFTEDIRQ(hmap, HOST_IRQ_6522USRVIA)
+  }
+}
+
+static inline void userviaregistersetirq(HOSTMAP* hmap)
+{
+  if (hmap->A_usrvia.ifr & hmap->A_usrvia.ier & 0x7F)
+  {
+    hmap->A_usrvia.ifr |= 0x80;
+    HOST_SETIRQ(hmap, HOST_IRQ_6522USRVIA)
+  }
+  else
+  {
+    hmap->A_usrvia.ifr &= 0x7F;
+    HOST_CLEARIRQ(hmap, HOST_IRQ_6522USRVIA)
+  }
+}
+
 void userviaamxmouse(void)
 {
   HOSTMAP* hmap = &hostmap;
@@ -78,38 +106,6 @@ void userviaamxmouse(void)
         }
       }
     }
-  }
-}
-
-void userviaeventsetirq(void)
-{
-  HOSTMAP* hmap = &hostmap;
-
-  if (hmap->A_usrvia.ifr & hmap->A_usrvia.ier & 0x7F)
-  {
-    hmap->A_usrvia.ifr |= 0x80;
-    HOST_SETSHIFTEDIRQ(hmap, HOST_IRQ_6522USRVIA)
-  }
-  else
-  {
-    hmap->A_usrvia.ifr &= 0x7F;
-    HOST_CLEARSHIFTEDIRQ(hmap, HOST_IRQ_6522USRVIA)
-  }
-}
-
-void userviaregistersetirq(void)
-{
-  HOSTMAP* hmap = &hostmap;
-
-  if (hmap->A_usrvia.ifr & hmap->A_usrvia.ier & 0x7F)
-  {
-    hmap->A_usrvia.ifr |= 0x80;
-    HOST_SETIRQ(hmap, HOST_IRQ_6522USRVIA)
-  }
-  else
-  {
-    hmap->A_usrvia.ifr &= 0x7F;
-    HOST_CLEARIRQ(hmap, HOST_IRQ_6522USRVIA)
   }
 }
 
@@ -190,7 +186,7 @@ void userviastartreset(int lfull)
   hmap->A_usrvia.aftert1 = FALSE;
   hmap->A_usrvia.t1setint = FALSE;
   hmap->A_usrvia.t2setint = FALSE;
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
   hmap->amx.timer = 0;
   hmap->amx.buttons = 0;
 
@@ -225,8 +221,6 @@ void userviabeforesnapshot(void)
     /*one-shot mode*/
     hmap->B_usrvia.t2doubled -= expiryoffset;
   }
-
-  userviaregistersetirq();
 }
 
 void userviaaftersnapshot(void)
@@ -243,6 +237,8 @@ void userviaaftersnapshot(void)
     hmap->B_usrvia.t2doubled += expiryoffset;
     HOST_LIMIT_PERIPHERAL_CYCLES_TO_GO(hmap, usrvia, hmap->B_usrvia.t2doubled + 2)
   }
+
+  userviaregistersetirq(hmap);
 }
 
 HOSTMAP* userviaatzerocycles(HOSTMAP* hmap)
@@ -338,7 +334,7 @@ HOSTMAP* userviaatzerocycles(HOSTMAP* hmap)
 
   hmap->cycles.usrvia_togo = hmap->cycles.usrvia_original = userviapickcyclestogo();
 
-  userviaeventsetirq();
+  userviaeventsetirq(hmap);
 
   return hmap;
 }
@@ -363,7 +359,7 @@ struct R6502CPUMAP* uservia00read(struct R6502CPUMAP* cmap, uintptr_t address_co
     /*clear b4,b3 (CB1,CB2)*/
     hmap->A_usrvia.ifr &= 0xE7;
   }
-  /*userviaregistersetirq();*/
+  /*userviaregistersetirq(hmap);*/
   /*reads output register bit in orb. pin level has no effect*/
   nresult = (hmap->A_usrvia.orb & hmap->A_usrvia.ddrb);
 
@@ -396,7 +392,7 @@ struct R6502CPUMAP* uservia00read(struct R6502CPUMAP* cmap, uintptr_t address_co
     nresult |= (hmap->amx.buttons ^ 7) << 5;
     hmap->A_usrvia.ifr &= 0xE7;
 
-    userviaregistersetirq();
+    userviaregistersetirq(hmap);
 
     if ((hmap->amx.targetx != hmap->amx.currentx) OR (hmap->amx.targety != hmap->amx.currenty))
     {
@@ -434,7 +430,7 @@ struct R6502CPUMAP* uservia01read(struct R6502CPUMAP* cmap, uintptr_t address_co
     /*clear b2,b1 (CA1,CA2)*/
     hmap->A_usrvia.ifr &= 0xFC;
   }
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
   if (hmap->A_usrvia.acr & 0x01)
   {
     /*input latching enabled*/
@@ -473,7 +469,7 @@ struct R6502CPUMAP* uservia04read(struct R6502CPUMAP* cmap, uintptr_t address_co
 
   /*T1 interrupt flag is cleared (IFR b6)*/
   hmap->A_usrvia.ifr &= 0xBF;
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
   HOST_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, hmap, usrvia)
   hmap->m = ((hmap->B_usrvia.t1doubled - cyclecount)>>1)&0xFF;
 
@@ -518,7 +514,7 @@ struct R6502CPUMAP* uservia08read(struct R6502CPUMAP* cmap, uintptr_t address_co
 
   /*T2 interrupt flag is cleared (IFR b5)*/
   hmap->A_usrvia.ifr &= 0xDF;
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
   if (!(hmap->A_usrvia.acr & 0x20))
   {
     HOST_GET_PERIPHERAL_CYCLE_COUNT(cyclecount, hmap, usrvia)
@@ -557,7 +553,7 @@ struct R6502CPUMAP* uservia0Aread(struct R6502CPUMAP* cmap, uintptr_t address_co
   HOSTMAP* hmap = (HOSTMAP*)cmap;
   /*SR interrupt flag is cleared (IFR b2)*/
   hmap->A_usrvia.ifr &= 0xFB;
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
   hmap->m = hmap->A_usrvia.sr;
 
   return cmap;
@@ -587,7 +583,7 @@ struct R6502CPUMAP* uservia0Dread(struct R6502CPUMAP* cmap, uintptr_t address_co
   HOSTMAP* hmap = (HOSTMAP*)cmap;
   /*b7 of this register will be read as a logic 1*/
   /*when an interrupt exists within the chip*/
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
   hmap->m = hmap->A_usrvia.ifr;
 
   return cmap;
@@ -639,7 +635,7 @@ struct R6502CPUMAP* uservia00write(struct R6502CPUMAP* cmap, uintptr_t address_c
     /*clear b4,b3 (CB1,CB2)*/
     hmap->A_usrvia.ifr &= 0xE7;
   }
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
 
   return cmap;
 }
@@ -671,9 +667,7 @@ struct R6502CPUMAP* uservia01write(struct R6502CPUMAP* cmap, uintptr_t address_c
     _kernel_swi(OS_PrintChar,&regs,&regs);
   }
 #endif
-  /*clear b2 (CA1)*/
-  hmap->A_usrvia.ifr |= 0x02; /*CA1*/
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
 
   return cmap;
 }
@@ -712,7 +706,7 @@ struct R6502CPUMAP* uservia05write(struct R6502CPUMAP* cmap, uintptr_t address_c
   hmap->A_usrvia.t1lh = value;
   /*clear T1 interrupt flag (b6)*/
   hmap->A_usrvia.ifr &= 0xBF;
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
   if ((hmap->A_usrvia.acr & 0xC0) == 0x80)
   {
     /*output enabled (b7=1) and free-run disabled (b6=0)*/
@@ -768,7 +762,7 @@ struct R6502CPUMAP* uservia09write(struct R6502CPUMAP* cmap, uintptr_t address_c
 
   /*clear T2 interrupt flag (bit 5)*/
   hmap->A_usrvia.ifr &= 0xDF;
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
   /*provide a single interrupt*/
   hmap->A_usrvia.t2setint = TRUE;
   if (!(hmap->A_usrvia.acr & 0x20))
@@ -795,7 +789,7 @@ struct R6502CPUMAP* uservia0Awrite(struct R6502CPUMAP* cmap, uintptr_t address_c
   HOSTMAP* hmap = (HOSTMAP*)cmap;
   hmap->A_usrvia.sr = value;
   hmap->A_usrvia.ifr &= 0xFB;
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
 
   return cmap;
 }
@@ -865,7 +859,7 @@ struct R6502CPUMAP* uservia0Dwrite(struct R6502CPUMAP* cmap, uintptr_t address_c
   HOSTMAP* hmap = (HOSTMAP*)cmap;
   value &= 0x7F; /*not really needed*/
   hmap->A_usrvia.ifr &= (~value);
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
 
   return cmap;
 }
@@ -879,7 +873,7 @@ struct R6502CPUMAP* uservia0Ewrite(struct R6502CPUMAP* cmap, uintptr_t address_c
   else
     hmap->A_usrvia.ier &= (~value);
   hmap->A_usrvia.ier &= 0x7F;
-  userviaregistersetirq();
+  userviaregistersetirq(hmap);
 
   return cmap;
 }

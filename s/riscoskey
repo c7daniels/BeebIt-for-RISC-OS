@@ -1,0 +1,166 @@
+;>riscoskey.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Cycle-level keyboard emulation
+;
+; (C) Copyright Crispian Daniels, 2026
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+  GET h.6502zmaps
+
+  GET h.6502cmaps
+
+  GET h.6502cpus
+
+  GET h.hostmaps
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET     h.RegNames
+
+; Use the GET directive to include a list of SWI names as if typed here
+
+  GET     h.SWInames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA    |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+  IMPORT |systemviasetca2|
+  IMPORT |systemviaunsetca2|
+
+; Export global symbols
+
+  EXPORT |keyboardf1p0i|
+  EXPORT |keyboardf1p0I|
+  EXPORT |keyboardf1p0c|
+  EXPORT |keyboardf1p0C|
+  EXPORT |keyboardb1|
+  EXPORT |keyboardf1|
+  EXPORT |keyboardf1p1i|
+  EXPORT |keyboardf1p1I|
+  EXPORT |keyboardf1p1c|
+  EXPORT |keyboardf1p1C|
+
+|keyboardf1p0i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  MOV r1,#R6502_IRQ
+  B systemviasetca2
+
+|keyboardf1p0I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  MOV r1,#R6502_IRQ
+  B systemviaunsetca2
+
+|keyboardf1p0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  MOV r1,#R6502_IRQ
+  B systemviasetca2
+
+|keyboardf1p0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  MOV r1,#R6502_IRQ
+  B systemviaunsetca2
+
+|keyboardb1|
+  MOV r1,r1,ROR #4
+  SUB r1,r1,#1:SHL:27
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOV pc,lr
+
+|keyboardf1|
+  MOV r1,r1,ROR #4
+  ADD r1,r1,#1:SHL:27
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOV pc,lr
+
+|keyboardf1p1i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  MOV r1,#(R6502_IRQ:SHL:4)|R6502_IRQ
+  B systemviasetca2
+
+|keyboardf1p1I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  MOV r1,#(R6502_IRQ:SHL:4)|R6502_IRQ
+  B systemviaunsetca2
+
+|keyboardf1p1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  MOV r1,#(R6502_IRQ:SHL:4)|R6502_IRQ
+  B systemviasetca2
+
+|keyboardf1p1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  MOV r1,#(R6502_IRQ:SHL:4)|R6502_IRQ
+  B systemviaunsetca2
+
+  END
