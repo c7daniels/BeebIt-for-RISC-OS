@@ -15,8 +15,10 @@
 
   GBLL Optimise6502Links
   GBLL Optimise6502WorkAreas
+  GBLL Optimise6502Cycles
 Optimise6502Links SETL {FALSE}
 Optimise6502WorkAreas SETL {FALSE}
+Optimise6502Cycles SETL {FALSE}
 
   GBLL LogCycles
   GBLL LogCyclesBatched
@@ -534,7 +536,7 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   BL logstartofcycles
   ]
   MOV lr,pc
-  IF $n+$ns<9
+  IF $n+$ns<9 && Optimise6502Cycles
   LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+4+($n:SHL:4)+($ns:SHL:7)]
   ELSE
 counter SETA $n
