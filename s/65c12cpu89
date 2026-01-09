@@ -1,0 +1,35 @@
+;>65c12cpu89.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Opcode routines based on cycle-level CPU emulation
+;
+; (C) Copyright Crispian Daniels, 2025
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+  GET h.6502zmaps
+
+  GET h.6502cmaps
+
+  GET h.6502cpus
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET h.RegNames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+; Export global symbols
+
+
+;Data Area
+
+;  AREA    |C$$data|, DATA
+
+  END

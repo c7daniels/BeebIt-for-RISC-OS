@@ -17,6 +17,8 @@
 
   GET h.hostmaps
 
+  GET h.hosts
+
 ; Use the GET directive to include register definitions as if typed here
 
   GET     h.RegNames
@@ -42,10 +44,629 @@
   EXPORT |keyboardf1p0C|
   EXPORT |keyboardb1|
   EXPORT |keyboardf1|
+  EXPORT |keyboardp0i|
+  EXPORT |keyboardp0I|
+  EXPORT |keyboardf2p0c|
+  EXPORT |keyboardf2p0C|
+  EXPORT |keyboardp0c|
+  EXPORT |keyboardp0C|
   EXPORT |keyboardf1p1i|
   EXPORT |keyboardf1p1I|
   EXPORT |keyboardf1p1c|
   EXPORT |keyboardf1p1C|
+  EXPORT |keyboardp1i|
+  EXPORT |keyboardp1I|
+  EXPORT |keyboardf2p1c|
+  EXPORT |keyboardf2p1C|
+  EXPORT |keyboardp1c|
+  EXPORT |keyboardp1C|
+  EXPORT |keyboardf3p1cp0c|
+  EXPORT |keyboardf3p1Cp0C|
+  EXPORT |keyboardb1p0i|
+  EXPORT |keyboardb1p0I|
+  EXPORT |keyboardf3p0c|
+  EXPORT |keyboardf3p0C|
+  EXPORT |keyboardb1p0c|
+  EXPORT |keyboardb1p0C|
+  EXPORT |keyboardp2i|
+  EXPORT |keyboardp2I|
+  EXPORT |keyboardf2p2c|
+  EXPORT |keyboardf2p2C|
+  EXPORT |keyboardp2c|
+  EXPORT |keyboardp2C|
+  EXPORT |keyboardf1p2i|
+  EXPORT |keyboardf1p2I|
+  EXPORT |keyboardf3p2cp0c|
+  EXPORT |keyboardf3p2Cp0C|
+  EXPORT |keyboardf1p2c|
+  EXPORT |keyboardf1p2C|
+  EXPORT |keyboardb1p1i|
+  EXPORT |keyboardb1p1I|
+  EXPORT |keyboardf3p1c|
+  EXPORT |keyboardf3p1C|
+  EXPORT |keyboardb1p1c|
+  EXPORT |keyboardb1p1C|
+  EXPORT |keyboardf4p2cp0c|
+  EXPORT |keyboardf4p2Cp0C|
+  EXPORT |keyboardf4p1cp0c|
+  EXPORT |keyboardf4p1Cp0C|
+  EXPORT |keyboardf1p3i|
+  EXPORT |keyboardf1p3I|
+  EXPORT |keyboardf3p3cp1c|
+  EXPORT |keyboardf3p3Cp1C|
+  EXPORT |keyboardf1p3c|
+  EXPORT |keyboardf1p3C|
+  EXPORT |keyboardb1p2i|
+  EXPORT |keyboardb1p2I|
+  EXPORT |keyboardf3p2c|
+  EXPORT |keyboardf3p2C|
+  EXPORT |keyboardb1p2c|
+  EXPORT |keyboardb1p2C|
+  EXPORT |keyboardp3i|
+  EXPORT |keyboardp3I|
+  EXPORT |keyboardf4p3cp1c|
+  EXPORT |keyboardf4p3Cp1C|
+  EXPORT |keyboardp3c|
+  EXPORT |keyboardp3C|
+  EXPORT |keyboardf5p3cp1cp0c|
+  EXPORT |keyboardf5p3Cp1Cp0C|
+  EXPORT |keyboardf5p2cp0c|
+  EXPORT |keyboardf5p2Cp0C|
+  EXPORT |keyboardp4i|
+  EXPORT |keyboardp4I|
+  EXPORT |keyboardf4p4cp2c|
+  EXPORT |keyboardf4p4Cp2C|
+  EXPORT |keyboardp4c|
+  EXPORT |keyboardp4C|
+  EXPORT |keyboardf1p4i|
+  EXPORT |keyboardf1p4I|
+  EXPORT |keyboardf5p4cp2cp0c|
+  EXPORT |keyboardf5p4Cp2Cp0C|
+  EXPORT |keyboardf1p4c|
+  EXPORT |keyboardf1p4C|
+  EXPORT |keyboardb1p3i|
+  EXPORT |keyboardb1p3I|
+  EXPORT |keyboardf5p3cp1c|
+  EXPORT |keyboardf5p3Cp1C|
+  EXPORT |keyboardb1p3c|
+  EXPORT |keyboardb1p3C|
+  EXPORT |keyboardf6p4cp2cp0c|
+  EXPORT |keyboardf6p4Cp2Cp0C|
+  EXPORT |keyboardf6p3cp1cp0c|
+  EXPORT |keyboardf6p3Cp1Cp0C|
+  EXPORT |keyboardf1p5i|
+  EXPORT |keyboardf1p5I|
+  EXPORT |keyboardf5p5cp3cp1c|
+  EXPORT |keyboardf5p5Cp3Cp1C|
+  EXPORT |keyboardf1p5c|
+  EXPORT |keyboardf1p5C|
+  EXPORT |keyboardb1p4i|
+  EXPORT |keyboardb1p4I|
+  EXPORT |keyboardf5p4cp2c|
+  EXPORT |keyboardf5p4Cp2C|
+  EXPORT |keyboardb1p4c|
+  EXPORT |keyboardb1p4C|
+  EXPORT |keyboardp5i|
+  EXPORT |keyboardp5I|
+  EXPORT |keyboardf6p5cp3cp1c|
+  EXPORT |keyboardf6p5Cp3Cp1C|
+  EXPORT |keyboardp5c|
+  EXPORT |keyboardp5C|
+  EXPORT |keyboardf7p5cp3cp1cp0c|
+  EXPORT |keyboardf7p5Cp3Cp1Cp0C|
+  EXPORT |keyboardf7p4cp2cp0c|
+  EXPORT |keyboardf7p4Cp2Cp0C|
+  EXPORT |keyboardp6i|
+  EXPORT |keyboardp6I|
+  EXPORT |keyboardf6p6cp4cp2c|
+  EXPORT |keyboardf6p6Cp4Cp2C|
+  EXPORT |keyboardp6c|
+  EXPORT |keyboardp6C|
+  EXPORT |keyboardf1p6i|
+  EXPORT |keyboardf1p6I|
+  EXPORT |keyboardf7p6cp4cp2cp0c|
+  EXPORT |keyboardf7p6Cp4Cp2Cp0C|
+  EXPORT |keyboardf1p6c|
+  EXPORT |keyboardf1p6C|
+  EXPORT |keyboardb1p5i|
+  EXPORT |keyboardb1p5I|
+  EXPORT |keyboardf7p5cp3cp1c|
+  EXPORT |keyboardf7p5Cp3Cp1C|
+  EXPORT |keyboardb1p5c|
+  EXPORT |keyboardb1p5C|
+  EXPORT |keyboardf8p6cp4cp2cp0c|
+  EXPORT |keyboardf8p6Cp4Cp2Cp0C|
+  EXPORT |keyboardf8p5cp3cp1cp0c|
+  EXPORT |keyboardf8p5Cp3Cp1Cp0C|
+
+  MACRO
+  CA2CHANGEEXITORJUMP $p,$s,$j
+  LDRB r3,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IFR]
+  LDRB r2,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PCR]
+  [ $s==0 && $j==1
+  SUB r1,r1,#KEYBOARDCA2FLAG
+  ]
+  [ $s==1 && $j==1
+  ADD r1,r1,#KEYBOARDCA2FLAG
+  ]
+  TST r3,#1
+  [ $j==1
+  BNE %F0
+  |
+  MOVNE pc,lr
+  ]
+  ANDS r2,r2,#&0E
+  [ $s==1
+  CMP r2,#4
+  CMPNE r2,#6
+  |
+  CMP r2,#2
+  ]
+  [ $j==1
+  BNE %F0
+  |
+  MOVNE pc,lr
+  ]
+  LDRB r2,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IER]
+  ORR r3,r3,#1
+  TST r2,#1
+  STRB r3,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IFR]
+  [ $j==1
+  BEQ %F0
+  |
+  MOVEQ pc,lr
+  ]
+  LDR r2,[r0,#:INDEX:HOST_INTERRUPTS]
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  [ $p>1
+  LDR r12,%F1
+  ]
+  ORR r2,r2,#HOST_IRQ_6522SYSVIA
+  IF $p==0
+  ORR r3,r3,#R6502_IRQ
+  ELIF $p==1
+  ORR r3,r3,#(R6502_IRQ<<4)|R6502_IRQ
+  ELSE
+  ORR r3,r3,r12
+  ENDIF
+  STR r2,[r0,#:INDEX:HOST_INTERRUPTS]
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  [ $j==1
+0
+  LDR r3,[lr]
+  LDMFD sp!,{r2,lr}
+  MOV pc,r3
+  |
+  MOV pc,lr
+  ]
+1
+  IF $p==2
+  DCD (R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ELIF $p==3
+  DCD (R6502_IRQ<<12)|(R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ELIF $p==4
+  DCD (R6502_IRQ<<16)|(R6502_IRQ<<12)|(R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ELIF $p==5
+  DCD (R6502_IRQ<<20)|(R6502_IRQ<<16)|(R6502_IRQ<<12)|(R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ELIF $p==6
+  DCD (R6502_IRQ<<24)|(R6502_IRQ<<20)|(R6502_IRQ<<16)|(R6502_IRQ<<12)|(R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ELIF $p==7
+  DCD (R6502_IRQ<<28)|(R6502_IRQ<<24)|(R6502_IRQ<<20)|(R6502_IRQ<<16)|(R6502_IRQ<<12)|(R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ENDIF
+  MEND
+
+keyboardp0setca2exit
+  CA2CHANGEEXITORJUMP 0,1,0
+
+keyboardp1setca2exit
+  CA2CHANGEEXITORJUMP 1,1,0
+
+keyboardp2setca2exit
+  CA2CHANGEEXITORJUMP 2,1,0
+
+keyboardp3setca2exit
+  CA2CHANGEEXITORJUMP 3,1,0
+
+keyboardp4setca2exit
+  CA2CHANGEEXITORJUMP 4,1,0
+
+keyboardp5setca2exit
+  CA2CHANGEEXITORJUMP 5,1,0
+
+keyboardp6setca2exit
+  CA2CHANGEEXITORJUMP 6,1,0
+
+keyboardp0unsetca2exit
+  CA2CHANGEEXITORJUMP 0,0,0
+
+keyboardp1unsetca2exit
+  CA2CHANGEEXITORJUMP 1,0,0
+
+keyboardp2unsetca2exit
+  CA2CHANGEEXITORJUMP 2,0,0
+
+keyboardp3unsetca2exit
+  CA2CHANGEEXITORJUMP 3,0,0
+
+keyboardp4unsetca2exit
+  CA2CHANGEEXITORJUMP 4,0,0
+
+keyboardp5unsetca2exit
+  CA2CHANGEEXITORJUMP 5,0,0
+
+keyboardp6unsetca2exit
+  CA2CHANGEEXITORJUMP 6,0,0
+
+keyboardp0setca2jump
+  CA2CHANGEEXITORJUMP 0,1,1
+
+keyboardp1setca2jump
+  CA2CHANGEEXITORJUMP 1,1,1
+
+keyboardp2setca2jump
+  CA2CHANGEEXITORJUMP 2,1,1
+
+keyboardp3setca2jump
+  CA2CHANGEEXITORJUMP 3,1,1
+
+keyboardp4setca2jump
+  CA2CHANGEEXITORJUMP 4,1,1
+
+keyboardp5setca2jump
+  CA2CHANGEEXITORJUMP 5,1,1
+
+keyboardp6setca2jump
+  CA2CHANGEEXITORJUMP 6,1,1
+
+keyboardp0unsetca2jump
+  CA2CHANGEEXITORJUMP 0,0,1
+
+keyboardp1unsetca2jump
+  CA2CHANGEEXITORJUMP 1,0,1
+
+keyboardp2unsetca2jump
+  CA2CHANGEEXITORJUMP 2,0,1
+
+keyboardp3unsetca2jump
+  CA2CHANGEEXITORJUMP 3,0,1
+
+keyboardp4unsetca2jump
+  CA2CHANGEEXITORJUMP 4,0,1
+
+keyboardp5unsetca2jump
+  CA2CHANGEEXITORJUMP 5,0,1
+
+keyboardp6unsetca2jump
+  CA2CHANGEEXITORJUMP 6,0,1
+keyboardafter1p0C
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+
+keyboardafter1p0c
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+
+keyboardafter1p1C
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+
+keyboardafter1p1c
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+
+keyboardafter1p1Cp0C
+  TST r2,#&FE:SHL:8
+  BEQ %F0
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp1unsetca2jump
+  DCD keyboardafter2p0c
+
+keyboardafter1p1cp0c
+  TST r2,#&FE:SHL:8
+  BNE %F0
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp1setca2jump
+  DCD keyboardafter2p0C
+
+keyboardafter1p2C
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+
+keyboardafter1p2c
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+
+keyboardafter1p2Cp0C
+  TST r2,#&FE:SHL:8
+  BEQ %F0
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter2p0c
+
+keyboardafter1p2cp0c
+  TST r2,#&FE:SHL:8
+  BNE %F0
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter2p0C
+
+keyboardafter1p3Cp1C
+  TST r2,#&FE:SHL:8
+  BEQ %F0
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter2p1c
+
+keyboardafter1p3cp1c
+  TST r2,#&FE:SHL:8
+  BNE %F0
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter2p1C
+
+keyboardafter1p3Cp1Cp0C
+  TST r2,#&FE:SHL:8
+  BEQ %F0
+  TST r2,#&FE:SHL:16
+  BEQ %F1
+  TST r2,#&FE:SHL:24
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter2p1cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp1unsetca2jump
+  DCD keyboardafter3p0c
+
+keyboardafter1p3cp1cp0c
+  TST r2,#&FE:SHL:8
+  BNE %F0
+  TST r2,#&FE:SHL:16
+  BNE %F1
+  TST r2,#&FE:SHL:24
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter2p1Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp1setca2jump
+  DCD keyboardafter3p0C
+
+keyboardafter1p4Cp2C
+  TST r2,#&FE:SHL:8
+  BEQ %F0
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4unsetca2jump
+  DCD keyboardafter2p2c
+
+keyboardafter1p4cp2c
+  TST r2,#&FE:SHL:8
+  BNE %F0
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4setca2jump
+  DCD keyboardafter2p2C
+
+keyboardafter1p4Cp2Cp0C
+  TST r2,#&FE:SHL:8
+  BEQ %F0
+  TST r2,#&FE:SHL:16
+  BEQ %F1
+  TST r2,#&FE:SHL:24
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4unsetca2jump
+  DCD keyboardafter2p2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter3p0c
+
+keyboardafter1p4cp2cp0c
+  TST r2,#&FE:SHL:8
+  BNE %F0
+  TST r2,#&FE:SHL:16
+  BNE %F1
+  TST r2,#&FE:SHL:24
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4setca2jump
+  DCD keyboardafter2p2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter3p0C
+
+keyboardafter2p0c
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+
+keyboardafter2p0C
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+
+keyboardafter2p1c
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+
+keyboardafter2p1C
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+
+keyboardafter2p1cp0c
+  TST r2,#&FE:SHL:16
+  BNE %F0
+  TST r2,#&FE:SHL:24
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp1setca2jump
+  DCD keyboardafter3p0C
+
+keyboardafter2p1Cp0C
+  TST r2,#&FE:SHL:16
+  BEQ %F0
+  TST r2,#&FE:SHL:24
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp1unsetca2jump
+  DCD keyboardafter3p0c
+
+keyboardafter2p2c
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+
+keyboardafter2p2C
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+
+keyboardafter2p2cp0c
+  TST r2,#&FE:SHL:16
+  BNE %F0
+  TST r2,#&FE:SHL:24
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter3p0C
+
+keyboardafter2p2Cp0C
+  TST r2,#&FE:SHL:16
+  BEQ %F0
+  TST r2,#&FE:SHL:24
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter3p0c
+
+keyboardafter3p0C
+  TST r2,#&FE:SHL:24
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+
+keyboardafter3p0c
+  TST r2,#&FE:SHL:24
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
 
 |keyboardf1p0i|
   LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
@@ -60,8 +681,7 @@
   ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   MOVEQ pc,lr
-  MOV r1,#R6502_IRQ
-  B systemviasetca2
+  B keyboardp0setca2exit
 
 |keyboardf1p0I|
   LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
@@ -76,8 +696,7 @@
   ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   MOVNE pc,lr
-  MOV r1,#R6502_IRQ
-  B systemviaunsetca2
+  B keyboardp0unsetca2exit
 
 |keyboardf1p0c|
   MOV r1,r1,ROR #4
@@ -86,8 +705,7 @@
   ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   MOVEQ pc,lr
-  MOV r1,#R6502_IRQ
-  B systemviasetca2
+  B keyboardp0setca2exit
 
 |keyboardf1p0C|
   MOV r1,r1,ROR #4
@@ -96,8 +714,7 @@
   ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   MOVNE pc,lr
-  MOV r1,#R6502_IRQ
-  B systemviaunsetca2
+  B keyboardp0unsetca2exit
 
 |keyboardb1|
   MOV r1,r1,ROR #4
@@ -110,6 +727,68 @@
   ADD r1,r1,#1:SHL:27
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   MOV pc,lr
+
+|keyboardp0i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+
+|keyboardp0I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+
+|keyboardf2p0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#2:SHL:27
+  ADDNE r1,r1,#(2:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+
+|keyboardf2p0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#2:SHL:27
+  ADDEQ r1,r1,#(2:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+
+|keyboardp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+
+|keyboardp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
 
 |keyboardf1p1i|
   LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
@@ -124,8 +803,7 @@
   ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   MOVEQ pc,lr
-  MOV r1,#(R6502_IRQ:SHL:4)|R6502_IRQ
-  B systemviasetca2
+  B keyboardp1setca2exit
 
 |keyboardf1p1I|
   LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
@@ -140,8 +818,7 @@
   ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   MOVNE pc,lr
-  MOV r1,#(R6502_IRQ:SHL:4)|R6502_IRQ
-  B systemviaunsetca2
+  B keyboardp1unsetca2exit
 
 |keyboardf1p1c|
   MOV r1,r1,ROR #4
@@ -150,8 +827,7 @@
   ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   MOVEQ pc,lr
-  MOV r1,#(R6502_IRQ:SHL:4)|R6502_IRQ
-  B systemviasetca2
+  B keyboardp1setca2exit
 
 |keyboardf1p1C|
   MOV r1,r1,ROR #4
@@ -160,7 +836,1782 @@
   ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
   STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
   MOVNE pc,lr
-  MOV r1,#(R6502_IRQ:SHL:4)|R6502_IRQ
-  B systemviaunsetca2
+  B keyboardp1unsetca2exit
+
+|keyboardp1i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+
+|keyboardp1I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+
+|keyboardf2p1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#2:SHL:27
+  ADDNE r1,r1,#(2:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+
+|keyboardf2p1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#2:SHL:27
+  ADDEQ r1,r1,#(2:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+
+|keyboardp1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+
+|keyboardp1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+
+|keyboardf3p1cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#3:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp1setca2jump
+  DCD keyboardafter1p0C
+
+|keyboardf3p1Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#3:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp1unsetca2jump
+  DCD keyboardafter1p0c
+
+|keyboardb1p0i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+
+|keyboardb1p0I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+
+|keyboardf3p0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#3:SHL:27
+  ADDNE r1,r1,#(3:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+
+|keyboardf3p0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#3:SHL:27
+  ADDEQ r1,r1,#(3:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+
+|keyboardb1p0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+
+|keyboardb1p0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+
+|keyboardp2i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+
+|keyboardp2I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+
+|keyboardf2p2c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#2:SHL:27
+  ADDNE r1,r1,#(2:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+
+|keyboardf2p2C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#2:SHL:27
+  ADDEQ r1,r1,#(2:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+
+|keyboardp2c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+
+|keyboardp2C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+
+|keyboardf1p2i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+
+|keyboardf1p2I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+
+|keyboardf3p2cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#3:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter1p0C
+
+|keyboardf3p2Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#3:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter1p0c
+
+|keyboardf1p2c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+
+|keyboardf1p2C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+
+|keyboardb1p1i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+
+|keyboardb1p1I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+
+|keyboardf3p1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#3:SHL:27
+  ADDNE r1,r1,#(3:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+
+|keyboardf3p1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#3:SHL:27
+  ADDEQ r1,r1,#(3:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+
+|keyboardb1p1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+
+|keyboardb1p1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+
+|keyboardf4p2cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#4:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter1p0C
+
+|keyboardf4p2Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#4:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter1p0c
+
+|keyboardf4p1cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#4:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp1setca2jump
+  DCD keyboardafter1p0C
+
+|keyboardf4p1Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#4:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp1unsetca2jump
+  DCD keyboardafter1p0c
+
+|keyboardf1p3i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp3setca2exit
+
+|keyboardf1p3I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp3unsetca2exit
+
+|keyboardf3p3cp1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#3:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter1p1C
+
+|keyboardf3p3Cp1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#3:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter1p1c
+
+|keyboardf1p3c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp3setca2exit
+
+|keyboardf1p3C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp3unsetca2exit
+
+|keyboardb1p2i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+
+|keyboardb1p2I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+
+|keyboardf3p2c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#3:SHL:27
+  ADDNE r1,r1,#(3:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+
+|keyboardf3p2C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#3:SHL:27
+  ADDEQ r1,r1,#(3:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+
+|keyboardb1p2c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+
+|keyboardb1p2C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+
+|keyboardp3i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp3setca2exit
+
+|keyboardp3I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp3unsetca2exit
+
+|keyboardf4p3cp1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#4:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter1p1C
+
+|keyboardf4p3Cp1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#4:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter1p1c
+
+|keyboardp3c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp3setca2exit
+
+|keyboardp3C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp3unsetca2exit
+
+|keyboardf5p3cp1cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter1p1Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp1setca2jump
+  DCD keyboardafter2p0C
+
+|keyboardf5p3Cp1Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter1p1cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp1unsetca2jump
+  DCD keyboardafter2p0c
+
+|keyboardf5p2cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter1p0C
+
+|keyboardf5p2Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter1p0c
+
+|keyboardp4i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp4setca2exit
+
+|keyboardp4I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp4unsetca2exit
+
+|keyboardf4p4cp2c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#4:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4setca2jump
+  DCD keyboardafter1p2C
+
+|keyboardf4p4Cp2C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#4:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4unsetca2jump
+  DCD keyboardafter1p2c
+
+|keyboardp4c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp4setca2exit
+
+|keyboardp4C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp4unsetca2exit
+
+|keyboardf1p4i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp4setca2exit
+
+|keyboardf1p4I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp4unsetca2exit
+
+|keyboardf5p4cp2cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4setca2jump
+  DCD keyboardafter1p2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter2p0C
+
+|keyboardf5p4Cp2Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4unsetca2jump
+  DCD keyboardafter1p2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter2p0c
+
+|keyboardf1p4c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp4setca2exit
+
+|keyboardf1p4C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp4unsetca2exit
+
+|keyboardb1p3i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp3setca2exit
+
+|keyboardb1p3I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp3unsetca2exit
+
+|keyboardf5p3cp1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter1p1C
+
+|keyboardf5p3Cp1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter1p1c
+
+|keyboardb1p3c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp3setca2exit
+
+|keyboardb1p3C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp3unsetca2exit
+
+|keyboardf6p4cp2cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#6:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4setca2jump
+  DCD keyboardafter1p2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter2p0C
+
+|keyboardf6p4Cp2Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#6:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4unsetca2jump
+  DCD keyboardafter1p2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter2p0c
+
+|keyboardf6p3cp1cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#6:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter1p1Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp1setca2jump
+  DCD keyboardafter2p0C
+
+|keyboardf6p3Cp1Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#6:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter1p1cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp1unsetca2jump
+  DCD keyboardafter2p0c
+
+|keyboardf1p5i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp5setca2exit
+
+|keyboardf1p5I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp5unsetca2exit
+
+|keyboardf5p5cp3cp1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp5setca2jump
+  DCD keyboardafter1p3Cp1C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter2p1C
+
+|keyboardf5p5Cp3Cp1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp5unsetca2jump
+  DCD keyboardafter1p3cp1c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter2p1c
+
+|keyboardf1p5c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp5setca2exit
+
+|keyboardf1p5C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp5unsetca2exit
+
+|keyboardb1p4i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp4setca2exit
+
+|keyboardb1p4I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp4unsetca2exit
+
+|keyboardf5p4cp2c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4setca2jump
+  DCD keyboardafter1p2C
+
+|keyboardf5p4Cp2C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#5:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4unsetca2jump
+  DCD keyboardafter1p2c
+
+|keyboardb1p4c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp4setca2exit
+
+|keyboardb1p4C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp4unsetca2exit
+
+|keyboardp5i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp5setca2exit
+
+|keyboardp5I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp5unsetca2exit
+
+|keyboardf6p5cp3cp1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#6:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp5setca2jump
+  DCD keyboardafter1p3Cp1C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter2p1C
+
+|keyboardf6p5Cp3Cp1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#6:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp5unsetca2jump
+  DCD keyboardafter1p3cp1c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter2p1c
+
+|keyboardp5c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp5setca2exit
+
+|keyboardp5C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp5unsetca2exit
+
+|keyboardf7p5cp3cp1cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#7:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  BNE %F2
+  TST r2,#&FE:SHL:24
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp5setca2jump
+  DCD keyboardafter1p3Cp1Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter2p1Cp0C
+2
+  STMFD sp!,{r2,lr}
+  BL keyboardp1setca2jump
+  DCD keyboardafter3p0C
+
+|keyboardf7p5Cp3Cp1Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#7:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  BEQ %F2
+  TST r2,#&FE:SHL:24
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp5unsetca2jump
+  DCD keyboardafter1p3cp1cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter2p1cp0c
+2
+  STMFD sp!,{r2,lr}
+  BL keyboardp1unsetca2jump
+  DCD keyboardafter3p0c
+
+|keyboardf7p4cp2cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#7:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4setca2jump
+  DCD keyboardafter1p2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter2p0C
+
+|keyboardf7p4Cp2Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#7:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp4unsetca2jump
+  DCD keyboardafter1p2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter2p0c
+
+|keyboardp6i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp6setca2exit
+
+|keyboardp6I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp6unsetca2exit
+
+|keyboardf6p6cp4cp2c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#6:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp2setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp6setca2jump
+  DCD keyboardafter1p4Cp2C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp4setca2jump
+  DCD keyboardafter2p2C
+
+|keyboardf6p6Cp4Cp2C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#6:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp2unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp6unsetca2jump
+  DCD keyboardafter1p4cp2c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp4unsetca2jump
+  DCD keyboardafter2p2c
+
+|keyboardp6c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp6setca2exit
+
+|keyboardp6C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp6unsetca2exit
+
+|keyboardf1p6i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp6setca2exit
+
+|keyboardf1p6I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp6unsetca2exit
+
+|keyboardf7p6cp4cp2cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#7:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  BNE %F2
+  TST r2,#&FE:SHL:24
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp6setca2jump
+  DCD keyboardafter1p4Cp2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp4setca2jump
+  DCD keyboardafter2p2Cp0C
+2
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter3p0C
+
+|keyboardf7p6Cp4Cp2Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#7:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  BEQ %F2
+  TST r2,#&FE:SHL:24
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp6unsetca2jump
+  DCD keyboardafter1p4cp2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp4unsetca2jump
+  DCD keyboardafter2p2cp0c
+2
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter3p0c
+
+|keyboardf1p6c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDEQ r1,r1,#1:SHL:27
+  ADDNE r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp6setca2exit
+
+|keyboardf1p6C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADDNE r1,r1,#1:SHL:27
+  ADDEQ r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp6unsetca2exit
+
+|keyboardb1p5i|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp5setca2exit
+
+|keyboardb1p5I|
+  LDRB r3,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  TST r2,r3
+  MOV r1,r1,ROR #4
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  TST r2,#&FE
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp5unsetca2exit
+
+|keyboardf7p5cp3cp1c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#7:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp5setca2jump
+  DCD keyboardafter1p3Cp1C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter2p1C
+
+|keyboardf7p5Cp3Cp1C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#7:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp5unsetca2jump
+  DCD keyboardafter1p3cp1c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter2p1c
+
+|keyboardb1p5c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBEQ r1,r1,#1:SHL:27
+  SUBNE r1,r1,#(1:SHL:27)-KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp5setca2exit
+
+|keyboardb1p5C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  SUBNE r1,r1,#1:SHL:27
+  SUBEQ r1,r1,#(1:SHL:27)+KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp5unsetca2exit
+
+|keyboardf8p6cp4cp2cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#8:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  BNE %F2
+  TST r2,#&FE:SHL:24
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp6setca2jump
+  DCD keyboardafter1p4Cp2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp4setca2jump
+  DCD keyboardafter2p2Cp0C
+2
+  STMFD sp!,{r2,lr}
+  BL keyboardp2setca2jump
+  DCD keyboardafter3p0C
+
+|keyboardf8p6Cp4Cp2Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#8:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  BEQ %F2
+  TST r2,#&FE:SHL:24
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp6unsetca2jump
+  DCD keyboardafter1p4cp2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp4unsetca2jump
+  DCD keyboardafter2p2cp0c
+2
+  STMFD sp!,{r2,lr}
+  BL keyboardp2unsetca2jump
+  DCD keyboardafter3p0c
+
+|keyboardf8p5cp3cp1cp0c|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#8:SHL:27
+  BNE %F0
+  TST r2,#&FE:SHL:8
+  BNE %F1
+  TST r2,#&FE:SHL:16
+  BNE %F2
+  TST r2,#&FE:SHL:24
+  ADDNE r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVEQ pc,lr
+  B keyboardp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp5setca2jump
+  DCD keyboardafter1p3Cp1Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp3setca2jump
+  DCD keyboardafter2p1Cp0C
+2
+  STMFD sp!,{r2,lr}
+  BL keyboardp1setca2jump
+  DCD keyboardafter3p0C
+
+|keyboardf8p5Cp3Cp1Cp0C|
+  MOV r1,r1,ROR #4
+  TST r2,#&FE
+  ADD r1,r1,#8:SHL:27
+  BEQ %F0
+  TST r2,#&FE:SHL:8
+  BEQ %F1
+  TST r2,#&FE:SHL:16
+  BEQ %F2
+  TST r2,#&FE:SHL:24
+  SUBEQ r1,r1,#KEYBOARDCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYBOARD_STATE]
+  MOVNE pc,lr
+  B keyboardp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyboardp5unsetca2jump
+  DCD keyboardafter1p3cp1cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyboardp3unsetca2jump
+  DCD keyboardafter2p1cp0c
+2
+  STMFD sp!,{r2,lr}
+  BL keyboardp1unsetca2jump
+  DCD keyboardafter3p0c
 
   END
