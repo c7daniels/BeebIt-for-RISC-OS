@@ -109,7 +109,7 @@ extern R6502CPUMAP* host_r6502writemjim(R6502CPUMAP* cmap, uintptr_t address_cod
 extern R6502CPUMAP* host_r6502cycle0s1(R6502CPUMAP* cmap);
 extern R6502CPUMAP* host_r6502cycle1(R6502CPUMAP* cmap);
 #else
-extern R6502CPUMAP* (*host_r6502cycleroutines[2])(R6502CPUMAP*);
+extern R6502CPUMAP* (*host_r6502cycleroutines[24])(R6502CPUMAP*);
 #endif
 
 extern R6502CPUMAP* host_r6502readspecial(R6502CPUMAP* cmap, uintptr_t address_code);
@@ -1065,6 +1065,7 @@ int hostresetcpu(void)
   const R6502OP* const extrasequences[R6502_EXTRA_SEQUENCE_COUNT] = {
     host_r6502_opcode07interfacesequence
   };
+  const R6502OP* mainopcoderoutines;
 
   cmap->pagezero = &hmap->memory[0];
   cmap->pageone = &hmap->memory[0x100];
@@ -1075,14 +1076,24 @@ int hostresetcpu(void)
     case MACHINE_MODELB:
     case MACHINE_MODELBPLUS:
       mainsequences = r6502sequences;
+#ifndef BEEBIT_NO_ASM
+      mainopcoderoutines = r6502opcoderoutines;
+#endif
       break;
     case MACHINE_MASTER128:
     case MACHINE_COMPACT:
       mainsequences = r65c12sequences;
+#ifndef BEEBIT_NO_ASM
+      mainopcoderoutines = r65c12opcoderoutines;
+#endif
       break;
   }
 
-  if (r6502reset(cmap, mainsequences, extrasequences))
+#ifdef BEEBIT_NO_ASM
+      mainopcoderoutines = NULL;
+#endif
+
+  if (r6502reset(cmap, mainsequences, extrasequences, mainopcoderoutines))
       return TRUE;
 
   cmap->interruptqueue = 0;
@@ -1275,10 +1286,10 @@ void hostresetperipherals(void)
   }
 
 #ifdef BEEBIT_NO_ASM
-  cmap->addressingandcycleops[0].cycleop = host_r6502cycle1;
-  cmap->addressingandcycleops[1].cycleop = host_r6502cycle0s1;
+  cmap->addressingandcycleops[1].cycleop = host_r6502cycle1;
+  cmap->addressingandcycleops[8].cycleop = host_r6502cycle0s1;
 #else
-  for (i=0; i<2; i++)
+  for (i=0; i<24; i++)
     cmap->addressingandcycleops[i].cycleop = host_r6502cycleroutines[i];
 #endif
 

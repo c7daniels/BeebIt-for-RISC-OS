@@ -33,8 +33,12 @@ stubs = C:o.stubs
 all: @.!RunImage @.RipROMs
 
 RunImage = @.o.main @.o.beebit \
-  @.o.6502cpu @.o.6502cpu!! @.o.6502opc07 @.o.6502opc07s \
-  @.o.65c12cpu @.o.65c12cpu!! \
+  @.o.6502cpu @.o.6502cpu!! @.o.6502cpu01 @.o.6502cpu23 \
+  @.o.6502cpu45 @.o.6502cpu67 @.o.6502cpu89 @.o.6502cpuAB \
+  @.o.6502cpuCD @.o.6502cpuEF @.o.6502opc07 @.o.6502opc07s \
+  @.o.65c12cpu @.o.65c12cpu!! @.o.65c12cpu01 @.o.65c12cpu23 \
+  @.o.65c12cpu45 @.o.65c12cpu67 @.o.65c12cpu89 \
+	@.o.65c12cpuAB @.o.65c12cpuCD @.o.65c12cpuEF \
   @.o.6522sysvia @.o.6522usrvia @.o.6845crtc @.o.6850acia \
   @.o.76489sound @.o.tube @.o.host @.o.hosts \
   @.o.8271fdc @.o.1770fdc @.o.adc @.o.keyboard @.o.sheila  \
@@ -115,6 +119,46 @@ o.6502cpu!!: h.6502zmaps
 o.6502cpu!!: h.6502cmaps
 o.6502cpu!!: h.6502cpus
 o.6502cpu!!: h.RegNames
+o.6502cpu01: s.6502cpu01
+o.6502cpu01: h.6502zmaps
+o.6502cpu01: h.6502cmaps
+o.6502cpu01: h.6502cpus
+o.6502cpu01: h.RegNames
+o.6502cpu23: s.6502cpu23
+o.6502cpu23: h.6502zmaps
+o.6502cpu23: h.6502cmaps
+o.6502cpu23: h.6502cpus
+o.6502cpu23: h.RegNames
+o.6502cpu45: s.6502cpu45
+o.6502cpu45: h.6502zmaps
+o.6502cpu45: h.6502cmaps
+o.6502cpu45: h.6502cpus
+o.6502cpu45: h.RegNames
+o.6502cpu67: s.6502cpu67
+o.6502cpu67: h.6502zmaps
+o.6502cpu67: h.6502cmaps
+o.6502cpu67: h.6502cpus
+o.6502cpu67: h.RegNames
+o.6502cpu89: s.6502cpu89
+o.6502cpu89: h.6502zmaps
+o.6502cpu89: h.6502cmaps
+o.6502cpu89: h.6502cpus
+o.6502cpu89: h.RegNames
+o.6502cpuAB: s.6502cpuAB
+o.6502cpuAB: h.6502zmaps
+o.6502cpuAB: h.6502cmaps
+o.6502cpuAB: h.6502cpus
+o.6502cpuAB: h.RegNames
+o.6502cpuCD: s.6502cpuCD
+o.6502cpuCD: h.6502zmaps
+o.6502cpuCD: h.6502cmaps
+o.6502cpuCD: h.6502cpus
+o.6502cpuCD: h.RegNames
+o.6502cpuEF: s.6502cpuEF
+o.6502cpuEF: h.6502zmaps
+o.6502cpuEF: h.6502cmaps
+o.6502cpuEF: h.6502cpus
+o.6502cpuEF: h.RegNames
 o.6502opc07:	c.6502opc07
 o.6502opc07:	h.beebit
 o.6502opc07:	h.hostmap
@@ -143,6 +187,46 @@ o.65c12cpu!!: h.6502zmaps
 o.65c12cpu!!: h.6502cmaps
 o.65c12cpu!!: h.6502cpus
 o.65c12cpu!!: h.RegNames
+o.65c12cpu01: s.65c12cpu01
+o.65c12cpu01: h.6502zmaps
+o.65c12cpu01: h.6502cmaps
+o.65c12cpu01: h.6502cpus
+o.65c12cpu01: h.RegNames
+o.65c12cpu23: s.65c12cpu23
+o.65c12cpu23: h.6502zmaps
+o.65c12cpu23: h.6502cmaps
+o.65c12cpu23: h.6502cpus
+o.65c12cpu23: h.RegNames
+o.65c12cpu45: s.65c12cpu45
+o.65c12cpu45: h.6502zmaps
+o.65c12cpu45: h.6502cmaps
+o.65c12cpu45: h.6502cpus
+o.65c12cpu45: h.RegNames
+o.65c12cpu67: s.65c12cpu67
+o.65c12cpu67: h.6502zmaps
+o.65c12cpu67: h.6502cmaps
+o.65c12cpu67: h.6502cpus
+o.65c12cpu67: h.RegNames
+o.65c12cpu89: s.65c12cpu89
+o.65c12cpu89: h.6502zmaps
+o.65c12cpu89: h.6502cmaps
+o.65c12cpu89: h.6502cpus
+o.65c12cpu89: h.RegNames
+o.65c12cpuAB: s.65c12cpuAB
+o.65c12cpuAB: h.6502zmaps
+o.65c12cpuAB: h.6502cmaps
+o.65c12cpuAB: h.6502cpus
+o.65c12cpuAB: h.RegNames
+o.65c12cpuCD: s.65c12cpuCD
+o.65c12cpuCD: h.6502zmaps
+o.65c12cpuCD: h.6502cmaps
+o.65c12cpuCD: h.6502cpus
+o.65c12cpuCD: h.RegNames
+o.65c12cpuEF: s.65c12cpuEF
+o.65c12cpuEF: h.6502zmaps
+o.65c12cpuEF: h.6502cmaps
+o.65c12cpuEF: h.6502cpus
+o.65c12cpuEF: h.RegNames
 o.6522sysvia:	c.6522sysvia
 o.6522sysvia:	h.beebit
 o.6522sysvia:	h.host

@@ -691,6 +691,9 @@ extern const R6502OP* const r65c12sequences[R6502_MAIN_SEQUENCE_COUNT];
 
 #ifndef BEEBIT_NO_ASM
 extern R6502CPUMAP* r6502invokeaddressing(R6502CPUMAP* cmap, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks);
+
+extern const R6502OP r6502opcoderoutines[R6502_MAIN_SEQUENCE_COUNT];
+extern const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT];
 #endif
 
 extern R6502CPUMAP* r6502cyclereadmappedreturn(R6502CPUMAP* cmap, uint8_t* p);
@@ -928,7 +931,7 @@ extern R6502CPUMAP* r6502yieldstep(R6502CPUMAP* cmap, uintptr_t incremented_cpu_
 #endif
 extern R6502CPUMAP* r6502startyield(R6502CPUMAP* cmap);
 
-extern int r6502reset(R6502CPUMAP* cmap, const R6502OP* const* mainsequences, const R6502OP* const* extrasequences);
+extern int r6502reset(R6502CPUMAP* cmap, const R6502OP* const* mainsequences, const R6502OP* const* extrasequences, const R6502OP* mainopcoderoutines);
 
 extern void r6502readmemory(R6502CPUMAP* cmap, char* buffer, uintptr_t naddress, int ncount);
 extern void r6502beforesnapshot(R6502CPUMAP* cmap);

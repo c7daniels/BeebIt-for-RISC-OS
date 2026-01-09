@@ -48,13 +48,153 @@
   EXPORT |keyscanf1p1C|
   EXPORT |keyscanf1p1i|
   EXPORT |keyscanf1p1I|
+  EXPORT |keyscanf2p0c|
+  EXPORT |keyscanf2p0C|
+  EXPORT |keyscanp0c|
+  EXPORT |keyscanp0C|
+  EXPORT |keyscanp0i|
+  EXPORT |keyscanp0I|
+  EXPORT |keyscanf2p1c|
+  EXPORT |keyscanf2p1C|
+  EXPORT |keyscanp1c|
+  EXPORT |keyscanp1C|
+  EXPORT |keyscanp1i|
+  EXPORT |keyscanp1I|
+  EXPORT |keyscanf2p2c|
+  EXPORT |keyscanf2p2C|
+  EXPORT |keyscanp2c|
+  EXPORT |keyscanp2C|
+  EXPORT |keyscanp2i|
+  EXPORT |keyscanp2I|
+  EXPORT |keyscanf3p1cp0c|
+  EXPORT |keyscanf3p1Cp0C|
+  EXPORT |keyscanf3p0c|
+  EXPORT |keyscanf3p0C|
+  EXPORT |keyscanb1p0c|
+  EXPORT |keyscanb1p0C|
+  EXPORT |keyscanb1p0i|
+  EXPORT |keyscanb1p0I|
+  EXPORT |keyscanf3p2cp0c|
+  EXPORT |keyscanf3p2Cp0C|
+  EXPORT |keyscanf1p2c|
+  EXPORT |keyscanf1p2C|
+  EXPORT |keyscanf1p2i|
+  EXPORT |keyscanf1p2I|
+  EXPORT |keyscanf3p1c|
+  EXPORT |keyscanf3p1C|
+  EXPORT |keyscanb1p1c|
+  EXPORT |keyscanb1p1C|
+  EXPORT |keyscanb1p1i|
+  EXPORT |keyscanb1p1I|
+  EXPORT |keyscanf3p3cp1c|
+  EXPORT |keyscanf3p3Cp1C|
+  EXPORT |keyscanf1p3c|
+  EXPORT |keyscanf1p3C|
+  EXPORT |keyscanf1p3i|
+  EXPORT |keyscanf1p3I|
+  EXPORT |keyscanf3p2c|
+  EXPORT |keyscanf3p2C|
+  EXPORT |keyscanb1p2c|
+  EXPORT |keyscanb1p2C|
+  EXPORT |keyscanb1p2i|
+  EXPORT |keyscanb1p2I|
+  EXPORT |keyscanf4p2cp0c|
+  EXPORT |keyscanf4p2Cp0C|
+  EXPORT |keyscanf4p1cp0c|
+  EXPORT |keyscanf4p1Cp0C|
+  EXPORT |keyscanf4p3cp1c|
+  EXPORT |keyscanf4p3Cp1C|
+  EXPORT |keyscanp3c|
+  EXPORT |keyscanp3C|
+  EXPORT |keyscanp3i|
+  EXPORT |keyscanp3I|
+  EXPORT |keyscanf4p4cp2c|
+  EXPORT |keyscanf4p4Cp2C|
+  EXPORT |keyscanp4c|
+  EXPORT |keyscanp4C|
+  EXPORT |keyscanp4i|
+  EXPORT |keyscanp4I|
+  EXPORT |keyscanf5p3cp1cp0c|
+  EXPORT |keyscanf5p3Cp1Cp0C|
+  EXPORT |keyscanf5p2cp0c|
+  EXPORT |keyscanf5p2Cp0C|
+  EXPORT |keyscanf5p4cp2cp0c|
+  EXPORT |keyscanf5p4Cp2Cp0C|
+  EXPORT |keyscanf1p4c|
+  EXPORT |keyscanf1p4C|
+  EXPORT |keyscanf1p4i|
+  EXPORT |keyscanf1p4I|
+  EXPORT |keyscanf5p3cp1c|
+  EXPORT |keyscanf5p3Cp1C|
+  EXPORT |keyscanb1p3c|
+  EXPORT |keyscanb1p3C|
+  EXPORT |keyscanb1p3i|
+  EXPORT |keyscanb1p3I|
+  EXPORT |keyscanf5p5cp3cp1c|
+  EXPORT |keyscanf5p5Cp3Cp1C|
+  EXPORT |keyscanf1p5c|
+  EXPORT |keyscanf1p5C|
+  EXPORT |keyscanf1p5i|
+  EXPORT |keyscanf1p5I|
+  EXPORT |keyscanf5p4cp2c|
+  EXPORT |keyscanf5p4Cp2C|
+  EXPORT |keyscanb1p4c|
+  EXPORT |keyscanb1p4C|
+  EXPORT |keyscanb1p4i|
+  EXPORT |keyscanb1p4I|
+  EXPORT |keyscanf6p4cp2cp0c|
+  EXPORT |keyscanf6p4Cp2Cp0C|
+  EXPORT |keyscanf6p3cp1cp0c|
+  EXPORT |keyscanf6p3Cp1Cp0C|
+  EXPORT |keyscanf6p5cp3cp1c|
+  EXPORT |keyscanf6p5Cp3Cp1C|
+  EXPORT |keyscanp5c|
+  EXPORT |keyscanp5C|
+  EXPORT |keyscanp5i|
+  EXPORT |keyscanp5I|
+  EXPORT |keyscanf6p6cp4cp2c|
+  EXPORT |keyscanf6p6Cp4Cp2C|
+  EXPORT |keyscanp6c|
+  EXPORT |keyscanp6C|
+  EXPORT |keyscanp6i|
+  EXPORT |keyscanp6I|
+  EXPORT |keyscanf7p5cp3cp1cp0c|
+  EXPORT |keyscanf7p5Cp3Cp1Cp0C|
+  EXPORT |keyscanf7p4cp2cp0c|
+  EXPORT |keyscanf7p4Cp2Cp0C|
+  EXPORT |keyscanf7p6cp4cp2cp0c|
+  EXPORT |keyscanf7p6Cp4Cp2Cp0C|
+  EXPORT |keyscanf1p6c|
+  EXPORT |keyscanf1p6C|
+  EXPORT |keyscanf1p6i|
+  EXPORT |keyscanf1p6I|
+  EXPORT |keyscanf7p5cp3cp1c|
+  EXPORT |keyscanf7p5Cp3Cp1C|
+  EXPORT |keyscanb1p5c|
+  EXPORT |keyscanb1p5C|
+  EXPORT |keyscanb1p5i|
+  EXPORT |keyscanb1p5I|
+  EXPORT |keyscanf8p6cp4cp2cp0c|
+  EXPORT |keyscanf8p6Cp4Cp2Cp0C|
+  EXPORT |keyscanf8p5cp3cp1cp0c|
+  EXPORT |keyscanf8p5Cp3Cp1Cp0C|
 
   MACRO
-  CA2CHANGEEXIT $p,$s
+  CA2CHANGEEXITORJUMP $p,$s,$j
   LDRB r3,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IFR]
   LDRB r2,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PCR]
+  [ $s==0 && $j==1
+  SUB r1,r1,#KEYSCANCA2FLAG
+  ]
+  [ $s==1 && $j==1
+  ADD r1,r1,#KEYSCANCA2FLAG
+  ]
   TST r3,#1
+  [ $j==1
+  BNE %F0
+  |
   MOVNE pc,lr
+  ]
   ANDS r2,r2,#&0E
   [ $s==1
   CMP r2,#4
@@ -62,36 +202,472 @@
   |
   CMP r2,#2
   ]
+  [ $j==1
+  BNE %F0
+  |
   MOVNE pc,lr
+  ]
   LDRB r2,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IER]
   ORR r3,r3,#1
   TST r2,#1
   STRB r3,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IFR]
+  [ $j==1
+  BEQ %F0
+  |
   MOVEQ pc,lr
+  ]
   LDR r2,[r0,#:INDEX:HOST_INTERRUPTS]
   LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  [ $p>1
+  LDR r12,%F1
+  ]
   ORR r2,r2,#HOST_IRQ_6522SYSVIA
   IF $p==0
   ORR r3,r3,#R6502_IRQ
-  ELSE
+  ELIF $p==1
   ORR r3,r3,#(R6502_IRQ<<4)|R6502_IRQ
+  ELSE
+  ORR r3,r3,r12
   ENDIF
   STR r2,[r0,#:INDEX:HOST_INTERRUPTS]
   STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  [ $j==1
+0
+  LDR r3,[lr]
+  LDMFD sp!,{r2,lr}
+  MOV pc,r3
+  |
   MOV pc,lr
+  ]
+1
+  IF $p==2
+  DCD (R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ELIF $p==3
+  DCD (R6502_IRQ<<12)|(R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ELIF $p==4
+  DCD (R6502_IRQ<<16)|(R6502_IRQ<<12)|(R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ELIF $p==5
+  DCD (R6502_IRQ<<20)|(R6502_IRQ<<16)|(R6502_IRQ<<12)|(R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ELIF $p==6
+  DCD (R6502_IRQ<<24)|(R6502_IRQ<<20)|(R6502_IRQ<<16)|(R6502_IRQ<<12)|(R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ELIF $p==7
+  DCD (R6502_IRQ<<28)|(R6502_IRQ<<24)|(R6502_IRQ<<20)|(R6502_IRQ<<16)|(R6502_IRQ<<12)|(R6502_IRQ<<8)|(R6502_IRQ<<4)|R6502_IRQ
+  ENDIF
   MEND
 
 keyscanp0setca2exit
-  CA2CHANGEEXIT 0,1
+  CA2CHANGEEXITORJUMP 0,1,0
 
 keyscanp1setca2exit
-  CA2CHANGEEXIT 1,1
+  CA2CHANGEEXITORJUMP 1,1,0
+
+keyscanp2setca2exit
+  CA2CHANGEEXITORJUMP 2,1,0
+
+keyscanp3setca2exit
+  CA2CHANGEEXITORJUMP 3,1,0
+
+keyscanp4setca2exit
+  CA2CHANGEEXITORJUMP 4,1,0
+
+keyscanp5setca2exit
+  CA2CHANGEEXITORJUMP 5,1,0
+
+keyscanp6setca2exit
+  CA2CHANGEEXITORJUMP 6,1,0
 
 keyscanp0unsetca2exit
-  CA2CHANGEEXIT 0,0
+  CA2CHANGEEXITORJUMP 0,0,0
 
 keyscanp1unsetca2exit
-  CA2CHANGEEXIT 1,0
+  CA2CHANGEEXITORJUMP 1,0,0
+
+keyscanp2unsetca2exit
+  CA2CHANGEEXITORJUMP 2,0,0
+
+keyscanp3unsetca2exit
+  CA2CHANGEEXITORJUMP 3,0,0
+
+keyscanp4unsetca2exit
+  CA2CHANGEEXITORJUMP 4,0,0
+
+keyscanp5unsetca2exit
+  CA2CHANGEEXITORJUMP 5,0,0
+
+keyscanp6unsetca2exit
+  CA2CHANGEEXITORJUMP 6,0,0
+
+keyscanp0setca2jump
+  CA2CHANGEEXITORJUMP 0,1,1
+
+keyscanp1setca2jump
+  CA2CHANGEEXITORJUMP 1,1,1
+
+keyscanp2setca2jump
+  CA2CHANGEEXITORJUMP 2,1,1
+
+keyscanp3setca2jump
+  CA2CHANGEEXITORJUMP 3,1,1
+
+keyscanp4setca2jump
+  CA2CHANGEEXITORJUMP 4,1,1
+
+keyscanp5setca2jump
+  CA2CHANGEEXITORJUMP 5,1,1
+
+keyscanp6setca2jump
+  CA2CHANGEEXITORJUMP 6,1,1
+
+keyscanp0unsetca2jump
+  CA2CHANGEEXITORJUMP 0,0,1
+
+keyscanp1unsetca2jump
+  CA2CHANGEEXITORJUMP 1,0,1
+
+keyscanp2unsetca2jump
+  CA2CHANGEEXITORJUMP 2,0,1
+
+keyscanp3unsetca2jump
+  CA2CHANGEEXITORJUMP 3,0,1
+
+keyscanp4unsetca2jump
+  CA2CHANGEEXITORJUMP 4,0,1
+
+keyscanp5unsetca2jump
+  CA2CHANGEEXITORJUMP 5,0,1
+
+keyscanp6unsetca2jump
+  CA2CHANGEEXITORJUMP 6,0,1
+
+keyscanafter1p0C
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+keyscanafter1p0c
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+
+keyscanafter1p1C
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+
+keyscanafter1p1c
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+
+keyscanafter1p2C
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+
+keyscanafter1p2c
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+
+keyscanafter1p1Cp0C
+  TST r2,#&01
+  BNE %F0
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp1unsetca2jump
+  DCD keyscanafter2p0c
+
+keyscanafter1p1cp0c
+  TST r2,#&01
+  BEQ %F0
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp1setca2jump
+  DCD keyscanafter2p0C
+
+keyscanafter1p2Cp0C
+  TST r2,#&01
+  BNE %F0
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter2p0c
+
+keyscanafter1p2cp0c
+  TST r2,#&01
+  BEQ %F0
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter2p0C
+
+keyscanafter1p3Cp1C
+  TST r2,#&01
+  BNE %F0
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter2p1c
+
+keyscanafter1p3cp1c
+  TST r2,#&01
+  BEQ %F0
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter2p1C
+
+keyscanafter1p4Cp2C
+  TST r2,#&01
+  BNE %F0
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4unsetca2jump
+  DCD keyscanafter2p2c
+
+keyscanafter1p4cp2c
+  TST r2,#&01
+  BEQ %F0
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4setca2jump
+  DCD keyscanafter2p2C
+
+keyscanafter1p3Cp1Cp0C
+  TST r2,#&01
+  BNE %F0
+  TST r2,#&04
+  BNE %F1
+  TST r2,#&10
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter2p1cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp1unsetca2jump
+  DCD keyscanafter3p0c
+
+keyscanafter1p3cp1cp0c
+  TST r2,#&01
+  BEQ %F0
+  TST r2,#&04
+  BEQ %F1
+  TST r2,#&10
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter2p1Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp1setca2jump
+  DCD keyscanafter3p0C
+
+keyscanafter1p4Cp2Cp0C
+  TST r2,#&01
+  BNE %F0
+  TST r2,#&04
+  BNE %F1
+  TST r2,#&10
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4unsetca2jump
+  DCD keyscanafter2p2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter3p0c
+
+keyscanafter1p4cp2cp0c
+  TST r2,#&01
+  BEQ %F0
+  TST r2,#&04
+  BEQ %F1
+  TST r2,#&10
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4setca2jump
+  DCD keyscanafter2p2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter3p0C
+
+keyscanafter2p0c
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+
+keyscanafter2p0C
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+keyscanafter2p1c
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+
+keyscanafter2p1C
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+
+keyscanafter2p2c
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+
+keyscanafter2p2C
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+
+keyscanafter2p1cp0c
+  TST r2,#&04
+  BEQ %F0
+  TST r2,#&10
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp1setca2jump
+  DCD keyscanafter3p0C
+
+keyscanafter2p1Cp0C
+  TST r2,#&04
+  BNE %F0
+  TST r2,#&10
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp1unsetca2jump
+  DCD keyscanafter3p0c
+
+keyscanafter2p2cp0c
+  TST r2,#&04
+  BEQ %F0
+  TST r2,#&10
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter3p0C
+
+keyscanafter2p2Cp0C
+  TST r2,#&04
+  BNE %F0
+  TST r2,#&10
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter3p0c
+
+keyscanafter3p0C
+  TST r2,#&10
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+keyscanafter3p0c
+  TST r2,#&10
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
 
 |keyscanf1p0c|
   ADD r1,r1,#&80000001
@@ -216,5 +792,2011 @@ keyscanp1unsetca2exit
   STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
   MOVEQ pc,lr
   B keyscanp1unsetca2exit
+
+|keyscanf2p0c|
+  ADD r1,r1,#&02
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+
+|keyscanf2p0C|
+  ADD r1,r1,#&02
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+|keyscanp0c|
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+
+|keyscanp0C|
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+|keyscanp0i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+
+|keyscanp0I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+|keyscanf2p1c|
+  ADD r1,r1,#&02
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+
+|keyscanf2p1C|
+  ADD r1,r1,#&02
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+
+|keyscanp1c|
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+
+|keyscanp1C|
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+
+|keyscanp1i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+
+|keyscanp1I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+
+|keyscanf2p2c|
+  ADD r1,r1,#&02
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+
+|keyscanf2p2C|
+  ADD r1,r1,#&02
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+
+|keyscanp2c|
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+
+|keyscanp2C|
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+
+|keyscanp2i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+
+|keyscanp2I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+
+|keyscanf3p1cp0c|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp1setca2jump
+  DCD keyscanafter1p0C
+
+|keyscanf3p1Cp0C|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp1unsetca2jump
+  DCD keyscanafter1p0c
+
+|keyscanf3p0c|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+
+|keyscanf3p0C|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+|keyscanb1p0c|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+
+|keyscanb1p0C|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+|keyscanb1p0i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+
+|keyscanb1p0I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+|keyscanf3p2cp0c|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter1p0C
+
+|keyscanf3p2Cp0C|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter1p0c
+
+|keyscanf1p2c|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+
+|keyscanf1p2C|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+
+|keyscanf1p2i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+
+|keyscanf1p2I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+
+|keyscanf3p1c|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+
+|keyscanf3p1C|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+
+|keyscanb1p1c|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+
+|keyscanb1p1C|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+
+|keyscanb1p1i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+
+|keyscanb1p1I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+
+|keyscanf3p3cp1c|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter1p1C
+
+|keyscanf3p3Cp1C|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter1p1c
+
+|keyscanf1p3c|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp3setca2exit
+
+|keyscanf1p3C|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp3unsetca2exit
+
+|keyscanf1p3i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp3setca2exit
+
+|keyscanf1p3I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp3unsetca2exit
+
+|keyscanf3p2c|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+
+|keyscanf3p2C|
+  ADD r1,r1,#&80000003
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+
+|keyscanb1p2c|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+
+|keyscanb1p2C|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+
+|keyscanb1p2i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+
+|keyscanb1p2I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+
+|keyscanf4p2cp0c|
+  ADD r1,r1,#&04
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter1p0C
+
+|keyscanf4p2Cp0C|
+  ADD r1,r1,#&04
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter1p0c
+
+|keyscanf4p1cp0c|
+  ADD r1,r1,#&04
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp1setca2jump
+  DCD keyscanafter1p0C
+
+|keyscanf4p1Cp0C|
+  ADD r1,r1,#&04
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp1unsetca2jump
+  DCD keyscanafter1p0c
+
+|keyscanf4p3cp1c|
+  ADD r1,r1,#&04
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter1p1C
+
+|keyscanf4p3Cp1C|
+  ADD r1,r1,#&04
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter1p1c
+
+|keyscanp3c|
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp3setca2exit
+
+|keyscanp3C|
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp3unsetca2exit
+
+|keyscanp3i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp3setca2exit
+
+|keyscanp3I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp3unsetca2exit
+
+|keyscanf4p4cp2c|
+  ADD r1,r1,#&04
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4setca2jump
+  DCD keyscanafter1p2C
+
+|keyscanf4p4Cp2C|
+  ADD r1,r1,#&04
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4unsetca2jump
+  DCD keyscanafter1p2c
+
+|keyscanp4c|
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp4setca2exit
+
+|keyscanp4C|
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp4unsetca2exit
+
+|keyscanp4i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp4setca2exit
+
+|keyscanp4I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp4unsetca2exit
+
+|keyscanf5p3cp1cp0c|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter1p1Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp1setca2jump
+  DCD keyscanafter2p0C
+
+|keyscanf5p3Cp1Cp0C|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter1p1cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp1unsetca2jump
+  DCD keyscanafter2p0c
+
+|keyscanf5p2cp0c|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter1p0C
+
+|keyscanf5p2Cp0C|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter1p0c
+
+|keyscanf5p4cp2cp0c|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4setca2jump
+  DCD keyscanafter1p2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter2p0C
+
+|keyscanf5p4Cp2Cp0C|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4unsetca2jump
+  DCD keyscanafter1p2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter2p0c
+
+|keyscanf1p4c|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp4setca2exit
+
+|keyscanf1p4C|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp4unsetca2exit
+
+|keyscanf1p4i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp4setca2exit
+
+|keyscanf1p4I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp4unsetca2exit
+
+|keyscanf5p3cp1c|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter1p1C
+
+|keyscanf5p3Cp1C|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter1p1c
+
+|keyscanb1p3c|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp3setca2exit
+
+|keyscanb1p3C|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp3unsetca2exit
+
+|keyscanb1p3i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp3setca2exit
+
+|keyscanb1p3I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp3unsetca2exit
+
+|keyscanf5p5cp3cp1c|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp5setca2jump
+  DCD keyscanafter1p3Cp1C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter2p1C
+
+|keyscanf5p5Cp3Cp1C|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp5unsetca2jump
+  DCD keyscanafter1p3cp1c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter2p1c
+
+|keyscanf1p5c|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp5setca2exit
+
+|keyscanf1p5C|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp5unsetca2exit
+
+|keyscanf1p5i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp5setca2exit
+
+|keyscanf1p5I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp5unsetca2exit
+
+|keyscanf5p4cp2c|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4setca2jump
+  DCD keyscanafter1p2C
+
+|keyscanf5p4Cp2C|
+  ADD r1,r1,#&80000005
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4unsetca2jump
+  DCD keyscanafter1p2c
+
+|keyscanb1p4c|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp4setca2exit
+
+|keyscanb1p4C|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp4unsetca2exit
+
+|keyscanb1p4i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp4setca2exit
+
+|keyscanb1p4I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp4unsetca2exit
+
+|keyscanf6p4cp2cp0c|
+  ADD r1,r1,#&06
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4setca2jump
+  DCD keyscanafter1p2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter2p0C
+
+|keyscanf6p4Cp2Cp0C|
+  ADD r1,r1,#&06
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4unsetca2jump
+  DCD keyscanafter1p2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter2p0c
+
+|keyscanf6p3cp1cp0c|
+  ADD r1,r1,#&06
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter1p1Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp1setca2jump
+  DCD keyscanafter2p0C
+
+|keyscanf6p3Cp1Cp0C|
+  ADD r1,r1,#&06
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter1p1cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp1unsetca2jump
+  DCD keyscanafter2p0c
+
+|keyscanf6p5cp3cp1c|
+  ADD r1,r1,#&06
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp5setca2jump
+  DCD keyscanafter1p3Cp1C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter2p1C
+
+|keyscanf6p5Cp3Cp1C|
+  ADD r1,r1,#&06
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp5unsetca2jump
+  DCD keyscanafter1p3cp1c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter2p1c
+
+|keyscanp5c|
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp5setca2exit
+
+|keyscanp5C|
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp5unsetca2exit
+
+|keyscanp5i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp5setca2exit
+
+|keyscanp5I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp5unsetca2exit
+
+|keyscanf6p6cp4cp2c|
+  ADD r1,r1,#&06
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp2setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp6setca2jump
+  DCD keyscanafter1p4Cp2C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp4setca2jump
+  DCD keyscanafter2p2C
+
+|keyscanf6p6Cp4Cp2C|
+  ADD r1,r1,#&06
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp2unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp6unsetca2jump
+  DCD keyscanafter1p4cp2c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp4unsetca2jump
+  DCD keyscanafter2p2c
+
+|keyscanp6c|
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp6setca2exit
+
+|keyscanp6C|
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp6unsetca2exit
+
+|keyscanp6i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp6setca2exit
+
+|keyscanp6I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp6unsetca2exit
+
+|keyscanf7p5cp3cp1cp0c|
+  ADD r1,r1,#&80000007
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  BEQ %F2
+  TST r2,#&10
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp5setca2jump
+  DCD keyscanafter1p3Cp1Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter2p1Cp0C
+2
+  STMFD sp!,{r2,lr}
+  BL keyscanp1setca2jump
+  DCD keyscanafter3p0C
+
+|keyscanf7p5Cp3Cp1Cp0C|
+  ADD r1,r1,#&80000007
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  BNE %F2
+  TST r2,#&10
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp5unsetca2jump
+  DCD keyscanafter1p3cp1cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter2p1cp0c
+2
+  STMFD sp!,{r2,lr}
+  BL keyscanp1unsetca2jump
+  DCD keyscanafter3p0c
+
+|keyscanf7p4cp2cp0c|
+  ADD r1,r1,#&80000007
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4setca2jump
+  DCD keyscanafter1p2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter2p0C
+
+|keyscanf7p4Cp2Cp0C|
+  ADD r1,r1,#&80000007
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp4unsetca2jump
+  DCD keyscanafter1p2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter2p0c
+
+|keyscanf7p6cp4cp2cp0c|
+  ADD r1,r1,#&80000007
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  BEQ %F2
+  TST r2,#&10
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp6setca2jump
+  DCD keyscanafter1p4Cp2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp4setca2jump
+  DCD keyscanafter2p2Cp0C
+2
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter3p0C
+
+|keyscanf7p6Cp4Cp2Cp0C|
+  ADD r1,r1,#&80000007
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  BNE %F2
+  TST r2,#&10
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp6unsetca2jump
+  DCD keyscanafter1p4cp2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp4unsetca2jump
+  DCD keyscanafter2p2cp0c
+2
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter3p0c
+
+|keyscanf1p6c|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp6setca2exit
+
+|keyscanf1p6C|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp6unsetca2exit
+
+|keyscanf1p6i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp6setca2exit
+
+|keyscanf1p6I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp6unsetca2exit
+
+|keyscanf7p5cp3cp1c|
+  ADD r1,r1,#&80000007
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp5setca2jump
+  DCD keyscanafter1p3Cp1C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter2p1C
+
+|keyscanf7p5Cp3Cp1C|
+  ADD r1,r1,#&80000007
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp5unsetca2jump
+  DCD keyscanafter1p3cp1c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter2p1c
+
+|keyscanb1p5c|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp5setca2exit
+
+|keyscanb1p5C|
+  ADD r1,r1,#&8000001F
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp5unsetca2exit
+
+|keyscanb1p5i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp5setca2exit
+
+|keyscanb1p5I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&8000001F
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp5unsetca2exit
+
+|keyscanf8p6cp4cp2cp0c|
+  ADD r1,r1,#&08
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  BEQ %F2
+  TST r2,#&10
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp6setca2jump
+  DCD keyscanafter1p4Cp2Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp4setca2jump
+  DCD keyscanafter2p2Cp0C
+2
+  STMFD sp!,{r2,lr}
+  BL keyscanp2setca2jump
+  DCD keyscanafter3p0C
+
+|keyscanf8p6Cp4Cp2Cp0C|
+  ADD r1,r1,#&08
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  BNE %F2
+  TST r2,#&10
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp6unsetca2jump
+  DCD keyscanafter1p4cp2cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp4unsetca2jump
+  DCD keyscanafter2p2cp0c
+2
+  STMFD sp!,{r2,lr}
+  BL keyscanp2unsetca2jump
+  DCD keyscanafter3p0c
+
+|keyscanf8p5cp3cp1cp0c|
+  ADD r1,r1,#&08
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BEQ %F0
+  TST r2,#&01
+  BEQ %F1
+  TST r2,#&04
+  BEQ %F2
+  TST r2,#&10
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp5setca2jump
+  DCD keyscanafter1p3Cp1Cp0C
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp3setca2jump
+  DCD keyscanafter2p1Cp0C
+2
+  STMFD sp!,{r2,lr}
+  BL keyscanp1setca2jump
+  DCD keyscanafter3p0C
+
+|keyscanf8p5Cp3Cp1Cp0C|
+  ADD r1,r1,#&08
+  TST r2,#&40000000
+  BIC r1,r1,#&20
+  BNE %F0
+  TST r2,#&01
+  BNE %F1
+  TST r2,#&04
+  BNE %F2
+  TST r2,#&10
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+0
+  STMFD sp!,{r2,lr}
+  BL keyscanp5unsetca2jump
+  DCD keyscanafter1p3cp1cp0c
+1
+  STMFD sp!,{r2,lr}
+  BL keyscanp3unsetca2jump
+  DCD keyscanafter2p1cp0c
+2
+  STMFD sp!,{r2,lr}
+  BL keyscanp1unsetca2jump
+  DCD keyscanafter3p0c
 
   END

@@ -15,8 +15,10 @@
 
   GBLL Optimise6502Links
   GBLL Optimise6502WorkAreas
+  GBLL Optimise6502Timing
 Optimise6502Links SETL {TRUE}
 Optimise6502WorkAreas SETL {TRUE}
+Optimise6502Timing SETL {TRUE}
 
 
 NFLAG EQU &80
@@ -54,7 +56,7 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   MACRO
   R6502_EXECUTE_PUSH
   [ Optimise6502WorkAreas
-  STMFD sp!,{r7-r8,lr}
+  STMFD sp!,{r6-r8,lr}
   LDR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
   LDRB r8,[r0,#:INDEX:R6502_PS]
   |
@@ -67,7 +69,7 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   [ Optimise6502WorkAreas
   STR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
   STRB r8,[r0,#:INDEX:R6502_PS]
-  LDMFD sp!,{r7-r8,pc}
+  LDMFD sp!,{r6-r8,pc}
   |
   LDR pc, [sp], #4
   ]
@@ -76,10 +78,10 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   MACRO
   R6502_CYCLE_UPDATE_PUSH
   [ !Optimise6502WorkAreas && Optimise6502Links
-  STMFD sp!,{r7-r8}
+  STMFD sp!,{r6-r8}
   ]
   [ !Optimise6502WorkAreas && !Optimise6502Links
-  STMFD sp!,{r7-r8,lr}
+  STMFD sp!,{r6-r8,lr}
   ]
   [ !Optimise6502WorkAreas
   LDR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
@@ -93,14 +95,15 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   MACRO
   R6502_CYCLE_UPDATE_POP
   [ !Optimise6502WorkAreas
+  MOV r1,r6
   STR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
   STRB r8,[r0,#:INDEX:R6502_PS]
   ]
   [ !Optimise6502WorkAreas && Optimise6502Links
-  LDMFD sp!,{r7-r8}
+  LDMFD sp!,{r6-r8}
   ]
   [ !Optimise6502WorkAreas && !Optimise6502Links
-  LDMFD sp!,{r7-r8,lr}
+  LDMFD sp!,{r6-r8,lr}
   ]
   [ Optimise6502WorkAreas && !Optimise6502Links
   LDR lr, [sp], #4
@@ -110,35 +113,61 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   MACRO
   R6502_CYCLE_ADDRESSING_PUSH
   [ !Optimise6502WorkAreas
-  STR r7,[sp, #-4]!
+  STMFD sp!,{r6-r7}
+  MOV r6,r1
   LDR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
   ]
   MEND
 
   MACRO
   R6502_CYCLE_ADDRESSING_PUSH_AND_SYNC
-  [ !Optimise6502WorkAreas
-  STR r7,[sp, #-4]!
-  ]
+  [ Optimise6502WorkAreas
+  MOV r7,r6
+  |
+  STMFD sp!,{r6-r7}
+  MOV r6,r1
   MOV r7,r1
+  ]
   MEND
 
   MACRO
   R6502_CYCLE_ADDRESSING_POP
   [ !Optimise6502WorkAreas
   STR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
-  LDR r7, [sp], #4
+  LDMFD sp!,{r6-r7}
   ]
   MEND
 
   MACRO
-  R6502_CYCLE_CALL_ACTION $i
-  [ !Optimise6502Links
+  R6502_OPCODE_PUSH
+  [ !Optimise6502WorkAreas && Optimise6502Links
+  STMFD sp!,{r6-r8}
+  ]
+  [ !Optimise6502WorkAreas && !Optimise6502Links
+  STMFD sp!,{r6-r8,lr}
+  ]
+  [ !Optimise6502WorkAreas
+  LDR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  LDRB r8,[r0,#:INDEX:R6502_PS]
+  ]
+  [ Optimise6502WorkAreas && !Optimise6502Links
   STR lr,[sp, #-4]!
   ]
-  MOV lr,pc
-  LDR pc,[r0,#:INDEX:$i]
-  [ !Optimise6502Links
+  MEND
+
+  MACRO
+  R6502_OPCODE_POP
+  [ !Optimise6502WorkAreas
+  STR r7,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  STRB r8,[r0,#:INDEX:R6502_PS]
+  ]
+  [ !Optimise6502WorkAreas && Optimise6502Links
+  LDMFD sp!,{r6-r8}
+  ]
+  [ !Optimise6502WorkAreas && !Optimise6502Links
+  LDMFD sp!,{r6-r8,lr}
+  ]
+  [ Optimise6502WorkAreas && !Optimise6502Links
   LDR lr, [sp], #4
   ]
   MEND
@@ -158,7 +187,7 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   [ Optimise6502Links
   ADR lr,.+20
   |
-  MOV r2,pc
+  ADR r2,.+8
   ]
   LDR pc,[r0,r3,ROR #24]
   R6502_ADDRESSING_CALLBACKS $rs,$r1s,$r2s
@@ -166,14 +195,36 @@ R6502_OPCODE_07_SEQUENCE EQU 262
 
   MACRO
   R6502_ADDRESS_FOR_READ $rds,$rd1s,$rd2s
-  AND r3,r1,#&F000000F-ADDRESSING_MODIFYFLAG
+  AND r3,r6,#&F000000F-ADDRESSING_MODIFYFLAG
   R6502_INVOKE_ADDRESSING $rds,$rd1s,$rd2s
   MEND
 
   MACRO
   R6502_ADDRESS_FOR_MODIFY $mds,$md1s,$md2s
-  AND r3,r1,#&F000000F
+  AND r3,r6,#&F000000F
   R6502_INVOKE_ADDRESSING $mds,$md1s,$md2s
+  MEND
+
+  MACRO
+  R6502_CYCLE_CALL_ACTION $i
+  [ !Optimise6502Links
+  STR lr,[sp, #-4]!
+  ]
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:$i]
+  [ !Optimise6502Links
+  LDR lr, [sp], #4
+  ]
+  MEND
+
+  MACRO
+  R6502_CYCLE_READSPECIAL
+  R6502_CYCLE_CALL_ACTION R6502_READSPECIALACTION
+  MEND
+
+  MACRO
+  R6502_CYCLE_WRITESPECIAL
+  R6502_CYCLE_CALL_ACTION R6502_WRITESPECIALACTION
   MEND
 
   MACRO
@@ -181,7 +232,7 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   [ Optimise6502Links
   LDR lr,[r0,#:INDEX:R6502_CONTINUELINK]
   ]
-  LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+20]
+  LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+132]
   MEND
 
   MACRO
@@ -189,47 +240,57 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   [ Optimise6502Links
   LDR lr,[r0,#:INDEX:R6502_CONTINUELINK]
   ]
-  LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+4]
+  LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+20]
   MEND
 
   MACRO
   R6502_CYCLE_ZPG_READ_RETURN
+  R6502_CYCLE_ADDRESSING_PUSH
   LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
-  LDRB r2,[r3,r1,LSR #24]
+  LDRB r2,[r3,r6,LSR #24]
   STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_ADDRESSING_POP
   R6502_CYCLE_RETURN
   MEND
 
   MACRO
   R6502_CYCLE_ZPG_WRITE_RETURN
+  R6502_CYCLE_ADDRESSING_PUSH
   LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
   LDRB r2,[r0,#:INDEX:R6502_M]
-  STRB r2,[r3,r1,LSR #24]
+  STRB r2,[r3,r6,LSR #24]
+  R6502_CYCLE_ADDRESSING_POP
   R6502_CYCLE_RETURN
   MEND
 
   MACRO
   R6502_CYCLE_STACK_READ_RETURN
+  R6502_CYCLE_ADDRESSING_PUSH
   LDR r3,[r0,#:INDEX:R6502_PAGEONE]
-  LDRB r2,[r3,r1,LSR #24]
+  LDRB r2,[r3,r6,LSR #24]
   STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_ADDRESSING_POP
   R6502_CYCLE_RETURN
   MEND
 
   MACRO
   R6502_CYCLE_STACK_WRITE_RETURN
+  R6502_CYCLE_ADDRESSING_PUSH
   LDR r3,[r0,#:INDEX:R6502_PAGEONE]
   LDRB r2,[r0,#:INDEX:R6502_M]
-  STRB r2,[r3,r1,LSR #24]
+  STRB r2,[r3,r6,LSR #24]
+  R6502_CYCLE_ADDRESSING_POP
   R6502_CYCLE_RETURN
   MEND
 
   MACRO
   R6502_CYCLE_VECTOR_READ_RETURN
-  MOV r1,r1,LSL #8
+  R6502_CYCLE_ADDRESSING_PUSH
+  MOV r1,r6,LSL #8
   LDR r3,[r0,#:INDEX:R6502_PAGEMINUSONE]
   LDRB r2,[r3,r1,LSR #24]
   STRB r2,[r0,#:INDEX:R6502_M]
+  R6502_CYCLE_ADDRESSING_POP
   R6502_CYCLE_RETURN
   MEND
 
@@ -342,26 +403,200 @@ R6502_OPCODE_07_SEQUENCE EQU 262
   MACRO
   R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN
   R6502_CYCLE_ADDRESSING_PUSH
-  ADD r1,r7,#1:SHL:16
+  ADD r6,r7,#1:SHL:16
   ADD r7,r7,#1:SHL:16
   R6502_ADDRESS_FOR_READ r6502cycleinterruptfetchspecialpopreturn, r6502cycleinterruptstretch1fetchspecialpopreturn, r6502cycleinterruptstretch2fetchspecialpopreturn
   R6502_CYCLE_ADDRESSING_POP
   R6502_CYCLE_INTERRUPT_CHECK_FETCH_MAPPED_RETURN
-
   MEND
 
   MACRO
   R6502_CYCLE_ADDRESSED_FETCH_RETURN
-  LDR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
-  ADD r1,r1,#1:SHL:16
+  R6502_CYCLE_ADDRESSING_PUSH
+  LDR r7,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  ADD r6,r7,#1:SHL:16
+  ADD r7,r7,#1:SHL:16
+  R6502_ADDRESS_FOR_READ r6502cyclefetchspecialpopreturn, r6502cyclestretch1fetchspecialpopreturn, r6502cyclestretch2fetchspecialpopreturn
+  R6502_CYCLE_ADDRESSING_POP
   R6502_CYCLE_FETCH_RETURN
   MEND
 
   MACRO
   R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN
-  LDR r1,[r0,#:INDEX:R6502_LAST_PC_CODE]
-  ADD r1,r1,#1:SHL:16
-  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN
+  R6502_CYCLE_ADDRESSING_PUSH
+  LDR r7,[r0,#:INDEX:R6502_LAST_PC_CODE]
+  ADD r6,r7,#1:SHL:16
+  ADD r7,r7,#1:SHL:16
+  R6502_ADDRESS_FOR_READ r6502cycleinterruptfetchspecialpopreturn, r6502cycleinterruptstretch1fetchspecialpopreturn, r6502cycleinterruptstretch2fetchspecialpopreturn
+  R6502_CYCLE_ADDRESSING_POP
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_MAPPED_RETURN
+  MEND
+
+  MACRO
+  R6502_READ_BRANCH $tag
+  R6502_ADDRESS_FOR_READ s_$tag,s1_$tag,s2_$tag
+  MEND
+
+  MACRO
+  R6502_NO_OPERAND_READ_BRANCH $tag
+  MOV r6,r7
+  R6502_READ_BRANCH $tag
+  MEND
+
+  MACRO
+  R6502_OPERAND_READ_BRANCH $tag
+  ADD r6,r7,#1:SHL:16
+  R6502_READ_BRANCH $tag
+  MEND
+
+  MACRO
+  R6502_MODIFY_BRANCH $tag
+  R6502_ADDRESS_FOR_MODIFY s_$tag,s1_$tag,s2_$tag
+  MEND
+
+  MACRO
+  R6502_OPCODE_READ_SPECIAL
+  MOV r1,r6
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_READSPECIALACTION]
+  MEND
+
+  MACRO
+  R6502_OPCODE_WRITE_SPECIAL
+  MOV r1,r6
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_WRITESPECIALACTION]
+  MEND
+
+  MACRO
+  R6502_OPCODE_CYCLES $n,$ns
+  LCLA counter
+  MOV lr,pc
+counter SETA $n
+  IF Optimise6502Timing
+  WHILE counter>6
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+4+(6:SHL:4)]
+counter SETA counter-6
+  WEND
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+4+($counter:SHL:4)+($ns:SHL:7)]
+  ELSE
+  WHILE counter>0
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+20]
+counter SETA counter-1
+  WEND
+counter SETA $ns
+  WHILE counter>0
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_ADDRESSINGANDCYCLEOPS+132]
+counter SETA counter-1
+  WEND
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_IMPLIED_OPCODE_RETURN
+  R6502_OPERAND_ADDRESS_FOR_READ r6502implied_s1,r6502implied_t1s1,r6502implied_t2s1
+  MOV r7,r6
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 2,0
+  B r6502opcodeinterruptfetchreturn
+  MEND
+
+  MACRO
+  R6502_PUSH_OPCODE_RETURN
+  R6502_OPERAND_ADDRESS_FOR_READ r6502push_s1,r6502push_t1s1,r6502push_t2s1
+  MOV r7,r6
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 3,0
+  B r6502opcodeinterruptfetchreturn
+  MEND
+
+  MACRO
+  R6502_PULL_OPCODE_RETURN
+  R6502_OPERAND_ADDRESS_FOR_READ r6502pull_s1,r6502pull_t1s1,r6502pull_t2s1
+  MOV r7,r6
+  LDRB r4,[r1]
+  R6502_OPCODE_CYCLES 4,0
+  B r6502opcodeinterruptfetchreturn
+  MEND
+
+  MACRO
+  R6502_BRANCH_OPCODE_RETURN $la,$lb,$ca,$cb
+  [ Optimise6502Links
+  $la lr,.+20
+  |
+  $la r2,.+20
+  ]
+  ADD r1,r7,#1:SHL:16
+  [ Optimise6502Links
+  $lb lr,.+16
+  |
+  $lb r2,.+16
+  ]
+  AND r3,r1,#&F000000F-ADDRESSING_MODIFYFLAG
+  LDR pc,[r0,r3,ROR #24]
+  [ Optimise6502Links
+  DCD $ca
+  DCD $cb
+  |
+  DCD $ca-16
+  DCD $cb-16
+  ]
+  MEND
+
+  MACRO
+  R6502_BRANCH_IF_CLEAR_OPCODE_RETURN $f
+  TST r8,#$f
+  R6502_BRANCH_OPCODE_RETURN LDREQ,LDRNE,r6502branch,r6502nobranch
+  MEND
+
+  MACRO
+  R6502_BRANCH_IF_SET_OPCODE_RETURN $f
+  TST r8,#$f
+  R6502_BRANCH_OPCODE_RETURN LDRNE,LDREQ,r6502branch,r6502nobranch
+  MEND
+
+  MACRO
+  R65C12_BRANCH_IF_CLEAR_OPCODE_RETURN $f
+  TST r8,#$f
+  R6502_BRANCH_OPCODE_RETURN LDREQ,LDRNE,r65c12branch,r6502nobranch
+  MEND
+
+  MACRO
+  R65C12_BRANCH_IF_SET_OPCODE_RETURN $f
+  TST r8,#$f
+  R6502_BRANCH_OPCODE_RETURN LDRNE,LDREQ,r65c12branch,r6502nobranch
+  MEND
+
+  MACRO
+  R65C12_BRANCH_ALWAYS_OPCODE_RETURN
+  ADD r1,r7,#1:SHL:16
+  [ Optimise6502Links
+  LDR lr,.+12
+  |
+  LDR r2,.+12
+  ]
+  AND r3,r1,#&F000000F-ADDRESSING_MODIFYFLAG
+  LDR pc,[r0,r3,ROR #24]
+  [ Optimise6502Links
+  DCD r65c12branch
+  |
+  DCD r65c12branch-16
+  ]
+  MEND
+
+  MACRO
+  R6502_OPCODE_RETURN
+  R6502_OPCODE_POP
+  [ Optimise6502Links
+  LDR pc, [r1], #4
+  |
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  MOV pc,lr
+  ]
   MEND
 
   END

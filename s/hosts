@@ -52,6 +52,136 @@
   IMPORT |keyscanf1p1C|
   IMPORT |keyscanf1p1i|
   IMPORT |keyscanf1p1I|
+  IMPORT |keyscanf2p0c|
+  IMPORT |keyscanf2p0C|
+  IMPORT |keyscanp0c|
+  IMPORT |keyscanp0C|
+  IMPORT |keyscanp0i|
+  IMPORT |keyscanp0I|
+  IMPORT |keyscanf2p1c|
+  IMPORT |keyscanf2p1C|
+  IMPORT |keyscanp1c|
+  IMPORT |keyscanp1C|
+  IMPORT |keyscanp1i|
+  IMPORT |keyscanp1I|
+  IMPORT |keyscanf2p2c|
+  IMPORT |keyscanf2p2C|
+  IMPORT |keyscanp2c|
+  IMPORT |keyscanp2C|
+  IMPORT |keyscanp2i|
+  IMPORT |keyscanp2I|
+  IMPORT |keyscanf3p1cp0c|
+  IMPORT |keyscanf3p1Cp0C|
+  IMPORT |keyscanf3p0c|
+  IMPORT |keyscanf3p0C|
+  IMPORT |keyscanb1p0c|
+  IMPORT |keyscanb1p0C|
+  IMPORT |keyscanb1p0i|
+  IMPORT |keyscanb1p0I|
+  IMPORT |keyscanf3p2cp0c|
+  IMPORT |keyscanf3p2Cp0C|
+  IMPORT |keyscanf1p2c|
+  IMPORT |keyscanf1p2C|
+  IMPORT |keyscanf1p2i|
+  IMPORT |keyscanf1p2I|
+  IMPORT |keyscanf3p1c|
+  IMPORT |keyscanf3p1C|
+  IMPORT |keyscanb1p1c|
+  IMPORT |keyscanb1p1C|
+  IMPORT |keyscanb1p1i|
+  IMPORT |keyscanb1p1I|
+  IMPORT |keyscanf3p3cp1c|
+  IMPORT |keyscanf3p3Cp1C|
+  IMPORT |keyscanf1p3c|
+  IMPORT |keyscanf1p3C|
+  IMPORT |keyscanf1p3i|
+  IMPORT |keyscanf1p3I|
+  IMPORT |keyscanf3p2c|
+  IMPORT |keyscanf3p2C|
+  IMPORT |keyscanb1p2c|
+  IMPORT |keyscanb1p2C|
+  IMPORT |keyscanb1p2i|
+  IMPORT |keyscanb1p2I|
+  IMPORT |keyscanf4p2cp0c|
+  IMPORT |keyscanf4p2Cp0C|
+  IMPORT |keyscanf4p1cp0c|
+  IMPORT |keyscanf4p1Cp0C|
+  IMPORT |keyscanf4p3cp1c|
+  IMPORT |keyscanf4p3Cp1C|
+  IMPORT |keyscanp3c|
+  IMPORT |keyscanp3C|
+  IMPORT |keyscanp3i|
+  IMPORT |keyscanp3I|
+  IMPORT |keyscanf4p4cp2c|
+  IMPORT |keyscanf4p4Cp2C|
+  IMPORT |keyscanp4c|
+  IMPORT |keyscanp4C|
+  IMPORT |keyscanp4i|
+  IMPORT |keyscanp4I|
+  IMPORT |keyscanf5p3cp1cp0c|
+  IMPORT |keyscanf5p3Cp1Cp0C|
+  IMPORT |keyscanf5p2cp0c|
+  IMPORT |keyscanf5p2Cp0C|
+  IMPORT |keyscanf5p4cp2cp0c|
+  IMPORT |keyscanf5p4Cp2Cp0C|
+  IMPORT |keyscanf1p4c|
+  IMPORT |keyscanf1p4C|
+  IMPORT |keyscanf1p4i|
+  IMPORT |keyscanf1p4I|
+  IMPORT |keyscanf5p3cp1c|
+  IMPORT |keyscanf5p3Cp1C|
+  IMPORT |keyscanb1p3c|
+  IMPORT |keyscanb1p3C|
+  IMPORT |keyscanb1p3i|
+  IMPORT |keyscanb1p3I|
+  IMPORT |keyscanf5p5cp3cp1c|
+  IMPORT |keyscanf5p5Cp3Cp1C|
+  IMPORT |keyscanf1p5c|
+  IMPORT |keyscanf1p5C|
+  IMPORT |keyscanf1p5i|
+  IMPORT |keyscanf1p5I|
+  IMPORT |keyscanf5p4cp2c|
+  IMPORT |keyscanf5p4Cp2C|
+  IMPORT |keyscanb1p4c|
+  IMPORT |keyscanb1p4C|
+  IMPORT |keyscanb1p4i|
+  IMPORT |keyscanb1p4I|
+  IMPORT |keyscanf6p4cp2cp0c|
+  IMPORT |keyscanf6p4Cp2Cp0C|
+  IMPORT |keyscanf6p3cp1cp0c|
+  IMPORT |keyscanf6p3Cp1Cp0C|
+  IMPORT |keyscanf6p5cp3cp1c|
+  IMPORT |keyscanf6p5Cp3Cp1C|
+  IMPORT |keyscanp5c|
+  IMPORT |keyscanp5C|
+  IMPORT |keyscanp5i|
+  IMPORT |keyscanp5I|
+  IMPORT |keyscanf6p6cp4cp2c|
+  IMPORT |keyscanf6p6Cp4Cp2C|
+  IMPORT |keyscanp6c|
+  IMPORT |keyscanp6C|
+  IMPORT |keyscanp6i|
+  IMPORT |keyscanp6I|
+  IMPORT |keyscanf7p5cp3cp1cp0c|
+  IMPORT |keyscanf7p5Cp3Cp1Cp0C|
+  IMPORT |keyscanf7p4cp2cp0c|
+  IMPORT |keyscanf7p4Cp2Cp0C|
+  IMPORT |keyscanf7p6cp4cp2cp0c|
+  IMPORT |keyscanf7p6Cp4Cp2Cp0C|
+  IMPORT |keyscanf1p6c|
+  IMPORT |keyscanf1p6C|
+  IMPORT |keyscanf1p6i|
+  IMPORT |keyscanf1p6I|
+  IMPORT |keyscanf7p5cp3cp1c|
+  IMPORT |keyscanf7p5Cp3Cp1C|
+  IMPORT |keyscanb1p5c|
+  IMPORT |keyscanb1p5C|
+  IMPORT |keyscanb1p5i|
+  IMPORT |keyscanb1p5I|
+  IMPORT |keyscanf8p6cp4cp2cp0c|
+  IMPORT |keyscanf8p6Cp4Cp2Cp0C|
+  IMPORT |keyscanf8p5cp3cp1cp0c|
+  IMPORT |keyscanf8p5Cp3Cp1Cp0C|
 
 ; Export global symbols
 
@@ -138,7 +268,7 @@ host_r6502address0000
 host_r6502address3000
 host_r6502readC000
   ADD r3,r0,#:INDEX:HOST_MEMORY
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502addressbp3000_ram
@@ -146,7 +276,7 @@ host_r6502addressbp3000_ram
   CMP r3,#&E0000000
   ADDLO r3,r0,#:INDEX:HOST_MEMORY
   ADDHS r3,r0,#:INDEX:HOST_SHADOW
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502addressbp3000_ramram
@@ -158,12 +288,12 @@ host_r6502addressbp3000_ramram
   ADDLO r3,r0,#:INDEX:HOST_MEMORY
 host_r6502addressbp3000_ramram2
   ADDHS r3,r0,#:INDEX:HOST_SHADOW
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502addressm3000_x
   ADD r3,r0,#:INDEX:HOST_SHADOW
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502addressm3000_e
@@ -171,18 +301,18 @@ host_r6502addressm3000_e
   CMP r3,#&E0000000
   ADDLO r3,r0,#:INDEX:HOST_MEMORY
   ADDHS r3,r0,#:INDEX:HOST_SHADOW
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502addressbp8000_ram
 host_r6502addressm8000_ram
   ADD r3,r0,#:INDEX:HOST_SHADOW-&8000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502addressmC000_y
   ADD r3,r0,#:INDEX:HOST_SHADOW-&B000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502addressFE00_slow
@@ -199,90 +329,90 @@ host_r6502addressFE00_fast
 
 host_r6502read8000_0
   ADD r3,r0,#:INDEX:HOST_ROMS-&8000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_1
   ADD r3,r0,#:INDEX:HOST_ROMS-&4000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_2
   ADD r3,r0,#:INDEX:HOST_ROMS
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_3
   ADD r3,r0,#:INDEX:HOST_ROMS+&4000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_4
   ADD r3,r0,#:INDEX:HOST_ROMS+&8000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_5
   ADD r3,r0,#:INDEX:HOST_ROMS+&C000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_6
   ADD r3,r0,#:INDEX:HOST_ROMS+&10000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_7
   ADD r3,r0,#:INDEX:HOST_ROMS+&14000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_8
   ADD r3,r0,#:INDEX:HOST_ROMS+&18000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_9
   ADD r3,r0,#:INDEX:HOST_ROMS+&1C000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_A
   ADD r3,r0,#:INDEX:HOST_ROMS+&20000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_B
   ADD r3,r0,#:INDEX:HOST_ROMS+&24000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_C
   ADD r3,r0,#:INDEX:HOST_ROMS+&28000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_D
   ADD r3,r0,#:INDEX:HOST_ROMS+&2C000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_E
   ADD r3,r0,#:INDEX:HOST_ROMS+&30000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502read8000_F
   ADD r3,r0,#:INDEX:HOST_ROMS+&34000
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502readF000
-  CMP r1,#&FC000000
+  CMP r6,#&FC000000
   SUBHS r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_READHIGH
-  LDRHS pc,[r3,r1,LSR #14]
+  LDRHS pc,[r3,r6,LSR #14]
   ADD r3,r0,#:INDEX:HOST_MEMORY
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502readmFC00
@@ -292,7 +422,7 @@ host_r6502modify8000_0
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE]
   ADD r3,r0,#:INDEX:HOST_ROMS-&8000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -303,7 +433,7 @@ host_r6502modify8000_1
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+1]
   ADD r3,r0,#:INDEX:HOST_ROMS-&4000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -314,7 +444,7 @@ host_r6502modify8000_2
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+2]
   ADD r3,r0,#:INDEX:HOST_ROMS
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -325,7 +455,7 @@ host_r6502modify8000_3
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+3]
   ADD r3,r0,#:INDEX:HOST_ROMS+&4000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -336,7 +466,7 @@ host_r6502modify8000_4
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+4]
   ADD r3,r0,#:INDEX:HOST_ROMS+&8000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -347,7 +477,7 @@ host_r6502modify8000_5
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+5]
   ADD r3,r0,#:INDEX:HOST_ROMS+&C000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -358,7 +488,7 @@ host_r6502modify8000_6
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+6]
   ADD r3,r0,#:INDEX:HOST_ROMS+&10000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -369,7 +499,7 @@ host_r6502modify8000_7
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+7]
   ADD r3,r0,#:INDEX:HOST_ROMS+&14000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -380,7 +510,7 @@ host_r6502modify8000_8
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+8]
   ADD r3,r0,#:INDEX:HOST_ROMS+&18000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -391,7 +521,7 @@ host_r6502modify8000_9
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+9]
   ADD r3,r0,#:INDEX:HOST_ROMS+&1C000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -402,7 +532,7 @@ host_r6502modify8000_A
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+10]
   ADD r3,r0,#:INDEX:HOST_ROMS+&20000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -413,7 +543,7 @@ host_r6502modify8000_B
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+11]
   ADD r3,r0,#:INDEX:HOST_ROMS+&24000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -424,7 +554,7 @@ host_r6502modify8000_C
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+12]
   ADD r3,r0,#:INDEX:HOST_ROMS+&28000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -435,7 +565,7 @@ host_r6502modify8000_D
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+13]
   ADD r3,r0,#:INDEX:HOST_ROMS+&2C000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -446,7 +576,7 @@ host_r6502modify8000_E
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+14]
   ADD r3,r0,#:INDEX:HOST_ROMS+&30000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -457,7 +587,7 @@ host_r6502modify8000_F
   LDRB r12,[r0,#:INDEX:HOST_ROMWRITABLE+15]
   ADD r3,r0,#:INDEX:HOST_ROMS+&34000
   TST r12,r12
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   HOST_ADDRESSING_RETURN_MAPPEDNE
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
@@ -466,18 +596,18 @@ host_r6502modify8000_F
 
 host_r6502modifyC000
   ADD r3,r0,#:INDEX:HOST_MEMORY
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
   STRB r3,[r0,#:INDEX:R6502_COPIEDVALUE]
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502modifyF000
-  CMP r1,#&FC000000
+  CMP r6,#&FC000000
   SUBHS r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_MODIFYHIGH
-  LDRHS pc,[r3,r1,LSR #14]
+  LDRHS pc,[r3,r6,LSR #14]
   ADD r3,r0,#:INDEX:HOST_MEMORY
-  ADD r1,r3,r1,LSR #16
+  ADD r1,r3,r6,LSR #16
   LDRB r3,[r1]
   ADD r1,r0,#:INDEX:R6502_COPIEDVALUE
   STRB r3,[r0,#:INDEX:R6502_COPIEDVALUE]
@@ -547,7 +677,44 @@ host_r6502writejim
   MOV pc,lr
 
 |host_r6502cycleroutines|
-  DCD host_r6502cycle1,host_r6502cycle0s1
+  DCD 0,host_r6502cycle1,host_r6502cycle2,host_r6502cycle3
+  DCD host_r6502cycle4,host_r6502cycle5,host_r6502cycle6,0
+  DCD host_r6502cycle0s1,host_r6502cycle1s1,host_r6502cycle2s1,host_r6502cycle3s1
+  DCD host_r6502cycle4s1,host_r6502cycle5s1,host_r6502cycle6s1,0
+  DCD host_r6502cycle0s2,host_r6502cycle1s2,host_r6502cycle2s2,host_r6502cycle3s2
+  DCD host_r6502cycle4s2,host_r6502cycle5s2,host_r6502cycle6s2,0
+
+  MACRO
+  SHIFTINTERRUPTQUEUE $ra,$rb,$shift
+  IF $shift==1
+  ORR $ra,$ra,$rb,LSL #4
+  ELIF $shift==2
+  ORR $ra,$ra,$ra,LSL #4
+  ORR $ra,$ra,$rb,LSL #8
+  ELIF $shift==3
+  ORR $ra,$ra,$ra,LSL #4
+  ORR $ra,$ra,$ra,LSL #4
+  ORR $ra,$ra,$rb,LSL #12
+  ELIF $shift==4
+  ORR $ra,$ra,$ra,LSL #4
+  ORR $ra,$ra,$ra,LSL #8
+  ORR $ra,$ra,$rb,LSL #16
+  ELIF $shift==5
+  ORR $ra,$ra,$ra,LSL #4
+  ORR $ra,$ra,$ra,LSL #8
+  ORR $ra,$ra,$ra,LSL #4
+  ORR $ra,$ra,$rb,LSL #20
+  ELIF $shift==6
+  ORR $ra,$ra,$ra,LSL #4
+  ORR $ra,$ra,$ra,LSL #8
+  ORR $ra,$ra,$ra,LSL #8
+  ORR $ra,$ra,$rb,LSL #24
+  ELIF $shift==7
+  ORR $ra,$ra,$ra,LSL #4
+  ORR $ra,$ra,$ra,LSL #8
+  ORR $rb,$ra,$ra,LSL #16
+  ENDIF
+  MEND
 
   MACRO
   TICK1SCAN1RETURN $shift,$routines
@@ -558,7 +725,7 @@ host_r6502writejim
   TST r3,#R6502_NMI
   AND r2,r3,#&0F
   ORREQ r2,r2,#R6502_NMI_ENABLE
-  ORR r2,r2,r3,LSL #4
+  SHIFTINTERRUPTQUEUE r2,r3,$shift
   LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
   STR r2,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
   ]
@@ -567,11 +734,63 @@ host_r6502writejim
   LDR r2,[r0,#:INDEX:HOST_KEYCOLUMNFLAGS]
   STR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
   STREQ lr,[sp, #-4]!
-  ADREQ lr,advancetimersreturn
+  ADREQ lr,firstadvancetimersreturn
   MOV r2,r2,ROR r1
   ADR r3,$routines
   ORR r2,r2,r2,LSR #1
   LDR pc,[r3,r1,LSR #26]
+  MEND
+
+  MACRO
+  TICKNSCANMULTIPLEBRANCH $n,$shift,$routines,$advancetimersrtn
+  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  LDR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  SUBS r3,r3,#$n
+  BHI %F1
+  ADR r2,%F2
+  STR lr,[sp, #-4]!
+  LDR pc,[r2,r3,LSL #2]
+0
+  ADR lr,$advancetimersrtn
+1
+  [ $shift==0
+  STR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  |
+  LDR r2,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  TST r2,#R6502_NMI
+  STR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  AND r3,r2,#&0F
+  ORREQ r3,r3,#R6502_NMI_ENABLE
+  SHIFTINTERRUPTQUEUE r3,r2,$shift
+  ]
+  LDR r2,[r0,#:INDEX:HOST_KEYCOLUMNFLAGS]
+  [ $shift>0
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  ]
+  MOV r2,r2,ROR r1
+  ADR r3,$routines
+  ORR r2,r2,r2,LSR #1
+  LDR pc,[r3,r1,LSR #26]
+  MEND
+
+  MACRO
+  TICKNSCANMULTIPLEENDOFTABLE
+2
+  DCD %B0
+  MEND
+
+  MACRO
+  TICK2SCAN1BRANCH $shift,$routines,$split
+  TICKNSCANMULTIPLEBRANCH 2,$shift,$routines,firstadvancetimersreturn
+  DCD $split
+  TICKNSCANMULTIPLEENDOFTABLE
+  MEND
+
+  MACRO
+  CYCLESPLIT $a,$b
+  BL $a
+  LDR lr, [sp], #4
+  B $b
   MEND
 
 host_r6502cycle0s1routines
@@ -592,9 +811,451 @@ host_r6502cycle0s1
 host_r6502cycle1
   TICK1SCAN1RETURN 1,host_r6502cycle1routines
 
-advancetimersreturn
+firstadvancetimersreturn
   LDR lr, [sp], #4
   B hostadvancetimers
+
+host_r6502cycle0s2routines
+  DCD keyscanf2p0c, keyscanf2p0C, keyscanp0c, keyscanp0C
+  DCD keyscanf2p0c, keyscanf2p0C, keyscanp0i, keyscanp0I
+  DCD keyscanf2p0c, keyscanf2p0C, keyscanp0c, keyscanp0C
+  DCD keyscanf2p0c, keyscanf2p0C, keyscanp0i, keyscanp0I
+
+host_r6502cycle1s1routines
+  DCD keyscanf2p1c, keyscanf2p1C, keyscanp1c, keyscanp1C
+  DCD keyscanf2p1c, keyscanf2p1C, keyscanp1i, keyscanp1I
+  DCD keyscanf2p0c, keyscanf2p0C, keyscanp0c, keyscanp0C
+  DCD keyscanf2p0c, keyscanf2p0C, keyscanp0i, keyscanp0I
+
+host_r6502cycle2routines
+  DCD keyscanf2p2c, keyscanf2p2C, keyscanp2c, keyscanp2C
+  DCD keyscanf2p2c, keyscanf2p2C, keyscanp2i, keyscanp2I
+  DCD keyscanf2p1c, keyscanf2p1C, keyscanp1c, keyscanp1C
+  DCD keyscanf2p1c, keyscanf2p1C, keyscanp1i, keyscanp1I
+
+host_r6502cycle0s2
+  TICK2SCAN1BRANCH 0,host_r6502cycle0s2routines,host_r6502cyclesplit0s1and0s1
+
+host_r6502cycle1s1
+  TICK2SCAN1BRANCH 1,host_r6502cycle1s1routines,host_r6502cyclesplit1and0s1
+
+host_r6502cycle2
+  TICK2SCAN1BRANCH 2,host_r6502cycle2routines,host_r6502cyclesplit1and1
+
+host_r6502cycle1s2routines
+  DCD keyscanf3p1cp0c, keyscanf3p1Cp0C, keyscanf1p1c, keyscanf1p1C
+  DCD keyscanf3p1cp0c, keyscanf3p1Cp0C, keyscanf1p1i, keyscanf1p1I
+  DCD keyscanf3p0c, keyscanf3p0C, keyscanb1p0c, keyscanb1p0C
+  DCD keyscanf3p0c, keyscanf3p0C, keyscanb1p0i, keyscanb1p0I
+
+host_r6502cycle2s1routines
+  DCD keyscanf3p2cp0c, keyscanf3p2Cp0C, keyscanf1p2c, keyscanf1p2C
+  DCD keyscanf3p2cp0c, keyscanf3p2Cp0C, keyscanf1p2i, keyscanf1p2I
+  DCD keyscanf3p1c, keyscanf3p1C, keyscanb1p1c, keyscanb1p1C
+  DCD keyscanf3p1c, keyscanf3p1C, keyscanb1p1i, keyscanb1p1I
+
+host_r6502cycle3routines
+  DCD keyscanf3p3cp1c, keyscanf3p3Cp1C, keyscanf1p3c, keyscanf1p3C
+  DCD keyscanf3p3cp1c, keyscanf3p3Cp1C, keyscanf1p3i, keyscanf1p3I
+  DCD keyscanf3p2c, keyscanf3p2C, keyscanb1p2c, keyscanb1p2C
+  DCD keyscanf3p2c, keyscanf3p2C, keyscanb1p2i, keyscanb1p2I
+
+host_r6502cycle1s2
+  TICKNSCANMULTIPLEBRANCH 3,1,host_r6502cycle1s2routines,secondadvancetimersreturn
+  DCD host_r6502cyclesplit1and0s2
+  DCD host_r6502cyclesplit1s1and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle2s1
+  TICKNSCANMULTIPLEBRANCH 3,2,host_r6502cycle2s1routines,secondadvancetimersreturn
+  DCD host_r6502cyclesplit1and1s1
+  DCD host_r6502cyclesplit2and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle3
+  TICKNSCANMULTIPLEBRANCH 3,3,host_r6502cycle3routines,secondadvancetimersreturn
+  DCD host_r6502cyclesplit1and2
+  DCD host_r6502cyclesplit2and1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+secondadvancetimersreturn
+  LDR lr, [sp], #4
+  B hostadvancetimers
+
+host_r6502cycle2s2routines
+  DCD keyscanf4p2cp0c, keyscanf4p2Cp0C, keyscanp2c, keyscanp2C
+  DCD keyscanf4p2cp0c, keyscanf4p2Cp0C, keyscanp2i, keyscanp2I
+  DCD keyscanf4p1cp0c, keyscanf4p1Cp0C, keyscanp1c, keyscanp1C
+  DCD keyscanf4p1cp0c, keyscanf4p1Cp0C, keyscanp1i, keyscanp1I
+
+host_r6502cycle3s1routines
+  DCD keyscanf4p3cp1c, keyscanf4p3Cp1C, keyscanp3c, keyscanp3C
+  DCD keyscanf4p3cp1c, keyscanf4p3Cp1C, keyscanp3i, keyscanp3I
+  DCD keyscanf4p2cp0c, keyscanf4p2Cp0C, keyscanp2c, keyscanp2C
+  DCD keyscanf4p2cp0c, keyscanf4p2Cp0C, keyscanp2i, keyscanp2I
+
+host_r6502cycle4routines
+  DCD keyscanf4p4cp2c, keyscanf4p4Cp2C, keyscanp4c, keyscanp4C
+  DCD keyscanf4p4cp2c, keyscanf4p4Cp2C, keyscanp4i, keyscanp4I
+  DCD keyscanf4p3cp1c, keyscanf4p3Cp1C, keyscanp3c, keyscanp3C
+  DCD keyscanf4p3cp1c, keyscanf4p3Cp1C, keyscanp3i, keyscanp3I
+
+host_r6502cycle2s2
+  TICKNSCANMULTIPLEBRANCH 4,2,host_r6502cycle2s2routines,secondadvancetimersreturn
+  DCD host_r6502cyclesplit1and1s2
+  DCD host_r6502cyclesplit2and0s2
+  DCD host_r6502cyclesplit2s1and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle3s1
+  TICKNSCANMULTIPLEBRANCH 4,3,host_r6502cycle3s1routines,secondadvancetimersreturn
+  DCD host_r6502cyclesplit1and2s1
+  DCD host_r6502cyclesplit2and1s1
+  DCD host_r6502cyclesplit3and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle4
+  TICKNSCANMULTIPLEBRANCH 4,4,host_r6502cycle4routines,secondadvancetimersreturn
+  DCD host_r6502cyclesplit1and3
+  DCD host_r6502cyclesplit2and2
+  DCD host_r6502cyclesplit3and1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle3s2routines
+  DCD keyscanf5p3cp1cp0c, keyscanf5p3Cp1Cp0C, keyscanf1p3c, keyscanf1p3C
+  DCD keyscanf5p3cp1cp0c, keyscanf5p3Cp1Cp0C, keyscanf1p3i, keyscanf1p3I
+  DCD keyscanf5p2cp0c, keyscanf5p2Cp0C, keyscanb1p2c, keyscanb1p2C
+  DCD keyscanf5p2cp0c, keyscanf5p2Cp0C, keyscanb1p2i, keyscanb1p2I
+
+host_r6502cycle4s1routines
+  DCD keyscanf5p4cp2cp0c, keyscanf5p4Cp2Cp0C, keyscanf1p4c, keyscanf1p4C
+  DCD keyscanf5p4cp2cp0c, keyscanf5p4Cp2Cp0C, keyscanf1p4i, keyscanf1p4I
+  DCD keyscanf5p3cp1c, keyscanf5p3Cp1C, keyscanb1p3c, keyscanb1p3C
+  DCD keyscanf5p3cp1c, keyscanf5p3Cp1C, keyscanb1p3i, keyscanb1p3I
+
+host_r6502cycle5routines
+  DCD keyscanf5p5cp3cp1c, keyscanf5p5Cp3Cp1C, keyscanf1p5c, keyscanf1p5C
+  DCD keyscanf5p5cp3cp1c, keyscanf5p5Cp3Cp1C, keyscanf1p5i, keyscanf1p5I
+  DCD keyscanf5p4cp2c, keyscanf5p4Cp2C, keyscanb1p4c, keyscanb1p4C
+  DCD keyscanf5p4cp2c, keyscanf5p4Cp2C, keyscanb1p4i, keyscanb1p4I
+
+host_r6502cycle3s2
+  TICKNSCANMULTIPLEBRANCH 5,3,host_r6502cycle3s2routines,thirdadvancetimersreturn
+  DCD host_r6502cyclesplit1and2s2
+  DCD host_r6502cyclesplit2and1s2
+  DCD host_r6502cyclesplit3and0s2
+  DCD host_r6502cyclesplit3s1and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle4s1
+  TICKNSCANMULTIPLEBRANCH 5,4,host_r6502cycle4s1routines,thirdadvancetimersreturn
+  DCD host_r6502cyclesplit1and3s1
+  DCD host_r6502cyclesplit2and2s1
+  DCD host_r6502cyclesplit3and1s1
+  DCD host_r6502cyclesplit4and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle5
+  TICKNSCANMULTIPLEBRANCH 5,5,host_r6502cycle5routines,thirdadvancetimersreturn
+  DCD host_r6502cyclesplit1and4
+  DCD host_r6502cyclesplit2and3
+  DCD host_r6502cyclesplit3and2
+  DCD host_r6502cyclesplit4and1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+thirdadvancetimersreturn
+  LDR lr, [sp], #4
+  B hostadvancetimers
+
+host_r6502cycle4s2routines
+  DCD keyscanf6p4cp2cp0c, keyscanf6p4Cp2Cp0C, keyscanp4c, keyscanp4C
+  DCD keyscanf6p4cp2cp0c, keyscanf6p4Cp2Cp0C, keyscanp4i, keyscanp4I
+  DCD keyscanf6p3cp1cp0c, keyscanf6p3Cp1Cp0C, keyscanp3c, keyscanp3C
+  DCD keyscanf6p3cp1cp0c, keyscanf6p3Cp1Cp0C, keyscanp3i, keyscanp3I
+
+host_r6502cycle5s1routines
+  DCD keyscanf6p5cp3cp1c, keyscanf6p5Cp3Cp1C, keyscanp5c, keyscanp5C
+  DCD keyscanf6p5cp3cp1c, keyscanf6p5Cp3Cp1C, keyscanp5i, keyscanp5I
+  DCD keyscanf6p4cp2cp0c, keyscanf6p4Cp2Cp0C, keyscanp4c, keyscanp4C
+  DCD keyscanf6p4cp2cp0c, keyscanf6p4Cp2Cp0C, keyscanp4i, keyscanp4I
+
+host_r6502cycle6routines
+  DCD keyscanf6p6cp4cp2c, keyscanf6p6Cp4Cp2C, keyscanp6c, keyscanp6C
+  DCD keyscanf6p6cp4cp2c, keyscanf6p6Cp4Cp2C, keyscanp6i, keyscanp6I
+  DCD keyscanf6p5cp3cp1c, keyscanf6p5Cp3Cp1C, keyscanp5c, keyscanp5C
+  DCD keyscanf6p5cp3cp1c, keyscanf6p5Cp3Cp1C, keyscanp5i, keyscanp5I
+
+host_r6502cycle4s2
+  TICKNSCANMULTIPLEBRANCH 6,4,host_r6502cycle4s2routines,thirdadvancetimersreturn
+  DCD host_r6502cyclesplit1and3s2
+  DCD host_r6502cyclesplit2and2s2
+  DCD host_r6502cyclesplit3and1s2
+  DCD host_r6502cyclesplit4and0s2
+  DCD host_r6502cyclesplit4s1and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle5s1
+  TICKNSCANMULTIPLEBRANCH 6,5,host_r6502cycle5s1routines,thirdadvancetimersreturn
+  DCD host_r6502cyclesplit1and4s1
+  DCD host_r6502cyclesplit2and3s1
+  DCD host_r6502cyclesplit3and2s1
+  DCD host_r6502cyclesplit4and1s1
+  DCD host_r6502cyclesplit5and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle6
+  TICKNSCANMULTIPLEBRANCH 6,6,host_r6502cycle6routines,thirdadvancetimersreturn
+  DCD host_r6502cyclesplit1and5
+  DCD host_r6502cyclesplit2and4
+  DCD host_r6502cyclesplit3and3
+  DCD host_r6502cyclesplit4and2
+  DCD host_r6502cyclesplit5and1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle5s2routines
+  DCD keyscanf7p5cp3cp1cp0c, keyscanf7p5Cp3Cp1Cp0C, keyscanf1p5c, keyscanf1p5C
+  DCD keyscanf7p5cp3cp1cp0c, keyscanf7p5Cp3Cp1Cp0C, keyscanf1p5i, keyscanf1p5I
+  DCD keyscanf7p4cp2cp0c, keyscanf7p4Cp2Cp0C, keyscanb1p4c, keyscanb1p4C
+  DCD keyscanf7p4cp2cp0c, keyscanf7p4Cp2Cp0C, keyscanb1p4i, keyscanb1p4I
+
+host_r6502cycle6s1routines
+  DCD keyscanf7p6cp4cp2cp0c, keyscanf7p6Cp4Cp2Cp0C, keyscanf1p6c, keyscanf1p6C
+  DCD keyscanf7p6cp4cp2cp0c, keyscanf7p6Cp4Cp2Cp0C, keyscanf1p6i, keyscanf1p6I
+  DCD keyscanf7p5cp3cp1c, keyscanf7p5Cp3Cp1C, keyscanb1p5c, keyscanb1p5C
+  DCD keyscanf7p5cp3cp1c, keyscanf7p5Cp3Cp1C, keyscanb1p5i, keyscanb1p5I
+
+host_r6502cycle5s2
+  TICKNSCANMULTIPLEBRANCH 7,5,host_r6502cycle5s2routines,fourthadvancetimersreturn
+  DCD host_r6502cyclesplit1and4s2
+  DCD host_r6502cyclesplit2and3s2
+  DCD host_r6502cyclesplit3and2s2
+  DCD host_r6502cyclesplit4and1s2
+  DCD host_r6502cyclesplit5and0s2
+  DCD host_r6502cyclesplit5s1and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cycle6s1
+  TICKNSCANMULTIPLEBRANCH 7,6,host_r6502cycle6s1routines,fourthadvancetimersreturn
+  DCD host_r6502cyclesplit1and5s1
+  DCD host_r6502cyclesplit2and4s1
+  DCD host_r6502cyclesplit3and3s1
+  DCD host_r6502cyclesplit4and2s1
+  DCD host_r6502cyclesplit5and1s1
+  DCD host_r6502cyclesplit6and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+fourthadvancetimersreturn
+  LDR lr, [sp], #4
+  B hostadvancetimers
+
+host_r6502cycle6s2routines
+  DCD keyscanf8p6cp4cp2cp0c, keyscanf8p6Cp4Cp2Cp0C, keyscanp6c, keyscanp6C
+  DCD keyscanf8p6cp4cp2cp0c, keyscanf8p6Cp4Cp2Cp0C, keyscanp6i, keyscanp6I
+  DCD keyscanf8p5cp3cp1cp0c, keyscanf8p5Cp3Cp1Cp0C, keyscanp5c, keyscanp5C
+  DCD keyscanf8p5cp3cp1cp0c, keyscanf8p5Cp3Cp1Cp0C, keyscanp5i, keyscanp5I
+
+host_r6502cycle6s2
+  TICKNSCANMULTIPLEBRANCH 8,6,host_r6502cycle6s2routines,fourthadvancetimersreturn
+  DCD host_r6502cyclesplit1and5s2
+  DCD host_r6502cyclesplit2and4s2
+  DCD host_r6502cyclesplit3and3s2
+  DCD host_r6502cyclesplit4and2s2
+  DCD host_r6502cyclesplit5and1s2
+  DCD host_r6502cyclesplit6and0s2
+  DCD host_r6502cyclesplit6s1and0s1
+  TICKNSCANMULTIPLEENDOFTABLE
+
+host_r6502cyclesplit0s1and0s1
+  CYCLESPLIT host_r6502cycle0s1,host_r6502cycle0s1
+
+host_r6502cyclesplit1and0s1
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle0s1
+
+host_r6502cyclesplit1and1
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle1
+
+host_r6502cyclesplit1and0s2
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle0s2
+
+host_r6502cyclesplit1s1and0s1
+  CYCLESPLIT host_r6502cycle1s1,host_r6502cycle0s1
+
+host_r6502cyclesplit1and1s1
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle1s1
+
+host_r6502cyclesplit2and0s1
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle0s1
+
+host_r6502cyclesplit1and2
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle2
+
+host_r6502cyclesplit2and1
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle1
+
+host_r6502cyclesplit1and1s2
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle1s2
+
+host_r6502cyclesplit2and0s2
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle0s2
+
+host_r6502cyclesplit2s1and0s1
+  CYCLESPLIT host_r6502cycle2s1,host_r6502cycle0s1
+
+host_r6502cyclesplit1and2s1
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle2s1
+
+host_r6502cyclesplit2and1s1
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle1s1
+
+host_r6502cyclesplit3and0s1
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle0s1
+
+host_r6502cyclesplit1and3
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle3
+
+host_r6502cyclesplit2and2
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle2
+
+host_r6502cyclesplit3and1
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle1
+
+host_r6502cyclesplit1and2s2
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle2s2
+
+host_r6502cyclesplit2and1s2
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle1s2
+
+host_r6502cyclesplit3and0s2
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle0s2
+
+host_r6502cyclesplit3s1and0s1
+  CYCLESPLIT host_r6502cycle3s1,host_r6502cycle0s1
+
+host_r6502cyclesplit1and3s1
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle3s1
+
+host_r6502cyclesplit2and2s1
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle2s1
+
+host_r6502cyclesplit3and1s1
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle1s1
+
+host_r6502cyclesplit4and0s1
+  CYCLESPLIT host_r6502cycle4,host_r6502cycle0s1
+
+host_r6502cyclesplit1and4
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle4
+
+host_r6502cyclesplit2and3
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle3
+
+host_r6502cyclesplit3and2
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle2
+
+host_r6502cyclesplit4and1
+  CYCLESPLIT host_r6502cycle4,host_r6502cycle1
+
+host_r6502cyclesplit1and3s2
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle3s2
+
+host_r6502cyclesplit2and2s2
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle2s2
+
+host_r6502cyclesplit3and1s2
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle1s2
+
+host_r6502cyclesplit4and0s2
+  CYCLESPLIT host_r6502cycle4,host_r6502cycle0s2
+
+host_r6502cyclesplit4s1and0s1
+  CYCLESPLIT host_r6502cycle4s1,host_r6502cycle0s1
+
+host_r6502cyclesplit1and4s1
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle4s1
+
+host_r6502cyclesplit2and3s1
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle3s1
+
+host_r6502cyclesplit3and2s1
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle2s1
+
+host_r6502cyclesplit4and1s1
+  CYCLESPLIT host_r6502cycle4,host_r6502cycle1s1
+
+host_r6502cyclesplit5and0s1
+  CYCLESPLIT host_r6502cycle5,host_r6502cycle0s1
+
+host_r6502cyclesplit1and5
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle5
+
+host_r6502cyclesplit2and4
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle4
+
+host_r6502cyclesplit3and3
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle3
+
+host_r6502cyclesplit4and2
+  CYCLESPLIT host_r6502cycle4,host_r6502cycle2
+
+host_r6502cyclesplit5and1
+  CYCLESPLIT host_r6502cycle5,host_r6502cycle1
+
+host_r6502cyclesplit1and4s2
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle4s2
+
+host_r6502cyclesplit2and3s2
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle3s2
+
+host_r6502cyclesplit3and2s2
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle2s2
+
+host_r6502cyclesplit4and1s2
+  CYCLESPLIT host_r6502cycle4,host_r6502cycle1s2
+
+host_r6502cyclesplit5and0s2
+  CYCLESPLIT host_r6502cycle5,host_r6502cycle0s2
+
+host_r6502cyclesplit5s1and0s1
+  CYCLESPLIT host_r6502cycle5s1,host_r6502cycle0s1
+
+host_r6502cyclesplit1and5s1
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle5s1
+
+host_r6502cyclesplit2and4s1
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle4s1
+
+host_r6502cyclesplit3and3s1
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle3s1
+
+host_r6502cyclesplit4and2s1
+  CYCLESPLIT host_r6502cycle4,host_r6502cycle2s1
+
+host_r6502cyclesplit5and1s1
+  CYCLESPLIT host_r6502cycle5,host_r6502cycle1s1
+
+host_r6502cyclesplit6and0s1
+  CYCLESPLIT host_r6502cycle6,host_r6502cycle0s1
+
+host_r6502cyclesplit1and5s2
+  CYCLESPLIT host_r6502cycle1,host_r6502cycle5s2
+
+host_r6502cyclesplit2and4s2
+  CYCLESPLIT host_r6502cycle2,host_r6502cycle4s2
+
+host_r6502cyclesplit3and3s2
+  CYCLESPLIT host_r6502cycle3,host_r6502cycle3s2
+
+host_r6502cyclesplit4and2s2
+  CYCLESPLIT host_r6502cycle4,host_r6502cycle2s2
+
+host_r6502cyclesplit5and1s2
+  CYCLESPLIT host_r6502cycle5,host_r6502cycle1s2
+
+host_r6502cyclesplit6and0s2
+  CYCLESPLIT host_r6502cycle6,host_r6502cycle0s2
+
+host_r6502cyclesplit6s1and0s1
+  CYCLESPLIT host_r6502cycle6s1,host_r6502cycle0s1
 
 |host_r6502readspecial|
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALREADOPS
