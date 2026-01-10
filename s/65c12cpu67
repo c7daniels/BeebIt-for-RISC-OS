@@ -34,6 +34,12 @@
   IMPORT |s2_r6502operandloadr4|
   IMPORT |s1_r6502operandloadr4|
   IMPORT |s_r6502operandloadr4|
+  IMPORT |s2_r6502storezpg_p|
+  IMPORT |s1_r6502storezpg_p|
+  IMPORT |s_r6502storezpg_p|
+  IMPORT |s2_r6502storezpgx_p|
+  IMPORT |s1_r6502storezpgx_p|
+  IMPORT |s_r6502storezpgx_p|
   IMPORT |s2_r65c12modifyabs_u1p2l|
   IMPORT |s1_r65c12modifyabs_u1p2l|
   IMPORT |s_r65c12modifyabs_u1p2l|
@@ -60,15 +66,20 @@
   IMPORT |s2_r6502interruptfetch_u3p|
   IMPORT |s1_r6502interruptfetch_u3p|
   IMPORT |s_r6502interruptfetch_u3p|
+  IMPORT |s2_r6502interruptfetch_u2p|
+  IMPORT |s1_r6502interruptfetch_u2p|
+  IMPORT |s_r6502interruptfetch_u2p|
   IMPORT |s2_r6502interruptfetch_u1p|
   IMPORT |s1_r6502interruptfetch_u1p|
   IMPORT |s_r6502interruptfetch_u1p|
 
 ; Export global symbols
 
+  EXPORT |r65c12stzzpgroutine|
   EXPORT |r65c12jmpabsindroutine|
   EXPORT |r65c12rorabsroutine|
   EXPORT |r65c12bvsroutine|
+  EXPORT |r65c12stzzpgxroutine|
   EXPORT |r65c12plyroutine|
   EXPORT |r65c12jmpabsxindroutine|
   EXPORT |r65c12rorabsxroutine|
@@ -131,6 +142,11 @@
   ORRMI r8,r8,#NFLAG
   ORREQ r8,r8,#ZFLAG
   MEND
+
+|r65c12stzzpgroutine|
+  R6502_OPCODE_PUSH
+  MOV r5,#0
+  R6502_STORE_ZPG_OPCODE_RETURN
 
 |r65c12jmpabsindroutine|
   R6502_OPCODE_PUSH
@@ -247,6 +263,11 @@ s_r65c12jmpabsind_p4
 |r65c12bvsroutine|
   R6502_OPCODE_PUSH
   R65C12_BRANCH_IF_SET_OPCODE_RETURN VFLAG
+
+|r65c12stzzpgxroutine|
+  R6502_OPCODE_PUSH
+  MOV r5,#0
+  R6502_STORE_ZPGX_OPCODE_RETURN
 
 |r65c12jmpabsxindroutine|
   R6502_OPCODE_PUSH

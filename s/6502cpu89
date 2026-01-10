@@ -31,14 +31,53 @@
   IMPORT |s_r6502implied_p|
   IMPORT |r6502nobranch|
   IMPORT |r6502branch|
+  IMPORT |s2_r6502interruptfetch_u3p|
+  IMPORT |s1_r6502interruptfetch_u3p|
+  IMPORT |s_r6502interruptfetch_u3p|
+  IMPORT |s2_r6502interruptfetch_u2p|
+  IMPORT |s1_r6502interruptfetch_u2p|
+  IMPORT |s_r6502interruptfetch_u2p|
+  IMPORT |s2_r6502interruptfetch_u1p|
+  IMPORT |s1_r6502interruptfetch_u1p|
+  IMPORT |s_r6502interruptfetch_u1p|
 
 ; Export global symbols
 
+  EXPORT |r6502styzpgroutine|
+  EXPORT |r6502stazpgroutine|
+  EXPORT |r6502stxzpgroutine|
+  EXPORT |r6502saxzpgroutine|
   EXPORT |r6502deyroutine|
   EXPORT |r6502txaroutine|
+  EXPORT |r6502styabsroutine|
+  EXPORT |r6502staabsroutine|
+  EXPORT |r6502stxabsroutine|
+  EXPORT |r6502saxabsroutine|
   EXPORT |r6502bccroutine|
+  EXPORT |r6502styzpgxroutine|
+  EXPORT |r6502stazpgxroutine|
+  EXPORT |r6502stxzpgyroutine|
+  EXPORT |r6502saxzpgyroutine|
   EXPORT |r6502tyaroutine|
   EXPORT |r6502txsroutine|
+  EXPORT |s2_r6502storezpg_p|
+  EXPORT |s1_r6502storezpg_p|
+  EXPORT |s_r6502storezpg_p|
+  EXPORT |s2_r6502storeabs_p1|
+  EXPORT |s1_r6502storeabs_p1|
+  EXPORT |s_r6502storeabs_p1|
+  EXPORT |s2_r6502storeabs_u1p2|
+  EXPORT |s1_r6502storeabs_u1p2|
+  EXPORT |s_r6502storeabs_u1p2|
+  EXPORT |s2_r6502storeabs_p3|
+  EXPORT |s1_r6502storeabs_p3|
+  EXPORT |s_r6502storeabs_p3|
+  EXPORT |s2_r6502storezpgx_p|
+  EXPORT |s1_r6502storezpgx_p|
+  EXPORT |s_r6502storezpgx_p|
+  EXPORT |s2_r6502storezpgy_p|
+  EXPORT |s1_r6502storezpgy_p|
+  EXPORT |s_r6502storezpgy_p|
 
   MACRO
   DEY_ACTION
@@ -76,6 +115,28 @@
   STRB r2,[r0,#:INDEX:R6502_SP_CODE+3]
   MEND
 
+|r6502styzpgroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_Y]
+  R6502_STORE_ZPG_OPCODE_RETURN
+
+|r6502stazpgroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_A]
+  R6502_STORE_ZPG_OPCODE_RETURN
+
+|r6502stxzpgroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_X]
+  R6502_STORE_ZPG_OPCODE_RETURN
+
+|r6502saxzpgroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_A]
+  LDR r2,[r0,#:INDEX:R6502_X]
+  AND r5,r5,r2
+  R6502_STORE_ZPG_OPCODE_RETURN
+
 |r6502deyroutine|
   R6502_OPCODE_PUSH
   DEY_ACTION
@@ -86,9 +147,53 @@
   TXA_ACTION
   R6502_IMPLIED_OPCODE_RETURN
 
+|r6502styabsroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_Y]
+  R6502_STORE_ABS_OPCODE_RETURN
+
+|r6502staabsroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_A]
+  R6502_STORE_ABS_OPCODE_RETURN
+
+|r6502stxabsroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_X]
+  R6502_STORE_ABS_OPCODE_RETURN
+
+|r6502saxabsroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_A]
+  LDR r2,[r0,#:INDEX:R6502_X]
+  AND r5,r5,r2
+  R6502_STORE_ABS_OPCODE_RETURN
+
 |r6502bccroutine|
   R6502_OPCODE_PUSH
   R6502_BRANCH_IF_CLEAR_OPCODE_RETURN CFLAG
+
+|r6502styzpgxroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_Y]
+  R6502_STORE_ZPGX_OPCODE_RETURN
+
+|r6502stazpgxroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_A]
+  R6502_STORE_ZPGX_OPCODE_RETURN
+
+|r6502stxzpgyroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_X]
+  R6502_STORE_ZPGY_OPCODE_RETURN
+
+|r6502saxzpgyroutine|
+  R6502_OPCODE_PUSH
+  LDR r5,[r0,#:INDEX:R6502_A]
+  LDR r2,[r0,#:INDEX:R6502_X]
+  AND r5,r5,r2
+  R6502_STORE_ZPGY_OPCODE_RETURN
 
 |r6502tyaroutine|
   R6502_OPCODE_PUSH
@@ -99,6 +204,94 @@
   R6502_OPCODE_PUSH
   TXS_ACTION
   R6502_IMPLIED_OPCODE_RETURN
+
+|s2_r6502storezpg_p|
+  R6502_OPCODE_CYCLES 0,2
+  B s_r6502storezpg_p
+|s1_r6502storezpg_p|
+  R6502_OPCODE_CYCLES 0,1
+|s_r6502storezpg_p|
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
+  STRB r5,[r3,r4]
+  ADD r6,r7,#2:SHL:16
+  ADD r7,r7,#2:SHL:16
+  R6502_OPCODE_INTERRUPT_FETCH 2
+
+|s2_r6502storeabs_p1|
+  R6502_OPCODE_CYCLES 0,2
+  B s_r6502storeabs_p1
+|s1_r6502storeabs_p1|
+  R6502_OPCODE_CYCLES 0,1
+|s_r6502storeabs_p1|
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  ADD r6,r7,#2:SHL:16
+  R6502_READ_BRANCH r6502storeabs_u1p2
+  LDRB r3,[r1]
+  MOV r6,#ADDRESSING_BASEFLAG
+  ORR r6,r6,r4,LSL #16
+  ORR r6,r6,r3,LSL #24
+  R6502_OPCODE_CYCLES 2,0
+  R6502_MODIFY_BRANCH r6502storeabs_p3
+  R6502_STORE_MAPPED_ABS_OPCODE_FINISH
+|s2_r6502storeabs_u1p2|
+  R6502_OPCODE_CYCLES 1,1
+  B s_r6502storeabs_p2
+|s1_r6502storeabs_u1p2|
+  R6502_OPCODE_CYCLES 1,2
+  B s_r6502storeabs_p2
+|s_r6502storeabs_u1p2|
+  R6502_OPCODE_CYCLES 1,0
+s_r6502storeabs_p2
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  MOV r6,#ADDRESSING_BASEFLAG
+  ORR r6,r6,r4,LSL #16
+  ORR r6,r6,r3,LSL #24
+  R6502_OPCODE_CYCLES 1,0
+  R6502_MODIFY_BRANCH r6502storeabs_p3
+  R6502_STORE_MAPPED_ABS_OPCODE_FINISH
+|s2_r6502storeabs_p3|
+  R6502_OPCODE_CYCLES 0,1
+  B s_r6502storeabs_p3
+|s1_r6502storeabs_p3|
+  R6502_OPCODE_CYCLES 0,2
+|s_r6502storeabs_p3|
+  R6502_STORE_SPECIAL_ABS_OPCODE_FINISH
+
+|s2_r6502storezpgx_p|
+  R6502_OPCODE_CYCLES 0,2
+  B s_r6502storezpgx_p
+|s1_r6502storezpgx_p|
+  R6502_OPCODE_CYCLES 0,1
+|s_r6502storezpgx_p|
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
+  ADD r4,r2,r4,LSL #24
+  STRB r5,[r3,r4,LSR #24]
+  ADD r6,r7,#2:SHL:16
+  ADD r7,r7,#2:SHL:16
+  R6502_OPCODE_INTERRUPT_FETCH 3
+
+|s2_r6502storezpgy_p|
+  R6502_OPCODE_CYCLES 0,2
+  B s_r6502storezpgy_p
+|s1_r6502storezpgy_p|
+  R6502_OPCODE_CYCLES 0,1
+|s_r6502storezpgy_p|
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  LDR r2,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDR r3,[r0,#:INDEX:R6502_PAGEZERO]
+  ADD r4,r2,r4,LSL #24
+  STRB r5,[r3,r4,LSR #24]
+  ADD r6,r7,#2:SHL:16
+  ADD r7,r7,#2:SHL:16
+  R6502_OPCODE_INTERRUPT_FETCH 3
 
 
 ;Data Area

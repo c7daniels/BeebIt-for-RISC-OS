@@ -1023,6 +1023,21 @@ extern R6502CPUMAP* r6502isbpreindexedroutine(R6502CPUMAP* cmap, uintptr_t incre
 extern R6502CPUMAP* r6502isbabsxroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502isbabsyroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502isbpostindexedroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502stazpgroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502staabsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502stazpgxroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r6502stxzpgroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502stxabsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502stxzpgyroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r6502styzpgroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502styabsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502styzpgxroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r6502saxzpgroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502saxabsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r6502saxzpgyroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 
 extern R6502CPUMAP* r6502bplroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r6502bmiroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
@@ -1072,6 +1087,10 @@ extern R6502CPUMAP* r65c12tsbzpgroutine(R6502CPUMAP* cmap, uintptr_t incremented
 extern R6502CPUMAP* r65c12tsbabsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12trbzpgroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12trbabsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+
+extern R6502CPUMAP* r65c12stzzpgroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12stzabsroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
+extern R6502CPUMAP* r65c12stzzpgxroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 
 extern R6502CPUMAP* r65c12bplroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
 extern R6502CPUMAP* r65c12bmiroutine(R6502CPUMAP* cmap, uintptr_t incremented_cpu_state);
