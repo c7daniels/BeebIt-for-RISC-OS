@@ -428,34 +428,34 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x01
   NULL, //0x02
   NULL, //0x03
-  NULL, //0x04
+  r65c12tsbzpgroutine, //0x04
   NULL, //0x05
-  NULL, //0x06
+  r6502aslzpgroutine, //0x06
   NULL, //0x07
   r6502phproutine, //0x08
   NULL, //0x09
   r6502aslaroutine, //0x0A
   NULL, //0x0B
-  NULL, //0x0C
+  r65c12tsbabsroutine, //0x0C
   NULL, //0x0D
-  NULL, //0x0E
+  r65c12aslabsroutine, //0x0E
   NULL, //0x0F
 
   r65c12bplroutine, //0x10
   NULL, //0x11
   NULL, //0x12
   NULL, //0x13
-  NULL, //0x14
+  r65c12trbzpgroutine, //0x14
   NULL, //0x15
-  NULL, //0x16
+  r6502aslzpgxroutine, //0x16
   NULL, //0x17
   r6502clcroutine, //0x18
   NULL, //0x19
   r65c12incaroutine, //0x1A
   NULL, //0x1B
-  NULL, //0x1C
+  r65c12trbabsroutine, //0x1C
   NULL, //0x1D
-  NULL, //0x1E
+  r65c12aslabsxroutine, //0x1E
   NULL, //0x1F
 
   r6502jsrroutine, //0x20
@@ -464,7 +464,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x23
   NULL, //0x24
   NULL, //0x25
-  NULL, //0x26
+  r6502rolzpgroutine, //0x26
   NULL, //0x27
   r6502plproutine, //0x28
   NULL, //0x29
@@ -472,7 +472,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x2B
   NULL, //0x2C
   NULL, //0x2D
-  NULL, //0x2E
+  r65c12rolabsroutine, //0x2E
   NULL, //0x2F
 
   r65c12bmiroutine, //0x30
@@ -481,7 +481,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x33
   NULL, //0x34
   NULL, //0x35
-  NULL, //0x36
+  r6502rolzpgxroutine, //0x36
   NULL, //0x37
   r6502secroutine, //0x38
   NULL, //0x39
@@ -489,7 +489,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x3B
   NULL, //0x3C
   NULL, //0x3D
-  NULL, //0x3E
+  r65c12rolabsxroutine, //0x3E
   NULL, //0x3F
 
   r6502rtiroutine, //0x40
@@ -498,7 +498,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x43
   NULL, //0x44
   NULL, //0x45
-  NULL, //0x46
+  r6502lsrzpgroutine, //0x46
   NULL, //0x47
   r6502pharoutine, //0x48
   NULL, //0x49
@@ -506,7 +506,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x4B
   r6502jmpabsroutine, //0x4C
   NULL, //0x4D
-  NULL, //0x4E
+  r65c12lsrabsroutine, //0x4E
   NULL, //0x4F
 
   r65c12bvcroutine, //0x50
@@ -515,7 +515,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x53
   NULL, //0x54
   NULL, //0x55
-  NULL, //0x56
+  r6502lsrzpgxroutine, //0x56
   NULL, //0x57
   r6502cliroutine, //0x58
   NULL, //0x59
@@ -523,7 +523,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x5B
   NULL, //0x5C
   NULL, //0x5D
-  NULL, //0x5E
+  r65c12lsrabsxroutine, //0x5E
   NULL, //0x5F
 
   r6502rtsroutine, //0x60
@@ -532,7 +532,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x63
   NULL, //0x64
   NULL, //0x65
-  NULL, //0x66
+  r6502rorzpgroutine, //0x66
   NULL, //0x67
   r6502plaroutine, //0x68
   NULL, //0x69
@@ -540,7 +540,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x6B
   r65c12jmpabsindroutine, //0x6C
   NULL, //0x6D
-  NULL, //0x6E
+  r65c12rorabsroutine, //0x6E
   NULL, //0x6F
 
   r65c12bvsroutine, //0x70
@@ -549,7 +549,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x73
   NULL, //0x74
   NULL, //0x75
-  NULL, //0x76
+  r6502rorzpgxroutine, //0x76
   NULL, //0x77
   r6502seiroutine, //0x78
   NULL, //0x79
@@ -557,7 +557,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0x7B
   r65c12jmpabsxindroutine, //0x7C
   NULL, //0x7D
-  NULL, //0x7E
+  r65c12rorabsxroutine, //0x7E
   NULL, //0x7F
 
   r65c12braroutine, //0x80
@@ -634,7 +634,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xC3
   NULL, //0xC4
   NULL, //0xC5
-  NULL, //0xC6
+  r6502deczpgroutine, //0xC6
   NULL, //0xC7
   r6502inyroutine, //0xC8
   NULL, //0xC9
@@ -642,7 +642,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xCB
   NULL, //0xCC
   NULL, //0xCD
-  NULL, //0xCE
+  r65c12decabsroutine, //0xCE
   NULL, //0xCF
 
   r65c12bneroutine, //0xD0
@@ -651,7 +651,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xD3
   NULL, //0xD4
   NULL, //0xD5
-  NULL, //0xD6
+  r6502deczpgxroutine, //0xD6
   NULL, //0xD7
   r6502cldroutine, //0xD8
   NULL, //0xD9
@@ -659,7 +659,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xDB
   NULL, //0xDC
   NULL, //0xDD
-  NULL, //0xDE
+  r65c12decabsxroutine, //0xDE
   NULL, //0xDF
 
   NULL, //0xE0
@@ -668,7 +668,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xE3
   NULL, //0xE4
   NULL, //0xE5
-  NULL, //0xE6
+  r6502inczpgroutine, //0xE6
   NULL, //0xE7
   r6502inxroutine, //0xE8
   NULL, //0xE9
@@ -676,7 +676,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xEB
   NULL, //0xEC
   NULL, //0xED
-  NULL, //0xEE
+  r65c12incabsroutine, //0xEE
   NULL, //0xEF
 
   r65c12beqroutine, //0xF0
@@ -685,7 +685,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xF3
   NULL, //0xF4
   NULL, //0xF5
-  NULL, //0xF6
+  r6502inczpgxroutine, //0xF6
   NULL, //0xF7
   r6502sedroutine, //0xF8
   NULL, //0xF9
@@ -693,7 +693,7 @@ const R6502OP r65c12opcoderoutines[R6502_MAIN_SEQUENCE_COUNT] =
   NULL, //0xFB
   NULL, //0xFC
   NULL, //0xFD
-  NULL, //0xFE
+  r65c12incabsxroutine, //0xFE
   NULL, //0xFF
 
   NULL,

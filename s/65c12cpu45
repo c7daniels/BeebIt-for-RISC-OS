@@ -25,17 +25,50 @@
 
 ; Import global symbols
 
+  IMPORT |r6502opcodefetchreturn|
   IMPORT |r6502opcodeinterruptfetchreturn|
+  IMPORT |r6502lsr|
   IMPORT |s2_r6502push_p|
   IMPORT |s1_r6502push_p|
   IMPORT |s_r6502push_p|
+  IMPORT |s2_r6502operandloadr4|
+  IMPORT |s1_r6502operandloadr4|
+  IMPORT |s_r6502operandloadr4|
+  IMPORT |s2_r65c12modifyabs_u1p2l|
+  IMPORT |s1_r65c12modifyabs_u1p2l|
+  IMPORT |s_r65c12modifyabs_u1p2l|
+  IMPORT |s2_r65c12modifyabs_u2p3l|
+  IMPORT |s1_r65c12modifyabs_u2p3l|
+  IMPORT |s_r65c12modifyabs_u2p3l|
+  IMPORT |s2_r65c12linearmodifyabs_u3p3l|
+  IMPORT |s1_r65c12linearmodifyabs_u3p3l|
+  IMPORT |s_r65c12linearmodifyabs_u3p3l|
+  IMPORT |s2_r65c12modifyabsx_u1p2l|
+  IMPORT |s1_r65c12modifyabsx_u1p2l|
+  IMPORT |s_r65c12modifyabsx_u1p2l|
   IMPORT |r6502nobranch|
   IMPORT |r65c12branch|
+  IMPORT |s2_r6502fetch_u1p|
+  IMPORT |s1_r6502fetch_u1p|
+  IMPORT |s_r6502fetch_u1p|
+  IMPORT |s2_r6502interruptfetch_u1p|
+  IMPORT |s1_r6502interruptfetch_u1p|
+  IMPORT |s_r6502interruptfetch_u1p|
 
 ; Export global symbols
 
+  EXPORT |r65c12lsrabsroutine|
   EXPORT |r65c12bvcroutine|
   EXPORT |r65c12phyroutine|
+  EXPORT |r65c12lsrabsxroutine|
+
+  MACRO
+  LSR_ACTION
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r4,r4,LSR #1
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  MEND
 
   MACRO
   PHY_ACTION
@@ -47,6 +80,12 @@
   STRB r2,[r5,r4,LSR #24]
   MEND
 
+|r65c12lsrabsroutine|
+  R6502_OPCODE_PUSH
+  R65C12_MODIFY_ABS_OPCODE_START r6502lsr
+  LSR_ACTION
+  R65C12_MODIFY_ABS_OPCODE_FINISH
+
 |r65c12bvcroutine|
   R6502_OPCODE_PUSH
   R65C12_BRANCH_IF_CLEAR_OPCODE_RETURN VFLAG
@@ -55,6 +94,12 @@
   R6502_OPCODE_PUSH
   PHY_ACTION
   R6502_PUSH_OPCODE_RETURN
+
+|r65c12lsrabsxroutine|
+  R6502_OPCODE_PUSH
+  R65C12_MODIFY_ABSX_OPCODE_START r6502lsr
+  LSR_ACTION
+  R65C12_MODIFY_ABS_OPCODE_FINISH
 
 
 ;Data Area

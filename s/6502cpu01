@@ -25,26 +25,79 @@
 
 ; Import global symbols
 
+  IMPORT |r6502opcodefetchreturn|
   IMPORT |r6502opcodeearlyinterruptfetchreturn|
   IMPORT |r6502opcodeinterruptfetchreturn|
 
 ; Export global symbols
 
   EXPORT |r6502brkroutine|
+  EXPORT |r6502asopreindexedroutine|
   EXPORT |r6502interruptroutine|
+  EXPORT |r6502aslzpgroutine|
+  EXPORT |r6502asozpgroutine|
   EXPORT |r6502phproutine|
   EXPORT |r6502aslaroutine|
+  EXPORT |r6502aslabsroutine|
+  EXPORT |r6502asoabsroutine|
   EXPORT |r6502bplroutine|
+  EXPORT |r6502asopostindexedroutine|
+  EXPORT |r6502aslzpgxroutine|
+  EXPORT |r6502asozpgxroutine|
   EXPORT |r6502clcroutine|
+  EXPORT |r6502asoabsyroutine|
+  EXPORT |r6502aslabsxroutine|
+  EXPORT |r6502asoabsxroutine|
+  EXPORT |r6502aso|
+  EXPORT |r6502asl|
   EXPORT |s2_r6502implied_p|
   EXPORT |s1_r6502implied_p|
   EXPORT |s_r6502implied_p|
   EXPORT |s2_r6502push_p|
   EXPORT |s1_r6502push_p|
   EXPORT |s_r6502push_p|
+  EXPORT |s2_r6502operandloadr4|
+  EXPORT |s1_r6502operandloadr4|
+  EXPORT |s_r6502operandloadr4|
+  EXPORT |s2_r6502linearmodifyabs_u1p2l|
+  EXPORT |s1_r6502linearmodifyabs_u1p2l|
+  EXPORT |s_r6502linearmodifyabs_u1p2l|
+  EXPORT |s2_r6502linearmodifyabs_u3p3l|
+  EXPORT |s1_r6502linearmodifyabs_u3p3l|
+  EXPORT |s_r6502linearmodifyabs_u3p3l|
+  EXPORT |s2_r6502linearmodifyabs_u2p3l|
+  EXPORT |s1_r6502linearmodifyabs_u2p3l|
+  EXPORT |s_r6502linearmodifyabs_u2p3l|
+  EXPORT |s1_r6502linearmodifypreindexed_u4p2l|
+  EXPORT |s2_r6502linearmodifypreindexed_u4p2l|
+  EXPORT |s_r6502linearmodifypreindexed_u4p2l|
+  EXPORT |s2_r6502linearmodifyabsx_u1p2l|
+  EXPORT |s1_r6502linearmodifyabsx_u1p2l|
+  EXPORT |s_r6502linearmodifyabsx_u1p2l|
+  EXPORT |s2_r6502linearmodifyabsx_u2p3l|
+  EXPORT |s1_r6502linearmodifyabsx_u2p3l|
+  EXPORT |s_r6502linearmodifyabsx_u2p3l|
+  EXPORT |s2_r6502linearmodifyabsy_u1p2l|
+  EXPORT |s1_r6502linearmodifyabsy_u1p2l|
+  EXPORT |s_r6502linearmodifyabsy_u1p2l|
+  EXPORT |s2_r6502linearmodifyabsxoutofpage_u2p3l|
+  EXPORT |s1_r6502linearmodifyabsxoutofpage_u2p3l|
+  EXPORT |s_r6502linearmodifyabsxoutofpage_u2p3l|
+  EXPORT |s2_r6502linearmodifypostindexed_u3p3l|
+  EXPORT |s1_r6502linearmodifypostindexed_u3p3l|
+  EXPORT |s_r6502linearmodifypostindexed_u3p3l|
+  EXPORT |s2_r6502linearmodifypostindexedoutofpage_u3p3l|
+  EXPORT |s1_r6502linearmodifypostindexedoutofpage_u3p3l|
+  EXPORT |s_r6502linearmodifypostindexedoutofpage_u3p3l|
   EXPORT |r6502nobranch|
   EXPORT |r65c12branch|
   EXPORT |r6502branch|
+  EXPORT |s2_r6502fetch_u1p|
+  EXPORT |s1_r6502fetch_u1p|
+  EXPORT |s_r6502fetch_u1p|
+  EXPORT |s2_r6502fetch_p|
+  EXPORT |s1_r6502fetch_p|
+  EXPORT |s_r6502fetch_p|
   EXPORT |s2_r6502interruptfetch_u5p|
   EXPORT |s1_r6502interruptfetch_u5p|
   EXPORT |s_r6502interruptfetch_u5p|
@@ -138,6 +191,29 @@
   MEND
 
   MACRO
+  ASO_ACTION
+  LDR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r3,r4,LSL #25
+  ORRCS r8,r8,#CFLAG
+  ORRS r2,r2,r3
+  MOV r4,r3,LSR #24
+  ORRMI r8,r8,#NFLAG
+  STR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r8,r8,#ZFLAG
+  MEND
+
+  MACRO
+  ASL_ACTION
+  BIC r8,r8,#NFLAG|ZFLAG|CFLAG
+  MOVS r3,r4,LSL #25
+  ORRMI r8,r8,#NFLAG
+  MOV r4,r3,LSR #24
+  ORREQ r8,r8,#ZFLAG
+  ORRCS r8,r8,#CFLAG
+  MEND
+
+  MACRO
   ASLA_ACTION
   LDR r2,[r0,#:INDEX:R6502_A_SHIFT]
   BIC r8,r8,#NFLAG|ZFLAG|CFLAG
@@ -167,10 +243,7 @@
 r6502brk_rs1
   R6502_OPCODE_CYCLES 6,0
   BRK_ACTION
-  R6502_READ_BRANCH r6502interruptfetch_p
-  LDRB r4,[r1]
-  R6502_OPCODE_CYCLES 1,0
-  B r6502opcodeinterruptfetchreturn
+  R6502_OPCODE_INTERRUPT_FETCH 0
 s2_r6502brk_p1
   R6502_OPCODE_CYCLES 0,2
   B s_r6502brk_p1
@@ -186,10 +259,7 @@ s_r6502brk_p1
 r6502interrupt_rs1
   R6502_OPCODE_CYCLES 6,0
   INTERRUPT_ACTION
-  R6502_READ_BRANCH r6502interruptfetch_p
-  LDRB r4,[r1]
-  R6502_OPCODE_CYCLES 1,0
-  B r6502opcodeinterruptfetchreturn
+  R6502_OPCODE_INTERRUPT_FETCH 0
 s2_r6502interrupt_p1
   R6502_OPCODE_CYCLES 0,2
   B s_r6502interrupt_p1
@@ -198,6 +268,24 @@ s1_r6502interrupt_p1
 s_r6502interrupt_p1
   R6502_OPCODE_READ_SPECIAL
   B r6502interrupt_rs1
+
+|r6502asopreindexedroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_START r6502aso
+  ASO_ACTION
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_FINISH
+
+|r6502aslzpgroutine|
+  R6502_OPCODE_PUSH
+  R6502_MODIFY_ZPG_OPCODE_START
+  ASL_ACTION
+  R6502_MODIFY_ZPG_OPCODE_FINISH
+
+|r6502asozpgroutine|
+  R6502_OPCODE_PUSH
+  R6502_MODIFY_ZPG_OPCODE_START
+  ASO_ACTION
+  R6502_MODIFY_ZPG_OPCODE_FINISH
 
 |r6502phproutine|
   R6502_OPCODE_PUSH
@@ -209,14 +297,70 @@ s_r6502interrupt_p1
   ASLA_ACTION
   R6502_IMPLIED_OPCODE_RETURN
 
+|r6502aslabsroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_ABS_OPCODE_START r6502asl
+  ASL_ACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+
+|r6502asoabsroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_ABS_OPCODE_START r6502aso
+  ASO_ACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+
 |r6502bplroutine|
   R6502_OPCODE_PUSH
   R6502_BRANCH_IF_CLEAR_OPCODE_RETURN NFLAG
+
+|r6502asopostindexedroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_POSTINDEXED_OPCODE_START r6502aso
+  ASO_ACTION
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_FINISH
+
+|r6502aslzpgxroutine|
+  R6502_OPCODE_PUSH
+  R6502_MODIFY_ZPGX_OPCODE_START
+  ASL_ACTION
+  R6502_MODIFY_ZPGX_OPCODE_FINISH
+
+|r6502asozpgxroutine|
+  R6502_OPCODE_PUSH
+  R6502_MODIFY_ZPGX_OPCODE_START
+  ASO_ACTION
+  R6502_MODIFY_ZPGX_OPCODE_FINISH
 
 |r6502clcroutine|
   R6502_OPCODE_PUSH
   BIC r8,r8,#CFLAG
   R6502_IMPLIED_OPCODE_RETURN
+
+|r6502asoabsyroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_ABSY_OPCODE_START r6502aso
+  ASO_ACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+
+|r6502aslabsxroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_ABSX_OPCODE_START r6502asl
+  ASL_ACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+
+|r6502asoabsxroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_ABSX_OPCODE_START r6502aso
+  ASO_ACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+
+|r6502aso|
+  ASO_ACTION
+  MOV pc,lr
+
+|r6502asl|
+  ASL_ACTION
+  MOV pc,lr
 
 |s2_r6502implied_p|
   R6502_OPCODE_CYCLES 0,2
@@ -250,14 +394,313 @@ sc_r6502push_p
   ADD r7,r7,#1:SHL:16
   B s_r6502interruptfetch_u2p
 
+|s2_r6502operandloadr4|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 0,2
+  B sc_r6502operandread
+|s1_r6502operandloadr4|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 0,1
+  B sc_r6502operandread
+|s_r6502operandloadr4|
+  R6502_LOAD_ADDRESSING_LINK r5
+sc_r6502operandread
+  R6502_OPCODE_WRITE_SPECIAL
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  MOV pc,r5
+
+|s2_r6502linearmodifyabs_u1p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 1,1
+  B s_r6502linearmodifyabs_p2
+|s1_r6502linearmodifyabs_u1p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 1,2
+  B s_r6502linearmodifyabs_p2
+|s_r6502linearmodifyabs_u1p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 1,0
+s_r6502linearmodifyabs_p2
+  R6502_OPCODE_WRITE_SPECIAL
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  MOV r6,#ADDRESSING_BASEFLAG
+  ORR r6,r6,r4,LSL #16
+  ORR r6,r6,r3,LSL #24
+  R6502_MODIFY_BRANCH r6502linearmodifyabs_u1p3
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 3,0
+  R6502_LINEAR_MODIFY_MAPPED_ABS_OPCODE_FINISH
+|s2_r6502linearmodifyabs_u3p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 3,1
+  B sc_r6502linearmodifyabs_p3
+|s1_r6502linearmodifyabs_u3p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 3,2
+  B sc_r6502linearmodifyabs_p3
+|s_r6502linearmodifyabs_u3p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 3,0
+  B s_r6502linearmodifyabs_p3
+|s2_r6502linearmodifyabs_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+s2_r6502linearmodifyabs_u2p3
+  R6502_OPCODE_CYCLES 2,2
+  B sc_r6502linearmodifyabs_p3
+|s1_r6502linearmodifyabs_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+s1_r6502linearmodifyabs_u2p3
+  R6502_OPCODE_CYCLES 2,1
+  B sc_r6502linearmodifyabs_p3
+|s_r6502linearmodifyabs_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+s_r6502linearmodifyabs_u2p3
+  R6502_OPCODE_CYCLES 2,0
+  B s_r6502linearmodifyabs_p3
+s2_r6502linearmodifyabs_u1p3
+  R6502_OPCODE_CYCLES 1,1
+  B sc_r6502linearmodifyabs_p3
+s1_r6502linearmodifyabs_u1p3
+  R6502_OPCODE_CYCLES 1,2
+sc_r6502linearmodifyabs_p3
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,1
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  MOV r2,r4
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,1
+  R6502_LINEAR_MODIFY_SPECIAL_ABS_OPCODE_FINISH
+s_r6502linearmodifyabs_u1p3
+  R6502_OPCODE_CYCLES 1,0
+s_r6502linearmodifyabs_p3
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  MOV r2,r4
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  R6502_LINEAR_MODIFY_SPECIAL_ABS_OPCODE_FINISH
+
+|s2_r6502linearmodifypreindexed_u4p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 4,2
+  B sc_r6502linearmodifypreindexed_p2
+|s1_r6502linearmodifypreindexed_u4p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 4,1
+  B sc_r6502linearmodifypreindexed_p2
+|s_r6502linearmodifypreindexed_u4p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 4,0
+  B s_r6502linearmodifypreindexed_p2
+s2_r6502linearmodifypreindexed_u1p2
+  R6502_OPCODE_CYCLES 1,1
+  B sc_r6502linearmodifypreindexed_p2
+s1_r6502linearmodifypreindexed_u1p2
+  R6502_OPCODE_CYCLES 1,2
+sc_r6502linearmodifypreindexed_p2
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,1
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  MOV r2,r4
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,1
+  R6502_LINEAR_MODIFY_SPECIAL_PREINDEXED_OPCODE_FINISH
+s_r6502linearmodifypreindexed_u1p2
+  R6502_OPCODE_CYCLES 1,0
+s_r6502linearmodifypreindexed_p2
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  MOV r2,r4
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  R6502_LINEAR_MODIFY_SPECIAL_PREINDEXED_OPCODE_FINISH
+
+|s2_r6502linearmodifyabsx_u1p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 1,1
+  B s_r6502linearmodifyabsx_p2
+|s1_r6502linearmodifyabsx_u1p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 1,2
+  B s_r6502linearmodifyabsx_p2
+|s_r6502linearmodifyabsx_u1p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 1,0
+s_r6502linearmodifyabsx_p2
+  R6502_OPCODE_WRITE_SPECIAL
+  LDRB r2,[r0,#:INDEX:R6502_X_SHIFT]
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  ADDS r4,r2,r4,LSL #24
+  ORR r4,r3,r4
+  ORR r4,r4,#ADDRESSING_BASEFLAG:SHL:8
+  MOV r6,r4,ROR #8
+  BCC s_r6502linearmodifyabsx_p2cc
+  R6502_READ_BRANCH r6502linearmodifyabsxoutofpage_u1p3
+  ADD r6,r6,#1:SHL:24
+  R6502_MODIFY_BRANCH r6502linearmodifyabs_u2p3
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 4,0
+  R6502_LINEAR_MODIFY_MAPPED_ABS_OPCODE_FINISH
+s_r6502linearmodifyabsx_p2cc
+  R6502_MODIFY_BRANCH r6502linearmodifyabsx_u1p3
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 3,0
+  R6502_LINEAR_MODIFY_MAPPED_ABS_OPCODE_FINISH
+|s2_r6502linearmodifyabsx_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 2,2
+  B sc_r6502linearmodifyabsx_p3
+|s1_r6502linearmodifyabsx_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 2,1
+  B sc_r6502linearmodifyabsx_p3
+|s_r6502linearmodifyabsx_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 2,0
+  B s_r6502linearmodifyabsx_p3
+s2_r6502linearmodifyabsx_u1p3
+  R6502_OPCODE_CYCLES 1,1
+  B sc_r6502linearmodifyabsx_p3
+s1_r6502linearmodifyabsx_u1p3
+  R6502_OPCODE_CYCLES 1,2
+sc_r6502linearmodifyabsx_p3
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,1
+  B sc_r6502linearmodifyabs_p3
+s_r6502linearmodifyabsx_u1p3
+  R6502_OPCODE_CYCLES 1,0
+s_r6502linearmodifyabsx_p3
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  B s_r6502linearmodifyabs_p3
+
+|s2_r6502linearmodifyabsy_u1p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 1,1
+  B s_r6502linearmodifyabsy_p2
+|s1_r6502linearmodifyabsy_u1p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 1,2
+  B s_r6502linearmodifyabsy_p2
+|s_r6502linearmodifyabsy_u1p2l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 1,0
+s_r6502linearmodifyabsy_p2
+  R6502_OPCODE_WRITE_SPECIAL
+  LDRB r2,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r3,[r0,#:INDEX:R6502_M]
+  ADDS r4,r2,r4,LSL #24
+  ORR r4,r3,r4
+  ORR r4,r4,#ADDRESSING_BASEFLAG:SHL:8
+  MOV r6,r4,ROR #8
+  BCC s_r6502linearmodifyabsx_p2cc
+  R6502_READ_BRANCH r6502linearmodifyabsxoutofpage_u1p3
+  ADD r6,r6,#1:SHL:24
+  R6502_MODIFY_BRANCH r6502linearmodifyabs_u2p3
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 4,0
+  R6502_LINEAR_MODIFY_MAPPED_ABS_OPCODE_FINISH
+
+|s2_r6502linearmodifyabsxoutofpage_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 2,2
+  B s_r6502linearmodifyabsxoutofpage_p3
+|s1_r6502linearmodifyabsxoutofpage_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 2,1
+  B s_r6502linearmodifyabsxoutofpage_p3
+|s_r6502linearmodifyabsxoutofpage_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 2,0
+  B s_r6502linearmodifyabsxoutofpage_p3
+s2_r6502linearmodifyabsxoutofpage_u1p3
+  R6502_OPCODE_CYCLES 1,1
+  B s_r6502linearmodifyabsxoutofpage_p3
+s1_r6502linearmodifyabsxoutofpage_u1p3
+  R6502_OPCODE_CYCLES 1,2
+  B s_r6502linearmodifyabsxoutofpage_p3
+s_r6502linearmodifyabsxoutofpage_u1p3
+  R6502_OPCODE_CYCLES 1,0
+s_r6502linearmodifyabsxoutofpage_p3
+  R6502_OPCODE_WRITE_SPECIAL
+  ADD r6,r6,#1:SHL:24
+  R6502_ADDRESS_FOR_MODIFY  s_r6502linearmodifyabs_u1p3,s1_r6502linearmodifyabs_u1p3,s2_r6502linearmodifyabs_u1p3
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 3,0
+  R6502_LINEAR_MODIFY_MAPPED_ABS_OPCODE_FINISH
+
+|s2_r6502linearmodifypostindexed_u3p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 3,1
+  B sc_r6502linearmodifypostindexed_p3
+|s1_r6502linearmodifypostindexed_u3p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 3,2
+sc_r6502linearmodifypostindexed_p3
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,1
+  B sc_r6502linearmodifypreindexed_p2
+|s_r6502linearmodifypostindexed_u3p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 3,0
+s_r6502linearmodifypostindexed_p3
+  R6502_OPCODE_WRITE_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  B s_r6502linearmodifypreindexed_p2
+
+|s2_r6502linearmodifypostindexedoutofpage_u3p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 3,1
+  B s_r6502linearmodifypostindexedoutofpage_p3
+|s1_r6502linearmodifypostindexedoutofpage_u3p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 3,2
+  B s_r6502linearmodifypostindexedoutofpage_p3
+|s_r6502linearmodifypostindexedoutofpage_u3p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 3,0
+  B s_r6502linearmodifypostindexedoutofpage_p3
+|s2_r6502linearmodifypostindexedoutofpage_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 2,2
+  B s_r6502linearmodifypostindexedoutofpage_p3
+|s1_r6502linearmodifypostindexedoutofpage_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 2,1
+  B s_r6502linearmodifypostindexedoutofpage_p3
+|s_r6502linearmodifypostindexedoutofpage_u2p3l|
+  R6502_LOAD_ADDRESSING_LINK r5
+  R6502_OPCODE_CYCLES 2,0
+  B s_r6502linearmodifypostindexedoutofpage_p3
+s2_r6502linearmodifypostindexedoutofpage_u1p3
+  R6502_OPCODE_CYCLES 1,1
+  B s_r6502linearmodifypostindexedoutofpage_p3
+s1_r6502linearmodifypostindexedoutofpage_u1p3
+  R6502_OPCODE_CYCLES 1,2
+  B s_r6502linearmodifypostindexedoutofpage_p3
+s_r6502linearmodifypostindexedoutofpage_u1p3
+  R6502_OPCODE_CYCLES 1,0
+s_r6502linearmodifypostindexedoutofpage_p3
+  R6502_OPCODE_WRITE_SPECIAL
+  ADD r6,r6,#1:SHL:24
+  R6502_ADDRESS_FOR_MODIFY  s_r6502linearmodifypreindexed_u1p2,s1_r6502linearmodifypreindexed_u1p2,s2_r6502linearmodifypreindexed_u1p2
+  LDRB r4,[r1]
+  MOV r6,r1
+  R6502_OPCODE_CYCLES 3,0
+  R6502_LINEAR_MODIFY_MAPPED_PREINDEXED_OPCODE_FINISH
+
   R6502_ADDRESSING_CALLBACKS s_r6502nobranch_p1,s1_r6502nobranch_p1,s2_r6502nobranch_p1
 |r6502nobranch|
   ADD r6,r7,#2:SHL:16
   ADD r7,r7,#2:SHL:16
-  R6502_READ_BRANCH r6502interruptfetch_u1p
-  LDRB r4,[r1]
-  R6502_OPCODE_CYCLES 2,0
-  B r6502opcodeinterruptfetchreturn
+  R6502_OPCODE_INTERRUPT_FETCH 1
 s2_r6502nobranch_p1
   R6502_OPCODE_CYCLES 0,2
   B s_r6502nobranch_p1
@@ -282,10 +725,7 @@ r65c12branch_rs1
   R6502_READ_BRANCH r65c12branch_u1p2
   ADD r6,r7,r4,LSL #16
   ADD r7,r7,r4,LSL #16
-  R6502_READ_BRANCH r6502interruptfetch_u2p
-  LDRB r4,[r1]
-  R6502_OPCODE_CYCLES 3,0
-  B r6502opcodeinterruptfetchreturn
+  R6502_OPCODE_INTERRUPT_FETCH 2
 s2_r65c12branch_p1
   R6502_OPCODE_CYCLES 0,2
   B s_r65c12branch_p1
@@ -307,10 +747,7 @@ s_r65c12branch_p2
   R6502_OPCODE_READ_SPECIAL
   ADD r6,r7,r4,LSL #16
   ADD r7,r7,r4,LSL #16
-  R6502_READ_BRANCH r6502interruptfetch_u1p
-  LDRB r4,[r1]
-  R6502_OPCODE_CYCLES 2,0
-  B r6502opcodeinterruptfetchreturn
+  R6502_OPCODE_INTERRUPT_FETCH 1
 
   R6502_ADDRESSING_CALLBACKS s_r6502branch_p1,s1_r6502branch_p1,s2_r6502branch_p1
 |r6502branch|
@@ -327,10 +764,7 @@ r6502branch_rs1
   R6502_READ_BRANCH r6502branch_u1p2
   ADD r6,r7,r4,LSL #16
   ADD r7,r7,r4,LSL #16
-  R6502_READ_BRANCH r6502earlyinterruptfetch_u2p
-  LDRB r4,[r1]
-  R6502_OPCODE_CYCLES 3,0
-  B r6502opcodeearlyinterruptfetchreturn
+  R6502_OPCODE_EARLY_INTERRUPT_FETCH 2
 s2_r6502branch_p1
   R6502_OPCODE_CYCLES 0,2
   B s_r6502branch_p1
@@ -352,10 +786,7 @@ s_r6502branch_p2
   R6502_OPCODE_READ_SPECIAL
   ADD r6,r7,r4,LSL #16
   ADD r7,r7,r4,LSL #16
-  R6502_READ_BRANCH r6502earlyinterruptfetch_u1p
-  LDRB r4,[r1]
-  R6502_OPCODE_CYCLES 2,0
-  B r6502opcodeearlyinterruptfetchreturn
+  R6502_OPCODE_EARLY_INTERRUPT_FETCH 1
 
 r6502branchoutofpage
   R6502_READ_BRANCH r6502branchoutofpage_u1p2
@@ -365,10 +796,7 @@ r6502branchoutofpage
   R6502_READ_BRANCH r6502branchoutofpage_u2p3
   ADD r6,r7,r4,LSL #16
   ADD r7,r7,r4,LSL #16
-  R6502_READ_BRANCH r6502interruptfetch_u3p
-  LDRB r4,[r1]
-  R6502_OPCODE_CYCLES 4,0
-  B r6502opcodeinterruptfetchreturn
+  R6502_OPCODE_INTERRUPT_FETCH 3
 s2_r6502branchoutofpage_u1p2
   R6502_OPCODE_CYCLES 1,1
   B s_r6502branchoutofpage_p2
@@ -385,10 +813,7 @@ s_r6502branchoutofpage_p2
   R6502_READ_BRANCH r6502branchoutofpage_u1p3
   ADD r6,r7,r4,LSL #16
   ADD r7,r7,r4,LSL #16
-  R6502_READ_BRANCH r6502interruptfetch_u2p
-  LDRB r4,[r1]
-  R6502_OPCODE_CYCLES 3,0
-  B r6502opcodeinterruptfetchreturn
+  R6502_OPCODE_INTERRUPT_FETCH 2
 s2_r6502branchoutofpage_u2p3
   R6502_OPCODE_CYCLES 2,2
   B s_r6502branchoutofpage_p3
@@ -410,10 +835,26 @@ s_r6502branchoutofpage_p3
   R6502_OPCODE_READ_SPECIAL
   ADD r6,r7,r4,LSL #16
   ADD r7,r7,r4,LSL #16
-  R6502_READ_BRANCH r6502interruptfetch_u1p
-  LDRB r4,[r1]
-  R6502_OPCODE_CYCLES 2,0
-  B r6502opcodeinterruptfetchreturn
+  R6502_OPCODE_INTERRUPT_FETCH 1
+
+|s2_r6502fetch_u1p|
+  R6502_OPCODE_CYCLES 1,1
+  B s_r6502fetch_p
+|s1_r6502fetch_u1p|
+  R6502_OPCODE_CYCLES 1,2
+  B s_r6502fetch_p
+|s_r6502fetch_u1p|
+  R6502_OPCODE_CYCLES 1,0
+  B s_r6502fetch_p
+|s2_r6502fetch_p|
+  R6502_OPCODE_CYCLES 0,2
+  B s_r6502fetch_p
+|s1_r6502fetch_p|
+  R6502_OPCODE_CYCLES 0,1
+|s_r6502fetch_p|
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r4,[r0,#:INDEX:R6502_M]
+  R6502_OPCODE_UNINTERRUPTED_FETCH_RETURN 1
 
 |s2_r6502earlyinterruptfetch_u2p|
   R6502_OPCODE_CYCLES 2,2
@@ -435,8 +876,7 @@ s_r6502branchoutofpage_p3
 |s_r6502earlyinterruptfetch_p|
   R6502_OPCODE_READ_SPECIAL
   LDRB r4,[r0,#:INDEX:R6502_M]
-  R6502_OPCODE_CYCLES 1,0
-  B r6502opcodeearlyinterruptfetchreturn
+  R6502_OPCODE_EARLY_INTERRUPT_FETCH_RETURN 1
 
 |s2_r6502interruptfetch_u5p|
   R6502_OPCODE_CYCLES 5,1
@@ -491,8 +931,7 @@ s_r6502branchoutofpage_p3
 |s_r6502interruptfetch_p|
   R6502_OPCODE_READ_SPECIAL
   LDRB r4,[r0,#:INDEX:R6502_M]
-  R6502_OPCODE_CYCLES 1,0
-  B r6502opcodeinterruptfetchreturn
+  R6502_OPCODE_INTERRUPT_FETCH_RETURN 1
 
 
 ;Data Area

@@ -29,15 +29,119 @@
   IMPORT |s2_r6502implied_p|
   IMPORT |s1_r6502implied_p|
   IMPORT |s_r6502implied_p|
+  IMPORT |s2_r6502operandloadr4|
+  IMPORT |s1_r6502operandloadr4|
+  IMPORT |s_r6502operandloadr4|
+  IMPORT |s2_r6502linearmodifyabs_u1p2l|
+  IMPORT |s1_r6502linearmodifyabs_u1p2l|
+  IMPORT |s_r6502linearmodifyabs_u1p2l|
+  IMPORT |s2_r6502linearmodifyabs_u2p3l|
+  IMPORT |s1_r6502linearmodifyabs_u2p3l|
+  IMPORT |s_r6502linearmodifyabs_u2p3l|
+  IMPORT |s1_r6502linearmodifypreindexed_u4p2l|
+  IMPORT |s2_r6502linearmodifypreindexed_u4p2l|
+  IMPORT |s_r6502linearmodifypreindexed_u4p2l|
+  IMPORT |s2_r6502linearmodifyabsx_u1p2l|
+  IMPORT |s1_r6502linearmodifyabsx_u1p2l|
+  IMPORT |s_r6502linearmodifyabsx_u1p2l|
+  IMPORT |s2_r6502linearmodifyabs_u3p3l|
+  IMPORT |s1_r6502linearmodifyabs_u3p3l|
+  IMPORT |s_r6502linearmodifyabs_u3p3l|
+  IMPORT |s2_r6502linearmodifyabsx_u2p3l|
+  IMPORT |s1_r6502linearmodifyabsx_u2p3l|
+  IMPORT |s_r6502linearmodifyabsx_u2p3l|
+  IMPORT |s2_r6502linearmodifyabsy_u1p2l|
+  IMPORT |s1_r6502linearmodifyabsy_u1p2l|
+  IMPORT |s_r6502linearmodifyabsy_u1p2l|
+  IMPORT |s2_r6502linearmodifyabsxoutofpage_u2p3l|
+  IMPORT |s1_r6502linearmodifyabsxoutofpage_u2p3l|
+  IMPORT |s_r6502linearmodifyabsxoutofpage_u2p3l|
+  IMPORT |s2_r6502linearmodifypostindexed_u3p3l|
+  IMPORT |s1_r6502linearmodifypostindexed_u3p3l|
+  IMPORT |s_r6502linearmodifypostindexed_u3p3l|
+  IMPORT |s2_r6502linearmodifypostindexedoutofpage_u3p3l|
+  IMPORT |s1_r6502linearmodifypostindexedoutofpage_u3p3l|
+  IMPORT |s_r6502linearmodifypostindexedoutofpage_u3p3l|
   IMPORT |r6502nobranch|
   IMPORT |r6502branch|
+  IMPORT |s2_r6502interruptfetch_u5p|
+  IMPORT |s1_r6502interruptfetch_u5p|
+  IMPORT |s_r6502interruptfetch_u5p|
+  IMPORT |s2_r6502interruptfetch_u4p|
+  IMPORT |s1_r6502interruptfetch_u4p|
+  IMPORT |s_r6502interruptfetch_u4p|
+  IMPORT |s2_r6502interruptfetch_u1p|
+  IMPORT |s1_r6502interruptfetch_u1p|
+  IMPORT |s_r6502interruptfetch_u1p|
 
 ; Export global symbols
 
+  EXPORT |r6502isbpreindexedroutine|
+  EXPORT |r6502inczpgroutine|
+  EXPORT |r6502isbzpgroutine|
   EXPORT |r6502inxroutine|
   EXPORT |r6502noproutine|
+  EXPORT |r6502incabsroutine|
+  EXPORT |r6502isbabsroutine|
   EXPORT |r6502beqroutine|
+  EXPORT |r6502isbpostindexedroutine|
+  EXPORT |r6502inczpgxroutine|
+  EXPORT |r6502isbzpgxroutine|
   EXPORT |r6502sedroutine|
+  EXPORT |r6502isbabsyroutine|
+  EXPORT |r6502incabsxroutine|
+  EXPORT |r6502isbabsxroutine|
+  EXPORT |r6502isb|
+  EXPORT |r6502inc|
+
+  MACRO
+  ISB_ACTION
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  ADD r4,r4,#1
+  TST r8,#DFLAG
+  MOV r2,r4,LSL #24
+  AND r4,r4,#&FF
+  BNE %F0
+  TEQ r2,r8,LSR #1   ;jdl** ARM c =6502 c
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  RSCS r1,r2,r1,ROR #8
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  ORRCS r8,r8,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  B %F1
+0
+  TEQ r2,r8,LSR #1   ;jdl** ARM c =6502 c
+  ORR r2,r2,r2,ROR #24
+  ORR r1,r1,r1,ROR #8
+  AND r2,r2,#&F000000F
+  AND r1,r1,#&F000000F
+  MVN r2,r2
+  BIC r8,r8,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRCS r8,r8,#CFLAG
+  ORRMI r8,r8,#NFLAG
+  ORRVS r8,r8,#VFLAG
+  MOV r2,r1
+  SUBCC r1,r1,#&60000000
+  TST r1,#&80
+  SUBNE r1,r1,#6
+  AND r1,r1,#&F000000F
+  TST r2,#&F000000F
+  ORR r1,r1,r1,LSR #24
+1
+  ORREQ r8,r8,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  MEND
+
+  MACRO
+  INC_ACTION
+  ADD r4,r4,#1
+  BIC r8,r8,#NFLAG|ZFLAG
+  MOVS r3,r4,LSL #24
+  ORRMI r8,r8,#NFLAG
+  ORREQ r8,r8,#ZFLAG
+  MEND
 
   MACRO
   INX_ACTION
@@ -49,10 +153,40 @@
   ORREQ r8,r8,#ZFLAG
   MEND
 
+|r6502isbpreindexedroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_START r6502isb
+  ISB_ACTION
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_FINISH
+
+|r6502inczpgroutine|
+  R6502_OPCODE_PUSH
+  R6502_MODIFY_ZPG_OPCODE_START
+  INC_ACTION
+  R6502_MODIFY_ZPG_OPCODE_FINISH
+
+|r6502isbzpgroutine|
+  R6502_OPCODE_PUSH
+  R6502_MODIFY_ZPG_OPCODE_START
+  ISB_ACTION
+  R6502_MODIFY_ZPG_OPCODE_FINISH
+
 |r6502inxroutine|
   R6502_OPCODE_PUSH
   INX_ACTION
   R6502_IMPLIED_OPCODE_RETURN
+
+|r6502incabsroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_ABS_OPCODE_START r6502inc
+  INC_ACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+
+|r6502isbabsroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_ABS_OPCODE_START r6502isb
+  ISB_ACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
 
 |r6502noproutine|
   R6502_OPCODE_PUSH
@@ -62,10 +196,54 @@
   R6502_OPCODE_PUSH
   R6502_BRANCH_IF_SET_OPCODE_RETURN ZFLAG
 
+|r6502isbpostindexedroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_POSTINDEXED_OPCODE_START r6502isb
+  ISB_ACTION
+  R6502_LINEAR_MODIFY_PREINDEXED_OPCODE_FINISH
+
+|r6502inczpgxroutine|
+  R6502_OPCODE_PUSH
+  R6502_MODIFY_ZPGX_OPCODE_START
+  INC_ACTION
+  R6502_MODIFY_ZPGX_OPCODE_FINISH
+
+|r6502isbzpgxroutine|
+  R6502_OPCODE_PUSH
+  R6502_MODIFY_ZPGX_OPCODE_START
+  ISB_ACTION
+  R6502_MODIFY_ZPGX_OPCODE_FINISH
+
 |r6502sedroutine|
   R6502_OPCODE_PUSH
   ORR r8,r8,#DFLAG
   R6502_IMPLIED_OPCODE_RETURN
+
+|r6502isbabsyroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_ABSY_OPCODE_START r6502isb
+  ISB_ACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+
+|r6502incabsxroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_ABSX_OPCODE_START r6502inc
+  INC_ACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+
+|r6502isbabsxroutine|
+  R6502_OPCODE_PUSH
+  R6502_LINEAR_MODIFY_ABSX_OPCODE_START r6502isb
+  ISB_ACTION
+  R6502_LINEAR_MODIFY_ABS_OPCODE_FINISH
+
+|r6502isb|
+  ISB_ACTION
+  MOV pc,lr
+
+|r6502inc|
+  INC_ACTION
+  MOV pc,lr
 
 
 ;Data Area
