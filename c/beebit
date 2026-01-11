@@ -668,9 +668,9 @@ void beebitpoll(void)
 {
   /*char *keybufferaddr;
   char *keylookupaddr;
-  char *keystatusaddr;
+  uint8_t *keystatusaddr;
   int count, i;
-  int keycode, keydown;*/
+  int keycode, keybit;*/
 
   hostexecute();
 
@@ -682,23 +682,18 @@ void beebitpoll(void)
     count = regs.r[2];
     if (count > 0)
     {
-      keydown = FALSE;
       keybufferaddr = (char *)regs.r[1];
       keylookupaddr = (char *)keylookup;
-      keystatusaddr = (char *)keystatus;
+      keystatusaddr = (uint8_t *)hostmap.keystatus;
       for (i = 0; i < count; i+=2)
       {
         keycode = keylookupaddr[keybufferaddr[i+1]];
+        keybit = (1<<(keycode>>4));
         if (keybufferaddr[i] == 0)
-          keystatusaddr[keycode] = 0;*/ /*up*/
+          keystatusaddr[keycode&0x0F] &= ~keybit;*/ /*up*/
         /*else
-          keystatusaddr[keycode] = 0xFF;*/ /*keybufferaddr[i];*/ /*up/down*/
-        /*if (NOT keydown)
-          keydown = (keybufferaddr[i] = 1);
-      }*/
-      /*only call this if a key is up*/
-      /*if (keydown)
-        systemviasetca2();
+          keystatusaddr[keycode&0x0F] |= keybit;*/ /*down*/
+      /*}
     }
   }*/
 }

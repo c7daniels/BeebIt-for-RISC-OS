@@ -35,7 +35,7 @@ static_assert(sizeof(R6502CPUMAP) == sizeof(R6502ZONEMAP), "Expecting consistent
 
 static_assert(R6502_SEQUENCE_COUNT <= R6502_SEQUENCE_ALLOWANCE, "Expecting R6502_SEQUENCE_COUNT not to exceed R6502_SEQUENCE_ALLOWANCE");
 
-static_assert(offsetof(R6502CPUMAP, addressingops) == ((ADDRESSING_BASEFLAG-ADDRESSING_MODIFYFLAG)*(64*sizeof(uintptr_t))), "Expecting addressingops at specific offset");
+static_assert(offsetof(R6502CPUMAP, addressingandcycleops) == ((ADDRESSING_BASEFLAG-ADDRESSING_MODIFYFLAG)*(64*sizeof(uintptr_t))), "Expecting addressingandcycleops at specific offset");
 
 
 const R6502OP r6502_nopsequence[] = R6502_IMPLIED_SEQUENCE(r6502nopstep);

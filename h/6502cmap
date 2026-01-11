@@ -27,9 +27,10 @@ typedef struct R6502CPUMAP* (*R6502TRANSITIONOP)(struct R6502CPUMAP* cmap, uintp
 /*addressing op spaced for an AArch32 access optimization*/
 typedef struct
 {
-  R6502ADDRESSINGOP op;
-  uintptr_t _unused[3];
-} R6502PADDEDADDRESSINGOP;
+  R6502ADDRESSINGOP addressingop;
+  R6502PERIPHERALOP cycleop;
+  uintptr_t _unused[2];
+} R6502PADDEDADDRESSINGANDCYCLEOPS;
 
 /*storage map specialized for 6502 CPU emulation*/
 typedef struct R6502CPUMAP
@@ -63,16 +64,16 @@ typedef struct R6502CPUMAP
   R6502OP* execute_cpu_state;
   uintptr_t transition1, transition2;
   R6502PERIPHERALOP resetstartingaction,resetcontinuingaction;
-  R6502PERIPHERALOP cycleaction;
   R6502READSPECIALOP readspecialaction;
   R6502WRITESPECIALOP writespecialaction;
+  uintptr_t continuelink;
   uintptr_t yieldlink; /*storage for the Optimise6502Links optimisation*/
   uintptr_t lbreak;
-  uintptr_t BC_unused[16];
+  uintptr_t BC_unused[15];
   R6502_BP_ZONE BP;
 
   // AArch32 offsets &400 - &FFF
-  R6502PADDEDADDRESSINGOP addressingops[32];
+  R6502PADDEDADDRESSINGANDCYCLEOPS addressingandcycleops[32];
   R6502_CP_ZONE CP;
 
   // AArch32 offsets &1000 - &1BFF

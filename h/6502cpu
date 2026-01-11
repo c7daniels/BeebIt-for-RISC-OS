@@ -53,7 +53,7 @@
 /*with optimisations applied, assembly language addressing routines are not directly callable from C*/
 #ifdef BEEBIT_NO_ASM
 #define R6502_INVOKE_ADDRESSING(MAP, ADDRCODE, CALLBACKS) \
-  MAP->addressingops[(((ADDRCODE)>>28)|((ADDRCODE)<<4))&0x1F].op(MAP, (ADDRCODE)|ADDRESSING_MODIFYFLAG, CALLBACKS);
+  MAP->addressingandcycleops[(((ADDRCODE)>>28)|((ADDRCODE)<<4))&0x1F].addressingop(MAP, (ADDRCODE)|ADDRESSING_MODIFYFLAG, CALLBACKS);
 #else
 #define R6502_INVOKE_ADDRESSING(MAP, ADDRCODE, CALLBACKS) \
   r6502invokeaddressing(MAP, ADDRCODE, CALLBACKS);
@@ -74,17 +74,10 @@
   }
 
 #define R6502_CYCLE_STRETCH_RETURN(MAP) \
-  return (*MAP->cycleaction)(MAP);
+  return (*MAP->addressingandcycleops[1].cycleop)(MAP);
 
 #define R6502_CYCLE_RETURN(MAP) \
-  { \
-    uintptr_t interruptqueue = cmap->interruptqueue; \
-    interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F); \
-    if (!(interruptqueue & R6502_NMI)) \
-      interruptqueue |= R6502_NMI_ENABLE; \
-    cmap->interruptqueue = interruptqueue; \
-    return (*MAP->cycleaction)(MAP); \
-  }
+  return (*MAP->addressingandcycleops[0].cycleop)(MAP);
 
 #define R6502_CYCLE_ZPG_READ_RETURN(MAP, ZCODE) \
   { \
@@ -156,13 +149,13 @@
   }
 
 #define R6502_CYCLE_IMPLIED_INTERRUPT_CHECK_FETCH_RETURN(MAP) \
-  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN(MAP, ((MAP)->sync_pc_code + 0x10000) & 0xFFFFFFFF);
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN(MAP, ((MAP)->sync_pc_code + 0x10000) & 0xFFFFFFFF)
 
 #define R6502_CYCLE_ADDRESSED_FETCH_RETURN(MAP) \
-  R6502_CYCLE_FETCH_RETURN(MAP, ((MAP)->last_pc_code + 0x10000) & 0xFFFFFFFF);
+  R6502_CYCLE_FETCH_RETURN(MAP, ((MAP)->last_pc_code + 0x10000) & 0xFFFFFFFF)
 
 #define R6502_CYCLE_ADDRESSED_INTERRUPT_CHECK_FETCH_RETURN(MAP) \
-  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN(MAP, ((MAP)->last_pc_code + 0x10000) & 0xFFFFFFFF);
+  R6502_CYCLE_INTERRUPT_CHECK_FETCH_RETURN(MAP, ((MAP)->last_pc_code + 0x10000) & 0xFFFFFFFF)
 
 #define R6502_CHECK_FOR_BREAK(MAP) \
   { \
