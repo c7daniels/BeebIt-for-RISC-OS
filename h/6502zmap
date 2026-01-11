@@ -41,8 +41,8 @@ typedef struct R6502CPUMAP* (*R6502PERIPHERALOP)(struct R6502CPUMAP* cmap); /*re
 /*outline of a storage map for both 6502 CPU and peripheral emulation*/
 typedef uintptr_t R6502_AC_ZONE[1];
 typedef uintptr_t R6502_AP_ZONE[63];
-typedef uintptr_t R6502_BC_ZONE[42];
-typedef uintptr_t R6502_BP_ZONE[148];
+typedef uintptr_t R6502_BC_ZONE[41];
+typedef uintptr_t R6502_BP_ZONE[149];
 typedef uintptr_t R6502_CC_ZONE[128];
 typedef uintptr_t R6502_CP_ZONE[640];
 typedef uintptr_t R6502_DC_ZONE[288];

@@ -1,0 +1,220 @@
+;>riscoskey.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Cycle-level keyboard emulation
+;
+; (C) Copyright Crispian Daniels, 2026
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+  GET h.6502zmaps
+
+  GET h.6502cmaps
+
+  GET h.6502cpus
+
+  GET h.hostmaps
+
+  GET h.hosts
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET     h.RegNames
+
+; Use the GET directive to include a list of SWI names as if typed here
+
+  GET     h.SWInames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA    |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+  IMPORT |systemviasetca2|
+  IMPORT |systemviaunsetca2|
+
+; Export global symbols
+
+  EXPORT |keyscanf1p0c|
+  EXPORT |keyscanf1p0C|
+  EXPORT |keyscanf1p0i|
+  EXPORT |keyscanf1p0I|
+  EXPORT |keyscanf1|
+  EXPORT |keyscanb1|
+  EXPORT |keyscanf1p1c|
+  EXPORT |keyscanf1p1C|
+  EXPORT |keyscanf1p1i|
+  EXPORT |keyscanf1p1I|
+
+  MACRO
+  CA2CHANGEEXIT $p,$s
+  LDRB r3,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IFR]
+  LDRB r2,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PCR]
+  TST r3,#1
+  MOVNE pc,lr
+  ANDS r2,r2,#&0E
+  [ $s==1
+  CMP r2,#4
+  CMPNE r2,#6
+  |
+  CMP r2,#2
+  ]
+  MOVNE pc,lr
+  LDRB r2,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IER]
+  ORR r3,r3,#1
+  TST r2,#1
+  STRB r3,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IFR]
+  MOVEQ pc,lr
+  LDR r2,[r0,#:INDEX:HOST_INTERRUPTS]
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  ORR r2,r2,#HOST_IRQ_6522SYSVIA
+  IF $p==0
+  ORR r3,r3,#R6502_IRQ
+  ELSE
+  ORR r3,r3,#(R6502_IRQ<<4)|R6502_IRQ
+  ENDIF
+  STR r2,[r0,#:INDEX:HOST_INTERRUPTS]
+  STR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  MOV pc,lr
+  MEND
+
+keyscanp0setca2exit
+  CA2CHANGEEXIT 0,1
+
+keyscanp1setca2exit
+  CA2CHANGEEXIT 1,1
+
+keyscanp0unsetca2exit
+  CA2CHANGEEXIT 0,0
+
+keyscanp1unsetca2exit
+  CA2CHANGEEXIT 1,0
+
+|keyscanf1p0c|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+
+|keyscanf1p0C|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+|keyscanf1p0i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp0setca2exit
+
+|keyscanf1p0I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp0unsetca2exit
+
+|keyscanf1|
+  ADD r1,r1,#&80000001
+  BIC r1,r1,#&20
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOV pc,lr
+
+|keyscanb1|
+  ADD r1,r1,#&8000001F
+  BIC r1,r1,#&20
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOV pc,lr
+
+|keyscanf1p1c|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+
+|keyscanf1p1C|
+  ADD r1,r1,#&80000001
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+
+|keyscanf1p1i|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  ADDEQ r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVNE pc,lr
+  B keyscanp1setca2exit
+
+|keyscanf1p1I|
+  TST r2,r2
+  AND r3,r1,#&1E
+  ADD r1,r1,#&80000001
+  BMI %F0
+  ADD r3,r0,r3,LSR #1
+  LDRB r12,[r0,#:INDEX:HOST_KEYBIT]
+  LDRB r3,[r3,#:INDEX:HOST_KEYSTATUS]
+  TST r3,r12
+  LDRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORRNE r12,r12,#&80
+  BICEQ r12,r12,#&80
+  STRB r12,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+0
+  TST r2,#&40000000
+  SUBNE r1,r1,#KEYSCANCA2FLAG
+  STR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  MOVEQ pc,lr
+  B keyscanp1unsetca2exit
+
+  END

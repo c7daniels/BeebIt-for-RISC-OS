@@ -38,7 +38,8 @@ RunImage = @.o.main @.o.beebit \
   @.o.6522sysvia @.o.6522usrvia @.o.6845crtc @.o.6850acia \
   @.o.76489sound @.o.tube @.o.host @.o.hosts \
   @.o.8271fdc @.o.1770fdc @.o.adc @.o.keyboard @.o.sheila  \
-  @.o.scrmode @.o.video @.o.videoscale @.o.videoula @.o.riscos \
+  @.o.scrmode @.o.video @.o.videoscale @.o.videoula \
+  @.o.riscos @.o.riscoskey \
   @.o.riscosvid1 @.o.riscosvid2 @.o.riscosvid3 @.o.riscosvid4 \
   @.o.scrsave @.o.snapshots
 RipRoms = @.o.RipROMs
@@ -251,12 +252,14 @@ o.adc:	C:h.kernel
 o.adc:	h.swis
 o.keyboard:	c.keyboard
 o.keyboard:	h.beebit
+o.keyboard:	h.host
 o.keyboard:	h.hostmap
 o.keyboard:	h.6502zmap
 o.keyboard:	h.6522sysvia
 o.keyboard:	C:h.kernel
 o.keyboard:	h.riscos
-o.keyboard:	h.swis
+o.keyboard:	h.6522sysvia
+o.keyboard:	h.keyboard
 o.sheila:	c.sheila
 o.sheila:	h.beebit
 o.sheila:	h.host
@@ -334,6 +337,14 @@ o.riscos: h.6502cpus
 o.riscos: h.hostmaps
 o.riscos: h.RegNames
 o.riscos: h.SWInames
+o.riscoskey: s.riscoskey
+o.riscoskey: h.6502zmaps
+o.riscoskey: h.6502cmaps
+o.riscoskey: h.6502cpus
+o.riscoskey: h.hostmaps
+o.riscoskey: h.hosts
+o.riscoskey: h.RegNames
+o.riscoskey: h.SWInames
 o.riscosvid1: s.riscosvid1
 o.riscosvid1: h.6502zmaps
 o.riscosvid1: h.hostmaps

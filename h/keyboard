@@ -2,12 +2,15 @@
  *
  * BeebIt - BBC Micro Model B Emulator
  *
- * (C) Copyright Michael J Foot, 1998-2002
+ * (C) Copyright Michael J Foot, 1998-2025
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
+ *
+ * Cycle-level keyboard emulation contributed by Crispian Daniels in 2025
+ *
+ * Email: <convertedgames@3insdale.me.uk>
  */
 
 extern void keyboardreset(void);
 extern void keyboardsetlinks(void);
 extern void keyboardload(char *filename);
-extern char keyboardread(char,char);

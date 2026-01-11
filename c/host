@@ -4,7 +4,7 @@
  *
  * Cycle-level CPU emulation
  *
- * (C) Copyright Crispian Daniels, 2025
+ * (C) Copyright Crispian Daniels, 2025-2026
  *
  * Email: <convertedgames@3insdale.me.uk>
  */
@@ -105,7 +105,13 @@ extern R6502CPUMAP* host_r6502readmjim(R6502CPUMAP* cmap, uintptr_t address_code
 extern R6502CPUMAP* host_r6502writemfred(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
 extern R6502CPUMAP* host_r6502writemjim(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
 
-extern R6502CPUMAP* host_r6502cycle(R6502CPUMAP* cmap);
+#ifdef BEEBIT_NO_ASM
+extern R6502CPUMAP* host_r6502cycle0s1(R6502CPUMAP* cmap);
+extern R6502CPUMAP* host_r6502cycle1(R6502CPUMAP* cmap);
+#else
+extern R6502CPUMAP* (*host_r6502cycleroutines[2])(R6502CPUMAP*);
+#endif
+
 extern R6502CPUMAP* host_r6502readspecial(R6502CPUMAP* cmap, uintptr_t address_code);
 extern R6502CPUMAP* host_r6502writespecial(R6502CPUMAP* cmap, uintptr_t address_code, uint8_t value);
 
@@ -764,13 +770,95 @@ R6502CPUMAP* host_r6502writemjim(R6502CPUMAP* cmap, uintptr_t address_code, uint
   return cmap;
 }
 
-R6502CPUMAP* host_r6502cycle(R6502CPUMAP* cmap)
+static inline void keyscanandtimercycle(HOSTMAP* hmap, const uint32_t irqbits, uintptr_t keyscanstate, uintptr_t columnflags)
 {
-  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  const uintptr_t step = KEYSCANIDLEFLAG + 1;
+  const uint32_t notwiredbit = 1U<<31;
+  const uint32_t notactivebit = 1U<<30;
+
+  columnflags |= (columnflags>>1);
+
+  switch (keyscanstate & 0xF0000000U)
+  {
+    case 0:
+    case KEYSCANWRITEENABLEFLAG:
+    case KEYSCANINPUTFLAG:
+      if (!(columnflags & notactivebit))
+      {
+        keyscanstate += KEYSCANCA2FLAG;
+        systemviasetca2(hmap, irqbits);
+      }
+      break;
+    case KEYSCANCA2FLAG:
+    case KEYSCANWRITEENABLEFLAG|KEYSCANCA2FLAG:
+    case KEYSCANINPUTFLAG|KEYSCANCA2FLAG:
+      if (columnflags & notactivebit)
+      {
+        keyscanstate -= KEYSCANCA2FLAG;
+        systemviaunsetca2(hmap, irqbits);
+      }
+      break;
+    case KEYSCANINPUTFLAG|KEYSCANWRITEENABLEFLAG:
+      if (!(columnflags & notwiredbit) && (hmap->keystatus[(keyscanstate>>1)&0xF] & hmap->keybit))
+        hmap->A_sysvia.porta |= 0x80;
+      else
+        hmap->A_sysvia.porta &= ~0x80;
+      if (!(columnflags & notactivebit))
+      {
+        keyscanstate += KEYSCANCA2FLAG;
+        systemviasetca2(hmap, irqbits);
+      }
+      break;
+    case KEYSCANINPUTFLAG|KEYSCANWRITEENABLEFLAG|KEYSCANCA2FLAG:
+      if (!(columnflags & notwiredbit) && (hmap->keystatus[(keyscanstate>>1)&0xF] & hmap->keybit))
+        hmap->A_sysvia.porta |= 0x80;
+      else
+        hmap->A_sysvia.porta &= ~0x80;
+      if (columnflags & notactivebit)
+      {
+        keyscanstate -= KEYSCANCA2FLAG;
+        systemviaunsetca2(hmap, irqbits);
+      }
+      break;
+  }
+
+  if ((keyscanstate & KEYSCANIDLEFLAG) && (keyscanstate & KEYSCANWRITEENABLEFLAG))
+    keyscanstate -= step;
+  else
+    keyscanstate += step;
+  hmap->keyscanstate = keyscanstate & 0xF000001F;
 
   if (--hmap->cycles.togo == 0)
     hostadvancetimers(hmap);
+}
 
+R6502CPUMAP* host_r6502cycle0s1(R6502CPUMAP* cmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t columnflags = hmap->keycolumnflags;
+  uintptr_t keyscanstate = hmap->keyscanstate;
+  int rotation = keyscanstate&31;
+
+  columnflags = (((columnflags<<(32-rotation))&0xFFFFFFFF)|(columnflags>>rotation));
+  keyscanandtimercycle(hmap, R6502_IRQ, keyscanstate, columnflags);
+  return cmap;
+}
+
+R6502CPUMAP* host_r6502cycle1(R6502CPUMAP* cmap)
+{
+  HOSTMAP* hmap = (HOSTMAP*)cmap;
+  uintptr_t interruptqueue = cmap->interruptqueue;
+  uintptr_t columnflags = hmap->keycolumnflags;
+  uintptr_t keyscanstate = hmap->keyscanstate;
+  int rotation = keyscanstate&31;
+
+  interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F);
+  if (!(interruptqueue & R6502_NMI))
+    interruptqueue |= R6502_NMI_ENABLE;
+  cmap->interruptqueue = interruptqueue;
+
+  columnflags = (((columnflags<<(32-rotation))&0xFFFFFFFF)|(columnflags>>rotation));
+  keyscanandtimercycle(hmap, (R6502_IRQ<<4)|R6502_IRQ, keyscanstate, columnflags);
   return cmap;
 }
 
@@ -923,6 +1011,8 @@ HOSTMAP* swappagesoutofmemorym(HOSTMAP* hmap)
 
 void hostinit(void)
 {
+  hostmap.keycolumnflags = 0xFFFFFFFF;
+
   videoinit();
 }
 
@@ -1053,13 +1143,12 @@ void hostresetperipherals(void)
   hmap->cycles.original = hmap->cycles.togo;
   hmap->interrupts = 0;
 
-  cmap->cycleaction = host_r6502cycle;
   cmap->readspecialaction = host_r6502readspecial;
   cmap->writespecialaction = host_r6502writespecial;
 
   for (i=0; i<32; i++)
   {
-    cmap->addressingops[i].op = initialaddressingops[i];
+    cmap->addressingandcycleops[i].addressingop = initialaddressingops[i];
   }
 
   memcpy(hmap->read8000s, read8000s, sizeof(read8000s));
@@ -1173,6 +1262,25 @@ void hostresetperipherals(void)
     hmap->specialreadops[0x100+i] = readjim;
     hmap->specialwriteops[0x100+i] = writejim;
   }
+
+  switch (beebit_machinetype)
+  {
+    default:
+      hmap->keycolumnflags = 0x2AA80000|(hmap->keycolumnflags&0x55555555);
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      hmap->keycolumnflags = 0x2A000000|(hmap->keycolumnflags&0x55555555);
+      break;
+  }
+
+#ifdef BEEBIT_NO_ASM
+  cmap->addressingandcycleops[0].cycleop = host_r6502cycle1;
+  cmap->addressingandcycleops[1].cycleop = host_r6502cycle0s1;
+#else
+  for (i=0; i<2; i++)
+    cmap->addressingandcycleops[i].cycleop = host_r6502cycleroutines[i];
+#endif
 
   sheilareset();
   aciareset();

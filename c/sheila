@@ -428,10 +428,10 @@ struct R6502CPUMAP* romselwrite_b(struct R6502CPUMAP* cmap, uintptr_t address_co
 {
   HOSTMAP* hmap = (HOSTMAP*)cmap;
   int nrom = (value & 0x0F);
-  cmap->addressingops[0x0B].op = cmap->addressingops[0x0A].op
-      = cmap->addressingops[0x09].op = cmap->addressingops[0x08].op = hmap->read8000s[nrom];
-  cmap->addressingops[0x1B].op = cmap->addressingops[0x1A].op
-      = cmap->addressingops[0x19].op = cmap->addressingops[0x18].op = hmap->modify8000s[nrom];
+  cmap->addressingandcycleops[0x0B].addressingop = cmap->addressingandcycleops[0x0A].addressingop
+      = cmap->addressingandcycleops[0x09].addressingop = cmap->addressingandcycleops[0x08].addressingop = hmap->read8000s[nrom];
+  cmap->addressingandcycleops[0x1B].addressingop = cmap->addressingandcycleops[0x1A].addressingop
+      = cmap->addressingandcycleops[0x19].addressingop = cmap->addressingandcycleops[0x18].addressingop = hmap->modify8000s[nrom];
   hmap->romsel = value;
   return cmap;
 }
@@ -443,40 +443,40 @@ struct R6502CPUMAP* romselwrite_bp(struct R6502CPUMAP* cmap, uintptr_t address_c
   if (value & 0x80)
   {
     /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
-    cmap->addressingops[0x0A].op = cmap->addressingops[0x09].op
-        = cmap->addressingops[0x08].op = hmap->paging.address8000_ram;
-    cmap->addressingops[0x1A].op = cmap->addressingops[0x19].op
-        = cmap->addressingops[0x18].op = hmap->paging.address8000_ram;
+    cmap->addressingandcycleops[0x0A].addressingop = cmap->addressingandcycleops[0x09].addressingop
+        = cmap->addressingandcycleops[0x08].addressingop = hmap->paging.address8000_ram;
+    cmap->addressingandcycleops[0x1A].addressingop = cmap->addressingandcycleops[0x19].addressingop
+        = cmap->addressingandcycleops[0x18].addressingop = hmap->paging.address8000_ram;
     if (hmap->acccon & 0x80)
     {
       /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
-      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
-      = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
-      = cmap->addressingops[0x03].op = hmap->paging.address3000_ramram;
-      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
-      = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
-      = cmap->addressingops[0x13].op = hmap->paging.address3000_ramram;
+      cmap->addressingandcycleops[0x07].addressingop = cmap->addressingandcycleops[0x06].addressingop
+      = cmap->addressingandcycleops[0x05].addressingop = cmap->addressingandcycleops[0x04].addressingop
+      = cmap->addressingandcycleops[0x03].addressingop = hmap->paging.address3000_ramram;
+      cmap->addressingandcycleops[0x17].addressingop = cmap->addressingandcycleops[0x16].addressingop
+      = cmap->addressingandcycleops[0x15].addressingop = cmap->addressingandcycleops[0x14].addressingop
+      = cmap->addressingandcycleops[0x13].addressingop = hmap->paging.address3000_ramram;
     }
   }
   else
   {
-    cmap->addressingops[0x0A].op = cmap->addressingops[0x09].op
-        = cmap->addressingops[0x08].op = hmap->read8000s[nrom];
-    cmap->addressingops[0x1A].op = cmap->addressingops[0x19].op
-        = cmap->addressingops[0x18].op = hmap->modify8000s[nrom];
+    cmap->addressingandcycleops[0x0A].addressingop = cmap->addressingandcycleops[0x09].addressingop
+        = cmap->addressingandcycleops[0x08].addressingop = hmap->read8000s[nrom];
+    cmap->addressingandcycleops[0x1A].addressingop = cmap->addressingandcycleops[0x19].addressingop
+        = cmap->addressingandcycleops[0x18].addressingop = hmap->modify8000s[nrom];
     if (hmap->acccon & 0x80)
     {
       /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
-      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
-      = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
-      = cmap->addressingops[0x03].op = hmap->paging.address3000_ram;
-      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
-      = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
-      = cmap->addressingops[0x13].op = hmap->paging.address3000_ram;
+      cmap->addressingandcycleops[0x07].addressingop = cmap->addressingandcycleops[0x06].addressingop
+      = cmap->addressingandcycleops[0x05].addressingop = cmap->addressingandcycleops[0x04].addressingop
+      = cmap->addressingandcycleops[0x03].addressingop = hmap->paging.address3000_ram;
+      cmap->addressingandcycleops[0x17].addressingop = cmap->addressingandcycleops[0x16].addressingop
+      = cmap->addressingandcycleops[0x15].addressingop = cmap->addressingandcycleops[0x14].addressingop
+      = cmap->addressingandcycleops[0x13].addressingop = hmap->paging.address3000_ram;
     }
   }
-  cmap->addressingops[0x0B].op = hmap->read8000s[nrom];
-  cmap->addressingops[0x1B].op = hmap->modify8000s[nrom];
+  cmap->addressingandcycleops[0x0B].addressingop = hmap->read8000s[nrom];
+  cmap->addressingandcycleops[0x1B].addressingop = hmap->modify8000s[nrom];
   hmap->romsel = value;
   return cmap;
 }
@@ -488,18 +488,18 @@ struct R6502CPUMAP* romselwrite_m(struct R6502CPUMAP* cmap, uintptr_t address_co
   if (value & 0x80)
   {
     /*ROMSEL b7 (RAM) (&8000-&8FFF)*/
-    cmap->addressingops[0x08].op = hmap->paging.address8000_ram;
-    cmap->addressingops[0x18].op = hmap->paging.address8000_ram;
+    cmap->addressingandcycleops[0x08].addressingop = hmap->paging.address8000_ram;
+    cmap->addressingandcycleops[0x18].addressingop = hmap->paging.address8000_ram;
   }
   else
   {
-    cmap->addressingops[0x08].op = hmap->read8000s[nrom];
-    cmap->addressingops[0x18].op = hmap->modify8000s[nrom];
+    cmap->addressingandcycleops[0x08].addressingop = hmap->read8000s[nrom];
+    cmap->addressingandcycleops[0x18].addressingop = hmap->modify8000s[nrom];
   }
-  cmap->addressingops[0x0B].op = cmap->addressingops[0x0A].op
-      = cmap->addressingops[0x09].op = hmap->read8000s[nrom];
-  cmap->addressingops[0x1B].op = cmap->addressingops[0x1A].op
-      = cmap->addressingops[0x19].op = hmap->modify8000s[nrom];
+  cmap->addressingandcycleops[0x0B].addressingop = cmap->addressingandcycleops[0x0A].addressingop
+      = cmap->addressingandcycleops[0x09].addressingop = hmap->read8000s[nrom];
+  cmap->addressingandcycleops[0x1B].addressingop = cmap->addressingandcycleops[0x1A].addressingop
+      = cmap->addressingandcycleops[0x19].addressingop = hmap->modify8000s[nrom];
   hmap->romsel = value;
   return cmap;
 }
@@ -513,31 +513,31 @@ struct R6502CPUMAP* accconwrite_bp(struct R6502CPUMAP* cmap, uintptr_t address_c
     if (hmap->romsel & 0x80)
     {
       /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
-      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
-      = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
-      = cmap->addressingops[0x03].op = hmap->paging.address3000_ramram;
-      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
-      = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
-      = cmap->addressingops[0x13].op = hmap->paging.address3000_ramram;
+      cmap->addressingandcycleops[0x07].addressingop = cmap->addressingandcycleops[0x06].addressingop
+      = cmap->addressingandcycleops[0x05].addressingop = cmap->addressingandcycleops[0x04].addressingop
+      = cmap->addressingandcycleops[0x03].addressingop = hmap->paging.address3000_ramram;
+      cmap->addressingandcycleops[0x17].addressingop = cmap->addressingandcycleops[0x16].addressingop
+      = cmap->addressingandcycleops[0x15].addressingop = cmap->addressingandcycleops[0x14].addressingop
+      = cmap->addressingandcycleops[0x13].addressingop = hmap->paging.address3000_ramram;
     }
     else
     {
-      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
-      = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
-      = cmap->addressingops[0x03].op = hmap->paging.address3000_ram;
-      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
-      = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
-      = cmap->addressingops[0x13].op = hmap->paging.address3000_ram;
+      cmap->addressingandcycleops[0x07].addressingop = cmap->addressingandcycleops[0x06].addressingop
+      = cmap->addressingandcycleops[0x05].addressingop = cmap->addressingandcycleops[0x04].addressingop
+      = cmap->addressingandcycleops[0x03].addressingop = hmap->paging.address3000_ram;
+      cmap->addressingandcycleops[0x17].addressingop = cmap->addressingandcycleops[0x16].addressingop
+      = cmap->addressingandcycleops[0x15].addressingop = cmap->addressingandcycleops[0x14].addressingop
+      = cmap->addressingandcycleops[0x13].addressingop = hmap->paging.address3000_ram;
     }
   }
   else
   {
-    cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
-        = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
-        = cmap->addressingops[0x03].op = hmap->paging.address3000;
-    cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
-        = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
-        = cmap->addressingops[0x13].op = hmap->paging.address3000;
+    cmap->addressingandcycleops[0x07].addressingop = cmap->addressingandcycleops[0x06].addressingop
+        = cmap->addressingandcycleops[0x05].addressingop = cmap->addressingandcycleops[0x04].addressingop
+        = cmap->addressingandcycleops[0x03].addressingop = hmap->paging.address3000;
+    cmap->addressingandcycleops[0x17].addressingop = cmap->addressingandcycleops[0x16].addressingop
+        = cmap->addressingandcycleops[0x15].addressingop = cmap->addressingandcycleops[0x14].addressingop
+        = cmap->addressingandcycleops[0x13].addressingop = hmap->paging.address3000;
   }
   hmap->acccon = value;
   return cmap;
@@ -550,45 +550,45 @@ struct R6502CPUMAP* accconwrite_m(struct R6502CPUMAP* cmap, uintptr_t address_co
   {
     case 0x00:
       /*RAM*/
-      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
-          = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
-          = cmap->addressingops[0x03].op = hmap->paging.address3000;
-      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
-          = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
-          = cmap->addressingops[0x13].op = hmap->paging.address3000;
+      cmap->addressingandcycleops[0x07].addressingop = cmap->addressingandcycleops[0x06].addressingop
+          = cmap->addressingandcycleops[0x05].addressingop = cmap->addressingandcycleops[0x04].addressingop
+          = cmap->addressingandcycleops[0x03].addressingop = hmap->paging.address3000;
+      cmap->addressingandcycleops[0x17].addressingop = cmap->addressingandcycleops[0x16].addressingop
+          = cmap->addressingandcycleops[0x15].addressingop = cmap->addressingandcycleops[0x14].addressingop
+          = cmap->addressingandcycleops[0x13].addressingop = hmap->paging.address3000;
       break;
     case 0x02:
       /*ACCCON b1 (E)*/
-      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
-          = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
-          = cmap->addressingops[0x03].op = hmap->paging.address3000_e;
-      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
-          = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
-          = cmap->addressingops[0x13].op = hmap->paging.address3000_e;
+      cmap->addressingandcycleops[0x07].addressingop = cmap->addressingandcycleops[0x06].addressingop
+          = cmap->addressingandcycleops[0x05].addressingop = cmap->addressingandcycleops[0x04].addressingop
+          = cmap->addressingandcycleops[0x03].addressingop = hmap->paging.address3000_e;
+      cmap->addressingandcycleops[0x17].addressingop = cmap->addressingandcycleops[0x16].addressingop
+          = cmap->addressingandcycleops[0x15].addressingop = cmap->addressingandcycleops[0x14].addressingop
+          = cmap->addressingandcycleops[0x13].addressingop = hmap->paging.address3000_e;
       break;
     case 0x04:
     case 0x06:
       /*ACCCON b2 (X)*/
-      cmap->addressingops[0x07].op = cmap->addressingops[0x06].op
-          = cmap->addressingops[0x05].op = cmap->addressingops[0x04].op
-          = cmap->addressingops[0x03].op = hmap->paging.address3000_x;
-      cmap->addressingops[0x17].op = cmap->addressingops[0x16].op
-          = cmap->addressingops[0x15].op = cmap->addressingops[0x14].op
-          = cmap->addressingops[0x13].op = hmap->paging.address3000_x;
+      cmap->addressingandcycleops[0x07].addressingop = cmap->addressingandcycleops[0x06].addressingop
+          = cmap->addressingandcycleops[0x05].addressingop = cmap->addressingandcycleops[0x04].addressingop
+          = cmap->addressingandcycleops[0x03].addressingop = hmap->paging.address3000_x;
+      cmap->addressingandcycleops[0x17].addressingop = cmap->addressingandcycleops[0x16].addressingop
+          = cmap->addressingandcycleops[0x15].addressingop = cmap->addressingandcycleops[0x14].addressingop
+          = cmap->addressingandcycleops[0x13].addressingop = hmap->paging.address3000_x;
       break;
   }
   if (value & 0x08)
   {
     /*ACCCON b3 (Y)*/
     /*&C000-&DFFF*/
-    cmap->addressingops[0x0D].op = cmap->addressingops[0x0C].op = hmap->paging.addressC000_y;
-    cmap->addressingops[0x1D].op = cmap->addressingops[0x1C].op = hmap->paging.addressC000_y;
+    cmap->addressingandcycleops[0x0D].addressingop = cmap->addressingandcycleops[0x0C].addressingop = hmap->paging.addressC000_y;
+    cmap->addressingandcycleops[0x1D].addressingop = cmap->addressingandcycleops[0x1C].addressingop = hmap->paging.addressC000_y;
   }
   else
   {
     /*&C000-&DFFF*/
-    cmap->addressingops[0x0D].op = cmap->addressingops[0x0C].op = cmap->addressingops[0x0E].op;
-    cmap->addressingops[0x1D].op = cmap->addressingops[0x1C].op = cmap->addressingops[0x1E].op;
+    cmap->addressingandcycleops[0x0D].addressingop = cmap->addressingandcycleops[0x0C].addressingop = cmap->addressingandcycleops[0x0E].addressingop;
+    cmap->addressingandcycleops[0x1D].addressingop = cmap->addressingandcycleops[0x1C].addressingop = cmap->addressingandcycleops[0x1E].addressingop;
   }
   switch (value & 0x60)
   {
@@ -605,8 +605,8 @@ struct R6502CPUMAP* accconwrite_m(struct R6502CPUMAP* cmap, uintptr_t address_co
     case 0x40:
     case 0x60:
       /*TST*/
-      hmap->readmFC00 = cmap->addressingops[0x0E].op;
-      hmap->modifymFC00 = cmap->addressingops[0x1E].op;
+      hmap->readmFC00 = cmap->addressingandcycleops[0x0E].addressingop;
+      hmap->modifymFC00 = cmap->addressingandcycleops[0x1E].addressingop;
       break;
   }
 
