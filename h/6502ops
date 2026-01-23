@@ -185,9 +185,21 @@ $name.split
   MACRO
   R6502_OPCODE_READ_SPECIAL
   STR r1,[sp, #-4]!
+  CMP r1,#&FC00:SHL:16
+  BLO %F2
+  CMP r1,#&FF00:SHL:16
+  BHS %F2
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDREADOPS
-  MOV lr,pc
+  ADR lr,%F3
   LDR pc,[r3,r1,LSR #14]
+2
+  MOV r3,r1,LSR #26
+  BIC r3,r3,#3
+  ADD r3,r3,r0
+  LDR r3,[r3,#:INDEX:HOST_ADDRESSBASES]
+  LDRB r2,[r3,r1,LSR #16]
+  STRB r2,[r0,#:INDEX:R6502_M]
+3
   LDR r1,[sp]
   STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
   BL logreadspecial
@@ -200,9 +212,20 @@ $name.split
   STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
   BL logwritespecial
   LDMFD sp!,{r1-r2}
+  CMP r1,#&FC00:SHL:16
+  BLO %F2
+  CMP r1,#&FF00:SHL:16
+  BHS %F2
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDWRITEOPS
-  MOV lr,pc
+  ADR lr,%F3
   LDR pc,[r3,r1,LSR #14]
+2
+  MOV r3,r1,LSR #26
+  BIC r3,r3,#3
+  ADD r3,r3,r0
+  LDR r3,[r3,#:INDEX:HOST_ADDRESSBASES]
+  STRB r2,[r3,r1,LSR #16]
+3
   MEND
 
   MACRO

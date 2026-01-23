@@ -22,6 +22,13 @@ Optimise6502WorkAreas SETL {TRUE}
 Optimise6502Timing SETL {TRUE}
 Optimise6502Flow SETL {TRUE}
 
+  GBLL Test6502OpcodeBranching
+  GBLL Test6502OpcodeBranchingPartial
+  GBLA Test6502OpcodeBranchingSlow
+Test6502OpcodeBranching SETL {TRUE}
+Test6502OpcodeBranchingPartial SETL {FALSE}
+Test6502OpcodeBranchingSlow SETA &00
+
   GBLL CompareOptimise6502Timing
 CompareOptimise6502Timing SETL {FALSE}
 

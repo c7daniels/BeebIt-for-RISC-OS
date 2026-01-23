@@ -200,7 +200,7 @@
   ASSERT :INDEX:HOST_MEMORY == 0
 
   MACRO
-  TOUCH_ADDRESS_RETURN $directaccesscondition
+  UNMODIFIED_TOUCH_ADDRESS_RETURN $directaccesscondition
   STR r2,[r0,#:INDEX:R6502_TOUCHPTR]
   IF "$directaccesscondition"=="AL"
   HOST_ADDRESSING_RETURN_TOUCHED
@@ -212,6 +212,99 @@
   ADD r2,r0,#:INDEX:R6502_COPIEDVALUE
   STRB r12,[r0,#:INDEX:R6502_COPIEDVALUE]
   HOST_ADDRESSING_RETURN_TOUCHED
+  ENDIF
+  MEND
+
+  MACRO
+  TOUCH_ADDRESS_RETURN $directaccesscondition
+  STR r2,[r0,#:INDEX:R6502_TOUCHPTR]
+  BNE %F2
+  IF Test6502OpcodeBranching
+  TST r1,#1:SHL:24
+  IF Test6502OpcodeBranchingPartial
+  BNE %F1
+  ELSE
+  B %F1
+  ENDIF
+  ENDIF
+  IF "$directaccesscondition"=="AL"
+  HOST_ADDRESSING_RETURN_TOUCHED
+  ELSE
+  LDRB r12,[r2]
+  ADD r2,r0,#:INDEX:R6502_COPIEDVALUE
+  STRB r12,[r0,#:INDEX:R6502_COPIEDVALUE]
+  HOST_ADDRESSING_RETURN_TOUCHED
+  ENDIF
+1
+  IF "$directaccesscondition"=="AL"
+  SUB r12,r2,r1,LSR #16
+  MOV r2,r1,LSR #26
+  BIC r2,r2,#3
+  ADD r2,r2,r0
+  STR r12,[r2,#:INDEX:HOST_ADDRESSBASES]
+  [ Test6502OpcodeBranchingSlow==0
+  HOST_ADDRESSING_RETURN_SPECIAL
+  |
+  B host_addressing_special_return
+  ]
+  ELSE
+  LDRB r12,[r2]
+  ADD r2,r0,#:INDEX:R6502_COPIEDVALUE
+  STRB r12,[r0,#:INDEX:R6502_COPIEDVALUE]
+  SUB r12,r2,r1,LSR #16
+  MOV r2,r1,LSR #26
+  BIC r2,r2,#3
+  ADD r2,r2,r0
+  STR r12,[r2,#:INDEX:HOST_ADDRESSBASES]
+  [ Test6502OpcodeBranchingSlow==0
+  HOST_ADDRESSING_RETURN_SPECIAL
+  |
+  B host_addressing_special_return
+  ]
+  ENDIF
+2
+  IF Test6502OpcodeBranching
+  TST r1,#1:SHL:24
+  IF Test6502OpcodeBranchingPartial
+  BNE %F3
+  ELSE
+  B %F3
+  ENDIF
+  ENDIF
+  IF "$directaccesscondition"=="AL" || "$directaccesscondition"=="NE"
+  HOST_ADDRESSING_RETURN_TOUCHED
+  ELSE
+  LDRB r12,[r2]
+  ADD r2,r0,#:INDEX:R6502_COPIEDVALUE
+  STRB r12,[r0,#:INDEX:R6502_COPIEDVALUE]
+  HOST_ADDRESSING_RETURN_TOUCHED
+  ENDIF
+3
+  IF "$directaccesscondition"=="AL" || "$directaccesscondition"=="NE"
+  SUB r12,r2,r1,LSR #16
+  MOV r2,r1,LSR #26
+  BIC r2,r2,#3
+  ADD r2,r2,r0
+  STR r12,[r2,#:INDEX:HOST_ADDRESSBASES]
+  [ Test6502OpcodeBranchingSlow==0
+  HOST_ADDRESSING_RETURN_SPECIAL
+  |
+  B host_addressing_special_return
+  ]
+  ELSE
+  LDRB r12,[r2]
+  ADD r2,r0,#:INDEX:R6502_COPIEDVALUE
+  STRB r12,[r0,#:INDEX:R6502_COPIEDVALUE]
+  SUB r12,r2,r1,LSR #16
+  MOV r2,r1,LSR #26
+  BIC r2,r2,#3
+  ADD r2,r2,r0
+  STR r12,[r2,#:INDEX:HOST_ADDRESSBASES]
+  [ Test6502OpcodeBranchingSlow==0
+  HOST_ADDRESSING_RETURN_SPECIAL
+  |
+  B host_addressing_special_return
+  ]
   ENDIF
   MEND
 
@@ -247,7 +340,11 @@ host_r6502touch8000_$tag
 
 host_r6502touch0000
   ADD r2,r0,r1,LSR #16
+  CMP r1,#2:SHL:24
+  BLO %F1
   TOUCH_ADDRESS_RETURN AL
+1
+  UNMODIFIED_TOUCH_ADDRESS_RETURN AL
 
 host_r6502touchbp3000_ram
   ADD r2,r6,#&20000000
@@ -309,7 +406,11 @@ host_r6502touchmC000_y
 
 host_r6502touchC000
   ADD r2,r0,r1,LSR #16
+  CMP r1,#&FF:SHL:24
+  BHS %F1
   TOUCH_ADDRESS_RETURN NV
+1
+  UNMODIFIED_TOUCH_ADDRESS_RETURN NV
 
 host_r6502touchF000
   CMP r1,#&FC000000
@@ -331,6 +432,7 @@ host_r6502touchFE00_slow
   ADD r2,r0,#(:INDEX:R6502_M):AND:&FF
   ADD r2,r2,#(:INDEX:R6502_M):AND:&FF00
   STR r2,[r0,#:INDEX:R6502_TOUCHPTR]
+host_addressing_return_slow
   LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ODD]
   LDR r12,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINALMINUSONE]
   EOR r3,r3,r7,LSR #12
@@ -338,14 +440,87 @@ host_r6502touchFE00_slow
   TST r3,#1
   HOST_ADDRESSING_RETURN_STRETCHSPECIAL
 
+  [ Test6502OpcodeBranchingSlow!=0
+host_addressing_special_return
+  TST r1,r1
+  BMI host_addressing_return_fast
+  MOV r2,r1,LSR #16
+  MOV r12,#Test6502OpcodeBranchingSlow:SHL:24
+  AND r2,r2,#7
+  MOVS r12,r12,LSL r2
+  BMI host_addressing_return_slow
+host_addressing_return_fast
+  HOST_ADDRESSING_RETURN_SPECIAL
+  ]
+
   MACRO
-  FOLD_ADDRESS_RETURN $offset,$base,$length
+  UNMODIFIED_FOLD_ADDRESS_RETURN $offset,$base,$length
   MOV r8,#$base+$length
   ADD r9,r0,#$offset+$length
   RSB r2,r8,#$base
   RSB r8,r8,r1,LSR #16
   STR r2,[r0,#:INDEX:R6502_FOLDFLOOR]
   HOST_ADDRESSING_RETURN_FOLDED
+  MEND
+
+  MACRO
+  FOLD_ADDRESS_RETURN $offset,$base,$length
+  IF Test6502OpcodeBranching
+  TST r1,#1:SHL:24
+  IF Test6502OpcodeBranchingPartial
+  BNE %F1
+  ELSE
+  B %F1
+  ENDIF
+  MOV r8,#$base+$length
+  [ ($length:AND:&3FF)==0
+  ADD r9,r0,#$offset+$length
+  |
+  ADD r9,r0,#($offset+$length):AND:&3FC00
+  ADD r9,r9,#($offset+$length):AND:&3FF
+  ]
+  RSB r8,r8,r1,LSR #16
+  ORR r2,r8,#&FF00
+  SUB r2,r2,r8
+  SUB r9,r9,r2
+  ADD r8,r8,r2
+  BIC r2,r8,#&FF
+  STR r2,[r0,#:INDEX:R6502_FOLDFLOOR]
+  HOST_ADDRESSING_RETURN_FOLDED
+1
+  MOV r8,#$base+$length
+  [ ($length:AND:&3FF)==0
+  ADD r9,r0,#$offset+$length
+  |
+  ADD r9,r0,#($offset+$length):AND:&3FC00
+  ADD r9,r9,#($offset+$length):AND:&3FF
+  ]
+  RSB r8,r8,r1,LSR #16
+  ADD r2,r9,r8
+  STR r2,[r0,#:INDEX:R6502_TOUCHPTR]
+  SUB r12,r2,r1,LSR #16
+  MOV r2,r1,LSR #26
+  BIC r2,r2,#3
+  ADD r2,r2,r0
+  STR r12,[r2,#:INDEX:HOST_ADDRESSBASES]
+  [ Test6502OpcodeBranchingSlow==0
+  HOST_ADDRESSING_RETURN_SPECIAL
+  |
+  B host_addressing_special_return
+  ]
+  ELSE
+  MOV r8,#$base+$length
+  [ ($length:AND:&3FF)==0
+  ADD r9,r0,#$offset+$length
+  |
+  ADD r9,r0,#($offset+$length):AND:&3FC00
+  ADD r9,r9,#($offset+$length):AND:&3FF
+  ]
+  RSB r2,r8,#$base
+  RSB r8,r8,r1,LSR #16
+  STR r2,[r0,#:INDEX:R6502_FOLDFLOOR]
+  HOST_ADDRESSING_RETURN_FOLDED
+  ENDIF
   MEND
 
   MACRO
@@ -368,10 +543,18 @@ host_r6502foldm9000_$tag
   MEND
 
 host_r6502fold0000
+  CMP r1,#2:SHL:24
+  BLO %F1
   FOLD_ADDRESS_RETURN :INDEX:HOST_MEMORY,&0000,&8000
+1
+  UNMODIFIED_FOLD_ADDRESS_RETURN :INDEX:HOST_MEMORY,&0000,&200
 
 host_r6502fold0000_ram
+  CMP r1,#2:SHL:24
+  BLO %F1
   FOLD_ADDRESS_RETURN :INDEX:HOST_MEMORY,&0000,&3000
+1
+  UNMODIFIED_FOLD_ADDRESS_RETURN :INDEX:HOST_MEMORY,&0000,&200
 
 host_r6502foldbp3000_ram
   ADD r2,r6,#&20000000
@@ -435,7 +618,7 @@ host_r6502foldmFC00_tst
   FOLD_ADDRESS_RETURN :INDEX:HOST_MEMORY+&C000,&C000,&3E00
 
 host_r6502foldFF00
-  FOLD_ADDRESS_RETURN :INDEX:HOST_MEMORY+&FF00,&FF00,&100
+  UNMODIFIED_FOLD_ADDRESS_RETURN :INDEX:HOST_MEMORY+&FF00,&FF00,&100
 
 host_r6502readifj
   MOV r2,#0
@@ -526,19 +709,43 @@ host_r6502cycle1
 
 |host_r6502readspecial|
   STMFD sp!,{r1,lr}
+  CMP r1,#&FC00:SHL:16
+  BLO %F2
+  CMP r1,#&FF00:SHL:16
+  BHS %F2
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALREADOPS
   MOV lr,pc
   LDR pc,[r3,r1,LSR #14]
+1
   LDR r1,[sp]
   BL logreadspecial
   LDMFD sp!,{r1,pc}
+2
+  MOV r3,r1,LSR #26
+  BIC r3,r3,#3
+  ADD r3,r3,r0
+  LDR r3,[r3,#:INDEX:HOST_ADDRESSBASES]
+  LDRB r2,[r3,r1,LSR #16]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  B %B1
 
 |host_r6502writespecial|
   STMFD sp!,{r1-r2,lr}
   BL logwritespecial
   LDMFD sp!,{r1-r2,lr}
+  CMP r1,#&FC00:SHL:16
+  BLO %F2
+  CMP r1,#&FF00:SHL:16
+  BHS %F2
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALWRITEOPS
   LDR pc,[r3,r1,LSR #14]
+2
+  MOV r3,r1,LSR #26
+  BIC r3,r3,#3
+  ADD r3,r3,r0
+  LDR r3,[r3,#:INDEX:HOST_ADDRESSBASES]
+  STRB r2,[r3,r1,LSR #16]
+  MOV pc,lr
 
   [ !Optimise6502WorkAreas
 host_r6502cycle0s1bridged
@@ -863,21 +1070,45 @@ foldmFC00_tst
   [ Optimise6502WorkAreas || Optimise6502Flow
 host_r6502readbridged
   STMFD sp!,{r0-r1,lr}
+  CMP r1,#&FC00:SHL:16
+  BLO %F2
+  CMP r1,#&FF00:SHL:16
+  BHS %F2
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDREADOPS
   MOV lr,pc
   LDR pc,[r3,r1,LSR #14]
+1
   LDMFD sp,{r0-r1}
   STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
   BL logreadspecial
   LDMFD sp!,{r0-r1,pc}
+2
+  MOV r3,r1,LSR #26
+  BIC r3,r3,#3
+  ADD r3,r3,r0
+  LDR r3,[r3,#:INDEX:HOST_ADDRESSBASES]
+  LDRB r2,[r3,r1,LSR #16]
+  STRB r2,[r0,#:INDEX:R6502_M]
+  B %B1
 
 host_r6502writebridged
   STMFD sp!,{r0-r2,lr}
   STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
   BL logwritespecial
   LDMFD sp!,{r0-r2,lr}
+  CMP r1,#&FC00:SHL:16
+  BLO %F2
+  CMP r1,#&FF00:SHL:16
+  BHS %F2
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDWRITEOPS
   LDR pc,[r3,r1,LSR #14]
+2
+  MOV r3,r1,LSR #26
+  BIC r3,r3,#3
+  ADD r3,r3,r0
+  LDR r3,[r3,#:INDEX:HOST_ADDRESSBASES]
+  STRB r2,[r3,r1,LSR #16]
+  MOV pc,lr
 
 host_interrupt_readsheila
   STR lr,[sp, #-4]!

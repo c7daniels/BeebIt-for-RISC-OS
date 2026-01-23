@@ -261,7 +261,8 @@ typedef struct HOSTMAP
   HOSTMAPBI8271 B_i8271;
   HOSTMAPBW1770 B_w1770;
   HOSTMAPBADC B_adc;
-  uintptr_t BP_unused[65];
+  uintptr_t addressbases[16];
+  uintptr_t BP_unused[49];
 
   // AArch32 offsets -&100 - -&01
   R6502_AC_ZONE AC;

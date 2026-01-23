@@ -247,7 +247,8 @@ HOST_BSERIAL            # SIZEOF_HOSTBSERIAL
 HOST_BI8271             # SIZEOF_HOSTBI8271
 HOST_BW1770             # SIZEOF_HOSTBW1770
 HOST_BADC               # SIZEOF_HOSTBADC
-                        # &104
+HOST_ADDRESSBASES       # &40
+                        # &C4
 
 ; offsets -&100 - -&01
 HOST_AC                 # SIZEOF_R6502_AC_ZONE
