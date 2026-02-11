@@ -366,10 +366,16 @@ void beebitinit(void)
 }
 
 #if 1
+#define MABFRSIZE 2*1024*1024
 int maready;
-static FILE *mafile;
+static FILE* mafile;
+static const int startmafn = 0;
 static int mafn;
 static int maticks;
+static char *mabfr;
+static char *manext;
+static int maremn;
+static FILE* malistfile;
 
 static void opennextmafile(void)
 {
@@ -378,15 +384,85 @@ static void opennextmafile(void)
   ++mafn;
   snprintf(fname, sizeof(fname), "<BeebIt$Dir>.LOGB.SLICE%06d",
            mafn);
-  mafile = BEEBIT_FOPEN(fname,"w");
+  if (mafn == -1)
+  {
+    mafile = BEEBIT_FOPEN(fname,"w");
+  }
   maready = 1;
   maticks = 0;
+  manext = mabfr;
+  maremn = MABFRSIZE;
+}
+
+static void closecurrentmafile(void)
+{
+  fclose(mafile);
+  mafile = 0;
+
+#ifdef __RISCOS__
+  if (malistfile && mafn >= startmafn)
+  {
+    regs.r[0] = 0;
+    regs.r[1] = (uintptr_t)mabfr;
+    regs.r[2] = (uintptr_t)(mabfr + (MABFRSIZE - maremn));
+    regs.r[3] = 1;
+    _kernel_swi(OS_CRC,&regs,&regs);
+
+    fprintf(malistfile, "SLICE%06d %d\n", mafn, regs.r[0]);
+    fflush(malistfile);
+  }
+#endif
 }
 
 void openmafile(void)
 {
+  mabfr = malloc(MABFRSIZE);
   mafn = -1;
   opennextmafile();
+
+  malistfile = BEEBIT_FOPEN("<BeebIt$Dir>.LOGB.LIST", "w");
+}
+
+void closemafile(void)
+{
+  closecurrentmafile();
+
+  fclose(malistfile);
+
+  malistfile = 0;
+  maready = 0;
+
+  free(mabfr);
+  mabfr = NULL;
+}
+
+void maprintf(char* fmt, ...)
+{
+  va_list ap,ap2;
+  int n,a;
+
+  if (mafn < startmafn)
+    return;
+
+  va_start(ap, fmt);
+  n = vsnprintf(manext, maremn, fmt, ap);
+  va_end(ap);
+
+  if (maremn > n)
+    a = n;
+  else
+    a = maremn - 1;
+
+  manext += a;
+  maremn -= a;
+
+  if (mafile)
+  {
+    va_start(ap2, fmt);
+    vfprintf(mafile, fmt, ap2);
+    va_end(ap2);
+    fflush(mafile);
+  }
 }
 
 //#define CCKEYPRESS
@@ -402,9 +478,9 @@ int tickmafile(uint32_t cc)
   const int endmafn = 99;
 #endif
 
-  if (mafile && ++maticks == 20000)
+  if (maready && ++maticks == 20000)
   {
-    fclose(mafile);
+    closecurrentmafile();
 
     if (mafn == endmafn)
     {
@@ -464,22 +540,6 @@ int tickmafile(uint32_t cc)
     return 1;
   else
     return 0;
-}
-
-void maprintf(char* fmt, ...)
-{
-  va_list ap;
-
-  va_start(ap, fmt);
-  vfprintf(mafile, fmt, ap);
-  va_end(ap);
-}
-
-void closemafile(void)
-{
-  fclose(mafile);
-  mafile = 0;
-  maready = 0;
 }
 #endif
 
