@@ -184,13 +184,22 @@ $name.split
 
   MACRO
   R6502_OPCODE_READ_SPECIAL
+  STR r1,[sp, #-4]!
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDREADOPS
   MOV lr,pc
   LDR pc,[r3,r1,LSR #14]
+  LDR r1,[sp]
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  BL logreadspecial
+  LDR r1, [sp], #4
   MEND
 
   MACRO
   R6502_OPCODE_WRITE_SPECIAL
+  STMFD sp!,{r1-r2}
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  BL logwritespecial
+  LDMFD sp!,{r1-r2}
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDWRITEOPS
   MOV lr,pc
   LDR pc,[r3,r1,LSR #14]

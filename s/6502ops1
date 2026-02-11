@@ -31,6 +31,9 @@
 
 ; Import global symbols
 
+  IMPORT |logreadspecial|
+  IMPORT |logwritespecial|
+
   IMPORT |r65c12dopzpgxnofold|
   IMPORT |r6502dopimmsplit1|
   IMPORT |r6502dopzpgsplit1|

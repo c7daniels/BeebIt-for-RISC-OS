@@ -11,6 +11,8 @@
 
 #include "6502cmap.h"
 
+//#define EXCLUDE_CYCLE_COUNT_FROM_LOG
+
 #define NFLAG 0x80
 #define VFLAG 0x40
 #define UFLAG 0x20

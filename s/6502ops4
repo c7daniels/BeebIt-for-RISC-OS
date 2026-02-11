@@ -31,6 +31,9 @@
 
 ; Import global symbols
 
+  IMPORT |logreadspecial|
+  IMPORT |logwritespecial|
+
   IMPORT |s_r6502operand|
   IMPORT |s1_r6502operand|
   IMPORT |s2_r6502operand|

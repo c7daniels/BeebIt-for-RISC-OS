@@ -582,6 +582,12 @@ R6502CPUMAP* logfetch(R6502CPUMAP* ctop, uint8_t* p, int defer)
   else if (maready)
   {
     cc = host_getcyclecount(ctop);
+#ifdef EXCLUDE_CYCLE_COUNT_FROM_LOG
+    extern int tickmafile(uint32_t cc);
+    ++cc;
+    tickmafile(cc);
+    cc = 0;
+#endif
     interruptqueue_ps = (uint32_t)ctop[-1].interruptqueue_ps;
     maprintf("%04X %06X %02X %02X %02X %08X ; %02X %02X %02X %02X %02X; %03X\n", (uint32_t)(ctop[-1].sync_pc_code>>16), interruptqueue_ps>>8, p[0], p[1], p[2], cc,
             ctop[-1].a, ctop[-1].x, ctop[-1].y, interruptqueue_ps&0xFF, ctop[-1].sp_code>>24, ctop[-1].togominusone_cyclestate&0xFFF);
@@ -596,6 +602,15 @@ R6502CPUMAP* ccreached(R6502CPUMAP* ctop)
 
 R6502CPUMAP* logcycles(R6502CPUMAP* ctop, int ncycles)
 {
+#ifdef EXCLUDE_CYCLE_COUNT_FROM_LOG
+  if (dlf_active)
+  {
+    logfetch(cmap, dlf_p, 0);
+    dlf_active = 0;
+  }
+
+  return cmap;
+#else
   uint32_t cc;
   int cchit;
   extern uint32_t host_getcyclecount(R6502CPUMAP* ctop);
@@ -619,6 +634,7 @@ R6502CPUMAP* logcycles(R6502CPUMAP* ctop, int ncycles)
     return ctop;
 
   return ccreached(ctop);
+#endif
 }
 
 R6502CPUMAP* m_r6502cyclereadreturn(R6502CPUMAP* ctop, uint8_t* p)

@@ -33,6 +33,9 @@
 
 ; Import global symbols
 
+  IMPORT |logreadspecial|
+  IMPORT |logwritespecial|
+
   IMPORT |systemviaatzerocycles|
   IMPORT |userviaatzerocycles|
   IMPORT |i8271poll|
@@ -522,10 +525,18 @@ host_r6502cycle1
   B assemblyhostadvancetimers
 
 |host_r6502readspecial|
+  STMFD sp!,{r1,lr}
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALREADOPS
+  MOV lr,pc
   LDR pc,[r3,r1,LSR #14]
+  LDR r1,[sp]
+  BL logreadspecial
+  LDMFD sp!,{r1,pc}
 
 |host_r6502writespecial|
+  STMFD sp!,{r1-r2,lr}
+  BL logwritespecial
+  LDMFD sp!,{r1-r2,lr}
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALWRITEOPS
   LDR pc,[r3,r1,LSR #14]
 
@@ -851,10 +862,20 @@ foldmFC00_tst
 
   [ Optimise6502WorkAreas || Optimise6502Flow
 host_r6502readbridged
+  STMFD sp!,{r0-r1,lr}
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDREADOPS
+  MOV lr,pc
   LDR pc,[r3,r1,LSR #14]
+  LDMFD sp,{r0-r1}
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  BL logreadspecial
+  LDMFD sp!,{r0-r1,pc}
 
 host_r6502writebridged
+  STMFD sp!,{r0-r2,lr}
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  BL logwritespecial
+  LDMFD sp!,{r0-r2,lr}
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDWRITEOPS
   LDR pc,[r3,r1,LSR #14]
 

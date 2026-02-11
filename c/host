@@ -111,6 +111,42 @@ uint32_t host_getcyclecount(R6502CPUMAP* ctop)
 
 extern R6502CPUMAP* host_r6502opcode07interfacestep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state);
 
+HOSTMAP* logreadspecial(HOSTMAP* hmap, uintptr_t address_code)
+{
+  uint32_t cc;
+  extern int maready;
+  extern void maprintf(char* fmt, ...);
+
+  if (maready)
+  {
+#ifdef EXCLUDE_CYCLE_COUNT_FROM_LOG
+    cc = 0;
+#else
+    cc = (uint32_t)(hmap->cycles.originalminusone - (hmap->togominusone_cyclestate>>12) + hmap->cycles.monotonic);
+#endif
+    maprintf("   Rs %04X (%02X) %08X\n", (uint32_t)(address_code>>16), hmap->m, cc);
+  }
+  return hmap;
+}
+
+HOSTMAP* logwritespecial(HOSTMAP* hmap, uintptr_t address_code, uint8_t value)
+{
+  uint32_t cc;
+  extern int maready;
+  extern void maprintf(char* fmt, ...);
+
+  if (maready)
+  {
+#ifdef EXCLUDE_CYCLE_COUNT_FROM_LOG
+    cc = 0;
+#else
+    cc = (uint32_t)(hmap->cycles.originalminusone - (hmap->togominusone_cyclestate>>12) + hmap->cycles.monotonic);
+#endif
+    maprintf("   Ws %04X (%02X) %08X\n", (uint32_t)(address_code>>16), value, cc);
+  }
+  return hmap;
+}
+
 static inline void hoststartreset(int poweron)
 {
   userviastartreset(poweron);
@@ -686,12 +722,15 @@ R6502CPUMAP* host_r6502cycle1(R6502CPUMAP* ctop)
 R6502CPUMAP* host_r6502readspecial(R6502CPUMAP* ctop, uintptr_t address_code)
 {
   HOSTMAP* htop = (HOSTMAP*)ctop;
-  return htop[-1].specialreadops[(address_code>>16)-0xFC00](ctop, address_code);
+  htop[-1].specialreadops[(address_code>>16)-0xFC00](ctop, address_code);
+  logreadspecial(htop, address_code);
+  return ctop;
 }
 
 R6502CPUMAP* host_r6502writespecial(R6502CPUMAP* ctop, uintptr_t address_code, uint8_t value)
 {
   HOSTMAP* htop = (HOSTMAP*)ctop;
+  logwritespecial(htop, address_code, value);
   return htop[-1].specialwriteops[(address_code>>16)-0xFC00](ctop, address_code, value);
 }
 #endif
