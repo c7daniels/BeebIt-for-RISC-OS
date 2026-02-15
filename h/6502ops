@@ -495,13 +495,7 @@ counter SETA $n
   SUBS r7,r7,#($n+$ns):SHL:12
   AND r3,r7,#&7C0
   LDR r2,[r0,#:INDEX:HOST_KEYCOLUMNFLAGS]
-  IF "$continuationtype"=="pop"
-  LDR lr, [sp], #4
-  ELIF "$continuationtype"=="branch"
-  LDR lr,%F1
-  ELSE
-  ADR lr,%F1
-  ENDIF
+  ADR lr,.+12
   [ $n+$ns>1 && CompareOptimise6502Timing
   B r6502opcc$ns
   |
@@ -515,37 +509,24 @@ counter SETA $n
 
   ELSE
   WHILE counter>0
-  [ counter+$ns>1
   BL host_r6502cycle1
-  |
-  IF "$continuationtype"=="pop"
-  LDR lr, [sp], #4
-  ELIF "$continuationtype"=="branch"
-  LDR lr,%F1
-  ELSE
-  ADR lr,%F1
-  ENDIF
-  B host_r6502cycle1
-  ]
 counter SETA counter-1
   WEND
 counter SETA $ns
   WHILE counter>0
-  [ counter>1
   BL host_r6502cycle0s1
-  |
+counter SETA counter-1
+  WEND
+  ENDIF
   IF "$continuationtype"=="pop"
-  LDR lr, [sp], #4
+  LDR pc, [sp], #4
   ELIF "$continuationtype"=="branch"
   LDR lr,%F1
   ELSE
   ADR lr,%F1
   ENDIF
-  B host_r6502cycle0s1
-  ]
-counter SETA counter-1
-  WEND
-  ENDIF
+  MOV r1,#$n+$ns
+  LDR pc,[r0,#:INDEX:R6502_LOGCYCLESACTION]
   IF "$continuationtype"!="pop"
 1
   IF "$continuationtype"=="branch"
@@ -567,6 +548,29 @@ counter SETA counter-1
   MACRO
   R6502_OPCODE_CYCLES_BRANCH $n,$ns,$label
   R6502_OPCODE_CYCLES_BODY $n,$ns,branch,$label
+  MEND
+
+  MACRO
+  R6502_OPCODE_LOG_FETCH $offset
+  ADD r1,r9,r8
+  [ $offset != 0
+  SUB r1,r1,#$offset
+  ]
+  STMFD sp!,{r2,lr}
+  MOV r2,#0
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_LOGFETCHACTION]
+  LDMFD sp!,{r2,lr}
+  MEND
+
+  MACRO
+  R6502_OPCODE_LOG_SPECIAL_FETCH
+  LDR r1,[r0,#:INDEX:R6502_TOUCHPTR]
+  STMFD sp!,{r2,lr}
+  MOV r2,#0
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_LOGFETCHACTION]
+  LDMFD sp!,{r2,lr}
   MEND
 
   MACRO

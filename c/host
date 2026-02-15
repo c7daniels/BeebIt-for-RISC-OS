@@ -103,6 +103,12 @@ extern void hostassemblyroutinereset(HOSTMAP* htop);
 FULLHOSTMAP hostmap;
 #endif
 
+uint32_t host_getcyclecount(R6502CPUMAP* ctop)
+{
+  HOSTMAP* htop = (HOSTMAP*)ctop;
+  return (uint32_t)(htop[-1].cycles.originalminusone - (htop[-1].togominusone_cyclestate>>12) + htop[-1].cycles.monotonic);
+}
+
 extern R6502CPUMAP* host_r6502opcode07interfacestep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state);
 
 static inline void hoststartreset(int poweron)
@@ -148,10 +154,14 @@ void swappages(uint8_t *block1, uint8_t *block2, int npagecount)
 }
 
 #define ADDRESS_TOUCH_RETURN(CTOP, PTR) \
-  return callbacks->mapped(CTOP, PTR);
+  { \
+    CTOP[-1].touchptr = PTR; \
+    return callbacks->mapped(CTOP, PTR); \
+  }
 
 #define ADDRESS_TOUCH_COPY_RETURN(CTOP, PTR) \
   { \
+    CTOP[-1].touchptr = PTR; \
     CTOP[-1].copiedvalue = *(PTR); \
     return callbacks->mapped(CTOP, &CTOP[-1].copiedvalue); \
   }
@@ -926,6 +936,8 @@ void hostresetcpu(void)
   const R6502OP* const extrasequences[R6502_EXTRA_SEQUENCE_COUNT] = {
     host_r6502_opcode07interfacesequence
   };
+  extern R6502CPUMAP* logfetch(R6502CPUMAP* ctop, uint8_t* p, int defer);
+  extern R6502CPUMAP* logcycles(R6502CPUMAP* ctop, int ncycles);
 #ifndef BEEBIT_NO_ASM
   void (*assemblyroutinereset)(R6502CPUMAP* ctop, uint32_t features);
   const uint32_t feature_flat = 1;
@@ -954,6 +966,8 @@ void hostresetcpu(void)
 
   ctop[-1].resetstartingaction = host_r6502onresetstart;
   ctop[-1].resetcontinuingaction = host_r6502onresetcontinue;
+  ctop[-1].logfetchaction = logfetch;
+  ctop[-1].logcyclesaction = logcycles;
 
 #ifndef BEEBIT_NO_ASM
   assemblyroutinereset(ctop, assemblyroutinefeatures);
@@ -1138,7 +1152,7 @@ void hostresetperipherals(void)
   hoststartreset(TRUE);
 }
 
-//#ifdef BEEBIT_NO_ASM
+#ifdef BEEBIT_NO_ASM
 HOSTMAP* hostadvancetimers(HOSTMAP* htop)
 {
   intptr_t cyclesoriginal, fewestcyclestogo, cyclestogo;
@@ -1255,12 +1269,10 @@ void hostexecute(void)
 
   while (ctop[-1].cpu_state != ctop[-1].sequences[R6502_YIELD_SEQUENCE])
   {
-    extern void tickmafile(void);
-    tickmafile();
     (*ctop[-1].cpu_state)(ctop, (intptr_t)(ctop[-1].cpu_state+1));
   }
 }
-//#endif
+#endif
 
 void hostbeforesnapshot(void)
 {

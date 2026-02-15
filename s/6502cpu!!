@@ -252,6 +252,9 @@
   IMPORT |r6502opcodeearlyinterrupttrap|
   IMPORT |r6502opcodeinterrupttrap|
 
+  IMPORT |logfetch|
+  IMPORT |logcycles|
+
 ; Export global symbols
 
   EXPORT |r6502invokeaddressing|
@@ -451,6 +454,10 @@
   EXPORT |r6502yieldstep|
   EXPORT |r6502patchsequences|
   EXPORT |r6502assemblyroutinereset|
+
+  EXPORT |switchtoopcoderoutine| ;;
+  EXPORT |switchtosequence| ;;
+  EXPORT |pchit| ;;
 
   ASSERT :INDEX:R6502ZONE_DC == -&4000
   ASSERT :INDEX:R6502ZONE_CC == -&1000
@@ -3006,6 +3013,9 @@ r6502opcoderoutines
   DCD 0
   DCD 0
   DCD 0
+
+pchit
+  MOV pc,lr
 
 
 ;Data Area

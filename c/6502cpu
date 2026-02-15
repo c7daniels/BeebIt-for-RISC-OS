@@ -14,8 +14,11 @@
 #include <assert.h>
 #include <stddef.h>
 #include <string.h>
+#include <stdarg.h>
 #include "beebit.h"
 #include "6502cpu.h"
+
+extern R6502CPUMAP* logcycles(R6502CPUMAP* ctop, int ncycles);
 
 static_assert(offsetof(R6502ZONEMAP, DC) == 0, "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, CC) == (0x3000>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
@@ -558,6 +561,66 @@ const R6502OP* const r6502sequences[R6502_MAIN_SEQUENCE_COUNT] =
   r6502_writestretchsequence
 };
 
+static int dlf_active = 0;
+static uint8_t dlf_p[4];
+
+R6502CPUMAP* logfetch(R6502CPUMAP* ctop, uint8_t* p, int defer)
+{
+  uint32_t cc;
+  uint32_t interruptqueue_ps;
+  extern int maready;
+  extern void maprintf(char* fmt, ...);
+  extern uint32_t host_getcyclecount(R6502CPUMAP* ctop);
+
+  if (defer)
+  {
+    dlf_active = 1;
+    dlf_p[0] = p[0];
+    dlf_p[1] = p[1];
+    dlf_p[2] = p[2];
+  }
+  else if (maready)
+  {
+    cc = host_getcyclecount(ctop);
+    interruptqueue_ps = (uint32_t)ctop[-1].interruptqueue_ps;
+    maprintf("%04X %06X %02X %02X %02X %08X ; %02X %02X %02X %02X %02X\n", (uint32_t)(ctop[-1].sync_pc_code>>16), interruptqueue_ps>>8, p[0], p[1], p[2], cc,
+            ctop[-1].a, ctop[-1].x, ctop[-1].y, interruptqueue_ps&0xFF, ctop[-1].sp_code>>24);
+  }
+  return ctop;
+}
+
+R6502CPUMAP* ccreached(R6502CPUMAP* ctop)
+{
+  return ctop;
+}
+
+R6502CPUMAP* logcycles(R6502CPUMAP* ctop, int ncycles)
+{
+  uint32_t cc;
+  int cchit;
+  extern uint32_t host_getcyclecount(R6502CPUMAP* ctop);
+  extern int tickmafile(uint32_t cc);
+
+  cc = host_getcyclecount(ctop);
+  cchit = 0;
+
+  for (cc -= ncycles; ncycles-->0;)
+  {
+    ++cc;
+    cchit |= tickmafile(cc);
+  }
+  if (dlf_active)
+  {
+    logfetch(ctop, dlf_p, 0);
+    dlf_active = 0;
+  }
+
+  if (!cchit)
+    return ctop;
+
+  return ccreached(ctop);
+}
+
 R6502CPUMAP* m_r6502cyclereadreturn(R6502CPUMAP* ctop, uint8_t* p)
 {
   ctop[-1].m = *p;
@@ -579,6 +642,8 @@ static R6502CPUMAP* r6502completecycleuninterruptedfetchreturn(R6502CPUMAP* ctop
 {
   ctop[-1].cpu_state = ctop[-1].sequences[opcode];
 
+  logfetch(ctop, ctop[-1].touchptr, 1);
+
   if (ctop[-1].transition1 == R6502_RESET_TRANSITION)
   {
     ctop[-1].cpu_state = ctop[-1].sequences[R6502_RESET_SEQUENCE];
@@ -597,6 +662,8 @@ static R6502CPUMAP* r6502completecycleearlyinterruptfetchreturn(R6502CPUMAP* cto
   uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
 
   ctop[-1].cpu_state = ctop[-1].sequences[opcode];
+
+  logfetch(ctop, ctop[-1].touchptr, 1);
 
   if (ctop[-1].transition1 == R6502_RESET_TRANSITION)
   {
@@ -621,6 +688,8 @@ static R6502CPUMAP* r6502completecycleinterruptfetchreturn(R6502CPUMAP* ctop,
   uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
 
   ctop[-1].cpu_state = ctop[-1].sequences[opcode];
+
+  logfetch(ctop, ctop[-1].touchptr, 1);
 
   if (ctop[-1].transition1 == R6502_RESET_TRANSITION)
   {

@@ -388,13 +388,28 @@ void openmafile(void)
   opennextmafile();
 }
 
-void tickmafile(void)
+int tickmafile(uint32_t cc)
 {
+  const uint32_t trapcc = 0xFFFFFFFF;
+  const int endmafn = 99;
+
   if (mafile && ++maticks == 20000)
   {
     fclose(mafile);
-    opennextmafile();
+
+    if (mafn == endmafn)
+    {
+      mafile = 0;
+      maready = 0;
+    }
+    else
+      opennextmafile();
   }
+
+  if (cc == trapcc)
+    return 1;
+  else
+    return 0;
 }
 
 void maprintf(char* fmt, ...)

@@ -18,7 +18,7 @@
   GBLL Optimise6502Timing
   GBLL Optimise6502Flow
 Optimise6502Links SETL {FALSE}
-Optimise6502WorkAreas SETL {FALSE}
+Optimise6502WorkAreas SETL {TRUE}
 Optimise6502Timing SETL {TRUE}
 Optimise6502Flow SETL {TRUE}
 
@@ -189,7 +189,16 @@ R6502_OPCODE_07_SEQUENCE EQU 265
   [ Optimise6502Links
   LDR lr,[r0,#:INDEX:R6502_CONTINUELINK]
   ]
+  STR lr,[sp, #-4]!
+  MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_STRETCHCYCLEACTION]
+  MOV r1,#1
+  LDR lr, [sp], #4
+  [ Optimise6502WorkAreas
+  LDR pc,[r0,#:INDEX:R6502_LOGCYCLESACTION]
+  |
+  B logcycles
+  ]
   MEND
 
   MACRO
@@ -197,7 +206,16 @@ R6502_OPCODE_07_SEQUENCE EQU 265
   [ Optimise6502Links
   LDR lr,[r0,#:INDEX:R6502_CONTINUELINK]
   ]
+  STR lr,[sp, #-4]!
+  MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_CYCLEACTION]
+  MOV r1,#1
+  LDR lr, [sp], #4
+  [ Optimise6502WorkAreas
+  LDR pc,[r0,#:INDEX:R6502_LOGCYCLESACTION]
+  |
+  B logcycles
+  ]
   MEND
 
   MACRO
@@ -208,7 +226,16 @@ R6502_OPCODE_07_SEQUENCE EQU 265
   [ Optimise6502Links
   LDR lr,[r0,#:INDEX:R6502_CONTINUELINK]
   ]
+  STR lr,[sp, #-4]!
+  MOV lr,pc
   LDR pc,[r0,#:INDEX:R6502_CYCLEACTION]
+  MOV r1,#1
+  LDR lr, [sp], #4
+  [ Optimise6502WorkAreas
+  LDR pc,[r0,#:INDEX:R6502_LOGCYCLESACTION]
+  |
+  B logcycles
+  ]
   MEND
 
   MACRO
@@ -284,6 +311,18 @@ R6502_OPCODE_07_SEQUENCE EQU 265
 
   MACRO
   R6502_CYCLE_FETCH_RETURN_TAIL $type
+
+  LDR r1,[r0,#:INDEX:R6502_TOUCHPTR]
+  STMFD sp!,{r2-r3,lr}
+  MOV r2,#1
+  MOV lr,pc
+  [ Optimise6502WorkAreas
+  LDR pc,[r0,#:INDEX:R6502_LOGFETCHACTION]
+  |
+  BL logfetch
+  ]
+  LDMFD sp!,{r2-r3,lr}
+
   [ !Optimise6502WorkAreas && "$type"!="uninterrupted"
   LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
   ]
@@ -388,6 +427,16 @@ R6502_OPCODE_07_SEQUENCE EQU 265
   |
   ADD $ra,$rb,r2,LSL #2
   ]
+  MEND
+
+  MACRO
+  R6502_PCTEST $addr
+  MOV r3,r6,LSR #16
+  EOR r3,r3,#$addr:AND:&FF
+  EORS r3,r3,#$addr:AND:&FF00
+  BNE %F1
+  BL pchit
+1
   MEND
 
   END

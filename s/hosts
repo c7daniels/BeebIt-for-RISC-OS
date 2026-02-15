@@ -107,6 +107,9 @@
 
   IMPORT |beebit_exit| ;
 
+  IMPORT |logfetch|
+  IMPORT |logcycles|
+
 ; Export global symbols
 
   EXPORT |hostmap|
@@ -142,6 +145,21 @@
   EXPORT |host_r6502touchFE00_fast|
   EXPORT |host_r6502touchFE00_slow|
 
+  EXPORT |host_r6502fold0000|
+  EXPORT |host_r6502fold0000_ram|
+  EXPORT |host_r6502foldbp3000_ram|
+  EXPORT |host_r6502foldbp3000_ramram|
+  EXPORT |host_r6502foldbp3000_ramram2|
+  EXPORT |host_r6502foldm3000_e|
+  EXPORT |host_r6502foldm3000_x|
+  EXPORT |host_r6502foldbp8000_ram|
+  EXPORT |host_r6502foldm8000_ram|
+  EXPORT |host_r6502foldmC000_y|
+  EXPORT |host_r6502foldC000|
+  EXPORT |host_r6502foldF000|
+  EXPORT |host_r6502foldmFC00_tst|
+  EXPORT |host_r6502foldFF00|
+
   EXPORT |host_r6502readfred|
   EXPORT |host_r6502readjim|
   EXPORT |host_r6502writefred|
@@ -158,9 +176,14 @@
   EXPORT |host_r6502writespecial|
 
   EXPORT |hostassemblyroutinereset|
-  ;EXPORT |hostadvancetimers|
+  EXPORT |hostadvancetimers|
   EXPORT |assemblyhostadvancetimers|
-  ;EXPORT |hostexecute|
+  EXPORT |hostexecute|
+
+  [ !Optimise6502Links
+  EXPORT |hostinto|
+  ]
+
   EXPORT |exex|
 
   ASSERT :INDEX:HOST_M_SHIFT == :INDEX:R6502ZONE_M_SHIFT
@@ -175,6 +198,7 @@
 
   MACRO
   TOUCH_ADDRESS_RETURN $directaccesscondition
+  STR r2,[r0,#:INDEX:R6502_TOUCHPTR]
   IF "$directaccesscondition"=="AL"
   HOST_ADDRESSING_RETURN_TOUCHED
   ELSE
@@ -295,9 +319,15 @@ host_r6502touchmFC00
   LDR pc,[r0,#:INDEX:HOST_TOUCHMFC00]
 
 host_r6502touchFE00_fast
+  ADD r2,r0,#(:INDEX:R6502_M):AND:&FF
+  ADD r2,r2,#(:INDEX:R6502_M):AND:&FF00
+  STR r2,[r0,#:INDEX:R6502_TOUCHPTR]
   HOST_ADDRESSING_RETURN_SPECIAL
 
 host_r6502touchFE00_slow
+  ADD r2,r0,#(:INDEX:R6502_M):AND:&FF
+  ADD r2,r2,#(:INDEX:R6502_M):AND:&FF00
+  STR r2,[r0,#:INDEX:R6502_TOUCHPTR]
   LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ODD]
   LDR r12,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINALMINUSONE]
   EOR r3,r3,r7,LSR #12
@@ -320,6 +350,10 @@ host_r6502touchFE00_slow
   LCLA n
   LCLA offset
 offset SETA :INDEX:HOST_ROMS+(&$tag:SHL:14)
+  EXPORT host_r6502fold8000_$tag
+  EXPORT host_r6502foldm9000_$tag
+  EXPORT host_r6502foldbpB000_$tag
+
 host_r6502fold8000_$tag
   FOLD_ADDRESS_RETURN &$offset,&8000,&4000
 
@@ -881,6 +915,20 @@ host_cycles_interrupt_writesheila
   LDR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
   LDR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
   LDR pc, [sp], #4
+
+bridgelogfetch
+  STR lr,[sp, #-4]!
+  HOST_STORE_WORK_AREA
+  BL logfetch
+  HOST_LOAD_WORK_AREA
+  LDR pc, [sp], #4
+
+bridgelogcycles
+  STR lr,[sp, #-4]!
+  HOST_STORE_WORK_AREA
+  BL logcycles
+  HOST_LOAD_WORK_AREA
+  LDR pc, [sp], #4
   ]
 
   [ Optimise6502Flow
@@ -1055,6 +1103,10 @@ substitutespecialroutines
   BL substitutespecialroutines
   ADR r1,sheilawritesubstitution
   BL substitutespecialroutines
+  LDR r1,%F90
+  LDR r2,%F90+4
+  STR r1,[r0,#:INDEX:R6502_LOGFETCHACTION]
+  STR r2,[r0,#:INDEX:R6502_LOGCYCLESACTION]
   ]
   LDMFD sp!,{r4-r7,pc}
   [ Optimise6502Flow
@@ -1079,6 +1131,9 @@ substitutespecialroutines
 85
   DCD host_r6502readbridged
   DCD host_r6502writebridged
+90
+  DCD bridgelogfetch
+  DCD bridgelogcycles
   ]
 
 |hostadvancetimers|
@@ -1226,6 +1281,7 @@ hostexecute1
   LDR r2,[r3,#R6502_YIELD_SEQUENCE:SHL:2]
   CMP r1,r2
   ADR lr,hostexecute1
+hostinto
   LDRNE pc, [r1], #4
   ]
 hostexecute2

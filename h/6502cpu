@@ -71,10 +71,18 @@
   R6502_TOUCH_ADDRESS(CTOP, ADDRCODE, s_##TAG, s1_##TAG, s2_##TAG, m_##TAG)
 
 #define R6502_CYCLE_STRETCH_RETURN(CTOP) \
-  return (*CTOP[-1].stretchcycleaction)(CTOP);
+  { \
+    (*CTOP[-1].stretchcycleaction)(CTOP); \
+    logcycles(CTOP, 1); \
+    return CTOP; \
+  }
 
 #define R6502_CYCLE_RETURN(CTOP) \
-  return (*CTOP[-1].cycleaction)(CTOP);
+  { \
+    (*CTOP[-1].cycleaction)(CTOP); \
+    logcycles(CTOP, 1); \
+    return CTOP; \
+  }
 
 #define R6502_CYCLE_ZPG_READ_RETURN(CTOP, ZCODE) \
   { \

@@ -79,7 +79,10 @@ typedef struct R6502CPUMAP
   uintptr_t opcodeearlyinterrupttrap;
   uintptr_t opcodeinterrupttrap;
   uintptr_t lbreak;
-  uintptr_t BC_unused[9];
+  uint8_t* touchptr;
+  struct R6502CPUMAP* (*logfetchaction)(struct R6502CPUMAP* ctop, uint8_t* p, int defer);
+  struct R6502CPUMAP* (*logcyclesaction)(struct R6502CPUMAP* ctop, int ncycles);
+  uintptr_t BC_unused[6];
   R6502_BP_ZONE BP;
 
   // AArch32 offsets -&100 - -&01

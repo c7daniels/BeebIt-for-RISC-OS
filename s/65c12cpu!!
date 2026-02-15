@@ -230,6 +230,9 @@
   IMPORT |r65c12interruptroutine|
   IMPORT |r65c12brkroutine|
 
+  IMPORT |logfetch|
+  IMPORT |logcycles|
+
 ; Export global symbols
 
   EXPORT |r65c12fastnopstep|

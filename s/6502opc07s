@@ -36,6 +36,9 @@
   IMPORT |s1_r6502cycleinterruptfetchpopreturn|
   IMPORT |s_r6502cycleinterruptfetchpopreturn|
 
+  IMPORT |logfetch|
+  IMPORT |logcycles|
+
 ; Export global symbols
 
   EXPORT |host_r6502opcode07interfacestep|
