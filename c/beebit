@@ -17,6 +17,7 @@
 #include <stdlib.h>
 /*#include <time.h>*/
 #include "beebit.h"
+#include "6502cpu.h"
 #include "host.h"
 #include "1770fdc.h"
 #include "8271fdc.h"
@@ -388,10 +389,18 @@ void openmafile(void)
   opennextmafile();
 }
 
+//#define CCKEYPRESS
+//#define CCRESET
+
 int tickmafile(uint32_t cc)
 {
   const uint32_t trapcc = 0xFFFFFFFF;
+#ifdef CCRESET
+  const int endmafn = 399;
+  R6502CPUMAP* cmap = (R6502CPUMAP*)&hostmap;
+#else
   const int endmafn = 99;
+#endif
 
   if (mafile && ++maticks == 20000)
   {
@@ -405,6 +414,51 @@ int tickmafile(uint32_t cc)
     else
       opennextmafile();
   }
+
+#ifdef CCRESET
+  if (cc == 20000*300)
+  {
+    cmap->lbreak = 0xFF;
+    cmap->transition1 = R6502_RESET_TRANSITION;
+  }
+  else if (cc == 20000*350)
+  {
+    cmap->lbreak = 0x00;
+  }
+#endif
+#ifdef CCKEYPRESS
+  int k1 = 0x31;
+  int k2 = 0x41;
+  int k;
+  if (cc == 20000*35)
+  {
+    k = k1;
+    hostmap.keystatus[k&15] |= (1<<((k&0x70)>>4));
+    if (hostmap.keystatus[k&15]>=2)
+      hostmap.keycolumnflags &= ~(0x40000000U>>((-k-k)&31));
+  }
+  else if (cc == 20000*45)
+  {
+    k = k1;
+    hostmap.keystatus[k&15] &= ~(1<<((k&0x70)>>4));
+    if (hostmap.keystatus[k&15]<2)
+      hostmap.keycolumnflags |= (0x40000000U>>((-k-k)&31));
+  }
+  if (cc == 20000*60)
+  {
+    k = k2;
+    hostmap.keystatus[k&15] |= (1<<((k&0x70)>>4));
+    if (hostmap.keystatus[k&15]>=2)
+      hostmap.keycolumnflags &= ~(0x40000000U>>((-k-k)&31));
+  }
+  else if (cc == 20000*70)
+  {
+    k = k2;
+    hostmap.keystatus[k&15] &= ~(1<<((k&0x70)>>4));
+    if (hostmap.keystatus[k&15]<2)
+      hostmap.keycolumnflags |= (0x40000000U>>((-k-k)&31));
+  }
+#endif
 
   if (cc == trapcc)
     return 1;
