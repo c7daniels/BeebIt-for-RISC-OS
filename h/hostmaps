@@ -202,9 +202,11 @@ SIZEOF_HOSTBADC         * @
 
 ;storage map specialised for peripheral emulation
 ;a C representation of this storage map appears in hostmap.h
-HOSTMAP_ORIGIN EQU -&A000
+HOSTMAP_ORIGIN EQU -&C000
                         ^ HOSTMAP_ORIGIN
-; offsets -&A000 - -&4001
+; offsets -&C000 - -&4001
+HOST_HIGHREADCOUNTS     # &1000
+HOST_HIGHWRITECOUNTS    # &1000
 HOST_TOUCHHIGH          # &1000
 HOST_FOLDHIGH           # &1000
 HOST_SPECIALREADOPS     # &1000

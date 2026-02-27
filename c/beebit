@@ -392,10 +392,52 @@ static void opennextmafile(void)
   maticks = 0;
   manext = mabfr;
   maremn = MABFRSIZE;
+
+  memset(hostmap.lower.highreadcounts, 0, 1024*sizeof(uintptr_t));
+  memset(hostmap.lower.highwritecounts, 0, 1024*sizeof(uintptr_t));
+}
+
+static void writehighcounts(void)
+{
+  FILE* f;
+  char fname[32];
+  int i;
+  uint32_t rc,wc;
+  HOSTMAP* hmap = &hostmap.lower;
+
+  snprintf(fname, sizeof(fname), "<BeebIt$Dir>.LOGB.COUNTS%06d",
+           mafn);
+  f = BEEBIT_FOPEN(fname,"w");
+
+  for (i=0; i<256; i++)
+  {
+    rc = (uint32_t)hmap->highreadcounts[0x200+i];
+    wc = (uint32_t)hmap->highwritecounts[0x200+i];
+
+    if (rc == 0 && wc == 0)
+      continue;
+
+    fprintf(f, "%2X", i);
+    if (rc==0)
+      fprintf(f, "         ");
+    else
+      fprintf(f, " %8d", rc);
+    if (wc==0)
+      fprintf(f, "         \n");
+    else
+      fprintf(f, " %8d\n", wc);
+  }
+
+  fclose(f);
 }
 
 static void closecurrentmafile(void)
 {
+  if (mafile)
+  {
+    writehighcounts();
+  }
+
   fclose(mafile);
   mafile = 0;
 
