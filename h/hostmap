@@ -220,9 +220,7 @@ typedef struct
 /*storage map specialised for peripheral emulation*/
 typedef struct HOSTMAP
 {
-  // AArch32 offsets -&C000 - -&4001
-  uintptr_t highreadcounts[1024];
-  uintptr_t highwritecounts[1024];
+  // AArch32 offsets -&A000 - -&4001
   R6502ADDRESSINGOP touchhigh[1024];
   R6502ADDRESSINGOP foldhigh[1024];
   R6502READSPECIALOP specialreadops[1024];

@@ -117,9 +117,6 @@ HOSTMAP* logreadspecial(HOSTMAP* hmap, uintptr_t address_code)
   extern int maready;
   extern void maprintf(char* fmt, ...);
 
-  if (address_code >= 0xFC000000U)
-    hmap->highreadcounts[(address_code>>16)&0x3FF]++;
-
   if (maready)
   {
 #ifdef EXCLUDE_CYCLE_COUNT_FROM_LOG
@@ -137,9 +134,6 @@ HOSTMAP* logwritespecial(HOSTMAP* hmap, uintptr_t address_code, uint8_t value)
   uint32_t cc;
   extern int maready;
   extern void maprintf(char* fmt, ...);
-
-  if (address_code >= 0xFC000000U)
-    hmap->highwritecounts[(address_code>>16)&0x3FF]++;
 
   if (maready)
   {
