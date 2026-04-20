@@ -464,10 +464,6 @@ keyrelease1
   CMP r1,#&FF
   BNE keyrelease1
 
-  MOV r0,#21
-  MOV r0,#0
-  SWI OS_Byte
-
   MOV r0,#&0D ;disable event
   MOV r1,#&0B
   SWI OS_Byte
@@ -475,7 +471,6 @@ keyrelease1
   LDR r1,=keyupdown
   MOV r2,r1 ;#0
   SWI OS_Release ;release event
-
 
   MOV r0,#&0b ;exit handler
   LDR r3,=old_exit
