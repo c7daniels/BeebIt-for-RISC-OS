@@ -12,12 +12,12 @@
 #ifndef __BEEBIT_6502ZMAP_H__
 #define __BEEBIT_6502ZMAP_H__
 
-#define R6502_IRQ_ENABLE 0x01
-#define R6502_NMI_ENABLE 0x02
-#define R6502_IRQ 0x04
-#define R6502_NMI 0x08
-#define R6502_NMI_IRQ_ENABLE 0x03
-#define R6502_NMI_IRQ 0x0C
+#define R6502_IRQ_ENABLE 0x0100
+#define R6502_NMI_ENABLE 0x0200
+#define R6502_IRQ 0x0400
+#define R6502_NMI 0x0800
+#define R6502_NMI_IRQ_ENABLE 0x0300
+#define R6502_NMI_IRQ 0x0C00
 
 struct R6502CPUMAP;
 
@@ -43,7 +43,7 @@ typedef uintptr_t R6502_DP_ZONE[2784];
 typedef uintptr_t R6502_CC_ZONE[132];
 typedef uintptr_t R6502_CP_ZONE[636];
 typedef uintptr_t R6502_BC_ZONE[42];
-typedef uintptr_t R6502_BP_ZONE[148];
+typedef uintptr_t R6502_BP_ZONE[147];
 typedef uintptr_t R6502_AC_ZONE[1];
 typedef uintptr_t R6502_AP_ZONE[63];
 
@@ -61,7 +61,8 @@ typedef struct R6502ZONEMAP
   R6502_CP_ZONE CP;
 
   // AArch32 offsets -&400 - -&101
-  uintptr_t interruptqueue;
+  uintptr_t interruptqueue_ps;
+  uintptr_t togominusone_cyclestate;
   R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
   R6502_BC_ZONE BC;
   R6502_BP_ZONE BP;

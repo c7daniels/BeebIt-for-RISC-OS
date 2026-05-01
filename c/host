@@ -109,6 +109,10 @@ extern R6502CPUMAP* host_r6502cycle1(R6502CPUMAP* ctop);
 extern R6502CPUMAP* host_r6502readspecial(R6502CPUMAP* ctop, uintptr_t address_code);
 extern R6502CPUMAP* host_r6502writespecial(R6502CPUMAP* ctop, uintptr_t address_code, uint8_t value);
 
+#ifndef BEEBIT_NO_ASM
+extern void hostassemblyroutinereset(HOSTMAP* htop);
+#endif
+
 #ifdef BEEBIT_NO_ASM
 FULLHOSTMAP hostmap;
 #endif
@@ -255,7 +259,7 @@ R6502CPUMAP* host_r6502addressFE00_fast(R6502CPUMAP* ctop, uintptr_t address_cod
 R6502CPUMAP* host_r6502addressFE00_slow(R6502CPUMAP* ctop, uintptr_t address_code, const R6502ADDRESSINGCALLBACKS* callbacks)
 {
   HOSTMAP* htop = (HOSTMAP*)ctop;
-  if (!((htop[-1].cycles.odd ^ htop[-1].cycles.togo ^ htop[-1].cycles.original) & 1))
+  if (!((htop[-1].cycles.odd ^ (htop[-1].togominusone_cyclestate>>12) ^ htop[-1].cycles.originalminusone) & 1))
     return callbacks->stretch1special(ctop, address_code);
   else
     return callbacks->stretch2special(ctop, address_code);
@@ -783,60 +787,63 @@ static inline void hoststep(HOSTMAP* htop)
   const uint32_t ca2testmask = KEYSCANIFRFLAG|KEYSCANCA2FLAG;
   const uint32_t notwiredbit = 1U<<31;
   const uint32_t notactivebit = 1U<<30;
-  uintptr_t keyscanstate = htop[-1].keyscanstate;
+  uintptr_t togominusone_cyclestate = htop[-1].togominusone_cyclestate;
   uintptr_t columnflags = htop[-1].keycolumnflags;
-  int rotation = keyscanstate&31;
+  int rotation = togominusone_cyclestate&31;
+  int atzerocycles;
 
   columnflags = (((columnflags<<(32-rotation))&0xFFFFFFFF)|(columnflags>>rotation));
   columnflags |= (columnflags>>1);
 
-  if ((keyscanstate & (KEYSCANIDLEFLAG|keytestmask)) == keytestmask)
+  if ((togominusone_cyclestate & (KEYSCANIDLEFLAG|keytestmask)) == keytestmask)
   {
-    if (!(columnflags & notwiredbit) && (htop[-1].keystatus[(keyscanstate>>1)&0xF] & htop[-1].keybit))
+    if (!(columnflags & notwiredbit) && (htop[-1].keystatus[(togominusone_cyclestate>>1)&0xF] & htop[-1].keybit))
       htop[-1].A_sysvia.porta |= 0x80;
     else
       htop[-1].A_sysvia.porta &= ~0x80;
   }
 
-  switch (keyscanstate & (KEYSCANIDLEFLAG|ca2testmask))
+  switch (togominusone_cyclestate & (KEYSCANIDLEFLAG|ca2testmask))
   {
     case 0:
       if (!(columnflags & notactivebit))
       {
-        keyscanstate += KEYSCANCA2FLAG;
+        togominusone_cyclestate += KEYSCANCA2FLAG;
         if (systemviasetca2(htop))
-          keyscanstate += KEYSCANIFRFLAG;
+          togominusone_cyclestate += KEYSCANIFRFLAG;
       }
       break;
     case KEYSCANCA2FLAG:
       if (columnflags & notactivebit)
       {
-        keyscanstate -= KEYSCANCA2FLAG;
+        togominusone_cyclestate -= KEYSCANCA2FLAG;
         if (systemviaunsetca2(htop))
-          keyscanstate += KEYSCANIFRFLAG;
+          togominusone_cyclestate += KEYSCANIFRFLAG;
       }
       break;
     case KEYSCANIFRFLAG:
       if (!(columnflags & notactivebit))
       {
-        keyscanstate += KEYSCANCA2FLAG;
+        togominusone_cyclestate += KEYSCANCA2FLAG;
       }
       break;
     case KEYSCANIFRFLAG|KEYSCANCA2FLAG:
       if (columnflags & notactivebit)
       {
-        keyscanstate -= KEYSCANCA2FLAG;
+        togominusone_cyclestate -= KEYSCANCA2FLAG;
       }
       break;
   }
 
-  if ((keyscanstate & KEYSCANIDLEFLAG) && (keyscanstate & KEYSCANWRITEENABLEFLAG))
-    keyscanstate += KEYSCANIDLEFLAG + 31;
+  if ((togominusone_cyclestate & KEYSCANIDLEFLAG) && (togominusone_cyclestate & KEYSCANWRITEENABLEFLAG))
+    togominusone_cyclestate += KEYSCANIDLEFLAG + 31;
   else
-    keyscanstate += KEYSCANIDLEFLAG + 1;
-  htop[-1].keyscanstate = keyscanstate &~ overflowmask;
+    togominusone_cyclestate += KEYSCANIDLEFLAG + 1;
 
-  if (--htop[-1].cycles.togo == 0)
+  atzerocycles = (togominusone_cyclestate>>12) == 0;
+  htop[-1].togominusone_cyclestate = (togominusone_cyclestate-(1<<12)) &~ overflowmask;
+
+  if (atzerocycles)
     hostadvancetimers(htop);
 }
 
@@ -851,12 +858,12 @@ R6502CPUMAP* host_r6502cycle0s1(R6502CPUMAP* ctop)
 R6502CPUMAP* host_r6502cycle1(R6502CPUMAP* ctop)
 {
   HOSTMAP* htop = (HOSTMAP*)ctop;
-  uintptr_t interruptqueue = ctop[-1].interruptqueue;
+  uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
 
-  interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F);
-  if (!(interruptqueue & R6502_NMI))
-    interruptqueue |= R6502_NMI_ENABLE;
-  ctop[-1].interruptqueue = interruptqueue;
+  interruptqueue_ps = ((interruptqueue_ps&~0xFF)<<4) | (interruptqueue_ps&0x0FFF);
+  if (!(interruptqueue_ps & R6502_NMI))
+    interruptqueue_ps |= R6502_NMI_ENABLE;
+  ctop[-1].interruptqueue_ps = interruptqueue_ps;
 
   hoststep(htop);
   return ctop;
@@ -1130,7 +1137,6 @@ void hostresetcpu(void)
 
   r6502reset(ctop, mainsequences, extrasequences);
 
-  ctop[-1].interruptqueue = 0;
   ctop[-1].resetstartingaction = host_r6502onresetstart;
   ctop[-1].resetcontinuingaction = host_r6502onresetcontinue;
 }
@@ -1182,8 +1188,8 @@ void hostresetperipherals(void)
   ctop[-1].oldreset = 1;
 
   htop[-1].cycles.odd = 0;
-  htop[-1].cycles.togo = 0x10000;
-  htop[-1].cycles.original = htop[-1].cycles.togo;
+  htop[-1].cycles.originalminusone = 0x1FFFF;
+  htop[-1].togominusone_cyclestate = (htop[-1].cycles.originalminusone<<12)|(htop[-1].togominusone_cyclestate&0x0FFF);
   htop[-1].interrupts = 0;
 
   ctop[-1].readspecialaction = host_r6502readspecial;
@@ -1335,6 +1341,7 @@ void hostresetperipherals(void)
   extern const uintptr_t hoststeps[64];
 
   memcpy(htop[-1].steproutines, hoststeps, sizeof(hoststeps));
+  hostassemblyroutinereset(htop);
 #endif
 
   hoststartreset(TRUE);
@@ -1345,8 +1352,8 @@ HOSTMAP* hostadvancetimers(HOSTMAP* htop)
 {
   intptr_t cyclesoriginal, fewestcyclestogo, cyclestogo;
 
-  cyclesoriginal = htop[-1].cycles.original;
-  htop[-1].cycles.original = 0;
+  cyclesoriginal = htop[-1].cycles.originalminusone + 1;
+  htop[-1].cycles.originalminusone = -1;
   htop[-1].cycles.odd ^= (cyclesoriginal & 1);
   htop[-1].cycles.monotonic += cyclesoriginal;
   fewestcyclestogo = (2<<16);
@@ -1442,8 +1449,8 @@ HOSTMAP* hostadvancetimers(HOSTMAP* htop)
       fewestcyclestogo = cyclestogo;
   }
 
-  htop[-1].cycles.original = fewestcyclestogo;
-  htop[-1].cycles.togo = fewestcyclestogo;
+  htop[-1].cycles.originalminusone = fewestcyclestogo - 1;
+  htop[-1].togominusone_cyclestate = (htop[-1].cycles.originalminusone<<12)|(htop[-1].togominusone_cyclestate&0x0FFF);
   return htop;
 }
 

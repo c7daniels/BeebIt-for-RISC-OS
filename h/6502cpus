@@ -53,9 +53,7 @@ R6502_OPCODE_07_SEQUENCE EQU 265
   R6502_CYCLE_UPDATE_PUSH
   [ !Optimise6502WorkAreas
   STMFD sp!,{r5-r6}
-  ]
-  [ !Optimise6502WorkAreas
-  LDRB r5,[r0,#:INDEX:R6502_PS]
+  LDR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
   LDR r6,[r0,#:INDEX:R6502_SYNC_PC_CODE]
   ]
   MEND
@@ -63,10 +61,8 @@ R6502_OPCODE_07_SEQUENCE EQU 265
   MACRO
   R6502_CYCLE_UPDATE_POP
   [ !Optimise6502WorkAreas
-  STRB r5,[r0,#:INDEX:R6502_PS]
+  STR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
   STR r6,[r0,#:INDEX:R6502_SYNC_PC_CODE]
-  ]
-  [ !Optimise6502WorkAreas
   LDMFD sp!,{r5-r6}
   ]
   MEND
@@ -77,13 +73,14 @@ R6502_OPCODE_07_SEQUENCE EQU 265
   STR lr,[sp, #-4]!
   ]
   [ !Optimise6502WorkAreas && Optimise6502Links
-  STR r6,[sp, #-4]!
+  STMFD sp!,{r6-r7}
   ]
   [ !Optimise6502WorkAreas && !Optimise6502Links
-  STMFD sp!,{r6,lr}
+  STMFD sp!,{r6-r7,lr}
   ]
   [ !Optimise6502WorkAreas
   LDR r6,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  LDR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
   ]
   MEND
 
@@ -93,12 +90,15 @@ R6502_OPCODE_07_SEQUENCE EQU 265
   STR lr,[sp, #-4]!
   ]
   [ !Optimise6502WorkAreas && Optimise6502Links
-  STR r6,[sp, #-4]!
+  STMFD sp!,{r6-r7}
   ]
   [ !Optimise6502WorkAreas && !Optimise6502Links
-  STMFD sp!,{r6,lr}
+  STMFD sp!,{r6-r7,lr}
   ]
   MOV r6,r1
+  [ !Optimise6502WorkAreas
+  LDR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  ]
   MEND
 
   MACRO
@@ -110,10 +110,10 @@ R6502_OPCODE_07_SEQUENCE EQU 265
   LDR lr, [sp], #4
   ]
   [ !Optimise6502WorkAreas && Optimise6502Links
-  LDR r6, [sp], #4
+  LDMFD sp!,{r6-r7}
   ]
   [ !Optimise6502WorkAreas && !Optimise6502Links
-  LDMFD sp!,{r6,lr}
+  LDMFD sp!,{r6-r7,lr}
   ]
   MEND
 
@@ -173,12 +173,20 @@ R6502_OPCODE_07_SEQUENCE EQU 265
 
   MACRO
   R6502_CYCLE_READ_SPECIAL
+  [ Optimise6502WorkAreas
+  R6502_CYCLE_CALL_ACTION R6502_READBRIDGEDACTION
+  |
   R6502_CYCLE_CALL_ACTION R6502_READSPECIALACTION
+  ]
   MEND
 
   MACRO
   R6502_CYCLE_WRITE_SPECIAL
+  [ Optimise6502WorkAreas
+  R6502_CYCLE_CALL_ACTION R6502_WRITEBRIDGEDACTION
+  |
   R6502_CYCLE_CALL_ACTION R6502_WRITESPECIALACTION
+  ]
   MEND
 
   MACRO
@@ -270,12 +278,16 @@ R6502_OPCODE_07_SEQUENCE EQU 265
 
   MACRO
   R6502_CYCLE_FETCH_RETURN_TAIL $type
-  [ "$type"!="uninterrupted"
-  LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE]
+  [ !Optimise6502WorkAreas && "$type"!="uninterrupted"
+  LDR r1,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
   ]
   CMP r3,#R6502_RESET_TRANSITION
   [ "$type"!="uninterrupted"
+  [ Optimise6502WorkAreas
+  AND r1,r5,r5,LSR #6
+  |
   AND r1,r1,r1,LSR #6
+  ]
   ]
   BNE r6502completecycle$type.fetchreturn
   R6502_CYCLE_RESET_RETURN

@@ -20,8 +20,7 @@ KEYSCANCOLUMNOVERFLOW EQU &20
                         ^ 0
 HOSTCYCLES_MONOTONIC    # &4
 HOSTCYCLES_ODD          # &4
-HOSTCYCLES_TOGO         # &4
-HOSTCYCLES_ORIGINAL     # &4
+HOSTCYCLES_ORIGINALMINUSONE # &4
 HOSTCYCLES_SYSVIATOGO   # &4
 HOSTCYCLES_SYSVIAORIGINAL # &4
 HOSTCYCLES_USRVIATOGO   # &4
@@ -203,13 +202,15 @@ SIZEOF_HOSTBADC         * @
 
 ;storage map specialised for peripheral emulation
 ;a C representation of this storage map appears in hostmap.h
-HOSTMAP_ORIGIN EQU -&8000
+HOSTMAP_ORIGIN EQU -&A000
                         ^ HOSTMAP_ORIGIN
-; offsets -&8000 - -&4001
+; offsets -&A000 - -&4001
 HOST_READHIGH           # &1000
 HOST_MODIFYHIGH         # &1000
 HOST_SPECIALREADOPS     # &1000
 HOST_SPECIALWRITEOPS    # &1000
+HOST_BRIDGEDREADOPS     # &1000
+HOST_BRIDGEDWRITEOPS    # &1000
 
 ; offsets -&4000 - -&1001
 HOST_DC                 # SIZEOF_R6502_DC_ZONE
@@ -224,13 +225,13 @@ HOST_CC                 # SIZEOF_R6502_CC_ZONE
                         # &9F0
 
 ; offsets -&400 - -&101
-HOST_INTERRUPTQUEUE     # &4
+HOST_INTERRUPTQUEUE_PS  # &4
+HOST_TOGOMINUSONE_CYCLESTATE # &4
 HOST_M_SHIFT            # &3
 HOST_M                  # &1
 HOST_BC                 # SIZEOF_R6502_BC_ZONE
 HOST_INTERRUPTS         # &4
 HOST_KEYCOLUMNFLAGS     # &4
-HOST_KEYSCANSTATE       # &4
 HOST_ZERIBEEPWRITEBYTE  # &4
 HOST_ZERIBEEPWORKSPACE  # &4
 HOST_SCREENSTARTADDRESS # &4
@@ -245,7 +246,7 @@ HOST_BSERIAL            # SIZEOF_HOSTBSERIAL
 HOST_BI8271             # SIZEOF_HOSTBI8271
 HOST_BW1770             # SIZEOF_HOSTBW1770
 HOST_BADC               # SIZEOF_HOSTBADC
-                        # &100
+                        # &104
 
 ; offsets -&100 - -&01
 HOST_AC                 # SIZEOF_R6502_AC_ZONE

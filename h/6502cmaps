@@ -25,7 +25,8 @@ R6502_ADDRESSINGOPS     # &200
 R6502_CP                # SIZEOF_R6502_CP_ZONE
 
 ; offsets -&400 - -&101
-R6502_INTERRUPTQUEUE    # &4
+R6502_INTERRUPTQUEUE_PS # &4
+R6502_TOGOMINUSONE_CYCLESTATE # &4
 R6502_M_SHIFT           # &3
 R6502_M                 # &1
 R6502_A_SHIFT           # &3
@@ -34,8 +35,6 @@ R6502_X_SHIFT           # &3
 R6502_X                 # &1
 R6502_Y_SHIFT           # &3
 R6502_Y                 # &1
-R6502_PS_SHIFT          # &3
-R6502_PS                # &1
 R6502_SP_CODE           # &4
 R6502_SYNC_PC_CODE      # &4
 R6502_LAST_PC_CODE      # &4
@@ -54,10 +53,12 @@ R6502_STRETCHCYCLEACTION # &4
 R6502_CYCLEACTION       # &4
 R6502_READSPECIALACTION # &4
 R6502_WRITESPECIALACTION # &4
+R6502_READBRIDGEDACTION # &4
+R6502_WRITEBRIDGEDACTION # &4
 R6502_CONTINUELINK      # &4
 R6502_YIELDLINK         # &4
 R6502_LBREAK            # &4
-                        # &44
+                        # &40
 R6502_BP                # SIZEOF_R6502_BP_ZONE
 
 ; offsets -&100 - -&01

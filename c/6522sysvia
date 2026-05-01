@@ -280,7 +280,7 @@ int systemviasetca2(HOSTMAP* htop)
       if (htop[-1].A_sysvia.ier & 0x01)
       {
         htop[-1].interrupts |= HOST_IRQ_6522SYSVIA;
-        htop[-1].interruptqueue |= R6502_IRQ;
+        htop[-1].interruptqueue_ps |= R6502_IRQ;
         htop[-1].A_sysvia.ifr |= 0x81;
       }
       else
@@ -299,7 +299,7 @@ int systemviaunsetca2(HOSTMAP* htop)
       if (htop[-1].A_sysvia.ier & 0x01)
       {
         htop[-1].interrupts |= HOST_IRQ_6522SYSVIA;
-        htop[-1].interruptqueue |= R6502_IRQ;
+        htop[-1].interruptqueue_ps |= R6502_IRQ;
         htop[-1].A_sysvia.ifr |= 0x81;
       }
       else
@@ -341,10 +341,10 @@ static intptr_t systemviapickcyclestogo(void)
 
 static void resetkeyscanstate(HOSTMAP* htop)
 {
-  if (htop[-1].A_sysvia.ddra & 0x80)
-    htop[-1].keyscanstate = 0;
-  else
-    htop[-1].keyscanstate = KEYSCANINPUTFLAG;
+  htop[-1].togominusone_cyclestate &= ~0xFFF;
+
+  if (!(htop[-1].A_sysvia.ddra & 0x80))
+    htop[-1].togominusone_cyclestate |= KEYSCANINPUTFLAG;
   htop[-1].keybit = 1;
 }
 
@@ -500,14 +500,14 @@ HOSTMAP* systemviaatzerocycles(HOSTMAP* htop)
 
 static inline void setkeyboardnotwriteenable(HOSTMAP* htop, int notwriteenable)
 {
-  uintptr_t keyscanstate = htop[-1].keyscanstate;
+  uintptr_t togominusone_cyclestate = htop[-1].togominusone_cyclestate;
   uintptr_t porta;
 
-  if (keyscanstate&KEYSCANWRITEENABLEFLAG)
+  if (togominusone_cyclestate&KEYSCANWRITEENABLEFLAG)
   {
     if (notwriteenable)
     {
-      htop[-1].keyscanstate -= KEYSCANWRITEENABLEFLAG;
+      htop[-1].togominusone_cyclestate = togominusone_cyclestate-KEYSCANWRITEENABLEFLAG;
       htop[-1].A_sysvia.porta &= (htop[-1].A_sysvia.ddra | 0x7F);
     }
   }
@@ -517,21 +517,21 @@ static inline void setkeyboardnotwriteenable(HOSTMAP* htop, int notwriteenable)
     {
       porta = htop[-1].A_sysvia.porta & htop[-1].A_sysvia.ddra;
       htop[-1].keybit = htop[-1].keybit = (1<<((porta>>4)&0x07));
-      htop[-1].keyscanstate = (htop[-1].keyscanstate & 0xFFFFFFE1) | KEYSCANWRITEENABLEFLAG | ((porta<<1)&0x1E);
+      htop[-1].togominusone_cyclestate = (togominusone_cyclestate & 0xFFFFFFE1) | KEYSCANWRITEENABLEFLAG | ((porta<<1)&0x1E);
     }
   }
 }
 
 static inline void setkeyboardscanposition(HOSTMAP* htop)
 {
-  uintptr_t keyscanstate = htop[-1].keyscanstate;
+  uintptr_t togominusone_cyclestate = htop[-1].togominusone_cyclestate;
   uintptr_t porta;
 
-  if (keyscanstate&KEYSCANWRITEENABLEFLAG)
+  if (togominusone_cyclestate&KEYSCANWRITEENABLEFLAG)
   {
     porta = htop[-1].A_sysvia.porta & htop[-1].A_sysvia.ddra;
     htop[-1].keybit = htop[-1].keybit = (1<<((porta>>4)&0x07));
-    htop[-1].keyscanstate = (htop[-1].keyscanstate & 0xFFFFFFE1) | ((porta<<1)&0x1E);
+    htop[-1].togominusone_cyclestate = (togominusone_cyclestate & 0xFFFFFFE1) | ((porta<<1)&0x1E);
   }
 }
 
@@ -610,7 +610,7 @@ struct R6502CPUMAP* systemvia01read_b(struct R6502CPUMAP* ctop, uintptr_t addres
   {
     /*clear b2,b1 (CA1,CA2)*/
     htop[-1].A_sysvia.ifr &= 0xFC;
-    htop[-1].keyscanstate &= ~KEYSCANIFRFLAG;
+    htop[-1].togominusone_cyclestate &= ~KEYSCANIFRFLAG;
   }
   systemviasetirqafterifrclear(htop);
   if (htop[-1].A_sysvia.acr & 0x01)
@@ -646,7 +646,7 @@ struct R6502CPUMAP* systemvia01read_m(struct R6502CPUMAP* ctop, uintptr_t addres
   {
     /*clear b2,b1 (CA1,CA2)*/
     htop[-1].A_sysvia.ifr &= 0xFC;
-    htop[-1].keyscanstate &= ~KEYSCANIFRFLAG;
+    htop[-1].togominusone_cyclestate &= ~KEYSCANIFRFLAG;
   }
   systemviasetirqafterifrclear(htop);
   if (htop[-1].A_sysvia.acr & 0x01)
@@ -917,7 +917,7 @@ static inline void systemviaportawrite(HOSTMAP* htop, uint8_t value)
   {
     /*clear b2,b1 (CA1,CA2)*/
     htop[-1].A_sysvia.ifr &= 0xFC;
-    htop[-1].keyscanstate &= ~KEYSCANIFRFLAG;
+    htop[-1].togominusone_cyclestate &= ~KEYSCANIFRFLAG;
   }
   systemviasetirqafterifrclear(htop);
 }
@@ -1544,9 +1544,9 @@ struct R6502CPUMAP* systemvia03write(struct R6502CPUMAP* ctop, uintptr_t address
   if ((htop[-1].A_sysvia.ddra ^ value) & 0x80)
   {
     if (value & 0x80)
-      htop[-1].keyscanstate &= ~KEYSCANINPUTFLAG;
+      htop[-1].togominusone_cyclestate &= ~KEYSCANINPUTFLAG;
     else
-      htop[-1].keyscanstate |= KEYSCANINPUTFLAG;
+      htop[-1].togominusone_cyclestate |= KEYSCANINPUTFLAG;
   }
 
   htop[-1].A_sysvia.ddra = value;
@@ -1700,7 +1700,7 @@ struct R6502CPUMAP* systemvia0Dwrite(struct R6502CPUMAP* ctop, uintptr_t address
   systemviasetirqafterifrclear(htop);
 
   if (value&0x01)
-      htop[-1].keyscanstate &= ~KEYSCANIFRFLAG;
+      htop[-1].togominusone_cyclestate &= ~KEYSCANIFRFLAG;
 
   return ctop;
 }

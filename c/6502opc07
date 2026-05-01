@@ -73,12 +73,12 @@ R6502CPUMAP* host_r6502opcode07interfacestep(R6502CPUMAP* ctop, uintptr_t increm
     swi = (memory[cb+2]<<16)|(memory[cb+1]<<8)|memory[cb];
 
     oserror = _kernel_swi_c(swi, &regs, &regs, &c);
-    ctop[-1].ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+    ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
 
     if (oserror == NULL)
     {
       if (c)
-        ctop[-1].ps |= CFLAG;
+        ctop[-1].interruptqueue_ps |= CFLAG;
 
       /*number of registers to return*/
       regcount = memory[cb+3];
@@ -135,7 +135,7 @@ R6502CPUMAP* host_r6502opcode07interfacestep(R6502CPUMAP* ctop, uintptr_t increm
     }
     else
     {
-      ctop[-1].ps |= (VFLAG | CFLAG);
+      ctop[-1].interruptqueue_ps |= (VFLAG | CFLAG);
 
       if (swi & 0x20000)
       {

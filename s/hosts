@@ -40,6 +40,64 @@
   IMPORT |adcpoll|
   IMPORT |aciapoll|
   IMPORT |videoatzerocycles|
+  IMPORT |acia01read|
+  IMPORT |w1770statusread|
+  IMPORT |systemvia00read|
+  IMPORT |systemvia01read_b|
+  IMPORT |systemvia01read_m|
+  IMPORT |systemvia04read|
+  IMPORT |systemvia05read|
+  IMPORT |systemvia08read|
+  IMPORT |systemvia09read|
+  IMPORT |systemvia0Aread|
+  IMPORT |uservia00read|
+  IMPORT |uservia01read|
+  IMPORT |uservia04read|
+  IMPORT |uservia05read|
+  IMPORT |uservia08read|
+  IMPORT |uservia09read|
+  IMPORT |uservia0Aread|
+  IMPORT |i8271resultread|
+  IMPORT |i8271dataread|
+  IMPORT |acia00write|
+  IMPORT |acia01write|
+  IMPORT |serialulawrite|
+  IMPORT |adcwrite|
+  IMPORT |w1770commandwrite|
+  IMPORT |accconwrite_m|
+  IMPORT |systemvia00write_b|
+  IMPORT |systemvia00write_m|
+  IMPORT |systemvia00write_nosoundb|
+  IMPORT |systemvia00write_nosoundm|
+  IMPORT |systemvia01write_b|
+  IMPORT |systemvia01write_m|
+  IMPORT |systemvia01write_nosoundb|
+  IMPORT |systemvia01write_nosoundm|
+  IMPORT |systemvia03write|
+  IMPORT |systemvia05write|
+  IMPORT |systemvia07write|
+  IMPORT |systemvia09write|
+  IMPORT |systemvia0Awrite|
+  IMPORT |systemvia0Bwrite|
+  IMPORT |systemvia0Dwrite|
+  IMPORT |systemvia0Ewrite|
+  IMPORT |systemvia0Fwrite_b|
+  IMPORT |systemvia0Fwrite_m|
+  IMPORT |systemvia0Fwrite_nosoundb|
+  IMPORT |systemvia0Fwrite_nosoundm|
+  IMPORT |uservia00write|
+  IMPORT |uservia01write|
+  IMPORT |uservia05write|
+  IMPORT |uservia07write|
+  IMPORT |uservia09write|
+  IMPORT |uservia0Awrite|
+  IMPORT |uservia0Bwrite|
+  IMPORT |uservia0Dwrite|
+  IMPORT |uservia0Ewrite|
+  IMPORT |i8271commandwrite|
+  IMPORT |i8271parameterwrite|
+  IMPORT |i8271resetwrite|
+  IMPORT |i8271datawrite|
 
 ; Export global symbols
 
@@ -111,6 +169,7 @@
   EXPORT |host_r6502readspecial|
   EXPORT |host_r6502writespecial|
 
+  EXPORT |hostassemblyroutinereset|
   EXPORT |hostadvancetimers|
   EXPORT |hostexecute|
 
@@ -171,10 +230,9 @@ host_r6502addressmC000_y
   HOST_ADDRESSING_RETURN_MAPPED
 
 host_r6502addressFE00_slow
-  LDR r12,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ODD]
-  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  EOR r3,r3,r12
-  LDR r12,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
+  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ODD]
+  LDR r12,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINALMINUSONE]
+  EOR r3,r3,r7,LSR #12
   EOR r3,r3,r12
   TST r3,#1
   HOST_ADDRESSING_RETURN_STRETCHSPECIAL
@@ -532,34 +590,28 @@ host_r6502writejim
   MOV pc,lr
 
 host_r6502cycle0s1
-  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  LDR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
   ADD r12,r0,#:INDEX:HOST_STEPROUTINES
-  SUBS r3,r3,#1
-  STR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  AND r3,r1,#&7C0
+  SUBS r7,r7,#1:SHL:12
+  AND r3,r7,#&7C0
   LDR r2,[r0,#:INDEX:HOST_KEYCOLUMNFLAGS]
-  LDRNE pc,[r12,r3,LSR #4]
+  LDRCS pc,[r12,r3,LSR #4]
   STR lr,[sp, #-4]!
   MOV lr,pc
   LDR pc,[r12,r3,LSR #4]
   LDR lr, [sp], #4
-  B hostadvancetimers
+  B assemblyhostadvancetimers
 
 host_r6502cycle1
-  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  LDR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
   ADD r12,r0,#:INDEX:HOST_STEPROUTINES+&80
-  SUBS r3,r3,#1
-  STR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  AND r3,r1,#&7C0
+  SUBS r7,r7,#1:SHL:12
+  AND r3,r7,#&7C0
   LDR r2,[r0,#:INDEX:HOST_KEYCOLUMNFLAGS]
-  LDRNE pc,[r12,r3,LSR #4]
+  LDRCS pc,[r12,r3,LSR #4]
   STR lr,[sp, #-4]!
   MOV lr,pc
   LDR pc,[r12,r3,LSR #4]
   LDR lr, [sp], #4
-  B hostadvancetimers
+  B assemblyhostadvancetimers
 
 |host_r6502readspecial|
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALREADOPS
@@ -569,16 +621,251 @@ host_r6502cycle1
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALWRITEOPS
   LDR pc,[r3,r1,LSR #14]
 
-|hostadvancetimers|
-  STMFD sp!,{r4-r5,lr}
+  [ !Optimise6502WorkAreas
+host_r6502cycle0s1bridged
+  STMFD sp!,{r5,r7,lr}
+  LDR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  LDR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  BL host_r6502cycle0s1
+  STR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  LDMFD sp!,{r5,r7,pc}
 
-  MOV r1,#0
-  LDR r4,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
-  STR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
+host_r6502cycle1bridged
+  STMFD sp!,{r5,r7,lr}
+  LDR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  LDR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  BL host_r6502cycle1
+  STR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  LDMFD sp!,{r5,r7,pc}
+  ]
+
+  [ Optimise6502WorkAreas
+|host_r6502readbridged|
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDREADOPS
+  LDR pc,[r3,r1,LSR #14]
+
+|host_r6502writebridged|
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDWRITEOPS
+  LDR pc,[r3,r1,LSR #14]
+
+host_interrupt_readsheila
+  STR lr,[sp, #-4]!
+  STR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALREADOPS
+  MOV lr,pc
+  LDR pc,[r3,r1,LSR #14]
+  LDR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  LDR pc, [sp], #4
+
+host_cycles_readsheila
+  STR lr,[sp, #-4]!
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALREADOPS
+  MOV lr,pc
+  LDR pc,[r3,r1,LSR #14]
+  LDR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  LDR pc, [sp], #4
+
+host_cycles_interrupt_readsheila
+  STR lr,[sp, #-4]!
+  STR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALREADOPS
+  MOV lr,pc
+  LDR pc,[r3,r1,LSR #14]
+  LDR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  LDR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  LDR pc, [sp], #4
+
+host_interrupt_writesheila
+  STR lr,[sp, #-4]!
+  STR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALWRITEOPS
+  MOV lr,pc
+  LDR pc,[r3,r1,LSR #14]
+  LDR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  LDR pc, [sp], #4
+
+host_cycles_writesheila
+  STR lr,[sp, #-4]!
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALWRITEOPS
+  MOV lr,pc
+  LDR pc,[r3,r1,LSR #14]
+  LDR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  LDR pc, [sp], #4
+
+host_cycles_interrupt_writesheila
+  STR lr,[sp, #-4]!
+  STR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALWRITEOPS
+  MOV lr,pc
+  LDR pc,[r3,r1,LSR #14]
+  LDR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  LDR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  LDR pc, [sp], #4
+  ]
+
+  [ Optimise6502WorkAreas
+sheilareadsubstitution
+  DCD :INDEX:HOST_BRIDGEDREADOPS+(&200:SHL:2)
+  DCD &100
+  DCD 0
+  DCD acia01read,host_interrupt_readsheila
+  DCD w1770statusread,host_interrupt_readsheila
+  DCD systemvia00read,host_interrupt_readsheila
+  DCD systemvia01read_b,host_cycles_interrupt_readsheila
+  DCD systemvia01read_m,host_cycles_interrupt_readsheila
+  DCD systemvia04read,host_cycles_interrupt_readsheila
+  DCD systemvia05read,host_cycles_readsheila
+  DCD systemvia08read,host_cycles_interrupt_readsheila
+  DCD systemvia09read,host_cycles_readsheila
+  DCD systemvia0Aread,host_interrupt_readsheila
+  DCD uservia00read,host_cycles_interrupt_readsheila
+  DCD uservia01read,host_interrupt_readsheila
+  DCD uservia04read,host_cycles_interrupt_readsheila
+  DCD uservia05read,host_cycles_readsheila
+  DCD uservia08read,host_cycles_interrupt_readsheila
+  DCD uservia09read,host_cycles_readsheila
+  DCD uservia0Aread,host_interrupt_readsheila
+  DCD i8271resultread,host_interrupt_readsheila
+  DCD i8271dataread,host_interrupt_readsheila
+  DCD 0
+
+sheilawritesubstitution
+  DCD :INDEX:HOST_BRIDGEDWRITEOPS+(&200:SHL:2)
+  DCD &100
+  DCD 0
+  DCD acia00write,host_interrupt_writesheila
+  DCD acia01write,host_interrupt_writesheila
+  DCD serialulawrite,host_cycles_writesheila
+  DCD adcwrite,host_cycles_writesheila
+  DCD w1770commandwrite,host_cycles_interrupt_writesheila
+  DCD accconwrite_m,host_interrupt_writesheila
+  DCD systemvia00write_b,host_cycles_interrupt_writesheila
+  DCD systemvia00write_m,host_cycles_interrupt_writesheila
+  DCD systemvia00write_nosoundb,host_cycles_interrupt_writesheila
+  DCD systemvia00write_nosoundm,host_cycles_interrupt_writesheila
+  DCD systemvia01write_b,host_cycles_interrupt_writesheila
+  DCD systemvia01write_m,host_cycles_interrupt_writesheila
+  DCD systemvia01write_nosoundb,host_cycles_interrupt_writesheila
+  DCD systemvia01write_nosoundm,host_cycles_interrupt_writesheila
+  DCD systemvia03write,host_cycles_writesheila
+  DCD systemvia05write,host_cycles_interrupt_writesheila
+  DCD systemvia07write,host_interrupt_writesheila
+  DCD systemvia09write,host_cycles_interrupt_writesheila
+  DCD systemvia0Awrite,host_interrupt_writesheila
+  DCD systemvia0Bwrite,host_cycles_writesheila
+  DCD systemvia0Dwrite,host_cycles_interrupt_writesheila
+  DCD systemvia0Ewrite,host_interrupt_writesheila
+  DCD systemvia0Fwrite_b,host_cycles_writesheila
+  DCD systemvia0Fwrite_m,host_cycles_writesheila
+  DCD systemvia0Fwrite_nosoundb,host_cycles_writesheila
+  DCD systemvia0Fwrite_nosoundm,host_cycles_writesheila
+  DCD uservia00write,host_interrupt_writesheila
+  DCD uservia01write,host_interrupt_writesheila
+  DCD uservia05write,host_cycles_interrupt_writesheila
+  DCD uservia07write,host_interrupt_writesheila
+  DCD uservia09write,host_cycles_interrupt_writesheila
+  DCD uservia0Awrite,host_interrupt_writesheila
+  DCD uservia0Bwrite,host_cycles_writesheila
+  DCD uservia0Dwrite,host_interrupt_writesheila
+  DCD uservia0Ewrite,host_interrupt_writesheila
+  DCD i8271commandwrite,host_cycles_interrupt_writesheila
+  DCD i8271parameterwrite,host_cycles_interrupt_writesheila
+  DCD i8271resetwrite,host_interrupt_writesheila
+  DCD i8271datawrite,host_interrupt_writesheila
+  DCD 0
+  ]
+
+substitutespecialroutines
+  LDMIA r1!,{r2-r3}
+  STMFD sp!,{r4-r7,lr}
+  ADD r2,r0,r2
+0
+  ADD r4,r1,#4
+  LDR r5,[r2]
+1
+  LDMIA r4!,{r6-r7}
+  TST r6,r6
+  BEQ %F4
+  CMP r5,r6
+  BNE %B1
+2
+  STR r7,[r2],#4
+3
+  SUBS r3,r3,#1
+  BNE %B0
+  LDMFD sp!,{r4-r7,pc}
+4
+  LDR r7,[r1]
+  TST r7,r7
+  BNE %B2
+  ADD r2,r2,#4
+  B %B3
+
+|hostassemblyroutinereset|
+  STMFD sp!,{r4-r7,lr}
+  [ !Optimise6502WorkAreas
+  LDR r1,%F40
+  LDR r2,%F40+4
+  STR r1,[r0,#:INDEX:R6502_STRETCHCYCLEACTION]
+  STR r2,[r0,#:INDEX:R6502_CYCLEACTION]
+  ]
+  [ Optimise6502WorkAreas
+  ADD r1,r0,#:INDEX:HOST_SPECIALREADOPS
+  ADD r2,r0,#:INDEX:HOST_BRIDGEDREADOPS
+  MOV r3,#&800:SHR:2
+0
+  LDMIA r1!,{r4-r7}
+  STMIA r2!,{r4-r7}
+  SUBS r3,r3,#1
+  BNE %B0
+  LDR r1,%F50
+  LDR r2,%F50+4
+  STR r1,[r0,#:INDEX:R6502_READBRIDGEDACTION]
+  STR r2,[r0,#:INDEX:R6502_WRITEBRIDGEDACTION]
+  ADR r1,sheilareadsubstitution
+  BL substitutespecialroutines
+  ADR r1,sheilawritesubstitution
+  BL substitutespecialroutines
+  ]
+  LDMFD sp!,{r4-r7,pc}
+  [ !Optimise6502WorkAreas
+40
+  DCD host_r6502cycle0s1bridged
+  DCD host_r6502cycle1bridged
+  ]
+  [ Optimise6502WorkAreas
+50
+  DCD host_r6502readbridged
+  DCD host_r6502writebridged
+  ]
+
+|hostadvancetimers|
+  STMFD sp!,{r5,r7,lr}
+  LDR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  LDR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  BL assemblyhostadvancetimers
+  STR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  STR r7,[r0,#:INDEX:R6502_TOGOMINUSONE_CYCLESTATE]
+  LDMFD sp!,{r5,r7,pc}
+
+assemblyhostadvancetimers
+  STR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  STMFD sp!,{r4,lr}
+
+  MOV r1,#-1
+  LDR r4,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINALMINUSONE]
+  STR r1,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINALMINUSONE]
   TST r4,#1
-  LDRNE r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ODD]
-  EORNE r2,r2,#1
-  STRNE r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ODD]
+  LDREQ r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ODD]
+  ADD r4,r4,#1
+  EOREQ r2,r2,#1
+  STREQ r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ODD]
   LDR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_MONOTONIC]
   ADD r2,r2,r4
   STR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_MONOTONIC]
@@ -668,9 +955,13 @@ advancetimers7
   MOVLO r5,r1
 
 advancetimers8
-  STR r5,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINAL]
-  STR r5,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  LDMFD sp!,{r4-r5,pc}
+  SUB r5,r5,#1
+  MOV r7,r7,LSL #20
+  MOV r7,r7,LSR #20
+  ORR r7,r7,r5,LSL #12
+  STR r5,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_ORIGINALMINUSONE]
+  LDR r5,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  LDMFD sp!,{r4,pc}
 
 |hostexecute|
   LDR r0,=hostmemory
