@@ -19,7 +19,7 @@
 
 static_assert(offsetof(R6502ZONEMAP, DC) == 0, "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, CC) == (0x3000>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
-static_assert(offsetof(R6502ZONEMAP, BC) == ((0x3C00>>2)+2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
+static_assert(offsetof(R6502ZONEMAP, BC) == ((0x3C00>>2)+3) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, AC) == (0x3F00>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(sizeof(R6502ZONEMAP) == (0x4000>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 
@@ -593,7 +593,7 @@ static R6502CPUMAP* r6502completecycleuninterruptedfetchreturn(R6502CPUMAP* ctop
 
 static R6502CPUMAP* r6502completecycleearlyinterruptfetchreturn(R6502CPUMAP* ctop, uint8_t opcode)
 {
-  uintptr_t interruptqueue = ctop[-1].interruptqueue;
+  uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
 
   ctop[-1].cpu_state = ctop[-1].sequences[opcode];
 
@@ -601,7 +601,7 @@ static R6502CPUMAP* r6502completecycleearlyinterruptfetchreturn(R6502CPUMAP* cto
   {
     ctop[-1].cpu_state = ctop[-1].sequences[R6502_RESET_SEQUENCE];
   }
-  else if ((interruptqueue>>6) & interruptqueue & (R6502_NMI_IRQ_ENABLE<<12))
+  else if ((interruptqueue_ps>>6) & interruptqueue_ps & (R6502_NMI_IRQ_ENABLE<<12))
   {
     ctop[-1].cpu_state = ctop[-1].sequences[R6502_INTERRUPT_SEQUENCE];
   }
@@ -616,7 +616,7 @@ static R6502CPUMAP* r6502completecycleearlyinterruptfetchreturn(R6502CPUMAP* cto
 static R6502CPUMAP* r6502completecycleinterruptfetchreturn(R6502CPUMAP* ctop,
  uint8_t opcode)
 {
-  uintptr_t interruptqueue = ctop[-1].interruptqueue;
+  uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
 
   ctop[-1].cpu_state = ctop[-1].sequences[opcode];
 
@@ -624,7 +624,7 @@ static R6502CPUMAP* r6502completecycleinterruptfetchreturn(R6502CPUMAP* ctop,
   {
     ctop[-1].cpu_state = ctop[-1].sequences[R6502_RESET_SEQUENCE];
   }
-  else if ((interruptqueue>>6) & interruptqueue & (R6502_NMI_IRQ_ENABLE<<8))
+  else if ((interruptqueue_ps>>6) & interruptqueue_ps & (R6502_NMI_IRQ_ENABLE<<8))
   {
     ctop[-1].cpu_state = ctop[-1].sequences[R6502_INTERRUPT_SEQUENCE];
   }
@@ -797,67 +797,67 @@ R6502CPUMAP* r6502nopstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 
 R6502CPUMAP* r6502clcstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  ctop[-1].ps &= NOTCFLAG;
+  ctop[-1].interruptqueue_ps &= NOTCFLAG;
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502secstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  ctop[-1].ps |= CFLAG;
+  ctop[-1].interruptqueue_ps |= CFLAG;
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502clistep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  ctop[-1].interruptqueue |= R6502_IRQ_ENABLE;
+  ctop[-1].interruptqueue_ps |= R6502_IRQ_ENABLE;
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502seistep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  ctop[-1].interruptqueue &= ~R6502_IRQ_ENABLE;
+  ctop[-1].interruptqueue_ps &= ~R6502_IRQ_ENABLE;
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502cldstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  ctop[-1].ps &= NOTDFLAG;
+  ctop[-1].interruptqueue_ps &= NOTDFLAG;
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502sedstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  ctop[-1].ps |= DFLAG;
+  ctop[-1].interruptqueue_ps |= DFLAG;
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502clvstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  ctop[-1].ps &= NOTVFLAG;
+  ctop[-1].interruptqueue_ps &= NOTVFLAG;
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502taxstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].x = ctop[-1].a;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502taystep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].y = ctop[-1].a;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].y & NFLAG) | (ctop[-1].y == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].y & NFLAG) | (ctop[-1].y == 0 ? ZFLAG : 0);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502txastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].a = ctop[-1].x;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
@@ -870,34 +870,35 @@ R6502CPUMAP* r6502txsstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 R6502CPUMAP* r6502tyastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].a = ctop[-1].y;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502tsxstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].x = (ctop[-1].sp_code>>24);
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502pulledastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].a = ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502pulledpstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
+  uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
   if (ctop[-1].m & IFLAG)
-    ctop[-1].interruptqueue &= ~R6502_IRQ_ENABLE;
+    interruptqueue_ps &= ~R6502_IRQ_ENABLE;
   else
-    ctop[-1].interruptqueue |= R6502_IRQ_ENABLE;
-  ctop[-1].ps = ctop[-1].m | UFLAG | BFLAG | IFLAG;
+    interruptqueue_ps |= R6502_IRQ_ENABLE;
+  ctop[-1].interruptqueue_ps = (interruptqueue_ps & ~0xFF) | ctop[-1].m | UFLAG | BFLAG | IFLAG;
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
@@ -1100,32 +1101,32 @@ R6502CPUMAP* r6502fixindexedstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_st
 R6502CPUMAP* r6502bitstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   int aandm = ctop[-1].a & ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].m & (NFLAG | VFLAG)) | (aandm == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].m & (NFLAG | VFLAG)) | (aandm == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502orastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].a |= ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502andstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].a &= ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502eorstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].a ^= ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
@@ -1136,13 +1137,13 @@ R6502CPUMAP* r6502adcstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t sum;
   m = ((m<<4)&0xF00) | (m&0xF);
   a = ((a<<4)&0xF00) | (a&0xF);
-  sum = a + 0x0F0 + m + (ctop[-1].ps & CFLAG);
-  ctop[-1].ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
-  if (ctop[-1].ps & DFLAG)
+  sum = a + 0x0F0 + m + (ctop[-1].interruptqueue_ps & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
+  if (ctop[-1].interruptqueue_ps & DFLAG)
     sum += 6;
-  ctop[-1].ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
-  if (ctop[-1].ps & DFLAG)
+  ctop[-1].interruptqueue_ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
+  if (ctop[-1].interruptqueue_ps & DFLAG)
   {
     if (sum & 0x80)
       sum -= 6;
@@ -1150,7 +1151,7 @@ R6502CPUMAP* r6502adcstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
       sum += 0x600;
   }
   if (sum >= 0x1000)
-    ctop[-1].ps |= CFLAG;
+    ctop[-1].interruptqueue_ps |= CFLAG;
   ctop[-1].a = ((sum>>4)&0xF0) | (sum&0xF);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
@@ -1158,48 +1159,48 @@ R6502CPUMAP* r6502adcstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 R6502CPUMAP* r6502ldastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].a = ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502ldxstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].x = ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502ldystep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].y = ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].y & NFLAG) | (ctop[-1].y == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].y & NFLAG) | (ctop[-1].y == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502cmpstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + ctop[-1].a - ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502cpxstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + ctop[-1].x - ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502cpystep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + ctop[-1].y - ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
@@ -1210,15 +1211,15 @@ R6502CPUMAP* r6502sbcstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t sum;
   im = ((im<<4)&0xF00) | (im&0xF);
   a = ((a<<4)&0xF00) | (a&0xF);
-  sum = a + 0x0F0 + im + (ctop[-1].ps & CFLAG);
-  ctop[-1].ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
-  ctop[-1].ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
-  if (ctop[-1].ps & DFLAG)
+  sum = a + 0x0F0 + im + (ctop[-1].interruptqueue_ps & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
+  ctop[-1].interruptqueue_ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
+  if (ctop[-1].interruptqueue_ps & DFLAG)
   {
     if (sum & 0x80)
       sum -= 6;
-    if (!(ctop[-1].ps & CFLAG))
+    if (!(ctop[-1].interruptqueue_ps & CFLAG))
       sum -= 0x600;
   }
   ctop[-1].a = ((sum>>4)&0xF0) | (sum&0xF);
@@ -1233,8 +1234,8 @@ R6502CPUMAP* r6502interruptskipstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu
 R6502CPUMAP* r6502laxstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].x = ctop[-1].a = ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
@@ -1243,39 +1244,39 @@ R6502CPUMAP* r6502lasstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   unsigned int anded = (ctop[-1].sp_code>>24) & ctop[-1].m;
   ctop[-1].x = ctop[-1].a = anded;
   ctop[-1].sp_code = (anded<<24)|(ctop[-1].sp_code&0xFFFFFF);
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502ancstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].a &= ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((ctop[-1].a>>7) & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((ctop[-1].a>>7) & CFLAG);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502alrstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   unsigned int anded = ctop[-1].a & ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].a = ((anded>>1) & 0x7F);
-  ctop[-1].ps |= (ctop[-1].a == 0 ? ZFLAG : 0) | (anded & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a == 0 ? ZFLAG : 0) | (anded & CFLAG);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502arrstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   unsigned int anded = ctop[-1].a & ctop[-1].m;
-  uintptr_t rotated = ((ctop[-1].ps & CFLAG)<<7) | (anded>>1);
-  ctop[-1].ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (rotated & NFLAG) | ((anded^rotated) & VFLAG) | ((rotated & 0xFF) == 0 ? ZFLAG : 0);
-  if (ctop[-1].ps & DFLAG)
+  uintptr_t rotated = ((ctop[-1].interruptqueue_ps & CFLAG)<<7) | (anded>>1);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (rotated & NFLAG) | ((anded^rotated) & VFLAG) | ((rotated & 0xFF) == 0 ? ZFLAG : 0);
+  if (ctop[-1].interruptqueue_ps & DFLAG)
   {
     if (anded >= 0x50)
     {
-      ctop[-1].ps |= CFLAG;
+      ctop[-1].interruptqueue_ps |= CFLAG;
       rotated += 0x60;
     }
     if ((anded & 0x0F) >= 0x05)
@@ -1283,7 +1284,7 @@ R6502CPUMAP* r6502arrstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   }
   else
   {
-    ctop[-1].ps |= ((anded>>7) & CFLAG);
+    ctop[-1].interruptqueue_ps |= ((anded>>7) & CFLAG);
   }
   ctop[-1].a = (rotated & 0xFF);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
@@ -1292,16 +1293,16 @@ R6502CPUMAP* r6502arrstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 R6502CPUMAP* r6502anestep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].a = ctop[-1].x & ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502lxastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].x = ctop[-1].a = (ctop[-1].a | 0xEE) & ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 
@@ -1309,8 +1310,8 @@ R6502CPUMAP* r6502sbxstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   unsigned int d = 0x100 + (ctop[-1].a & ctop[-1].x) - ctop[-1].m;
   ctop[-1].x = (d & 0xFF);
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (d & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (d & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
   R6502_CYCLE_ADDRESSED_FETCH_RETURN(interrupt, ctop)
 }
 // MODIFY STEPS
@@ -1329,9 +1330,9 @@ R6502CPUMAP* r6502tomodifystep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_stat
 R6502CPUMAP* r6502aslastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   uintptr_t shifted = (((uintptr_t)ctop[-1].a)<<1);
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].a = shifted & 0xFF;
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
@@ -1339,9 +1340,9 @@ R6502CPUMAP* r6502aslzpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   uintptr_t shifted = (((uintptr_t)ctop[-1].m)<<1);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].m = shifted & 0xFF;
-  ctop[-1].ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
@@ -1349,46 +1350,46 @@ R6502CPUMAP* r6502aslstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   uintptr_t shifted = (((uintptr_t)ctop[-1].m)<<1);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].m = shifted & 0xFF;
-  ctop[-1].ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
 R6502CPUMAP* r6502rolastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  uintptr_t rotated = (((uintptr_t)ctop[-1].a)<<1) | (ctop[-1].ps & CFLAG);
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  uintptr_t rotated = (((uintptr_t)ctop[-1].a)<<1) | (ctop[-1].interruptqueue_ps & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].a = rotated & 0xFF;
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502rolzpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  uintptr_t rotated = (((uintptr_t)ctop[-1].m)<<1) | (ctop[-1].ps & CFLAG);
+  uintptr_t rotated = (((uintptr_t)ctop[-1].m)<<1) | (ctop[-1].interruptqueue_ps & CFLAG);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].m = rotated & 0xFF;
-  ctop[-1].ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
 R6502CPUMAP* r6502rolstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  uintptr_t rotated = (((uintptr_t)ctop[-1].m)<<1) | (ctop[-1].ps & CFLAG);
+  uintptr_t rotated = (((uintptr_t)ctop[-1].m)<<1) | (ctop[-1].interruptqueue_ps & CFLAG);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].m = rotated & 0xFF;
-  ctop[-1].ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
 R6502CPUMAP* r6502lsrastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   uintptr_t shifted = (ctop[-1].a>>1);
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (shifted == 0 ? ZFLAG : 0) | (ctop[-1].a & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (shifted == 0 ? ZFLAG : 0) | (ctop[-1].a & CFLAG);
   ctop[-1].a = shifted;
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
@@ -1397,8 +1398,8 @@ R6502CPUMAP* r6502lsrzpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   uintptr_t shifted = (ctop[-1].m>>1);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (shifted == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (shifted == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
   ctop[-1].m = shifted;
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
@@ -1407,37 +1408,37 @@ R6502CPUMAP* r6502lsrstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   uintptr_t shifted = (ctop[-1].m>>1);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (shifted == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (shifted == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
   ctop[-1].m = shifted;
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
 R6502CPUMAP* r6502rorastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  uintptr_t rotated = ((ctop[-1].ps & CFLAG)<<7) | (ctop[-1].a>>1);
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (rotated & NFLAG) | (rotated == 0 ? ZFLAG : 0) | (ctop[-1].a & CFLAG);
+  uintptr_t rotated = ((ctop[-1].interruptqueue_ps & CFLAG)<<7) | (ctop[-1].a>>1);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (rotated & NFLAG) | (rotated == 0 ? ZFLAG : 0) | (ctop[-1].a & CFLAG);
   ctop[-1].a = rotated;
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502rorzpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  uintptr_t rotated = ((ctop[-1].ps & CFLAG)<<7) | (ctop[-1].m>>1);
+  uintptr_t rotated = ((ctop[-1].interruptqueue_ps & CFLAG)<<7) | (ctop[-1].m>>1);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (rotated & NFLAG) | (rotated == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (rotated & NFLAG) | (rotated == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
   ctop[-1].m = rotated;
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
 R6502CPUMAP* r6502rorstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  uintptr_t rotated = ((ctop[-1].ps & CFLAG)<<7) | (ctop[-1].m>>1);
+  uintptr_t rotated = ((ctop[-1].interruptqueue_ps & CFLAG)<<7) | (ctop[-1].m>>1);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (rotated & NFLAG) | (rotated == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (rotated & NFLAG) | (rotated == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
   ctop[-1].m = rotated;
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
@@ -1445,16 +1446,16 @@ R6502CPUMAP* r6502rorstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 R6502CPUMAP* r6502dexstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].x = (ctop[-1].x - 1) & 0xFF;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502deystep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].y = (ctop[-1].y - 1) & 0xFF;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].y & NFLAG) | (ctop[-1].y == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].y & NFLAG) | (ctop[-1].y == 0 ? ZFLAG : 0);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
@@ -1462,8 +1463,8 @@ R6502CPUMAP* r6502deczpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].m = (ctop[-1].m - 1) & 0xFF;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0);
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
@@ -1471,24 +1472,24 @@ R6502CPUMAP* r6502decstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].m = (ctop[-1].m - 1) & 0xFF;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0);
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
 R6502CPUMAP* r6502inxstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].x = (ctop[-1].x + 1) & 0xFF;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].x & NFLAG) | (ctop[-1].x == 0 ? ZFLAG : 0);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
 R6502CPUMAP* r6502inystep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].y = (ctop[-1].y + 1) & 0xFF;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].y & NFLAG) | (ctop[-1].y == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].y & NFLAG) | (ctop[-1].y == 0 ? ZFLAG : 0);
   R6502_CYCLE_IMPLIED_FETCH_RETURN(interrupt, ctop)
 }
 
@@ -1496,8 +1497,8 @@ R6502CPUMAP* r6502inczpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].m = (ctop[-1].m + 1) & 0xFF;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0);
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
@@ -1505,8 +1506,8 @@ R6502CPUMAP* r6502incstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].m = (ctop[-1].m + 1) & 0xFF;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG);
-  ctop[-1].ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].m & NFLAG) | (ctop[-1].m == 0 ? ZFLAG : 0);
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
@@ -1515,10 +1516,10 @@ R6502CPUMAP* r6502slozpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t shifted;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   shifted = (((uintptr_t)ctop[-1].m)<<1);
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].a |= (shifted & 0xFF);
   ctop[-1].m = shifted & 0xFF;
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
@@ -1527,32 +1528,32 @@ R6502CPUMAP* r6502slostep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t shifted;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   shifted = (((uintptr_t)ctop[-1].m)<<1);
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].a |= (shifted & 0xFF);
   ctop[-1].m = shifted & 0xFF;
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((shifted>>8) & CFLAG);
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
 R6502CPUMAP* r6502rlazpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  uintptr_t rotated = (((uintptr_t)ctop[-1].m)<<1) | (ctop[-1].ps & CFLAG);
+  uintptr_t rotated = (((uintptr_t)ctop[-1].m)<<1) | (ctop[-1].interruptqueue_ps & CFLAG);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].a &= rotated;
   ctop[-1].m = rotated & 0xFF;
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
 R6502CPUMAP* r6502rlastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  uintptr_t rotated = (((uintptr_t)ctop[-1].m)<<1) | (ctop[-1].ps & CFLAG);
+  uintptr_t rotated = (((uintptr_t)ctop[-1].m)<<1) | (ctop[-1].interruptqueue_ps & CFLAG);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].a &= rotated;
   ctop[-1].m = rotated & 0xFF;
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | ((rotated>>8) & CFLAG);
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
@@ -1560,9 +1561,9 @@ R6502CPUMAP* r6502srezpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   uintptr_t shifted = (ctop[-1].m>>1);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].a ^= shifted;
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
   ctop[-1].m = shifted;
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
@@ -1571,9 +1572,9 @@ R6502CPUMAP* r6502srestep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   uintptr_t shifted = (ctop[-1].m>>1);
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
   ctop[-1].a ^= shifted;
-  ctop[-1].ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
+  ctop[-1].interruptqueue_ps |= (ctop[-1].a & NFLAG) | (ctop[-1].a == 0 ? ZFLAG : 0) | (ctop[-1].m & CFLAG);
   ctop[-1].m = shifted;
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
@@ -1585,16 +1586,16 @@ R6502CPUMAP* r6502rrazpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   unsigned int c = m & CFLAG;
   uintptr_t sum;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].m = ((ctop[-1].ps & CFLAG)<<7) | (m>>1);
+  ctop[-1].m = ((ctop[-1].interruptqueue_ps & CFLAG)<<7) | (m>>1);
   m = ((m<<4)&0xF00) | (m&0xF);
   a = ((a<<4)&0xF00) | (a&0xF);
   sum = a + 0x0F0 + m + c;
-  ctop[-1].ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
-  if (ctop[-1].ps & DFLAG)
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
+  if (ctop[-1].interruptqueue_ps & DFLAG)
     sum += 6;
-  ctop[-1].ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
-  if (ctop[-1].ps & DFLAG)
+  ctop[-1].interruptqueue_ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
+  if (ctop[-1].interruptqueue_ps & DFLAG)
   {
     if (sum & 0x80)
       sum -= 6;
@@ -1602,7 +1603,7 @@ R6502CPUMAP* r6502rrazpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
       sum += 0x600;
   }
   if (sum >= 0x1000)
-    ctop[-1].ps |= CFLAG;
+    ctop[-1].interruptqueue_ps |= CFLAG;
   ctop[-1].a = ((sum>>4)&0xF0) | (sum&0xF);
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
@@ -1614,16 +1615,16 @@ R6502CPUMAP* r6502rrastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   unsigned int c = m & CFLAG;
   uintptr_t sum;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].m = ((ctop[-1].ps & CFLAG)<<7) | (m>>1);
+  ctop[-1].m = ((ctop[-1].interruptqueue_ps & CFLAG)<<7) | (m>>1);
   m = ((m<<4)&0xF00) | (m&0xF);
   a = ((a<<4)&0xF00) | (a&0xF);
   sum = a + 0x0F0 + m + c;
-  ctop[-1].ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
-  if (ctop[-1].ps & DFLAG)
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0);
+  if (ctop[-1].interruptqueue_ps & DFLAG)
     sum += 6;
-  ctop[-1].ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
-  if (ctop[-1].ps & DFLAG)
+  ctop[-1].interruptqueue_ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ m))>>5) & VFLAG);
+  if (ctop[-1].interruptqueue_ps & DFLAG)
   {
     if (sum & 0x80)
       sum -= 6;
@@ -1631,7 +1632,7 @@ R6502CPUMAP* r6502rrastep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
       sum += 0x600;
   }
   if (sum >= 0x1000)
-    ctop[-1].ps |= CFLAG;
+    ctop[-1].interruptqueue_ps |= CFLAG;
   ctop[-1].a = ((sum>>4)&0xF0) | (sum&0xF);
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
@@ -1642,8 +1643,8 @@ R6502CPUMAP* r6502dcpzpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].m = (ctop[-1].m - 1) & 0xFF;
   d = 0x100 + ctop[-1].a - ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
   R6502_CYCLE_ZPG_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
@@ -1653,8 +1654,8 @@ R6502CPUMAP* r6502dcpstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].m = (ctop[-1].m - 1) & 0xFF;
   d = 0x100 + ctop[-1].a - ctop[-1].m;
-  ctop[-1].ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= (d & NFLAG) | ((d & 0xFF) == 0 ? ZFLAG : 0) | ((d>>8) & CFLAG);
   R6502_CYCLE_WRITE_RETURN(ctop, ctop[-1].address_code)
 }
 
@@ -1668,15 +1669,15 @@ R6502CPUMAP* r6502isczpgstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   im = 0xFF ^ ctop[-1].m;
   im = ((im<<4)&0xF00) | (im&0xF);
   a = ((a<<4)&0xF00) | (a&0xF);
-  sum = a + 0x0F0 + im + (ctop[-1].ps & CFLAG);
-  ctop[-1].ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
-  ctop[-1].ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
-  if (ctop[-1].ps & DFLAG)
+  sum = a + 0x0F0 + im + (ctop[-1].interruptqueue_ps & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
+  ctop[-1].interruptqueue_ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
+  if (ctop[-1].interruptqueue_ps & DFLAG)
   {
     if (sum & 0x80)
       sum -= 6;
-    if (!(ctop[-1].ps & CFLAG))
+    if (!(ctop[-1].interruptqueue_ps & CFLAG))
       sum -= 0x600;
   }
   ctop[-1].a = ((sum>>4)&0xF0) | (sum&0xF);
@@ -1693,15 +1694,15 @@ R6502CPUMAP* r6502iscstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   im = 0xFF ^ ctop[-1].m;
   im = ((im<<4)&0xF00) | (im&0xF);
   a = ((a<<4)&0xF00) | (a&0xF);
-  sum = a + 0x0F0 + im + (ctop[-1].ps & CFLAG);
-  ctop[-1].ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
-  ctop[-1].ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
-  ctop[-1].ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
-  if (ctop[-1].ps & DFLAG)
+  sum = a + 0x0F0 + im + (ctop[-1].interruptqueue_ps & CFLAG);
+  ctop[-1].interruptqueue_ps &= (NOTNFLAG & NOTVFLAG & NOTZFLAG & NOTCFLAG);
+  ctop[-1].interruptqueue_ps |= ((sum & 0xF0F) == 0 ? ZFLAG : 0) | ((sum>>12) & CFLAG);
+  ctop[-1].interruptqueue_ps |= ((sum>>4) & NFLAG) | ((((sum ^ a) & (sum ^ im))>>5) & VFLAG);
+  if (ctop[-1].interruptqueue_ps & DFLAG)
   {
     if (sum & 0x80)
       sum -= 6;
-    if (!(ctop[-1].ps & CFLAG))
+    if (!(ctop[-1].interruptqueue_ps & CFLAG))
       sum -= 0x600;
   }
   ctop[-1].a = ((sum>>4)&0xF0) | (sum&0xF);
@@ -1711,10 +1712,12 @@ R6502CPUMAP* r6502iscstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 // STORE STEPS
 R6502CPUMAP* r6502topushpstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
+  uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  ctop[-1].m = ctop[-1].ps;
-  if (ctop[-1].interruptqueue & R6502_IRQ_ENABLE)
-    ctop[-1].m &= NOTIFLAG;
+  if (interruptqueue_ps & R6502_IRQ_ENABLE)
+    ctop[-1].m = interruptqueue_ps & 0xFF & NOTIFLAG;
+  else
+    ctop[-1].m = interruptqueue_ps & 0xFF;
   R6502_CYCLE_STACK_WRITE_RETURN(ctop, ctop[-1].sp_code)
 }
 
@@ -1919,7 +1922,7 @@ R6502CPUMAP* r6502bplstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t address_code;
   address_code = (ctop[-1].sync_pc_code + 0x20000) & 0xFFFFFFFF;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  if (ctop[-1].ps & NFLAG)
+  if (ctop[-1].interruptqueue_ps & NFLAG)
     R6502_CYCLE_FETCH_RETURN(interrupt, ctop, address_code)
   else
   {
@@ -1933,7 +1936,7 @@ R6502CPUMAP* r6502bmistep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t address_code;
   address_code = (ctop[-1].sync_pc_code + 0x20000) & 0xFFFFFFFF;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  if (ctop[-1].ps & NFLAG)
+  if (ctop[-1].interruptqueue_ps & NFLAG)
   {
     ctop[-1].latch = (((uintptr_t)ctop[-1].m)<<16);
     R6502_CYCLE_READ_RETURN(ctop, address_code)
@@ -1947,7 +1950,7 @@ R6502CPUMAP* r6502bvcstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t address_code;
   address_code = (ctop[-1].sync_pc_code + 0x20000) & 0xFFFFFFFF;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  if (ctop[-1].ps & VFLAG)
+  if (ctop[-1].interruptqueue_ps & VFLAG)
     R6502_CYCLE_FETCH_RETURN(interrupt, ctop, address_code)
   else
   {
@@ -1961,7 +1964,7 @@ R6502CPUMAP* r6502bvsstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t address_code;
   address_code = (ctop[-1].sync_pc_code + 0x20000) & 0xFFFFFFFF;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  if (ctop[-1].ps & VFLAG)
+  if (ctop[-1].interruptqueue_ps & VFLAG)
   {
     ctop[-1].latch = (((uintptr_t)ctop[-1].m)<<16);
     R6502_CYCLE_READ_RETURN(ctop, address_code)
@@ -1975,7 +1978,7 @@ R6502CPUMAP* r6502bccstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t address_code;
   address_code = (ctop[-1].sync_pc_code + 0x20000) & 0xFFFFFFFF;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  if (ctop[-1].ps & CFLAG)
+  if (ctop[-1].interruptqueue_ps & CFLAG)
     R6502_CYCLE_FETCH_RETURN(interrupt, ctop, address_code)
   else
   {
@@ -1989,7 +1992,7 @@ R6502CPUMAP* r6502bcsstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t address_code;
   address_code = (ctop[-1].sync_pc_code + 0x20000) & 0xFFFFFFFF;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  if (ctop[-1].ps & CFLAG)
+  if (ctop[-1].interruptqueue_ps & CFLAG)
   {
     ctop[-1].latch = (((uintptr_t)ctop[-1].m)<<16);
     R6502_CYCLE_READ_RETURN(ctop, address_code)
@@ -2003,7 +2006,7 @@ R6502CPUMAP* r6502bnestep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t address_code;
   address_code = (ctop[-1].sync_pc_code + 0x20000) & 0xFFFFFFFF;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  if (ctop[-1].ps & ZFLAG)
+  if (ctop[-1].interruptqueue_ps & ZFLAG)
     R6502_CYCLE_FETCH_RETURN(interrupt, ctop, address_code)
   else
   {
@@ -2017,7 +2020,7 @@ R6502CPUMAP* r6502beqstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
   uintptr_t address_code;
   address_code = (ctop[-1].sync_pc_code + 0x20000) & 0xFFFFFFFF;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
-  if (ctop[-1].ps & ZFLAG)
+  if (ctop[-1].interruptqueue_ps & ZFLAG)
   {
     ctop[-1].latch = (((uintptr_t)ctop[-1].m)<<16);
     R6502_CYCLE_READ_RETURN(ctop, address_code)
@@ -2122,7 +2125,7 @@ R6502CPUMAP* r6502breadcrumbnotpushedtoresetlostep(R6502CPUMAP* ctop, uintptr_t 
 {
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].sp_code = (ctop[-1].sp_code - 0x1000000) & 0xFFFFFFFF;
-  ctop[-1].interruptqueue &= ~R6502_IRQ_ENABLE;
+  ctop[-1].interruptqueue_ps &= ~R6502_IRQ_ENABLE;
   ctop[-1].address_code = 0xFFFC0000 | ADDRESSING_BASECODE;
   ctop[-1].transition1 = ctop[-1].transition2;
   R6502_CHECK_FOR_BREAK(ctop)
@@ -2148,40 +2151,44 @@ R6502CPUMAP* r6502pushedtopushpclstep(R6502CPUMAP* ctop, uintptr_t incremented_c
 
 R6502CPUMAP* r6502pushedtopushpstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
+  uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].sp_code = (ctop[-1].sp_code - 0x1000000) & 0xFFFFFFFF;
-  ctop[-1].m = ctop[-1].ps;
-  if (ctop[-1].interruptqueue & R6502_IRQ_ENABLE)
-    ctop[-1].m &= NOTIFLAG;
+  if (interruptqueue_ps & R6502_IRQ_ENABLE)
+    ctop[-1].m = interruptqueue_ps & 0xFF & NOTIFLAG;
+  else
+    ctop[-1].m = interruptqueue_ps & 0xFF;
   R6502_CYCLE_STACK_WRITE_RETURN(ctop, ctop[-1].sp_code)
 }
 
 R6502CPUMAP* r6502pushedtopushpwithoutbstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
+  uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].sp_code = (ctop[-1].sp_code - 0x1000000) & 0xFFFFFFFF;
-  ctop[-1].m = ctop[-1].ps & NOTBFLAG;
-  if (ctop[-1].interruptqueue & R6502_IRQ_ENABLE)
-    ctop[-1].m &= NOTIFLAG;
+  if (interruptqueue_ps & R6502_IRQ_ENABLE)
+    ctop[-1].m = interruptqueue_ps & 0xFF & NOTBFLAG & NOTIFLAG;
+  else
+    ctop[-1].m = interruptqueue_ps & 0xFF & NOTBFLAG;
   R6502_CYCLE_STACK_WRITE_RETURN(ctop, ctop[-1].sp_code)
 }
 
 R6502CPUMAP* r6502breadcrumbpushedtointerruptlostep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
-  uintptr_t interruptqueue = ctop[-1].interruptqueue;
+  uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].sp_code = (ctop[-1].sp_code - 0x1000000) & 0xFFFFFFFF;
-  if ((interruptqueue & (R6502_NMI_ENABLE<<4)) && (interruptqueue & (R6502_NMI<<4)))
+  if ((interruptqueue_ps & (R6502_NMI_ENABLE<<4)) && (interruptqueue_ps & (R6502_NMI<<4)))
   {
-    interruptqueue &= ~R6502_NMI_IRQ_ENABLE;
+    interruptqueue_ps &= ~R6502_NMI_IRQ_ENABLE;
     ctop[-1].address_code = 0xFFFA0000 | ADDRESSING_BASECODE;
   }
   else
   {
-    interruptqueue &= ~R6502_IRQ_ENABLE;
+    interruptqueue_ps &= ~R6502_IRQ_ENABLE;
     ctop[-1].address_code = 0xFFFE0000 | ADDRESSING_BASECODE;
   }
-  ctop[-1].interruptqueue = interruptqueue;
+  ctop[-1].interruptqueue_ps = interruptqueue_ps;
   R6502_CYCLE_VECTOR_READ_RETURN(ctop, ctop[-1].address_code)
 }
 
@@ -2241,13 +2248,14 @@ R6502CPUMAP* r6502pushedtoloadpchstep(R6502CPUMAP* ctop, uintptr_t incremented_c
 
 R6502CPUMAP* r6502pulledptopullstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
+  uintptr_t interruptqueue_ps = ctop[-1].interruptqueue_ps;
   ctop[-1].cpu_state = (R6502OP*)incremented_cpu_state;
   ctop[-1].sp_code = (ctop[-1].sp_code + 0x1000000) & 0xFFFFFFFF;
   if (ctop[-1].m & IFLAG)
-    ctop[-1].interruptqueue &= ~R6502_IRQ_ENABLE;
+    interruptqueue_ps &= ~R6502_IRQ_ENABLE;
   else
-    ctop[-1].interruptqueue |= R6502_IRQ_ENABLE;
-  ctop[-1].ps = ctop[-1].m | UFLAG | BFLAG | IFLAG;
+    interruptqueue_ps |= R6502_IRQ_ENABLE;
+  ctop[-1].interruptqueue_ps = (interruptqueue_ps & ~0xFF) | ctop[-1].m | UFLAG | BFLAG | IFLAG;
   R6502_CYCLE_STACK_READ_RETURN(ctop, ctop[-1].sp_code)
 }
 
@@ -2281,13 +2289,13 @@ R6502CPUMAP* r6502stretcheduninterruptedfetchstep(R6502CPUMAP* ctop, uintptr_t i
 R6502CPUMAP* r6502stretchedearlyinterruptfetchstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].readspecialaction(ctop, ctop[-1].stretched_address_code);
-  return m_r6502cycleearlyinterruptfetchreturn(ctop, &ctop[-1].m);
+  return r6502completecycleearlyinterruptfetchreturn(ctop, ctop[-1].m);
 }
 
 R6502CPUMAP* r6502stretchedinterruptfetchstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
 {
   ctop[-1].readspecialaction(ctop, ctop[-1].stretched_address_code);
-  return m_r6502cycleinterruptfetchreturn(ctop, &ctop[-1].m);
+  return r6502completecycleinterruptfetchreturn(ctop, ctop[-1].m);
 }
 
 R6502CPUMAP* r6502stretchedreadstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_state)
@@ -2339,7 +2347,7 @@ void r6502reset(R6502CPUMAP* ctop, const R6502OP* const* mainsequences, const R6
 
   ctop[-1].sync_pc_code = ADDRESSING_BASECODE;
   ctop[-1].sp_code = 0xFF000000 | (0x0100>>8);
-  ctop[-1].ps = UFLAG | BFLAG | IFLAG;
+  ctop[-1].interruptqueue_ps = UFLAG | BFLAG | IFLAG;
 
   for (i=0; i<R6502_MAIN_SEQUENCE_COUNT; i++)
   {
@@ -2384,8 +2392,8 @@ void r6502readmemory(R6502CPUMAP* ctop, char* buffer, uintptr_t naddress, int nc
 
 void r6502beforesnapshot(R6502CPUMAP* ctop)
 {
-  if (ctop[-1].interruptqueue & R6502_IRQ_ENABLE)
-    ctop[-1].ps &= NOTIFLAG;
+  if (ctop[-1].interruptqueue_ps & R6502_IRQ_ENABLE)
+    ctop[-1].interruptqueue_ps &= NOTIFLAG;
 }
 
 void r6502aftersnapshot(R6502CPUMAP* ctop)
@@ -2397,11 +2405,8 @@ void r6502aftersnapshot(R6502CPUMAP* ctop)
   R6502_ADDRESS_FOR_READ(ctop, address_code, rds, rds, rds, r6502readmemoryread)
   ctop[-1].execute_cpu_state = ctop[-1].sequences[ctop[-1].m];
 
-  if (ctop[-1].ps & IFLAG)
-    ctop[-1].interruptqueue &= ~R6502_IRQ_ENABLE;
+  if (ctop[-1].interruptqueue_ps & IFLAG)
+    ctop[-1].interruptqueue_ps &= ~R6502_IRQ_ENABLE;
   else
-  {
-    ctop[-1].interruptqueue |= R6502_IRQ_ENABLE;
-    ctop[-1].ps |= IFLAG;
-  }
+    ctop[-1].interruptqueue_ps |= R6502_IRQ_ENABLE | IFLAG;
 }

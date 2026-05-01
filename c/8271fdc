@@ -85,7 +85,7 @@ static void i8271addtotimer(int cycles)
   }
   else
   {
-    cyclesin = htop[-1].cycles.original - htop[-1].cycles.togo;
+    cyclesin = htop[-1].cycles.originalminusone - (htop[-1].togominusone_cyclestate>>12);
 
     htop[-1].cycles.i8271_togo = cyclesin + cycles;
 

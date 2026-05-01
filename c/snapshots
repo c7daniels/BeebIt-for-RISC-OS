@@ -90,7 +90,7 @@ void snapshotload(FILE *hfile)
       r6502_z = (cbuffer[0] & 0x02);
       r6502_c = (cbuffer[0] & 0x01);*/
 //      r6502_ps = cbuffer[0];
-  ctop[-1].ps =readhdr.P | UFLAG | BFLAG;
+  ctop[-1].interruptqueue_ps =readhdr.P | UFLAG | BFLAG;
 
 //      fread(cbuffer,1,4,hfile); /*16*/
 //      r6502_sp = cbuffer[3] ;
@@ -340,7 +340,7 @@ void snapheadersave(SNAPHDR *phdr)
 //  cbuffer[3] = 0;
 //  cbuffer[0] = r6502_ps; /*12*/
 //  wimpwrite(cbuffer,1,4);
-  phdr ->P =ctop[-1].ps;
+  phdr ->P =ctop[-1].interruptqueue_ps&0xFF;
 //  cbuffer[3] = r6502_sp;
 //  /*cbuffer[0] = 1;*/
 //  wimpwrite(cbuffer,1,4); /*16*/

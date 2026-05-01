@@ -33,8 +33,7 @@ typedef struct
 {
   uintptr_t monotonic; /*used by zeribeepwrite*/
   intptr_t odd;
-  intptr_t togo;
-  intptr_t original;
+  intptr_t originalminusone;
   intptr_t sysvia_togo;
   intptr_t sysvia_original;
   intptr_t usrvia_togo;
@@ -221,11 +220,13 @@ typedef struct
 /*storage map specialised for peripheral emulation*/
 typedef struct HOSTMAP
 {
-  // AArch32 offsets -&8000 - -&4001
+  // AArch32 offsets -&A000 - -&4001
   R6502ADDRESSINGOP readhigh[1024];
   R6502ADDRESSINGOP modifyhigh[1024];
   R6502READSPECIALOP specialreadops[1024];
   R6502WRITESPECIALOP specialwriteops[1024];
+  R6502READSPECIALOP bridgedreadops[1024];
+  R6502WRITESPECIALOP bridgedwriteops[1024];
 
   // AArch32 offsets -&4000 - -&1001
   R6502_DC_ZONE DC;
@@ -240,12 +241,12 @@ typedef struct HOSTMAP
   uintptr_t CP_unused[636];
 
   // AArch32 offsets -&400 - -&101
-  uintptr_t interruptqueue;
+  uintptr_t interruptqueue_ps;
+  uintptr_t togominusone_cyclestate;
   R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
   R6502_BC_ZONE BC;
   uintptr_t interrupts;
   uintptr_t keycolumnflags;
-  uintptr_t keyscanstate;
   void* zeribeep_writebyte;
   void* zeribeep_workspace;
   uintptr_t screenstartaddress;
@@ -260,7 +261,7 @@ typedef struct HOSTMAP
   HOSTMAPBI8271 B_i8271;
   HOSTMAPBW1770 B_w1770;
   HOSTMAPBADC B_adc;
-  uintptr_t BP_unused[64];
+  uintptr_t BP_unused[65];
 
   // AArch32 offsets -&100 - -&01
   R6502_AC_ZONE AC;
