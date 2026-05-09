@@ -14,6 +14,14 @@
 
 #include "6502zmap.h"
 
+#define KEYSCANIDLEOVERFLOW 0x800
+#define KEYSCANIDLEFLAG 0x400
+#define KEYSCANINPUTFLAG 0x200
+#define KEYSCANWRITEENABLEFLAG 0x100
+#define KEYSCANIFRFLAG 0x80
+#define KEYSCANCA2FLAG 0x40
+#define KEYSCANCOLUMNOVERFLOW 0x20
+
 struct HOSTMAP;
 
 typedef int (*OPCODE07SCREENINGOP)(struct HOSTMAP* htop, uintptr_t sync_pc_code);
@@ -223,7 +231,9 @@ typedef struct HOSTMAP
   R6502_DC_ZONE DC;
   R6502ADDRESSINGOP read8000s[16];
   R6502ADDRESSINGOP modify8000s[16];
-  uintptr_t DP_unused[2752];
+  uintptr_t DP_unused1[704];
+  uintptr_t steproutines[64];
+  uintptr_t DP_unused2[1984];
 
   // AArch32 offsets -&1000 - -&401
   R6502_CC_ZONE CC;
@@ -234,6 +244,8 @@ typedef struct HOSTMAP
   R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
   R6502_BC_ZONE BC;
   uintptr_t interrupts;
+  uintptr_t keycolumnflags;
+  uintptr_t keyscanstate;
   void* zeribeep_writebyte;
   void* zeribeep_workspace;
   uintptr_t screenstartaddress;
@@ -248,10 +260,11 @@ typedef struct HOSTMAP
   HOSTMAPBI8271 B_i8271;
   HOSTMAPBW1770 B_w1770;
   HOSTMAPBADC B_adc;
-  uintptr_t BP_unused[66];
+  uintptr_t BP_unused[64];
 
   // AArch32 offsets -&100 - -&01
   R6502_AC_ZONE AC;
+  uint8_t keystatus[16];
   int8_t romwritable[16];
   uint8_t romsel; /*ROMSELect*/
   uint8_t acccon;  /*ACCCON*/
@@ -264,7 +277,8 @@ typedef struct HOSTMAP
   HOSTMAPAI8271 A_i8271;
   HOSTMAPAW1770 A_w1770;
   HOSTMAPAADC A_adc;
-  uint8_t AP_unused[63*sizeof(uintptr_t)-136];
+  uint8_t keybit;
+  uint8_t AP_unused[63*sizeof(uintptr_t)-153];
 
 } HOSTMAP;
 

@@ -12,8 +12,8 @@
 /*System VIA*/
 extern HOSTMAP* systemviasetca1(HOSTMAP* htop);
 extern HOSTMAP* systemviaunsetca1(HOSTMAP* htop);
-extern void systemviasetca2(void);
-extern void systemviakeyca2(void);
+extern int systemviasetca2(HOSTMAP* htop);
+extern int systemviaunsetca2(HOSTMAP* htop);
 extern void systemviareset(void);
 extern void systemviabeforesnapshot(void);
 extern void systemviaaftersnapshot(void);

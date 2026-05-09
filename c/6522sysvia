@@ -258,29 +258,6 @@ HOSTMAP* systemviasetca1(HOSTMAP* htop)
   return htop;
 }
 
-void systemviasetca2(void)
-{
-  HOSTMAP* htop = (HOSTMAP*)&hostmap.upper;
-  #ifdef __DEBUG__
-    fprintf(htrace,"CA2 ");
-  #endif
-  switch (htop[-1].A_sysvia.pcr & 0x0E)
-  {
-    case 0:
-    case 2:
-      /*updatekeyboard();*/
-      htop[-1].A_sysvia.ifr |= 0x01; /*CA2 flag*/
-      systemviaeventsetirq(htop);
-      break;
-    case 4:
-    case 6:
-      /*updatekeyboard();*/
-      htop[-1].A_sysvia.ifr |= 0x01; /*CA2 flag*/
-      systemviaeventsetirq(htop);
-      break;
-  }
-}
-
 HOSTMAP* systemviaunsetca1(HOSTMAP* htop)
 {
   if (!(htop[-1].A_sysvia.pcr & 0x01))
@@ -294,21 +271,43 @@ HOSTMAP* systemviaunsetca1(HOSTMAP* htop)
   return htop;
 }
 
-void systemviakeyca2(void)
+int systemviasetca2(HOSTMAP* htop)
 {
-  HOSTMAP* htop = (HOSTMAP*)&hostmap.upper;
-  /*updatekeyboard();*/
-  /*if (beebit_trace)
-    printf("SVK PC=%X, SP=%X %X\n", r6502_pc, r6502_sp, htop[-1].A_sysvia.ifr);*/
-  htop[-1].A_sysvia.ifr |= 0x01; /*CA2 flag*/
-  systemviaregistersetirq(htop);
+  switch (htop[-1].A_sysvia.pcr & 0x0E)
+  {
+    case 4:
+    case 6:
+      if (htop[-1].A_sysvia.ier & 0x01)
+      {
+        htop[-1].interrupts |= HOST_IRQ_6522SYSVIA;
+        htop[-1].interruptqueue |= R6502_IRQ;
+        htop[-1].A_sysvia.ifr |= 0x81;
+      }
+      else
+        htop[-1].A_sysvia.ifr |= 0x01; /*CA2 flag*/
+      return 1;
+  }
+  return 0;
 }
 
-/*void systemviaunsetca2(void)
+int systemviaunsetca2(HOSTMAP* htop)
 {
-  htop[-1].A_sysvia.ifr &= 0xFE;*/ /*CA2 flag*/
-  /*systemviaeventsetirq(htop);
-}*/
+  switch (htop[-1].A_sysvia.pcr & 0x0E)
+  {
+    case 0:
+    case 2:
+      if (htop[-1].A_sysvia.ier & 0x01)
+      {
+        htop[-1].interrupts |= HOST_IRQ_6522SYSVIA;
+        htop[-1].interruptqueue |= R6502_IRQ;
+        htop[-1].A_sysvia.ifr |= 0x81;
+      }
+      else
+        htop[-1].A_sysvia.ifr |= 0x01; /*CA2 flag*/
+      return 1;
+  }
+  return 0;
+}
 
 static intptr_t systemviapickcyclestogo(void)
 {
@@ -338,6 +337,15 @@ static intptr_t systemviapickcyclestogo(void)
   }
 
   return cyclestogo;
+}
+
+static void resetkeyscanstate(HOSTMAP* htop)
+{
+  if (htop[-1].A_sysvia.ddra & 0x80)
+    htop[-1].keyscanstate = 0;
+  else
+    htop[-1].keyscanstate = KEYSCANINPUTFLAG;
+  htop[-1].keybit = 1;
 }
 
 void systemviareset(void)
@@ -382,6 +390,8 @@ void systemviareset(void)
   htop[-1].cycles.sysvia_togo = systemviapickcyclestogo();
   htop[-1].cycles.sysvia_original = htop[-1].cycles.sysvia_togo;
 
+  resetkeyscanstate(htop);
+
   HOST_LIMIT_CYCLES_TO_GO(htop, htop[-1].cycles.sysvia_togo)
 }
 
@@ -415,6 +425,8 @@ void systemviaaftersnapshot(void)
   }
 
   systemviaregistersetirq(htop);
+
+  resetkeyscanstate(htop);
 }
 
 HOSTMAP* systemviaatzerocycles(HOSTMAP* htop)
@@ -486,6 +498,43 @@ HOSTMAP* systemviaatzerocycles(HOSTMAP* htop)
   return htop;
 }
 
+static inline void setkeyboardnotwriteenable(HOSTMAP* htop, int notwriteenable)
+{
+  uintptr_t keyscanstate = htop[-1].keyscanstate;
+  uintptr_t porta;
+
+  if (keyscanstate&KEYSCANWRITEENABLEFLAG)
+  {
+    if (notwriteenable)
+    {
+      htop[-1].keyscanstate -= KEYSCANWRITEENABLEFLAG;
+      htop[-1].A_sysvia.porta &= (htop[-1].A_sysvia.ddra | 0x7F);
+    }
+  }
+  else
+  {
+    if (!notwriteenable)
+    {
+      porta = htop[-1].A_sysvia.porta & htop[-1].A_sysvia.ddra;
+      htop[-1].keybit = htop[-1].keybit = (1<<((porta>>4)&0x07));
+      htop[-1].keyscanstate = (htop[-1].keyscanstate & 0xFFFFFFE1) | KEYSCANWRITEENABLEFLAG | ((porta<<1)&0x1E);
+    }
+  }
+}
+
+static inline void setkeyboardscanposition(HOSTMAP* htop)
+{
+  uintptr_t keyscanstate = htop[-1].keyscanstate;
+  uintptr_t porta;
+
+  if (keyscanstate&KEYSCANWRITEENABLEFLAG)
+  {
+    porta = htop[-1].A_sysvia.porta & htop[-1].A_sysvia.ddra;
+    htop[-1].keybit = htop[-1].keybit = (1<<((porta>>4)&0x07));
+    htop[-1].keyscanstate = (htop[-1].keyscanstate & 0xFFFFFFE1) | ((porta<<1)&0x1E);
+  }
+}
+
 struct R6502CPUMAP* systemvia00read(struct R6502CPUMAP* ctop, uintptr_t address_code)
 {
   /*input/output reg b*/
@@ -511,7 +560,7 @@ struct R6502CPUMAP* systemvia00read(struct R6502CPUMAP* ctop, uintptr_t address_
   {
     /*input latching enabled*/
     /*read input level on irb*/
-    nresult |= (htop[-1].A_sysvia.irb & ~htop[-1].A_sysvia.ddrb);
+    nresult = htop[-1].A_sysvia.irb;
   }
   else
   {
@@ -561,6 +610,7 @@ struct R6502CPUMAP* systemvia01read_b(struct R6502CPUMAP* ctop, uintptr_t addres
   {
     /*clear b2,b1 (CA1,CA2)*/
     htop[-1].A_sysvia.ifr &= 0xFC;
+    htop[-1].keyscanstate &= ~KEYSCANIFRFLAG;
   }
   systemviasetirqafterifrclear(htop);
   if (htop[-1].A_sysvia.acr & 0x01)
@@ -596,6 +646,7 @@ struct R6502CPUMAP* systemvia01read_m(struct R6502CPUMAP* ctop, uintptr_t addres
   {
     /*clear b2,b1 (CA1,CA2)*/
     htop[-1].A_sysvia.ifr &= 0xFC;
+    htop[-1].keyscanstate &= ~KEYSCANIFRFLAG;
   }
   systemviasetirqafterifrclear(htop);
   if (htop[-1].A_sysvia.acr & 0x01)
@@ -788,8 +839,6 @@ struct R6502CPUMAP* systemvia0Fread_b(struct R6502CPUMAP* ctop, uintptr_t addres
   else
   {
     /*input latching disabled*/
-    if (keystatus[(htop[-1].A_sysvia.porta & htop[-1].A_sysvia.ddra)])
-      htop[-1].A_sysvia.porta = keyboardread(htop[-1].A_sysvia.porta,htop[-1].A_sysvia.ddra);
     nresult = htop[-1].A_sysvia.porta;
   }
   htop[-1].m = nresult;
@@ -821,8 +870,6 @@ struct R6502CPUMAP* systemvia0Fread_m(struct R6502CPUMAP* ctop, uintptr_t addres
     }
     else
     {
-      if (keystatus[(htop[-1].A_sysvia.porta & htop[-1].A_sysvia.ddra)])
-        htop[-1].A_sysvia.porta = keyboardread(htop[-1].A_sysvia.porta,htop[-1].A_sysvia.ddra);
       nresult = htop[-1].A_sysvia.porta;
     }
   }
@@ -870,6 +917,7 @@ static inline void systemviaportawrite(HOSTMAP* htop, uint8_t value)
   {
     /*clear b2,b1 (CA1,CA2)*/
     htop[-1].A_sysvia.ifr &= 0xFC;
+    htop[-1].keyscanstate &= ~KEYSCANIFRFLAG;
   }
   systemviasetirqafterifrclear(htop);
 }
@@ -908,8 +956,7 @@ static inline void systemviaportbwrite_latchb(HOSTMAP* htop, uint8_t value)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        htop[-1].A_sysvia.porta = keyboardread(htop[-1].A_sysvia.porta,htop[-1].A_sysvia.ddra);
+      setkeyboardnotwriteenable(htop, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1025,8 +1072,7 @@ static inline void systemviaportbwrite_latchm(HOSTMAP* htop, uint8_t value)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        htop[-1].A_sysvia.porta = keyboardread(htop[-1].A_sysvia.porta,htop[-1].A_sysvia.ddra);
+      setkeyboardnotwriteenable(htop, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1108,8 +1154,7 @@ static inline void systemviaportbwrite_nosoundlatchb(HOSTMAP* htop, uint8_t valu
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        htop[-1].A_sysvia.porta = keyboardread(htop[-1].A_sysvia.porta,htop[-1].A_sysvia.ddra);
+      setkeyboardnotwriteenable(htop, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1219,9 +1264,7 @@ static inline void systemviaportbwrite_nosoundlatchm(HOSTMAP* htop, uint8_t valu
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        htop[-1].A_sysvia.porta = keyboardread(htop[-1].A_sysvia.porta,htop[-1].A_sysvia
-.ddra);
+      setkeyboardnotwriteenable(htop, lenabled);
       break;
     case 0x04:
       /*Screen Size hi*/
@@ -1308,9 +1351,7 @@ static inline void systemviaportawrite_latchb(HOSTMAP* htop, uint8_t value)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        htop[-1].A_sysvia.porta = keyboardread(htop[-1].A_sysvia.porta,htop[-1].A_sysvia
-.ddra);
+      setkeyboardscanposition(htop);
       break;
   }
 }
@@ -1347,8 +1388,7 @@ static inline void systemviaportawrite_latchm(HOSTMAP* htop, uint8_t value)
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        htop[-1].A_sysvia.porta = keyboardread(htop[-1].A_sysvia.porta,htop[-1].A_sysvia.ddra);
+      setkeyboardscanposition(htop);
       break;
   }
 }
@@ -1373,8 +1413,7 @@ static inline void systemviaportawrite_nosoundlatchb(HOSTMAP* htop, uint8_t valu
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        htop[-1].A_sysvia.porta = keyboardread(htop[-1].A_sysvia.porta,htop[-1].A_sysvia.ddra);
+      setkeyboardscanposition(htop);
       break;
   }
 }
@@ -1405,8 +1444,7 @@ static inline void systemviaportawrite_nosoundlatchm(HOSTMAP* htop, uint8_t valu
       break;
     case 0x03:
       /*keyboard*/
-      if (!lenabled)
-        htop[-1].A_sysvia.porta = keyboardread(htop[-1].A_sysvia.porta,htop[-1].A_sysvia.ddra);
+      setkeyboardscanposition(htop);
       break;
   }
 }
@@ -1502,6 +1540,15 @@ struct R6502CPUMAP* systemvia02write(struct R6502CPUMAP* ctop, uintptr_t address
 struct R6502CPUMAP* systemvia03write(struct R6502CPUMAP* ctop, uintptr_t address_code, uint8_t value)
 {
   HOSTMAP* htop = (HOSTMAP*)ctop;
+
+  if ((htop[-1].A_sysvia.ddra ^ value) & 0x80)
+  {
+    if (value & 0x80)
+      htop[-1].keyscanstate &= ~KEYSCANINPUTFLAG;
+    else
+      htop[-1].keyscanstate |= KEYSCANINPUTFLAG;
+  }
+
   htop[-1].A_sysvia.ddra = value;
 
   return ctop;
@@ -1651,6 +1698,9 @@ struct R6502CPUMAP* systemvia0Dwrite(struct R6502CPUMAP* ctop, uintptr_t address
   HOSTMAP* htop = (HOSTMAP*)ctop;
   htop[-1].A_sysvia.ifr &= (~value);
   systemviasetirqafterifrclear(htop);
+
+  if (value&0x01)
+      htop[-1].keyscanstate &= ~KEYSCANIFRFLAG;
 
   return ctop;
 }
