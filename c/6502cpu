@@ -583,8 +583,8 @@ R6502CPUMAP* logfetch(R6502CPUMAP* ctop, uint8_t* p, int defer)
   {
     cc = host_getcyclecount(ctop);
     interruptqueue_ps = (uint32_t)ctop[-1].interruptqueue_ps;
-    maprintf("%04X %06X %02X %02X %02X %08X ; %02X %02X %02X %02X %02X\n", (uint32_t)(ctop[-1].sync_pc_code>>16), interruptqueue_ps>>8, p[0], p[1], p[2], cc,
-            ctop[-1].a, ctop[-1].x, ctop[-1].y, interruptqueue_ps&0xFF, ctop[-1].sp_code>>24);
+    maprintf("%04X %06X %02X %02X %02X %08X ; %02X %02X %02X %02X %02X; %03X\n", (uint32_t)(ctop[-1].sync_pc_code>>16), interruptqueue_ps>>8, p[0], p[1], p[2], cc,
+            ctop[-1].a, ctop[-1].x, ctop[-1].y, interruptqueue_ps&0xFF, ctop[-1].sp_code>>24, ctop[-1].togominusone_cyclestate&0xFFF);
   }
   return ctop;
 }
