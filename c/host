@@ -103,7 +103,9 @@ extern R6502CPUMAP* host_r6502readmjim(R6502CPUMAP* ctop, uintptr_t address_code
 extern R6502CPUMAP* host_r6502writemfred(R6502CPUMAP* ctop, uintptr_t address_code, uint8_t value);
 extern R6502CPUMAP* host_r6502writemjim(R6502CPUMAP* ctop, uintptr_t address_code, uint8_t value);
 
-extern R6502CPUMAP* host_r6502cycle(R6502CPUMAP* ctop);
+extern R6502CPUMAP* host_r6502cycle0s1(R6502CPUMAP* ctop);
+extern R6502CPUMAP* host_r6502cycle1(R6502CPUMAP* ctop);
+
 extern R6502CPUMAP* host_r6502readspecial(R6502CPUMAP* ctop, uintptr_t address_code);
 extern R6502CPUMAP* host_r6502writespecial(R6502CPUMAP* ctop, uintptr_t address_code, uint8_t value);
 
@@ -774,14 +776,89 @@ R6502CPUMAP* host_r6502writemjim(R6502CPUMAP* ctop, uintptr_t address_code, uint
   return ctop;
 }
 
-R6502CPUMAP* host_r6502cycle(R6502CPUMAP* ctop)
+static inline void hoststep(HOSTMAP* htop)
 {
-  HOSTMAP* htop = (HOSTMAP*)ctop;
-  HOSTMEMORY* mmap = (HOSTMEMORY*)ctop;
+  const uint32_t overflowmask = KEYSCANIDLEOVERFLOW|KEYSCANCOLUMNOVERFLOW;
+  const uint32_t keytestmask = KEYSCANINPUTFLAG|KEYSCANWRITEENABLEFLAG;
+  const uint32_t ca2testmask = KEYSCANIFRFLAG|KEYSCANCA2FLAG;
+  const uint32_t notwiredbit = 1U<<31;
+  const uint32_t notactivebit = 1U<<30;
+  uintptr_t keyscanstate = htop[-1].keyscanstate;
+  uintptr_t columnflags = htop[-1].keycolumnflags;
+  int rotation = keyscanstate&31;
+
+  columnflags = (((columnflags<<(32-rotation))&0xFFFFFFFF)|(columnflags>>rotation));
+  columnflags |= (columnflags>>1);
+
+  if ((keyscanstate & (KEYSCANIDLEFLAG|keytestmask)) == keytestmask)
+  {
+    if (!(columnflags & notwiredbit) && (htop[-1].keystatus[(keyscanstate>>1)&0xF] & htop[-1].keybit))
+      htop[-1].A_sysvia.porta |= 0x80;
+    else
+      htop[-1].A_sysvia.porta &= ~0x80;
+  }
+
+  switch (keyscanstate & (KEYSCANIDLEFLAG|ca2testmask))
+  {
+    case 0:
+      if (!(columnflags & notactivebit))
+      {
+        keyscanstate += KEYSCANCA2FLAG;
+        if (systemviasetca2(htop))
+          keyscanstate += KEYSCANIFRFLAG;
+      }
+      break;
+    case KEYSCANCA2FLAG:
+      if (columnflags & notactivebit)
+      {
+        keyscanstate -= KEYSCANCA2FLAG;
+        if (systemviaunsetca2(htop))
+          keyscanstate += KEYSCANIFRFLAG;
+      }
+      break;
+    case KEYSCANIFRFLAG:
+      if (!(columnflags & notactivebit))
+      {
+        keyscanstate += KEYSCANCA2FLAG;
+      }
+      break;
+    case KEYSCANIFRFLAG|KEYSCANCA2FLAG:
+      if (columnflags & notactivebit)
+      {
+        keyscanstate -= KEYSCANCA2FLAG;
+      }
+      break;
+  }
+
+  if ((keyscanstate & KEYSCANIDLEFLAG) && (keyscanstate & KEYSCANWRITEENABLEFLAG))
+    keyscanstate += KEYSCANIDLEFLAG + 31;
+  else
+    keyscanstate += KEYSCANIDLEFLAG + 1;
+  htop[-1].keyscanstate = keyscanstate &~ overflowmask;
 
   if (--htop[-1].cycles.togo == 0)
     hostadvancetimers(htop);
+}
 
+R6502CPUMAP* host_r6502cycle0s1(R6502CPUMAP* ctop)
+{
+  HOSTMAP* htop = (HOSTMAP*)ctop;
+
+  hoststep(htop);
+  return ctop;
+}
+
+R6502CPUMAP* host_r6502cycle1(R6502CPUMAP* ctop)
+{
+  HOSTMAP* htop = (HOSTMAP*)ctop;
+  uintptr_t interruptqueue = ctop[-1].interruptqueue;
+
+  interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F);
+  if (!(interruptqueue & R6502_NMI))
+    interruptqueue |= R6502_NMI_ENABLE;
+  ctop[-1].interruptqueue = interruptqueue;
+
+  hoststep(htop);
   return ctop;
 }
 
@@ -985,6 +1062,8 @@ HOSTMAP* swappagesoutofmemorym(HOSTMAP* htop)
 
 void hostinit(void)
 {
+  hostmap.lower.keycolumnflags = 0xFFFFFFFF;
+
   videoinit();
 }
 
@@ -1107,7 +1186,6 @@ void hostresetperipherals(void)
   htop[-1].cycles.original = htop[-1].cycles.togo;
   htop[-1].interrupts = 0;
 
-  ctop[-1].cycleaction = host_r6502cycle;
   ctop[-1].readspecialaction = host_r6502readspecial;
   ctop[-1].writespecialaction = host_r6502writespecial;
 
@@ -1229,6 +1307,20 @@ void hostresetperipherals(void)
     htop[-1].specialwriteops[0x100+i] = writejim;
   }
 
+  switch (beebit_machinetype)
+  {
+    default:
+      htop[-1].keycolumnflags = 0x2AA80000|(htop[-1].keycolumnflags&0x55555555);
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      htop[-1].keycolumnflags = 0x2A000000|(htop[-1].keycolumnflags&0x55555555);
+      break;
+  }
+
+  ctop[-1].stretchcycleaction = host_r6502cycle0s1;
+  ctop[-1].cycleaction = host_r6502cycle1;
+
   sheilareset();
   aciareset();
   adcreset();
@@ -1238,6 +1330,13 @@ void hostresetperipherals(void)
   systemviareset();
   videoreset();
   soundreset();
+
+#ifndef BEEBIT_NO_ASM
+  extern const uintptr_t hoststeps[64];
+
+  memcpy(htop[-1].steproutines, hoststeps, sizeof(hoststeps));
+#endif
+
   hoststartreset(TRUE);
 }
 

@@ -81,17 +81,10 @@
   R6502_ADDRESS_FOR_MODIFY(CTOP, ADDRCODE, s_##TAG, s1_##TAG, s2_##TAG, m_##TAG)
 
 #define R6502_CYCLE_STRETCH_RETURN(CTOP) \
-  return (*CTOP[-1].cycleaction)(CTOP);
+  return (*CTOP[-1].stretchcycleaction)(CTOP);
 
 #define R6502_CYCLE_RETURN(CTOP) \
-  { \
-    uintptr_t interruptqueue = CTOP[-1].interruptqueue; \
-    interruptqueue = (interruptqueue<<4) | (interruptqueue&0x0F); \
-    if (!(interruptqueue & R6502_NMI)) \
-      interruptqueue |= R6502_NMI_ENABLE; \
-    CTOP[-1].interruptqueue = interruptqueue; \
-    return (*CTOP[-1].cycleaction)(CTOP); \
-  }
+  return (*CTOP[-1].cycleaction)(CTOP);
 
 #define R6502_CYCLE_ZPG_READ_RETURN(CTOP, ZCODE) \
   { \

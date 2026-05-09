@@ -36,7 +36,7 @@ RunImage = @.o.main @.o.beebit \
   @.o.6502cpu @.o.6502cpu!! @.o.6502opc07 @.o.6502opc07s \
   @.o.65c12cpu @.o.65c12cpu!! \
   @.o.6522sysvia @.o.6522usrvia @.o.6845crtc @.o.6850acia \
-  @.o.76489sound @.o.tube @.o.host @.o.hosts \
+  @.o.76489sound @.o.tube @.o.host @.o.hosts @.o.hoststeps \
   @.o.8271fdc @.o.1770fdc @.o.adc @.o.keyboard @.o.sheila  \
   @.o.scrmode @.o.video @.o.videoscale @.o.videoula @.o.riscos \
   @.o.riscosvid1 @.o.riscosvid2 @.o.riscosvid3 @.o.riscosvid4 \
@@ -222,6 +222,13 @@ o.hosts: h.hostmaps
 o.hosts: h.hosts
 o.hosts: h.RegNames
 o.hosts: h.SWInames
+o.hoststeps: s.hoststeps
+o.hoststeps: h.6502zmaps
+o.hoststeps: h.6502cmaps
+o.hoststeps: h.6502cpus
+o.hoststeps: h.hostmaps
+o.hoststeps: h.hosts
+o.hoststeps: h.RegNames
 o.8271fdc:	c.8271fdc
 o.8271fdc:	h.beebit
 o.8271fdc:	h.host
@@ -251,12 +258,14 @@ o.adc:	C:h.kernel
 o.adc:	h.swis
 o.keyboard:	c.keyboard
 o.keyboard:	h.beebit
+o.keyboard:	h.host
 o.keyboard:	h.hostmap
 o.keyboard:	h.6502zmap
 o.keyboard:	h.6522sysvia
 o.keyboard:	C:h.kernel
 o.keyboard:	h.riscos
-o.keyboard:	h.swis
+o.keyboard:	h.6522sysvia
+o.keyboard:	h.keyboard
 o.sheila:	c.sheila
 o.sheila:	h.beebit
 o.sheila:	h.host

@@ -9,6 +9,14 @@
 ; Email: <convertedgames@3insdale.me.uk>
 ;
 
+KEYSCANIDLEOVERFLOW EQU &800
+KEYSCANIDLEFLAG EQU &400
+KEYSCANINPUTFLAG EQU &200
+KEYSCANWRITEENABLEFLAG EQU &100
+KEYSCANIFRFLAG EQU &80
+KEYSCANCA2FLAG EQU &40
+KEYSCANCOLUMNOVERFLOW EQU &20
+
                         ^ 0
 HOSTCYCLES_MONOTONIC    # &4
 HOSTCYCLES_ODD          # &4
@@ -207,7 +215,9 @@ HOST_SPECIALWRITEOPS    # &1000
 HOST_DC                 # SIZEOF_R6502_DC_ZONE
 HOST_READ8000S          # &40
 HOST_WRITE8000S         # &40
-                        # &2B00
+                        # &B00
+HOST_STEPROUTINES       # &100
+                        # &1F00
 
 ; offsets -&1000 - -&401
 HOST_CC                 # SIZEOF_R6502_CC_ZONE
@@ -219,6 +229,8 @@ HOST_M_SHIFT            # &3
 HOST_M                  # &1
 HOST_BC                 # SIZEOF_R6502_BC_ZONE
 HOST_INTERRUPTS         # &4
+HOST_KEYCOLUMNFLAGS     # &4
+HOST_KEYSCANSTATE       # &4
 HOST_ZERIBEEPWRITEBYTE  # &4
 HOST_ZERIBEEPWORKSPACE  # &4
 HOST_SCREENSTARTADDRESS # &4
@@ -233,10 +245,11 @@ HOST_BSERIAL            # SIZEOF_HOSTBSERIAL
 HOST_BI8271             # SIZEOF_HOSTBI8271
 HOST_BW1770             # SIZEOF_HOSTBW1770
 HOST_BADC               # SIZEOF_HOSTBADC
-                        # &108
+                        # &100
 
 ; offsets -&100 - -&01
 HOST_AC                 # SIZEOF_R6502_AC_ZONE
+HOST_KEYSTATUS          # &10
 HOST_ROMWRITABLE        # &10
 HOST_ROMSEL             # &1
 HOST_ACCCON             # &1
@@ -249,7 +262,8 @@ HOST_SERIAL             # SIZEOF_HOSTASERIAL
 HOST_AI8271             # SIZEOF_HOSTAI8271
 HOST_AW1770             # SIZEOF_HOSTAW1770
 HOST_AADC               # SIZEOF_HOSTAADC
-                        # &74
+HOST_KEYBIT             # &1
+                        # &63
 
 ; offsets &00 - &FFFF
 HOST_MEMORY             # &10000

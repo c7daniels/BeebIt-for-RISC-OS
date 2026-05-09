@@ -105,7 +105,9 @@
   EXPORT |host_r6502writemfred|
   EXPORT |host_r6502writemjim|
 
-  EXPORT |host_r6502cycle|
+  EXPORT |host_r6502cycle0s1|
+  EXPORT |host_r6502cycle1|
+
   EXPORT |host_r6502readspecial|
   EXPORT |host_r6502writespecial|
 
@@ -529,20 +531,35 @@ host_r6502writejim
   LDR r0, [sp], #4
   MOV pc,lr
 
-|host_r6502cycle|
-  LDR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  SUBS r2,r2,#1
-  STR r2,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
-  [ Optimise6502Links
-  LDR r1,[r0,#:INDEX:R6502_CPU_STATE]
-  LDRNE pc, [r1], #4
-  BL hostadvancetimers
-  LDR r1,[r0,#:INDEX:R6502_CPU_STATE]
-  LDR pc, [r1], #4
-  |
-  MOVNE pc,lr
+host_r6502cycle0s1
+  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  LDR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  ADD r12,r0,#:INDEX:HOST_STEPROUTINES
+  SUBS r3,r3,#1
+  STR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  AND r3,r1,#&7C0
+  LDR r2,[r0,#:INDEX:HOST_KEYCOLUMNFLAGS]
+  LDRNE pc,[r12,r3,LSR #4]
+  STR lr,[sp, #-4]!
+  MOV lr,pc
+  LDR pc,[r12,r3,LSR #4]
+  LDR lr, [sp], #4
   B hostadvancetimers
-  ]
+
+host_r6502cycle1
+  LDR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  LDR r1,[r0,#:INDEX:HOST_KEYSCANSTATE]
+  ADD r12,r0,#:INDEX:HOST_STEPROUTINES+&80
+  SUBS r3,r3,#1
+  STR r3,[r0,#:INDEX:HOST_CYCLES+:INDEX:HOSTCYCLES_TOGO]
+  AND r3,r1,#&7C0
+  LDR r2,[r0,#:INDEX:HOST_KEYCOLUMNFLAGS]
+  LDRNE pc,[r12,r3,LSR #4]
+  STR lr,[sp, #-4]!
+  MOV lr,pc
+  LDR pc,[r12,r3,LSR #4]
+  LDR lr, [sp], #4
+  B hostadvancetimers
 
 |host_r6502readspecial|
   SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_SPECIALREADOPS
@@ -664,8 +681,10 @@ advancetimers8
   STR r3,[r0,#:INDEX:R6502_TRANSITION1]
   STR r3,[r0,#:INDEX:R6502_TRANSITION2]
   [ Optimise6502Links
-  ADR r2,hostexecute2
-  STR r2,[r0,#:INDEX:R6502_YIELDLINK]
+  ADR r2,hostexecute1
+  ADR r3,hostexecute2
+  STR r2,[r0,#:INDEX:R6502_CONTINUELINK]
+  STR r3,[r0,#:INDEX:R6502_YIELDLINK]
   ]
 hostexecute1
   [ Optimise6502Links

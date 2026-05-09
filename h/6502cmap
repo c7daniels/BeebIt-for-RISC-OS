@@ -60,12 +60,13 @@ typedef struct R6502CPUMAP
   const R6502OP* execute_cpu_state;
   uintptr_t transition1, transition2;
   R6502PERIPHERALOP resetstartingaction,resetcontinuingaction;
-  R6502PERIPHERALOP cycleaction;
+  R6502PERIPHERALOP stretchcycleaction,cycleaction;
   R6502READSPECIALOP readspecialaction;
   R6502WRITESPECIALOP writespecialaction;
+  uintptr_t continuelink; /*storage for the Optimise6502Links optimisation*/
   uintptr_t yieldlink; /*storage for the Optimise6502Links optimisation*/
   uintptr_t lbreak;
-  uintptr_t BC_unused[19];
+  uintptr_t BC_unused[17];
   R6502_BP_ZONE BP;
 
   // AArch32 offsets -&100 - -&01
