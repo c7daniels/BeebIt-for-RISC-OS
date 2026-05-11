@@ -217,7 +217,8 @@ HOST_DC                 # SIZEOF_R6502_DC_ZONE
 HOST_TOUCH8000S         # &40
                         # &240
 HOST_STEPROUTINES       # &D00
-                        # &1300
+                        # &F00
+HOST_CYCLESCRATCH       # &400
 
 ; offsets -&1000 - -&401
 HOST_CC                 # SIZEOF_R6502_CC_ZONE

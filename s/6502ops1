@@ -193,6 +193,10 @@
   EXPORT |r6502opcodecycles1split|
   EXPORT |r6502opcodecycles2split|
 
+  EXPORT |r6502opcc0|
+  EXPORT |r6502opcc1|
+  EXPORT |r6502opcc2|
+  EXPORT |r6502opccerr|
 
   MACRO
   ASLA_ACTION
@@ -2558,6 +2562,114 @@ r6502opcodecycles2split
   DCD r6502opcodecycle5s2afteradvancetimers
   DCD r6502opcodecycle6s2afteradvancetimers
   DCD r6502opcodecycle7s2afteradvancetimers
+
+  MACRO
+  CYCLE_COMPARE_STORE
+  STMIA r1!,{r2,r5,r7}
+  LDRB r3,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IER]
+  LDRB r2,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IFR]
+  LDRB r7,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PCR]
+  LDRB r5,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  ORR r2,r2,r3,LSL #16
+  ORR r5,r5,r7,LSL #16
+  LDR r3,[r0,#:INDEX:HOST_INTERRUPTS]
+  STMIA r1,{r2,r3,r5}
+  SUB r1,r1,#12
+  MEND
+
+  MACRO
+  CYCLE_COMPARE_LOAD
+  ADD r1,r1,#12
+  LDMIA r1,{r2,r3,r5}
+  STRB r2,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_IFR]
+  STR r3,[r0,#:INDEX:HOST_INTERRUPTS]
+  STRB r5,[r0,#:INDEX:HOST_ASYSVIA+:INDEX:HOSTAVIA_PORTA]
+  SUB r1,r1,#12
+  LDMIA r1,{r2,r5,r7}
+  MEND
+
+r6502opcc0
+  BCC r6502opcodecycles0split
+  B r6502opcodecyclecompare
+
+r6502opcc1
+  BCC r6502opcodecycles1split
+  B r6502opcodecyclecompare
+
+r6502opcc2
+  BCC r6502opcodecycles2split
+r6502opcodecyclecompare
+  STMFD sp!,{r4,r12,lr}
+  SUB r4,r12,r0
+  ADD r4,r4,#&80-:INDEX:HOST_STEPROUTINES
+  ADD r1,r0,#:INDEX:HOST_CYCLESCRATCH
+  CYCLE_COMPARE_STORE
+  CYCLE_COMPARE_LOAD
+
+0
+  SUBS r4,r4,#&180
+  ADDCC r4,r4,#&180
+  BCC %F1
+  ADD r12,r0,#:INDEX:HOST_STEPROUTINES+&100
+  ADD r1,r0,#:INDEX:HOST_CYCLESCRATCH
+  AND r3,r7,#&7C0
+  LDR r2,[r1]
+  MOV lr,pc
+  LDR pc,[r12,r3,LSR #4]
+  B %B0
+1
+  SUBS r4,r4,#&80
+  ADDCC r4,r4,#&80
+  BCC %F2
+  ADD r12,r0,#:INDEX:HOST_STEPROUTINES
+  ADD r1,r0,#:INDEX:HOST_CYCLESCRATCH
+  AND r3,r7,#&7C0
+  LDR r2,[r1]
+  MOV lr,pc
+  LDR pc,[r12,r3,LSR #4]
+  B %B1
+2
+
+  ADD r1,r0,#:INDEX:HOST_CYCLESCRATCH
+  ADD r1,r1,#32
+  CYCLE_COMPARE_STORE
+  SUB r1,r1,#32
+  CYCLE_COMPARE_LOAD
+
+  LDR r12,[sp, #4]
+  ADD r1,r0,#:INDEX:HOST_CYCLESCRATCH
+  AND r3,r7,#&7C0
+  LDR r2,[r1]
+  MOV lr,pc
+  LDR pc,[r12,r3,LSR #4]
+
+  ADD r1,r0,#:INDEX:HOST_CYCLESCRATCH
+  ADD r1,r1,#64
+  CYCLE_COMPARE_STORE
+
+  ADD r1,r0,#:INDEX:HOST_CYCLESCRATCH
+  MOV r4,#5
+3
+  ADD r1,r1,#4
+  LDR r3,[r1,#32]
+  LDR r12,[r1,#64]
+  CMP r3,r12
+  BNE r6502opccerr
+  SUBS r4,r4,#1
+  BNE %B3
+
+r6502opccexit
+  ADD r1,r0,#:INDEX:HOST_CYCLESCRATCH
+  ADD r1,r1,#64
+  CYCLE_COMPARE_LOAD
+
+  LDMFD sp!,{r4,r12,pc}
+
+r6502opccerr
+  LDR r4,[sp, #4]
+  SUB r4,r4,r0
+  SUB r4,r4,#:INDEX:HOST_STEPROUTINES
+  B r6502opccexit
 
 
 ;Data Area

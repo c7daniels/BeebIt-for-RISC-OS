@@ -33,6 +33,587 @@
 
   EXPORT hoststeps
 
+  EXPORT host0s1_000
+  EXPORT host0s1_040
+  EXPORT host0s1_080
+  EXPORT host0s1_0C0
+  EXPORT host0s1_300
+  EXPORT host0s1_340
+  EXPORT host0s1_380
+  EXPORT host0s1_3C0
+  EXPORT host0s1_400
+  EXPORT host0s1_500
+  EXPORT host0s2_000
+  EXPORT host0s2_040
+  EXPORT host0s2_080
+  EXPORT host0s2_0C0
+  EXPORT host0s2_100
+  EXPORT host0s2_140
+  EXPORT host0s2_180
+  EXPORT host0s2_1C0
+  EXPORT host0s2_300
+  EXPORT host0s2_340
+  EXPORT host0s2_380
+  EXPORT host0s2_3C0
+  EXPORT host0s2_400
+  EXPORT host0s2_440
+  EXPORT host0s2_480
+  EXPORT host0s2_4C0
+  EXPORT host0s2_500
+  EXPORT host0s2_540
+  EXPORT host0s2_580
+  EXPORT host0s2_5C0
+  EXPORT host0s2_700
+  EXPORT host0s2_740
+  EXPORT host0s2_780
+  EXPORT host0s2_7C0
+  EXPORT host1s0_000
+  EXPORT host1s0_040
+  EXPORT host1s0_080
+  EXPORT host1s0_0C0
+  EXPORT host1s0_300
+  EXPORT host1s0_340
+  EXPORT host1s0_380
+  EXPORT host1s0_3C0
+  EXPORT host1s0_400
+  EXPORT host1s0_500
+  EXPORT host1s1_000
+  EXPORT host1s1_040
+  EXPORT host1s1_080
+  EXPORT host1s1_0C0
+  EXPORT host1s1_100
+  EXPORT host1s1_140
+  EXPORT host1s1_180
+  EXPORT host1s1_1C0
+  EXPORT host1s1_300
+  EXPORT host1s1_340
+  EXPORT host1s1_380
+  EXPORT host1s1_3C0
+  EXPORT host1s1_400
+  EXPORT host1s1_440
+  EXPORT host1s1_480
+  EXPORT host1s1_4C0
+  EXPORT host1s1_500
+  EXPORT host1s1_540
+  EXPORT host1s1_580
+  EXPORT host1s1_5C0
+  EXPORT host1s1_700
+  EXPORT host1s1_740
+  EXPORT host1s1_780
+  EXPORT host1s1_7C0
+  EXPORT host1s2_000
+  EXPORT host1s2_040
+  EXPORT host1s2_080
+  EXPORT host1s2_0C0
+  EXPORT host1s2_100
+  EXPORT host1s2_140
+  EXPORT host1s2_300
+  EXPORT host1s2_340
+  EXPORT host1s2_380
+  EXPORT host1s2_3C0
+  EXPORT host1s2_400
+  EXPORT host1s2_440
+  EXPORT host1s2_480
+  EXPORT host1s2_4C0
+  EXPORT host1s2_500
+  EXPORT host1s2_540
+  EXPORT host1s2_580
+  EXPORT host1s2_5C0
+  EXPORT host1s2_700
+  EXPORT host1s2_740
+  EXPORT host1s2_780
+  EXPORT host1s2_7C0
+  EXPORT host2s0_000
+  EXPORT host2s0_040
+  EXPORT host2s0_080
+  EXPORT host2s0_0C0
+  EXPORT host2s0_100
+  EXPORT host2s0_140
+  EXPORT host2s0_180
+  EXPORT host2s0_1C0
+  EXPORT host2s0_300
+  EXPORT host2s0_340
+  EXPORT host2s0_380
+  EXPORT host2s0_3C0
+  EXPORT host2s0_400
+  EXPORT host2s0_440
+  EXPORT host2s0_480
+  EXPORT host2s0_4C0
+  EXPORT host2s0_500
+  EXPORT host2s0_540
+  EXPORT host2s0_580
+  EXPORT host2s0_5C0
+  EXPORT host2s0_700
+  EXPORT host2s0_740
+  EXPORT host2s0_780
+  EXPORT host2s0_7C0
+  EXPORT host2s1_000
+  EXPORT host2s1_040
+  EXPORT host2s1_080
+  EXPORT host2s1_0C0
+  EXPORT host2s1_100
+  EXPORT host2s1_140
+  EXPORT host2s1_180
+  EXPORT host2s1_1C0
+  EXPORT host2s1_300
+  EXPORT host2s1_340
+  EXPORT host2s1_380
+  EXPORT host2s1_3C0
+  EXPORT host2s1_400
+  EXPORT host2s1_440
+  EXPORT host2s1_480
+  EXPORT host2s1_4C0
+  EXPORT host2s1_500
+  EXPORT host2s1_540
+  EXPORT host2s1_580
+  EXPORT host2s1_5C0
+  EXPORT host2s1_700
+  EXPORT host2s1_740
+  EXPORT host2s1_780
+  EXPORT host2s1_7C0
+  EXPORT host2s2_000
+  EXPORT host2s2_040
+  EXPORT host2s2_080
+  EXPORT host2s2_0C0
+  EXPORT host2s2_100
+  EXPORT host2s2_140
+  EXPORT host2s2_180
+  EXPORT host2s2_1C0
+  EXPORT host2s2_300
+  EXPORT host2s2_340
+  EXPORT host2s2_380
+  EXPORT host2s2_3C0
+  EXPORT host2s2_400
+  EXPORT host2s2_440
+  EXPORT host2s2_480
+  EXPORT host2s2_4C0
+  EXPORT host2s2_500
+  EXPORT host2s2_540
+  EXPORT host2s2_700
+  EXPORT host2s2_740
+  EXPORT host2s2_780
+  EXPORT host2s2_7C0
+  EXPORT host3s0_000
+  EXPORT host3s0_040
+  EXPORT host3s0_080
+  EXPORT host3s0_0C0
+  EXPORT host3s0_100
+  EXPORT host3s0_140
+  EXPORT host3s0_180
+  EXPORT host3s0_1C0
+  EXPORT host3s0_300
+  EXPORT host3s0_340
+  EXPORT host3s0_380
+  EXPORT host3s0_3C0
+  EXPORT host3s0_400
+  EXPORT host3s0_440
+  EXPORT host3s0_480
+  EXPORT host3s0_4C0
+  EXPORT host3s0_500
+  EXPORT host3s0_540
+  EXPORT host3s0_580
+  EXPORT host3s0_5C0
+  EXPORT host3s0_700
+  EXPORT host3s0_740
+  EXPORT host3s0_780
+  EXPORT host3s0_7C0
+  EXPORT host3s1_000
+  EXPORT host3s1_040
+  EXPORT host3s1_080
+  EXPORT host3s1_0C0
+  EXPORT host3s1_100
+  EXPORT host3s1_140
+  EXPORT host3s1_180
+  EXPORT host3s1_1C0
+  EXPORT host3s1_300
+  EXPORT host3s1_340
+  EXPORT host3s1_380
+  EXPORT host3s1_3C0
+  EXPORT host3s1_400
+  EXPORT host3s1_440
+  EXPORT host3s1_480
+  EXPORT host3s1_4C0
+  EXPORT host3s1_500
+  EXPORT host3s1_540
+  EXPORT host3s1_580
+  EXPORT host3s1_5C0
+  EXPORT host3s1_700
+  EXPORT host3s1_740
+  EXPORT host3s1_780
+  EXPORT host3s1_7C0
+  EXPORT host3s2_000
+  EXPORT host3s2_040
+  EXPORT host3s2_080
+  EXPORT host3s2_0C0
+  EXPORT host3s2_100
+  EXPORT host3s2_140
+  EXPORT host3s2_300
+  EXPORT host3s2_340
+  EXPORT host3s2_380
+  EXPORT host3s2_3C0
+  EXPORT host3s2_400
+  EXPORT host3s2_440
+  EXPORT host3s2_480
+  EXPORT host3s2_4C0
+  EXPORT host3s2_500
+  EXPORT host3s2_540
+  EXPORT host3s2_580
+  EXPORT host3s2_5C0
+  EXPORT host3s2_700
+  EXPORT host3s2_740
+  EXPORT host3s2_780
+  EXPORT host3s2_7C0
+  EXPORT host4s0_000
+  EXPORT host4s0_040
+  EXPORT host4s0_080
+  EXPORT host4s0_0C0
+  EXPORT host4s0_100
+  EXPORT host4s0_140
+  EXPORT host4s0_180
+  EXPORT host4s0_1C0
+  EXPORT host4s0_300
+  EXPORT host4s0_340
+  EXPORT host4s0_380
+  EXPORT host4s0_3C0
+  EXPORT host4s0_400
+  EXPORT host4s0_440
+  EXPORT host4s0_480
+  EXPORT host4s0_4C0
+  EXPORT host4s0_500
+  EXPORT host4s0_540
+  EXPORT host4s0_580
+  EXPORT host4s0_5C0
+  EXPORT host4s0_700
+  EXPORT host4s0_740
+  EXPORT host4s0_780
+  EXPORT host4s0_7C0
+  EXPORT host4s1_000
+  EXPORT host4s1_040
+  EXPORT host4s1_080
+  EXPORT host4s1_0C0
+  EXPORT host4s1_100
+  EXPORT host4s1_140
+  EXPORT host4s1_180
+  EXPORT host4s1_1C0
+  EXPORT host4s1_300
+  EXPORT host4s1_340
+  EXPORT host4s1_380
+  EXPORT host4s1_3C0
+  EXPORT host4s1_400
+  EXPORT host4s1_440
+  EXPORT host4s1_480
+  EXPORT host4s1_4C0
+  EXPORT host4s1_500
+  EXPORT host4s1_540
+  EXPORT host4s1_580
+  EXPORT host4s1_5C0
+  EXPORT host4s1_700
+  EXPORT host4s1_740
+  EXPORT host4s1_780
+  EXPORT host4s1_7C0
+  EXPORT host4s2_000
+  EXPORT host4s2_040
+  EXPORT host4s2_080
+  EXPORT host4s2_0C0
+  EXPORT host4s2_100
+  EXPORT host4s2_140
+  EXPORT host4s2_180
+  EXPORT host4s2_1C0
+  EXPORT host4s2_300
+  EXPORT host4s2_340
+  EXPORT host4s2_380
+  EXPORT host4s2_3C0
+  EXPORT host4s2_400
+  EXPORT host4s2_440
+  EXPORT host4s2_480
+  EXPORT host4s2_4C0
+  EXPORT host4s2_500
+  EXPORT host4s2_540
+  EXPORT host4s2_700
+  EXPORT host4s2_740
+  EXPORT host4s2_780
+  EXPORT host4s2_7C0
+  EXPORT host5s0_000
+  EXPORT host5s0_040
+  EXPORT host5s0_080
+  EXPORT host5s0_0C0
+  EXPORT host5s0_100
+  EXPORT host5s0_140
+  EXPORT host5s0_180
+  EXPORT host5s0_1C0
+  EXPORT host5s0_300
+  EXPORT host5s0_340
+  EXPORT host5s0_380
+  EXPORT host5s0_3C0
+  EXPORT host5s0_400
+  EXPORT host5s0_440
+  EXPORT host5s0_480
+  EXPORT host5s0_4C0
+  EXPORT host5s0_500
+  EXPORT host5s0_540
+  EXPORT host5s0_580
+  EXPORT host5s0_5C0
+  EXPORT host5s0_700
+  EXPORT host5s0_740
+  EXPORT host5s0_780
+  EXPORT host5s0_7C0
+  EXPORT host5s1_000
+  EXPORT host5s1_040
+  EXPORT host5s1_080
+  EXPORT host5s1_0C0
+  EXPORT host5s1_100
+  EXPORT host5s1_140
+  EXPORT host5s1_180
+  EXPORT host5s1_1C0
+  EXPORT host5s1_300
+  EXPORT host5s1_340
+  EXPORT host5s1_380
+  EXPORT host5s1_3C0
+  EXPORT host5s1_400
+  EXPORT host5s1_440
+  EXPORT host5s1_480
+  EXPORT host5s1_4C0
+  EXPORT host5s1_500
+  EXPORT host5s1_540
+  EXPORT host5s1_580
+  EXPORT host5s1_5C0
+  EXPORT host5s1_700
+  EXPORT host5s1_740
+  EXPORT host5s1_780
+  EXPORT host5s1_7C0
+  EXPORT host5s2_000
+  EXPORT host5s2_040
+  EXPORT host5s2_080
+  EXPORT host5s2_0C0
+  EXPORT host5s2_100
+  EXPORT host5s2_140
+  EXPORT host5s2_300
+  EXPORT host5s2_340
+  EXPORT host5s2_380
+  EXPORT host5s2_3C0
+  EXPORT host5s2_400
+  EXPORT host5s2_440
+  EXPORT host5s2_480
+  EXPORT host5s2_4C0
+  EXPORT host5s2_500
+  EXPORT host5s2_540
+  EXPORT host5s2_580
+  EXPORT host5s2_5C0
+  EXPORT host5s2_700
+  EXPORT host5s2_740
+  EXPORT host5s2_780
+  EXPORT host5s2_7C0
+  EXPORT host6s0_000
+  EXPORT host6s0_040
+  EXPORT host6s0_080
+  EXPORT host6s0_0C0
+  EXPORT host6s0_100
+  EXPORT host6s0_140
+  EXPORT host6s0_180
+  EXPORT host6s0_1C0
+  EXPORT host6s0_300
+  EXPORT host6s0_340
+  EXPORT host6s0_380
+  EXPORT host6s0_3C0
+  EXPORT host6s0_400
+  EXPORT host6s0_440
+  EXPORT host6s0_480
+  EXPORT host6s0_4C0
+  EXPORT host6s0_500
+  EXPORT host6s0_540
+  EXPORT host6s0_580
+  EXPORT host6s0_5C0
+  EXPORT host6s0_700
+  EXPORT host6s0_740
+  EXPORT host6s0_780
+  EXPORT host6s0_7C0
+  EXPORT host6s1_000
+  EXPORT host6s1_040
+  EXPORT host6s1_080
+  EXPORT host6s1_0C0
+  EXPORT host6s1_100
+  EXPORT host6s1_140
+  EXPORT host6s1_180
+  EXPORT host6s1_1C0
+  EXPORT host6s1_300
+  EXPORT host6s1_340
+  EXPORT host6s1_380
+  EXPORT host6s1_3C0
+  EXPORT host6s1_400
+  EXPORT host6s1_440
+  EXPORT host6s1_480
+  EXPORT host6s1_4C0
+  EXPORT host6s1_500
+  EXPORT host6s1_540
+  EXPORT host6s1_580
+  EXPORT host6s1_5C0
+  EXPORT host6s1_700
+  EXPORT host6s1_740
+  EXPORT host6s1_780
+  EXPORT host6s1_7C0
+  EXPORT host6s2_000
+  EXPORT host6s2_040
+  EXPORT host6s2_080
+  EXPORT host6s2_0C0
+  EXPORT host6s2_100
+  EXPORT host6s2_140
+  EXPORT host6s2_180
+  EXPORT host6s2_1C0
+  EXPORT host6s2_300
+  EXPORT host6s2_340
+  EXPORT host6s2_380
+  EXPORT host6s2_3C0
+  EXPORT host6s2_400
+  EXPORT host6s2_440
+  EXPORT host6s2_480
+  EXPORT host6s2_4C0
+  EXPORT host6s2_500
+  EXPORT host6s2_540
+  EXPORT host6s2_700
+  EXPORT host6s2_740
+  EXPORT host6s2_780
+  EXPORT host6s2_7C0
+  EXPORT host7s0_000
+  EXPORT host7s0_040
+  EXPORT host7s0_080
+  EXPORT host7s0_0C0
+  EXPORT host7s0_100
+  EXPORT host7s0_140
+  EXPORT host7s0_180
+  EXPORT host7s0_1C0
+  EXPORT host7s0_300
+  EXPORT host7s0_340
+  EXPORT host7s0_380
+  EXPORT host7s0_3C0
+  EXPORT host7s0_400
+  EXPORT host7s0_440
+  EXPORT host7s0_480
+  EXPORT host7s0_4C0
+  EXPORT host7s0_500
+  EXPORT host7s0_540
+  EXPORT host7s0_580
+  EXPORT host7s0_5C0
+  EXPORT host7s0_700
+  EXPORT host7s0_740
+  EXPORT host7s0_780
+  EXPORT host7s0_7C0
+  EXPORT host7s1_000
+  EXPORT host7s1_040
+  EXPORT host7s1_080
+  EXPORT host7s1_0C0
+  EXPORT host7s1_100
+  EXPORT host7s1_140
+  EXPORT host7s1_180
+  EXPORT host7s1_1C0
+  EXPORT host7s1_300
+  EXPORT host7s1_340
+  EXPORT host7s1_380
+  EXPORT host7s1_3C0
+  EXPORT host7s1_400
+  EXPORT host7s1_440
+  EXPORT host7s1_480
+  EXPORT host7s1_4C0
+  EXPORT host7s1_500
+  EXPORT host7s1_540
+  EXPORT host7s1_580
+  EXPORT host7s1_5C0
+  EXPORT host7s1_700
+  EXPORT host7s1_740
+  EXPORT host7s1_780
+  EXPORT host7s1_7C0
+  EXPORT host7s2_000
+  EXPORT host7s2_040
+  EXPORT host7s2_080
+  EXPORT host7s2_0C0
+  EXPORT host7s2_100
+  EXPORT host7s2_140
+  EXPORT host7s2_300
+  EXPORT host7s2_340
+  EXPORT host7s2_380
+  EXPORT host7s2_3C0
+  EXPORT host7s2_400
+  EXPORT host7s2_440
+  EXPORT host7s2_480
+  EXPORT host7s2_4C0
+  EXPORT host7s2_500
+  EXPORT host7s2_540
+  EXPORT host7s2_580
+  EXPORT host7s2_5C0
+  EXPORT host7s2_700
+  EXPORT host7s2_740
+  EXPORT host7s2_780
+  EXPORT host7s2_7C0
+  EXPORT host8s0_000
+  EXPORT host8s0_040
+  EXPORT host8s0_080
+  EXPORT host8s0_0C0
+  EXPORT host8s0_100
+  EXPORT host8s0_140
+  EXPORT host8s0_180
+  EXPORT host8s0_1C0
+  EXPORT host8s0_300
+  EXPORT host8s0_340
+  EXPORT host8s0_380
+  EXPORT host8s0_3C0
+  EXPORT host8s0_400
+  EXPORT host8s0_440
+  EXPORT host8s0_480
+  EXPORT host8s0_4C0
+  EXPORT host8s0_500
+  EXPORT host8s0_540
+  EXPORT host8s0_580
+  EXPORT host8s0_5C0
+  EXPORT host8s0_700
+  EXPORT host8s0_740
+  EXPORT host8s0_780
+  EXPORT host8s0_7C0
+  EXPORT host8s1_000
+  EXPORT host8s1_040
+  EXPORT host8s1_080
+  EXPORT host8s1_0C0
+  EXPORT host8s1_100
+  EXPORT host8s1_140
+  EXPORT host8s1_180
+  EXPORT host8s1_1C0
+  EXPORT host8s1_300
+  EXPORT host8s1_340
+  EXPORT host8s1_380
+  EXPORT host8s1_3C0
+  EXPORT host8s1_400
+  EXPORT host8s1_440
+  EXPORT host8s1_480
+  EXPORT host8s1_4C0
+  EXPORT host8s1_500
+  EXPORT host8s1_540
+  EXPORT host8s1_580
+  EXPORT host8s1_5C0
+  EXPORT host8s1_700
+  EXPORT host8s1_740
+  EXPORT host8s1_780
+  EXPORT host8s1_7C0
+  EXPORT host8s2_000
+  EXPORT host8s2_040
+  EXPORT host8s2_080
+  EXPORT host8s2_0C0
+  EXPORT host8s2_100
+  EXPORT host8s2_140
+  EXPORT host8s2_180
+  EXPORT host8s2_1C0
+  EXPORT host8s2_300
+  EXPORT host8s2_340
+  EXPORT host8s2_380
+  EXPORT host8s2_3C0
+  EXPORT host8s2_400
+  EXPORT host8s2_440
+  EXPORT host8s2_480
+  EXPORT host8s2_4C0
+  EXPORT host8s2_500
+  EXPORT host8s2_540
+  EXPORT host8s2_700
+  EXPORT host8s2_740
+  EXPORT host8s2_780
+  EXPORT host8s2_7C0
+
   MACRO
   LOAD_KEY
   ADD r3,r0,r3,LSR #1
@@ -124,6 +705,7 @@
   MEND
 
 host0s1_000
+  ;    [[[0, 0, 1, 0, 'F+']], [1, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   ANDS r2,r2,#&40000000
@@ -142,6 +724,7 @@ host0s1_000
   SET_IFR_RETURN
 
 host0s1_040
+  ;    [[[0, 0, 1, 0, 'F-']], [1, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   ANDS r2,r2,#&40000000
@@ -160,6 +743,7 @@ host0s1_040
   SET_IFR_RETURN
 
 host0s1_080
+  ;    [[[0, 0, 1, 0, '+']], [1, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   TST r2,#&40000000
@@ -169,6 +753,7 @@ host0s1_080
   MOV pc,lr
 
 host0s1_0C0
+  ;    [[[0, 0, 1, 0, '-']], [1, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   TST r2,#&40000000
@@ -178,6 +763,7 @@ host0s1_0C0
   MOV pc,lr
 
 host0s1_300
+  ;    [[[0, 0, 1, 0, 'NF+']], [1, 0], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -203,6 +789,7 @@ host0s1_300
   SET_IFR_RETURN
 
 host0s1_340
+  ;    [[[0, 0, 1, 0, 'NF-']], [1, 0], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -228,6 +815,7 @@ host0s1_340
   SET_IFR_RETURN
 
 host0s1_380
+  ;    [[[0, 0, 1, 0, 'N+']], [1, 0], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -242,6 +830,7 @@ host0s1_380
   MOV pc,lr
 
 host0s1_3C0
+  ;    [[[0, 0, 1, 0, 'N-']], [1, 0], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -256,16 +845,19 @@ host0s1_3C0
   MOV pc,lr
 
 host0s1_400
+  ;    [[], [1, 0], 1]
   ADD r7,r7,#&001
   BIC r7,r7,#&420
   MOV pc,lr
 
 host0s1_500
+  ;    [[], [-1, 0], 1]
   ADD r7,r7,#&01F
   BIC r7,r7,#&420
   MOV pc,lr
 
 host0s2_000
+  ;    [[[0, 1, 1, 0, 'F+']], [2, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   ANDS r2,r2,#&40000000
@@ -287,6 +879,7 @@ host0s2_000
   B host0s1_400
 
 host0s2_040
+  ;    [[[0, 1, 1, 0, 'F-']], [2, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   ANDS r2,r2,#&40000000
@@ -308,6 +901,7 @@ host0s2_040
   B host0s1_400
 
 host0s2_080
+  ;    [[[0, 1, 1, 0, '+']], [2, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   TST r2,#&40000000
@@ -317,6 +911,7 @@ host0s2_080
   MOV pc,lr
 
 host0s2_0C0
+  ;    [[[0, 1, 1, 0, '-']], [2, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   TST r2,#&40000000
@@ -326,6 +921,7 @@ host0s2_0C0
   MOV pc,lr
 
 host0s2_100
+  ;    [[[0, 1, 1, 0, 'F+']], [0, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   ANDS r2,r2,#&40000000
@@ -345,6 +941,7 @@ host0s2_100
   B host0s1_500
 
 host0s2_140
+  ;    [[[0, 1, 1, 0, 'F-']], [0, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   ANDS r2,r2,#&40000000
@@ -364,6 +961,7 @@ host0s2_140
   B host0s1_500
 
 host0s2_180
+  ;    [[[0, 1, 1, 0, '+']], [0, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   TST r2,#&40000000
@@ -371,6 +969,7 @@ host0s2_180
   MOV pc,lr
 
 host0s2_1C0
+  ;    [[[0, 1, 1, 0, '-']], [0, 0], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   TST r2,#&40000000
@@ -378,6 +977,7 @@ host0s2_1C0
   MOV pc,lr
 
 host0s2_300
+  ;    [[[0, 1, 1, 0, 'NF+']], [0, 0], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -404,6 +1004,7 @@ host0s2_300
   B host0s1_500
 
 host0s2_340
+  ;    [[[0, 1, 1, 0, 'NF-']], [0, 0], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -430,6 +1031,7 @@ host0s2_340
   B host0s1_500
 
 host0s2_380
+  ;    [[[0, 1, 1, 0, 'N+']], [0, 0], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -442,6 +1044,7 @@ host0s2_380
   MOV pc,lr
 
 host0s2_3C0
+  ;    [[[0, 1, 1, 0, 'N-']], [0, 0], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -454,6 +1057,7 @@ host0s2_3C0
   MOV pc,lr
 
 host0s2_400
+  ;    [[[0, 0, 2, 0, 'F+']], [2, 0], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   ANDS r2,r2,#&80000000
@@ -472,6 +1076,7 @@ host0s2_400
   SET_IFR_RETURN
 
 host0s2_440
+  ;    [[[0, 0, 2, 0, 'F-']], [2, 0], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   ANDS r2,r2,#&80000000
@@ -489,6 +1094,7 @@ host0s2_440
   SET_IFR_RETURN
 
 host0s2_480
+  ;    [[[0, 0, 2, 0, '+']], [2, 0], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   TST r2,#&80000000
@@ -498,6 +1104,7 @@ host0s2_480
   MOV pc,lr
 
 host0s2_4C0
+  ;    [[[0, 0, 2, 0, '-']], [2, 0], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   TST r2,#&80000000
@@ -507,6 +1114,7 @@ host0s2_4C0
   MOV pc,lr
 
 host0s2_500
+  ;    [[[0, 0, 0, 0, 'F+']], [0, 0], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   ANDS r2,r2,#&20000000
@@ -522,6 +1130,7 @@ host0s2_500
   SET_IFR_RETURN
 
 host0s2_540
+  ;    [[[0, 0, 0, 0, 'F-']], [0, 0], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   ANDS r2,r2,#&20000000
@@ -536,6 +1145,7 @@ host0s2_540
   SET_IFR_RETURN
 
 host0s2_580
+  ;    [[[0, 0, 0, 0, '+']], [0, 0], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   TST r2,#&20000000
@@ -543,6 +1153,7 @@ host0s2_580
   MOV pc,lr
 
 host0s2_5C0
+  ;    [[[0, 0, 0, 0, '-']], [0, 0], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   TST r2,#&20000000
@@ -550,6 +1161,7 @@ host0s2_5C0
   MOV pc,lr
 
 host0s2_700
+  ;    [[[0, 0, 0, 0, 'NF+']], [0, 0], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -573,6 +1185,7 @@ host0s2_700
   SET_IFR_RETURN
 
 host0s2_740
+  ;    [[[0, 0, 0, 0, 'NF-']], [0, 0], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -595,6 +1208,7 @@ host0s2_740
   SET_IFR_RETURN
 
 host0s2_780
+  ;    [[[0, 0, 0, 0, 'N+']], [0, 0], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -608,6 +1222,7 @@ host0s2_780
   MOV pc,lr
 
 host0s2_7C0
+  ;    [[[0, 0, 0, 0, 'N-']], [0, 0], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -621,6 +1236,7 @@ host0s2_7C0
   MOV pc,lr
 
 host1s0_000
+  ;    [[[0, 0, 1, 1, 'F+']], [1, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -642,6 +1258,7 @@ host1s0_000
   SET_IFR_RETURN
 
 host1s0_040
+  ;    [[[0, 0, 1, 1, 'F-']], [1, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -663,6 +1280,7 @@ host1s0_040
   SET_IFR_RETURN
 
 host1s0_080
+  ;    [[[0, 0, 1, 1, '+']], [1, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -674,6 +1292,7 @@ host1s0_080
   MOV pc,lr
 
 host1s0_0C0
+  ;    [[[0, 0, 1, 1, '-']], [1, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -685,6 +1304,7 @@ host1s0_0C0
   MOV pc,lr
 
 host1s0_300
+  ;    [[[0, 0, 1, 1, 'NF+']], [1, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -714,6 +1334,7 @@ host1s0_300
   SET_IFR_RETURN
 
 host1s0_340
+  ;    [[[0, 0, 1, 1, 'NF-']], [1, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -743,6 +1364,7 @@ host1s0_340
   SET_IFR_RETURN
 
 host1s0_380
+  ;    [[[0, 0, 1, 1, 'N+']], [1, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -759,6 +1381,7 @@ host1s0_380
   MOV pc,lr
 
 host1s0_3C0
+  ;    [[[0, 0, 1, 1, 'N-']], [1, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -775,6 +1398,7 @@ host1s0_3C0
   MOV pc,lr
 
 host1s0_400
+  ;    [[], [1, 1], 1]
   SHIFT_INTERRUPTQUEUE_START
   ADD r7,r7,#&001
   BIC r7,r7,#&420
@@ -782,6 +1406,7 @@ host1s0_400
   MOV pc,lr
 
 host1s0_500
+  ;    [[], [-1, 1], 1]
   SHIFT_INTERRUPTQUEUE_START
   ADD r7,r7,#&01F
   BIC r7,r7,#&420
@@ -789,6 +1414,7 @@ host1s0_500
   MOV pc,lr
 
 host1s1_000
+  ;    [[[0, 1, 1, 1, 'F+']], [2, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -813,6 +1439,7 @@ host1s1_000
   B host0s1_400
 
 host1s1_040
+  ;    [[[0, 1, 1, 1, 'F-']], [2, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -837,6 +1464,7 @@ host1s1_040
   B host0s1_400
 
 host1s1_080
+  ;    [[[0, 1, 1, 1, '+']], [2, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -848,6 +1476,7 @@ host1s1_080
   MOV pc,lr
 
 host1s1_0C0
+  ;    [[[0, 1, 1, 1, '-']], [2, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -859,6 +1488,7 @@ host1s1_0C0
   MOV pc,lr
 
 host1s1_100
+  ;    [[[0, 1, 1, 1, 'F+']], [0, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -881,6 +1511,7 @@ host1s1_100
   B host0s1_500
 
 host1s1_140
+  ;    [[[0, 1, 1, 1, 'F-']], [0, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -903,6 +1534,7 @@ host1s1_140
   B host0s1_500
 
 host1s1_180
+  ;    [[[0, 1, 1, 1, '+']], [0, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -912,6 +1544,7 @@ host1s1_180
   MOV pc,lr
 
 host1s1_1C0
+  ;    [[[0, 1, 1, 1, '-']], [0, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -921,6 +1554,7 @@ host1s1_1C0
   MOV pc,lr
 
 host1s1_300
+  ;    [[[0, 1, 1, 1, 'NF+']], [0, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -951,6 +1585,7 @@ host1s1_300
   B host0s1_500
 
 host1s1_340
+  ;    [[[0, 1, 1, 1, 'NF-']], [0, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -981,6 +1616,7 @@ host1s1_340
   B host0s1_500
 
 host1s1_380
+  ;    [[[0, 1, 1, 1, 'N+']], [0, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -995,6 +1631,7 @@ host1s1_380
   MOV pc,lr
 
 host1s1_3C0
+  ;    [[[0, 1, 1, 1, 'N-']], [0, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -1009,6 +1646,7 @@ host1s1_3C0
   MOV pc,lr
 
 host1s1_400
+  ;    [[[0, 0, 2, 1, 'F+']], [2, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1030,6 +1668,7 @@ host1s1_400
   SET_IFR_RETURN
 
 host1s1_440
+  ;    [[[0, 0, 2, 1, 'F-']], [2, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1050,6 +1689,7 @@ host1s1_440
   SET_IFR_RETURN
 
 host1s1_480
+  ;    [[[0, 0, 2, 1, '+']], [2, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1061,6 +1701,7 @@ host1s1_480
   MOV pc,lr
 
 host1s1_4C0
+  ;    [[[0, 0, 2, 1, '-']], [2, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1072,6 +1713,7 @@ host1s1_4C0
   MOV pc,lr
 
 host1s1_500
+  ;    [[[0, 0, 0, 1, 'F+']], [0, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1090,6 +1732,7 @@ host1s1_500
   SET_IFR_RETURN
 
 host1s1_540
+  ;    [[[0, 0, 0, 1, 'F-']], [0, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1107,6 +1750,7 @@ host1s1_540
   SET_IFR_RETURN
 
 host1s1_580
+  ;    [[[0, 0, 0, 1, '+']], [0, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1116,6 +1760,7 @@ host1s1_580
   MOV pc,lr
 
 host1s1_5C0
+  ;    [[[0, 0, 0, 1, '-']], [0, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1125,6 +1770,7 @@ host1s1_5C0
   MOV pc,lr
 
 host1s1_700
+  ;    [[[0, 0, 0, 1, 'NF+']], [0, 1], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -1152,6 +1798,7 @@ host1s1_700
   SET_IFR_RETURN
 
 host1s1_740
+  ;    [[[0, 0, 0, 1, 'NF-']], [0, 1], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -1178,6 +1825,7 @@ host1s1_740
   SET_IFR_RETURN
 
 host1s1_780
+  ;    [[[0, 0, 0, 1, 'N+']], [0, 1], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -1193,6 +1841,7 @@ host1s1_780
   MOV pc,lr
 
 host1s1_7C0
+  ;    [[[0, 0, 0, 1, 'N-']], [0, 1], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -1208,6 +1857,7 @@ host1s1_7C0
   MOV pc,lr
 
 host1s2_000
+  ;    [[[0, 2, 1, 1, 'F+'], [0, 0, 3, 1, 'F+']], [3, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000001
@@ -1250,6 +1900,7 @@ host1s2_000
   SET_IFR_RETURN
 
 host1s2_040
+  ;    [[[0, 2, 1, 1, 'F-'], [0, 0, 3, 1, 'F-']], [3, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1290,6 +1941,7 @@ host1s2_040
   SET_IFR_RETURN
 
 host1s2_080
+  ;    [[[0, 0, 3, 1, '+']], [3, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1302,6 +1954,7 @@ host1s2_080
   MOV pc,lr
 
 host1s2_0C0
+  ;    [[[0, 0, 3, 1, '-']], [3, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1314,6 +1967,7 @@ host1s2_0C0
   MOV pc,lr
 
 host1s2_100
+  ;    [[[0, 2, 1, 1, 'F+']], [1, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1341,6 +1995,7 @@ host1s2_100
   B host0s2_540
 
 host1s2_140
+  ;    [[[0, 2, 1, 1, 'F-']], [1, 1], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1368,6 +2023,7 @@ host1s2_140
   B host0s2_500
 
 host1s2_300
+  ;    [[[0, 2, 1, 1, 'NF+']], [1, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -1403,6 +2059,7 @@ host1s2_300
   B host0s2_740
 
 host1s2_340
+  ;    [[[0, 2, 1, 1, 'NF-']], [1, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -1438,6 +2095,7 @@ host1s2_340
   B host0s2_700
 
 host1s2_380
+  ;    [[[0, 2, 1, 1, 'N+']], [1, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -1454,6 +2112,7 @@ host1s2_380
   MOV pc,lr
 
 host1s2_3C0
+  ;    [[[0, 2, 1, 1, 'N-']], [1, 1], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -1470,6 +2129,7 @@ host1s2_3C0
   MOV pc,lr
 
 host1s2_400
+  ;    [[[0, 1, 2, 1, 'F+']], [3, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1494,6 +2154,7 @@ host1s2_400
   B host0s1_400
 
 host1s2_440
+  ;    [[[0, 1, 2, 1, 'F-']], [3, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1517,6 +2178,7 @@ host1s2_440
   B host0s1_400
 
 host1s2_480
+  ;    [[[0, 1, 2, 1, '+']], [3, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1528,6 +2190,7 @@ host1s2_480
   MOV pc,lr
 
 host1s2_4C0
+  ;    [[[0, 1, 2, 1, '-']], [3, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1539,6 +2202,7 @@ host1s2_4C0
   MOV pc,lr
 
 host1s2_500
+  ;    [[[0, 1, 0, 1, 'F+']], [-1, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1562,6 +2226,7 @@ host1s2_500
   B host0s1_500
 
 host1s2_540
+  ;    [[[0, 1, 0, 1, 'F-']], [-1, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1584,6 +2249,7 @@ host1s2_540
   B host0s1_500
 
 host1s2_580
+  ;    [[[0, 1, 0, 1, '+']], [-1, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1595,6 +2261,7 @@ host1s2_580
   MOV pc,lr
 
 host1s2_5C0
+  ;    [[[0, 1, 0, 1, '-']], [-1, 1], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1606,6 +2273,7 @@ host1s2_5C0
   MOV pc,lr
 
 host1s2_700
+  ;    [[[0, 1, 0, 1, 'NF+']], [-1, 1], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -1638,6 +2306,7 @@ host1s2_700
   B host0s1_500
 
 host1s2_740
+  ;    [[[0, 1, 0, 1, 'NF-']], [-1, 1], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -1669,6 +2338,7 @@ host1s2_740
   B host0s1_500
 
 host1s2_780
+  ;    [[[0, 1, 0, 1, 'N+']], [-1, 1], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -1686,6 +2356,7 @@ host1s2_780
   MOV pc,lr
 
 host1s2_7C0
+  ;    [[[0, 1, 0, 1, 'N-']], [-1, 1], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -1703,6 +2374,7 @@ host1s2_7C0
   MOV pc,lr
 
 host2s0_000
+  ;    [[[1, 0, 1, 1, 'F+']], [2, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1727,6 +2399,7 @@ host2s0_000
   B host1s0_400
 
 host2s0_040
+  ;    [[[1, 0, 1, 1, 'F-']], [2, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1751,6 +2424,7 @@ host2s0_040
   B host1s0_400
 
 host2s0_080
+  ;    [[[1, 0, 1, 1, '+']], [2, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1762,6 +2436,7 @@ host2s0_080
   MOV pc,lr
 
 host2s0_0C0
+  ;    [[[1, 0, 1, 1, '-']], [2, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1773,6 +2448,7 @@ host2s0_0C0
   MOV pc,lr
 
 host2s0_100
+  ;    [[[1, 0, 1, 1, 'F+']], [0, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1795,6 +2471,7 @@ host2s0_100
   B host1s0_500
 
 host2s0_140
+  ;    [[[1, 0, 1, 1, 'F-']], [0, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1817,6 +2494,7 @@ host2s0_140
   B host1s0_500
 
 host2s0_180
+  ;    [[[1, 0, 1, 1, '+']], [0, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1826,6 +2504,7 @@ host2s0_180
   MOV pc,lr
 
 host2s0_1C0
+  ;    [[[1, 0, 1, 1, '-']], [0, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1835,6 +2514,7 @@ host2s0_1C0
   MOV pc,lr
 
 host2s0_300
+  ;    [[[1, 0, 1, 1, 'NF+']], [0, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -1865,6 +2545,7 @@ host2s0_300
   B host1s0_500
 
 host2s0_340
+  ;    [[[1, 0, 1, 1, 'NF-']], [0, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -1895,6 +2576,7 @@ host2s0_340
   B host1s0_500
 
 host2s0_380
+  ;    [[[1, 0, 1, 1, 'N+']], [0, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -1909,6 +2591,7 @@ host2s0_380
   MOV pc,lr
 
 host2s0_3C0
+  ;    [[[1, 0, 1, 1, 'N-']], [0, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -1923,6 +2606,7 @@ host2s0_3C0
   MOV pc,lr
 
 host2s0_400
+  ;    [[[0, 0, 2, 2, 'F+']], [2, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1944,6 +2628,7 @@ host2s0_400
   SET_IFR_RETURN
 
 host2s0_440
+  ;    [[[0, 0, 2, 2, 'F-']], [2, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1964,6 +2649,7 @@ host2s0_440
   SET_IFR_RETURN
 
 host2s0_480
+  ;    [[[0, 0, 2, 2, '+']], [2, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1975,6 +2661,7 @@ host2s0_480
   MOV pc,lr
 
 host2s0_4C0
+  ;    [[[0, 0, 2, 2, '-']], [2, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -1986,6 +2673,7 @@ host2s0_4C0
   MOV pc,lr
 
 host2s0_500
+  ;    [[[0, 0, 0, 2, 'F+']], [0, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2004,6 +2692,7 @@ host2s0_500
   SET_IFR_RETURN
 
 host2s0_540
+  ;    [[[0, 0, 0, 2, 'F-']], [0, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2021,6 +2710,7 @@ host2s0_540
   SET_IFR_RETURN
 
 host2s0_580
+  ;    [[[0, 0, 0, 2, '+']], [0, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2030,6 +2720,7 @@ host2s0_580
   MOV pc,lr
 
 host2s0_5C0
+  ;    [[[0, 0, 0, 2, '-']], [0, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2039,6 +2730,7 @@ host2s0_5C0
   MOV pc,lr
 
 host2s0_700
+  ;    [[[0, 0, 0, 2, 'NF+']], [0, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -2066,6 +2758,7 @@ host2s0_700
   SET_IFR_RETURN
 
 host2s0_740
+  ;    [[[0, 0, 0, 2, 'NF-']], [0, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -2092,6 +2785,7 @@ host2s0_740
   SET_IFR_RETURN
 
 host2s0_780
+  ;    [[[0, 0, 0, 2, 'N+']], [0, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -2107,6 +2801,7 @@ host2s0_780
   MOV pc,lr
 
 host2s0_7C0
+  ;    [[[0, 0, 0, 2, 'N-']], [0, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -2122,6 +2817,7 @@ host2s0_7C0
   MOV pc,lr
 
 host2s1_000
+  ;    [[[1, 1, 1, 1, 'F+'], [0, 0, 3, 2, 'F+']], [3, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000001
@@ -2164,6 +2860,7 @@ host2s1_000
   SET_IFR_RETURN
 
 host2s1_040
+  ;    [[[1, 1, 1, 1, 'F-'], [0, 0, 3, 2, 'F-']], [3, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2204,6 +2901,7 @@ host2s1_040
   SET_IFR_RETURN
 
 host2s1_080
+  ;    [[[0, 0, 3, 2, '+']], [3, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2216,6 +2914,7 @@ host2s1_080
   MOV pc,lr
 
 host2s1_0C0
+  ;    [[[0, 0, 3, 2, '-']], [3, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2228,6 +2927,7 @@ host2s1_0C0
   MOV pc,lr
 
 host2s1_100
+  ;    [[[1, 1, 1, 1, 'F+']], [1, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2255,6 +2955,7 @@ host2s1_100
   B host1s1_540
 
 host2s1_140
+  ;    [[[1, 1, 1, 1, 'F-']], [1, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2282,6 +2983,7 @@ host2s1_140
   B host1s1_500
 
 host2s1_180
+  ;    [[[0, 0, 1, 2, '+']], [1, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2293,6 +2995,7 @@ host2s1_180
   MOV pc,lr
 
 host2s1_1C0
+  ;    [[[0, 0, 1, 2, '-']], [1, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2304,6 +3007,7 @@ host2s1_1C0
   MOV pc,lr
 
 host2s1_300
+  ;    [[[1, 1, 1, 1, 'NF+']], [1, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -2339,6 +3043,7 @@ host2s1_300
   B host1s1_740
 
 host2s1_340
+  ;    [[[1, 1, 1, 1, 'NF-']], [1, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -2374,6 +3079,7 @@ host2s1_340
   B host1s1_700
 
 host2s1_380
+  ;    [[[1, 1, 1, 1, 'N+']], [1, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -2390,6 +3096,7 @@ host2s1_380
   MOV pc,lr
 
 host2s1_3C0
+  ;    [[[1, 1, 1, 1, 'N-']], [1, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -2406,6 +3113,7 @@ host2s1_3C0
   MOV pc,lr
 
 host2s1_400
+  ;    [[[0, 1, 2, 2, 'F+']], [3, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2430,6 +3138,7 @@ host2s1_400
   B host0s1_400
 
 host2s1_440
+  ;    [[[0, 1, 2, 2, 'F-']], [3, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2453,6 +3162,7 @@ host2s1_440
   B host0s1_400
 
 host2s1_480
+  ;    [[[0, 1, 2, 2, '+']], [3, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2464,6 +3174,7 @@ host2s1_480
   MOV pc,lr
 
 host2s1_4C0
+  ;    [[[0, 1, 2, 2, '-']], [3, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2475,6 +3186,7 @@ host2s1_4C0
   MOV pc,lr
 
 host2s1_500
+  ;    [[[0, 1, 0, 2, 'F+']], [-1, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2498,6 +3210,7 @@ host2s1_500
   B host0s1_500
 
 host2s1_540
+  ;    [[[0, 1, 0, 2, 'F-']], [-1, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2520,6 +3233,7 @@ host2s1_540
   B host0s1_500
 
 host2s1_580
+  ;    [[[0, 1, 0, 2, '+']], [-1, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2531,6 +3245,7 @@ host2s1_580
   MOV pc,lr
 
 host2s1_5C0
+  ;    [[[0, 1, 0, 2, '-']], [-1, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2542,6 +3257,7 @@ host2s1_5C0
   MOV pc,lr
 
 host2s1_700
+  ;    [[[0, 1, 0, 2, 'NF+']], [-1, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -2574,6 +3290,7 @@ host2s1_700
   B host0s1_500
 
 host2s1_740
+  ;    [[[0, 1, 0, 2, 'NF-']], [-1, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -2605,6 +3322,7 @@ host2s1_740
   B host0s1_500
 
 host2s1_780
+  ;    [[[0, 1, 0, 2, 'N+']], [-1, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -2622,6 +3340,7 @@ host2s1_780
   MOV pc,lr
 
 host2s1_7C0
+  ;    [[[0, 1, 0, 2, 'N-']], [-1, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -2639,6 +3358,7 @@ host2s1_7C0
   MOV pc,lr
 
 host2s2_000
+  ;    [[[1, 2, 1, 1, 'F+'], [0, 1, 3, 2, 'F+']], [4, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000001
@@ -2683,6 +3403,7 @@ host2s2_000
   B host0s1_400
 
 host2s2_040
+  ;    [[[1, 2, 1, 1, 'F-'], [0, 1, 3, 2, 'F-']], [4, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2725,6 +3446,7 @@ host2s2_040
   B host0s1_400
 
 host2s2_080
+  ;    [[[0, 1, 3, 2, '+']], [4, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2736,6 +3458,7 @@ host2s2_080
   MOV pc,lr
 
 host2s2_0C0
+  ;    [[[0, 1, 3, 2, '-']], [4, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2747,6 +3470,7 @@ host2s2_0C0
   MOV pc,lr
 
 host2s2_100
+  ;    [[[1, 2, 1, 1, 'F+']], [0, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2772,6 +3496,7 @@ host2s2_100
   B host1s2_540
 
 host2s2_140
+  ;    [[[1, 2, 1, 1, 'F-']], [0, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2797,6 +3522,7 @@ host2s2_140
   B host1s2_500
 
 host2s2_180
+  ;    [[[0, 1, 1, 2, '+']], [0, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2806,6 +3532,7 @@ host2s2_180
   MOV pc,lr
 
 host2s2_1C0
+  ;    [[[0, 1, 1, 2, '-']], [0, 2], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2815,6 +3542,7 @@ host2s2_1C0
   MOV pc,lr
 
 host2s2_300
+  ;    [[[1, 2, 1, 1, 'NF+']], [0, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -2848,6 +3576,7 @@ host2s2_300
   B host1s2_740
 
 host2s2_340
+  ;    [[[1, 2, 1, 1, 'NF-']], [0, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -2881,6 +3610,7 @@ host2s2_340
   B host1s2_700
 
 host2s2_380
+  ;    [[[1, 2, 1, 1, 'N+']], [0, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -2895,6 +3625,7 @@ host2s2_380
   MOV pc,lr
 
 host2s2_3C0
+  ;    [[[1, 2, 1, 1, 'N-']], [0, 2], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -2909,6 +3640,7 @@ host2s2_3C0
   MOV pc,lr
 
 host2s2_400
+  ;    [[[0, 2, 2, 2, 'F+'], [0, 0, 4, 2, 'F+']], [4, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&80000002
@@ -2949,6 +3681,7 @@ host2s2_400
   SET_IFR_RETURN
 
 host2s2_440
+  ;    [[[0, 2, 2, 2, 'F-'], [0, 0, 4, 2, 'F-']], [4, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2986,6 +3719,7 @@ host2s2_440
   SET_IFR_RETURN
 
 host2s2_480
+  ;    [[[0, 0, 4, 2, '+']], [4, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -2997,6 +3731,7 @@ host2s2_480
   MOV pc,lr
 
 host2s2_4C0
+  ;    [[[0, 0, 4, 2, '-']], [4, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3008,6 +3743,7 @@ host2s2_4C0
   MOV pc,lr
 
 host2s2_500
+  ;    [[[0, 2, 0, 2, 'F+']], [0, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3032,6 +3768,7 @@ host2s2_500
   B host0s2_540
 
 host2s2_540
+  ;    [[[0, 2, 0, 2, 'F-']], [0, 2], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3055,6 +3792,7 @@ host2s2_540
   B host0s2_500
 
 host2s2_700
+  ;    [[[0, 2, 0, 2, 'NF+']], [0, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -3088,6 +3826,7 @@ host2s2_700
   B host0s2_740
 
 host2s2_740
+  ;    [[[0, 2, 0, 2, 'NF-']], [0, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -3120,6 +3859,7 @@ host2s2_740
   B host0s2_700
 
 host2s2_780
+  ;    [[[0, 2, 0, 2, 'N+']], [0, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -3135,6 +3875,7 @@ host2s2_780
   MOV pc,lr
 
 host2s2_7C0
+  ;    [[[0, 2, 0, 2, 'N-']], [0, 2], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -3150,6 +3891,7 @@ host2s2_7C0
   MOV pc,lr
 
 host3s0_000
+  ;    [[[2, 0, 1, 1, 'F+'], [0, 0, 3, 3, 'F+']], [3, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000001
@@ -3192,6 +3934,7 @@ host3s0_000
   SET_IFR_RETURN
 
 host3s0_040
+  ;    [[[2, 0, 1, 1, 'F-'], [0, 0, 3, 3, 'F-']], [3, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3232,6 +3975,7 @@ host3s0_040
   SET_IFR_RETURN
 
 host3s0_080
+  ;    [[[0, 0, 3, 3, '+']], [3, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3244,6 +3988,7 @@ host3s0_080
   MOV pc,lr
 
 host3s0_0C0
+  ;    [[[0, 0, 3, 3, '-']], [3, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3256,6 +4001,7 @@ host3s0_0C0
   MOV pc,lr
 
 host3s0_100
+  ;    [[[2, 0, 1, 1, 'F+']], [1, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3283,6 +4029,7 @@ host3s0_100
   B host2s0_540
 
 host3s0_140
+  ;    [[[2, 0, 1, 1, 'F-']], [1, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3310,6 +4057,7 @@ host3s0_140
   B host2s0_500
 
 host3s0_180
+  ;    [[[0, 0, 1, 3, '+']], [1, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3321,6 +4069,7 @@ host3s0_180
   MOV pc,lr
 
 host3s0_1C0
+  ;    [[[0, 0, 1, 3, '-']], [1, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3332,6 +4081,7 @@ host3s0_1C0
   MOV pc,lr
 
 host3s0_300
+  ;    [[[2, 0, 1, 1, 'NF+']], [1, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -3367,6 +4117,7 @@ host3s0_300
   B host2s0_740
 
 host3s0_340
+  ;    [[[2, 0, 1, 1, 'NF-']], [1, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -3402,6 +4153,7 @@ host3s0_340
   B host2s0_700
 
 host3s0_380
+  ;    [[[2, 0, 1, 1, 'N+']], [1, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -3418,6 +4170,7 @@ host3s0_380
   MOV pc,lr
 
 host3s0_3C0
+  ;    [[[2, 0, 1, 1, 'N-']], [1, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -3434,6 +4187,7 @@ host3s0_3C0
   MOV pc,lr
 
 host3s0_400
+  ;    [[[1, 0, 2, 2, 'F+']], [3, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3458,6 +4212,7 @@ host3s0_400
   B host1s0_400
 
 host3s0_440
+  ;    [[[1, 0, 2, 2, 'F-']], [3, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3481,6 +4236,7 @@ host3s0_440
   B host1s0_400
 
 host3s0_480
+  ;    [[[1, 0, 2, 2, '+']], [3, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3492,6 +4248,7 @@ host3s0_480
   MOV pc,lr
 
 host3s0_4C0
+  ;    [[[1, 0, 2, 2, '-']], [3, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3503,6 +4260,7 @@ host3s0_4C0
   MOV pc,lr
 
 host3s0_500
+  ;    [[[1, 0, 0, 2, 'F+']], [-1, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3526,6 +4284,7 @@ host3s0_500
   B host1s0_500
 
 host3s0_540
+  ;    [[[1, 0, 0, 2, 'F-']], [-1, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3548,6 +4307,7 @@ host3s0_540
   B host1s0_500
 
 host3s0_580
+  ;    [[[1, 0, 0, 2, '+']], [-1, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3559,6 +4319,7 @@ host3s0_580
   MOV pc,lr
 
 host3s0_5C0
+  ;    [[[1, 0, 0, 2, '-']], [-1, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3570,6 +4331,7 @@ host3s0_5C0
   MOV pc,lr
 
 host3s0_700
+  ;    [[[1, 0, 0, 2, 'NF+']], [-1, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -3602,6 +4364,7 @@ host3s0_700
   B host1s0_500
 
 host3s0_740
+  ;    [[[1, 0, 0, 2, 'NF-']], [-1, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -3633,6 +4396,7 @@ host3s0_740
   B host1s0_500
 
 host3s0_780
+  ;    [[[1, 0, 0, 2, 'N+']], [-1, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -3650,6 +4414,7 @@ host3s0_780
   MOV pc,lr
 
 host3s0_7C0
+  ;    [[[1, 0, 0, 2, 'N-']], [-1, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -3667,6 +4432,7 @@ host3s0_7C0
   MOV pc,lr
 
 host3s1_000
+  ;    [[[2, 1, 1, 1, 'F+'], [0, 1, 3, 3, 'F+']], [4, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000001
@@ -3711,6 +4477,7 @@ host3s1_000
   B host0s1_400
 
 host3s1_040
+  ;    [[[2, 1, 1, 1, 'F-'], [0, 1, 3, 3, 'F-']], [4, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3753,6 +4520,7 @@ host3s1_040
   B host0s1_400
 
 host3s1_080
+  ;    [[[0, 1, 3, 3, '+']], [4, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3764,6 +4532,7 @@ host3s1_080
   MOV pc,lr
 
 host3s1_0C0
+  ;    [[[0, 1, 3, 3, '-']], [4, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3775,6 +4544,7 @@ host3s1_0C0
   MOV pc,lr
 
 host3s1_100
+  ;    [[[2, 1, 1, 1, 'F+']], [0, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3800,6 +4570,7 @@ host3s1_100
   B host2s1_540
 
 host3s1_140
+  ;    [[[2, 1, 1, 1, 'F-']], [0, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3825,6 +4596,7 @@ host3s1_140
   B host2s1_500
 
 host3s1_180
+  ;    [[[0, 1, 1, 3, '+']], [0, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3834,6 +4606,7 @@ host3s1_180
   MOV pc,lr
 
 host3s1_1C0
+  ;    [[[0, 1, 1, 3, '-']], [0, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -3843,6 +4616,7 @@ host3s1_1C0
   MOV pc,lr
 
 host3s1_300
+  ;    [[[2, 1, 1, 1, 'NF+']], [0, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -3876,6 +4650,7 @@ host3s1_300
   B host2s1_740
 
 host3s1_340
+  ;    [[[2, 1, 1, 1, 'NF-']], [0, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -3909,6 +4684,7 @@ host3s1_340
   B host2s1_700
 
 host3s1_380
+  ;    [[[2, 1, 1, 1, 'N+']], [0, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -3923,6 +4699,7 @@ host3s1_380
   MOV pc,lr
 
 host3s1_3C0
+  ;    [[[2, 1, 1, 1, 'N-']], [0, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -3937,6 +4714,7 @@ host3s1_3C0
   MOV pc,lr
 
 host3s1_400
+  ;    [[[1, 1, 2, 2, 'F+'], [0, 0, 4, 3, 'F+']], [4, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&80000002
@@ -3977,6 +4755,7 @@ host3s1_400
   SET_IFR_RETURN
 
 host3s1_440
+  ;    [[[1, 1, 2, 2, 'F-'], [0, 0, 4, 3, 'F-']], [4, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4014,6 +4793,7 @@ host3s1_440
   SET_IFR_RETURN
 
 host3s1_480
+  ;    [[[0, 0, 4, 3, '+']], [4, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4025,6 +4805,7 @@ host3s1_480
   MOV pc,lr
 
 host3s1_4C0
+  ;    [[[0, 0, 4, 3, '-']], [4, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4036,6 +4817,7 @@ host3s1_4C0
   MOV pc,lr
 
 host3s1_500
+  ;    [[[1, 1, 0, 2, 'F+']], [0, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4060,6 +4842,7 @@ host3s1_500
   B host1s1_540
 
 host3s1_540
+  ;    [[[1, 1, 0, 2, 'F-']], [0, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4083,6 +4866,7 @@ host3s1_540
   B host1s1_500
 
 host3s1_580
+  ;    [[[0, 0, 0, 3, '+']], [0, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4092,6 +4876,7 @@ host3s1_580
   MOV pc,lr
 
 host3s1_5C0
+  ;    [[[0, 0, 0, 3, '-']], [0, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4101,6 +4886,7 @@ host3s1_5C0
   MOV pc,lr
 
 host3s1_700
+  ;    [[[1, 1, 0, 2, 'NF+']], [0, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -4134,6 +4920,7 @@ host3s1_700
   B host1s1_740
 
 host3s1_740
+  ;    [[[1, 1, 0, 2, 'NF-']], [0, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -4166,6 +4953,7 @@ host3s1_740
   B host1s1_700
 
 host3s1_780
+  ;    [[[1, 1, 0, 2, 'N+']], [0, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -4181,6 +4969,7 @@ host3s1_780
   MOV pc,lr
 
 host3s1_7C0
+  ;    [[[1, 1, 0, 2, 'N-']], [0, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -4196,6 +4985,7 @@ host3s1_7C0
   MOV pc,lr
 
 host3s2_000
+  ;    [[[2, 2, 1, 1, 'F+'], [0, 2, 3, 3, 'F+'], [0, 0, 5, 3, 'F+']], [5, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000005
@@ -4257,6 +5047,7 @@ host3s2_000
   SET_IFR_RETURN
 
 host3s2_040
+  ;    [[[2, 2, 1, 1, 'F-'], [0, 2, 3, 3, 'F-'], [0, 0, 5, 3, 'F-']], [5, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4315,6 +5106,7 @@ host3s2_040
   SET_IFR_RETURN
 
 host3s2_080
+  ;    [[[0, 0, 5, 3, '+']], [5, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4327,6 +5119,7 @@ host3s2_080
   MOV pc,lr
 
 host3s2_0C0
+  ;    [[[0, 0, 5, 3, '-']], [5, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4339,6 +5132,7 @@ host3s2_0C0
   MOV pc,lr
 
 host3s2_100
+  ;    [[[2, 2, 1, 1, 'F+']], [1, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4366,6 +5160,7 @@ host3s2_100
   B host2s2_540
 
 host3s2_140
+  ;    [[[2, 2, 1, 1, 'F-']], [1, 3], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4393,6 +5188,7 @@ host3s2_140
   B host2s2_500
 
 host3s2_300
+  ;    [[[2, 2, 1, 1, 'NF+']], [1, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -4428,6 +5224,7 @@ host3s2_300
   B host2s2_740
 
 host3s2_340
+  ;    [[[2, 2, 1, 1, 'NF-']], [1, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -4463,6 +5260,7 @@ host3s2_340
   B host2s2_700
 
 host3s2_380
+  ;    [[[2, 2, 1, 1, 'N+']], [1, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -4479,6 +5277,7 @@ host3s2_380
   MOV pc,lr
 
 host3s2_3C0
+  ;    [[[2, 2, 1, 1, 'N-']], [1, 3], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -4495,6 +5294,7 @@ host3s2_3C0
   MOV pc,lr
 
 host3s2_400
+  ;    [[[1, 2, 2, 2, 'F+'], [0, 1, 4, 3, 'F+']], [5, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&80000002
@@ -4538,6 +5338,7 @@ host3s2_400
   B host0s1_400
 
 host3s2_440
+  ;    [[[1, 2, 2, 2, 'F-'], [0, 1, 4, 3, 'F-']], [5, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4578,6 +5379,7 @@ host3s2_440
   B host0s1_400
 
 host3s2_480
+  ;    [[[0, 1, 4, 3, '+']], [5, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4589,6 +5391,7 @@ host3s2_480
   MOV pc,lr
 
 host3s2_4C0
+  ;    [[[0, 1, 4, 3, '-']], [5, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4600,6 +5403,7 @@ host3s2_4C0
   MOV pc,lr
 
 host3s2_500
+  ;    [[[1, 2, 0, 2, 'F+']], [-1, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4626,6 +5430,7 @@ host3s2_500
   B host1s2_540
 
 host3s2_540
+  ;    [[[1, 2, 0, 2, 'F-']], [-1, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4651,6 +5456,7 @@ host3s2_540
   B host1s2_500
 
 host3s2_580
+  ;    [[[0, 1, 0, 3, '+']], [-1, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4662,6 +5468,7 @@ host3s2_580
   MOV pc,lr
 
 host3s2_5C0
+  ;    [[[0, 1, 0, 3, '-']], [-1, 3], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4673,6 +5480,7 @@ host3s2_5C0
   MOV pc,lr
 
 host3s2_700
+  ;    [[[1, 2, 0, 2, 'NF+']], [-1, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -4708,6 +5516,7 @@ host3s2_700
   B host1s2_740
 
 host3s2_740
+  ;    [[[1, 2, 0, 2, 'NF-']], [-1, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -4742,6 +5551,7 @@ host3s2_740
   B host1s2_700
 
 host3s2_780
+  ;    [[[1, 2, 0, 2, 'N+']], [-1, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -4759,6 +5569,7 @@ host3s2_780
   MOV pc,lr
 
 host3s2_7C0
+  ;    [[[1, 2, 0, 2, 'N-']], [-1, 3], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -4776,6 +5587,7 @@ host3s2_7C0
   MOV pc,lr
 
 host4s0_000
+  ;    [[[3, 0, 1, 1, 'F+'], [1, 0, 3, 3, 'F+']], [4, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000001
@@ -4820,6 +5632,7 @@ host4s0_000
   B host1s0_400
 
 host4s0_040
+  ;    [[[3, 0, 1, 1, 'F-'], [1, 0, 3, 3, 'F-']], [4, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4862,6 +5675,7 @@ host4s0_040
   B host1s0_400
 
 host4s0_080
+  ;    [[[1, 0, 3, 3, '+']], [4, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4873,6 +5687,7 @@ host4s0_080
   MOV pc,lr
 
 host4s0_0C0
+  ;    [[[1, 0, 3, 3, '-']], [4, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4884,6 +5699,7 @@ host4s0_0C0
   MOV pc,lr
 
 host4s0_100
+  ;    [[[3, 0, 1, 1, 'F+']], [0, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4909,6 +5725,7 @@ host4s0_100
   B host3s0_540
 
 host4s0_140
+  ;    [[[3, 0, 1, 1, 'F-']], [0, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4934,6 +5751,7 @@ host4s0_140
   B host3s0_500
 
 host4s0_180
+  ;    [[[1, 0, 1, 3, '+']], [0, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4943,6 +5761,7 @@ host4s0_180
   MOV pc,lr
 
 host4s0_1C0
+  ;    [[[1, 0, 1, 3, '-']], [0, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -4952,6 +5771,7 @@ host4s0_1C0
   MOV pc,lr
 
 host4s0_300
+  ;    [[[3, 0, 1, 1, 'NF+']], [0, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -4985,6 +5805,7 @@ host4s0_300
   B host3s0_740
 
 host4s0_340
+  ;    [[[3, 0, 1, 1, 'NF-']], [0, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -5018,6 +5839,7 @@ host4s0_340
   B host3s0_700
 
 host4s0_380
+  ;    [[[3, 0, 1, 1, 'N+']], [0, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -5032,6 +5854,7 @@ host4s0_380
   MOV pc,lr
 
 host4s0_3C0
+  ;    [[[3, 0, 1, 1, 'N-']], [0, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -5046,6 +5869,7 @@ host4s0_3C0
   MOV pc,lr
 
 host4s0_400
+  ;    [[[2, 0, 2, 2, 'F+'], [0, 0, 4, 4, 'F+']], [4, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&80000002
@@ -5086,6 +5910,7 @@ host4s0_400
   SET_IFR_RETURN
 
 host4s0_440
+  ;    [[[2, 0, 2, 2, 'F-'], [0, 0, 4, 4, 'F-']], [4, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5123,6 +5948,7 @@ host4s0_440
   SET_IFR_RETURN
 
 host4s0_480
+  ;    [[[0, 0, 4, 4, '+']], [4, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5134,6 +5960,7 @@ host4s0_480
   MOV pc,lr
 
 host4s0_4C0
+  ;    [[[0, 0, 4, 4, '-']], [4, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5145,6 +5972,7 @@ host4s0_4C0
   MOV pc,lr
 
 host4s0_500
+  ;    [[[2, 0, 0, 2, 'F+']], [0, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5169,6 +5997,7 @@ host4s0_500
   B host2s0_540
 
 host4s0_540
+  ;    [[[2, 0, 0, 2, 'F-']], [0, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5192,6 +6021,7 @@ host4s0_540
   B host2s0_500
 
 host4s0_580
+  ;    [[[0, 0, 0, 4, '+']], [0, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5201,6 +6031,7 @@ host4s0_580
   MOV pc,lr
 
 host4s0_5C0
+  ;    [[[0, 0, 0, 4, '-']], [0, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5210,6 +6041,7 @@ host4s0_5C0
   MOV pc,lr
 
 host4s0_700
+  ;    [[[2, 0, 0, 2, 'NF+']], [0, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -5243,6 +6075,7 @@ host4s0_700
   B host2s0_740
 
 host4s0_740
+  ;    [[[2, 0, 0, 2, 'NF-']], [0, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -5275,6 +6108,7 @@ host4s0_740
   B host2s0_700
 
 host4s0_780
+  ;    [[[2, 0, 0, 2, 'N+']], [0, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -5290,6 +6124,7 @@ host4s0_780
   MOV pc,lr
 
 host4s0_7C0
+  ;    [[[2, 0, 0, 2, 'N-']], [0, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -5305,6 +6140,7 @@ host4s0_7C0
   MOV pc,lr
 
 host4s1_000
+  ;    [[[3, 1, 1, 1, 'F+'], [1, 1, 3, 3, 'F+'], [0, 0, 5, 4, 'F+']], [5, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000005
@@ -5366,6 +6202,7 @@ host4s1_000
   SET_IFR_RETURN
 
 host4s1_040
+  ;    [[[3, 1, 1, 1, 'F-'], [1, 1, 3, 3, 'F-'], [0, 0, 5, 4, 'F-']], [5, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5424,6 +6261,7 @@ host4s1_040
   SET_IFR_RETURN
 
 host4s1_080
+  ;    [[[0, 0, 5, 4, '+']], [5, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5436,6 +6274,7 @@ host4s1_080
   MOV pc,lr
 
 host4s1_0C0
+  ;    [[[0, 0, 5, 4, '-']], [5, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5448,6 +6287,7 @@ host4s1_0C0
   MOV pc,lr
 
 host4s1_100
+  ;    [[[3, 1, 1, 1, 'F+']], [1, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5475,6 +6315,7 @@ host4s1_100
   B host3s1_540
 
 host4s1_140
+  ;    [[[3, 1, 1, 1, 'F-']], [1, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5502,6 +6343,7 @@ host4s1_140
   B host3s1_500
 
 host4s1_180
+  ;    [[[0, 0, 1, 4, '+']], [1, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5513,6 +6355,7 @@ host4s1_180
   MOV pc,lr
 
 host4s1_1C0
+  ;    [[[0, 0, 1, 4, '-']], [1, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5524,6 +6367,7 @@ host4s1_1C0
   MOV pc,lr
 
 host4s1_300
+  ;    [[[3, 1, 1, 1, 'NF+']], [1, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -5559,6 +6403,7 @@ host4s1_300
   B host3s1_740
 
 host4s1_340
+  ;    [[[3, 1, 1, 1, 'NF-']], [1, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -5594,6 +6439,7 @@ host4s1_340
   B host3s1_700
 
 host4s1_380
+  ;    [[[3, 1, 1, 1, 'N+']], [1, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -5610,6 +6456,7 @@ host4s1_380
   MOV pc,lr
 
 host4s1_3C0
+  ;    [[[3, 1, 1, 1, 'N-']], [1, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -5626,6 +6473,7 @@ host4s1_3C0
   MOV pc,lr
 
 host4s1_400
+  ;    [[[2, 1, 2, 2, 'F+'], [0, 1, 4, 4, 'F+']], [5, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&80000002
@@ -5669,6 +6517,7 @@ host4s1_400
   B host0s1_400
 
 host4s1_440
+  ;    [[[2, 1, 2, 2, 'F-'], [0, 1, 4, 4, 'F-']], [5, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5709,6 +6558,7 @@ host4s1_440
   B host0s1_400
 
 host4s1_480
+  ;    [[[0, 1, 4, 4, '+']], [5, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5720,6 +6570,7 @@ host4s1_480
   MOV pc,lr
 
 host4s1_4C0
+  ;    [[[0, 1, 4, 4, '-']], [5, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5731,6 +6582,7 @@ host4s1_4C0
   MOV pc,lr
 
 host4s1_500
+  ;    [[[2, 1, 0, 2, 'F+']], [-1, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5757,6 +6609,7 @@ host4s1_500
   B host2s1_540
 
 host4s1_540
+  ;    [[[2, 1, 0, 2, 'F-']], [-1, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5782,6 +6635,7 @@ host4s1_540
   B host2s1_500
 
 host4s1_580
+  ;    [[[0, 1, 0, 4, '+']], [-1, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5793,6 +6647,7 @@ host4s1_580
   MOV pc,lr
 
 host4s1_5C0
+  ;    [[[0, 1, 0, 4, '-']], [-1, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -5804,6 +6659,7 @@ host4s1_5C0
   MOV pc,lr
 
 host4s1_700
+  ;    [[[2, 1, 0, 2, 'NF+']], [-1, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -5839,6 +6695,7 @@ host4s1_700
   B host2s1_740
 
 host4s1_740
+  ;    [[[2, 1, 0, 2, 'NF-']], [-1, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -5873,6 +6730,7 @@ host4s1_740
   B host2s1_700
 
 host4s1_780
+  ;    [[[2, 1, 0, 2, 'N+']], [-1, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -5890,6 +6748,7 @@ host4s1_780
   MOV pc,lr
 
 host4s1_7C0
+  ;    [[[2, 1, 0, 2, 'N-']], [-1, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -5907,6 +6766,7 @@ host4s1_7C0
   MOV pc,lr
 
 host4s2_000
+  ;    [[[3, 2, 1, 1, 'F+'], [1, 2, 3, 3, 'F+'], [0, 1, 5, 4, 'F+']], [6, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000005
@@ -5970,6 +6830,7 @@ host4s2_000
   B host0s1_400
 
 host4s2_040
+  ;    [[[3, 2, 1, 1, 'F-'], [1, 2, 3, 3, 'F-'], [0, 1, 5, 4, 'F-']], [6, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6030,6 +6891,7 @@ host4s2_040
   B host0s1_400
 
 host4s2_080
+  ;    [[[0, 1, 5, 4, '+']], [6, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6041,6 +6903,7 @@ host4s2_080
   MOV pc,lr
 
 host4s2_0C0
+  ;    [[[0, 1, 5, 4, '-']], [6, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6052,6 +6915,7 @@ host4s2_0C0
   MOV pc,lr
 
 host4s2_100
+  ;    [[[3, 2, 1, 1, 'F+']], [0, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6077,6 +6941,7 @@ host4s2_100
   B host3s2_540
 
 host4s2_140
+  ;    [[[3, 2, 1, 1, 'F-']], [0, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6102,6 +6967,7 @@ host4s2_140
   B host3s2_500
 
 host4s2_180
+  ;    [[[0, 1, 1, 4, '+']], [0, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6111,6 +6977,7 @@ host4s2_180
   MOV pc,lr
 
 host4s2_1C0
+  ;    [[[0, 1, 1, 4, '-']], [0, 4], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6120,6 +6987,7 @@ host4s2_1C0
   MOV pc,lr
 
 host4s2_300
+  ;    [[[3, 2, 1, 1, 'NF+']], [0, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -6153,6 +7021,7 @@ host4s2_300
   B host3s2_740
 
 host4s2_340
+  ;    [[[3, 2, 1, 1, 'NF-']], [0, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -6186,6 +7055,7 @@ host4s2_340
   B host3s2_700
 
 host4s2_380
+  ;    [[[3, 2, 1, 1, 'N+']], [0, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -6200,6 +7070,7 @@ host4s2_380
   MOV pc,lr
 
 host4s2_3C0
+  ;    [[[3, 2, 1, 1, 'N-']], [0, 4], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -6214,6 +7085,7 @@ host4s2_3C0
   MOV pc,lr
 
 host4s2_400
+  ;    [[[2, 2, 2, 2, 'F+'], [0, 2, 4, 4, 'F+'], [0, 0, 6, 4, 'F+']], [6, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000000A
@@ -6272,6 +7144,7 @@ host4s2_400
   SET_IFR_RETURN
 
 host4s2_440
+  ;    [[[2, 2, 2, 2, 'F-'], [0, 2, 4, 4, 'F-'], [0, 0, 6, 4, 'F-']], [6, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6326,6 +7199,7 @@ host4s2_440
   SET_IFR_RETURN
 
 host4s2_480
+  ;    [[[0, 0, 6, 4, '+']], [6, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6337,6 +7211,7 @@ host4s2_480
   MOV pc,lr
 
 host4s2_4C0
+  ;    [[[0, 0, 6, 4, '-']], [6, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6348,6 +7223,7 @@ host4s2_4C0
   MOV pc,lr
 
 host4s2_500
+  ;    [[[2, 2, 0, 2, 'F+']], [0, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6372,6 +7248,7 @@ host4s2_500
   B host2s2_540
 
 host4s2_540
+  ;    [[[2, 2, 0, 2, 'F-']], [0, 4], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6395,6 +7272,7 @@ host4s2_540
   B host2s2_500
 
 host4s2_700
+  ;    [[[2, 2, 0, 2, 'NF+']], [0, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -6428,6 +7306,7 @@ host4s2_700
   B host2s2_740
 
 host4s2_740
+  ;    [[[2, 2, 0, 2, 'NF-']], [0, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -6460,6 +7339,7 @@ host4s2_740
   B host2s2_700
 
 host4s2_780
+  ;    [[[2, 2, 0, 2, 'N+']], [0, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -6475,6 +7355,7 @@ host4s2_780
   MOV pc,lr
 
 host4s2_7C0
+  ;    [[[2, 2, 0, 2, 'N-']], [0, 4], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -6490,6 +7371,7 @@ host4s2_7C0
   MOV pc,lr
 
 host5s0_000
+  ;    [[[4, 0, 1, 1, 'F+'], [2, 0, 3, 3, 'F+'], [0, 0, 5, 5, 'F+']], [5, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000005
@@ -6551,6 +7433,7 @@ host5s0_000
   SET_IFR_RETURN
 
 host5s0_040
+  ;    [[[4, 0, 1, 1, 'F-'], [2, 0, 3, 3, 'F-'], [0, 0, 5, 5, 'F-']], [5, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6609,6 +7492,7 @@ host5s0_040
   SET_IFR_RETURN
 
 host5s0_080
+  ;    [[[0, 0, 5, 5, '+']], [5, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6621,6 +7505,7 @@ host5s0_080
   MOV pc,lr
 
 host5s0_0C0
+  ;    [[[0, 0, 5, 5, '-']], [5, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6633,6 +7518,7 @@ host5s0_0C0
   MOV pc,lr
 
 host5s0_100
+  ;    [[[4, 0, 1, 1, 'F+']], [1, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6660,6 +7546,7 @@ host5s0_100
   B host4s0_540
 
 host5s0_140
+  ;    [[[4, 0, 1, 1, 'F-']], [1, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6687,6 +7574,7 @@ host5s0_140
   B host4s0_500
 
 host5s0_180
+  ;    [[[0, 0, 1, 5, '+']], [1, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6698,6 +7586,7 @@ host5s0_180
   MOV pc,lr
 
 host5s0_1C0
+  ;    [[[0, 0, 1, 5, '-']], [1, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6709,6 +7598,7 @@ host5s0_1C0
   MOV pc,lr
 
 host5s0_300
+  ;    [[[4, 0, 1, 1, 'NF+']], [1, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -6744,6 +7634,7 @@ host5s0_300
   B host4s0_740
 
 host5s0_340
+  ;    [[[4, 0, 1, 1, 'NF-']], [1, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -6779,6 +7670,7 @@ host5s0_340
   B host4s0_700
 
 host5s0_380
+  ;    [[[4, 0, 1, 1, 'N+']], [1, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -6795,6 +7687,7 @@ host5s0_380
   MOV pc,lr
 
 host5s0_3C0
+  ;    [[[4, 0, 1, 1, 'N-']], [1, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -6811,6 +7704,7 @@ host5s0_3C0
   MOV pc,lr
 
 host5s0_400
+  ;    [[[3, 0, 2, 2, 'F+'], [1, 0, 4, 4, 'F+']], [5, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&80000002
@@ -6854,6 +7748,7 @@ host5s0_400
   B host1s0_400
 
 host5s0_440
+  ;    [[[3, 0, 2, 2, 'F-'], [1, 0, 4, 4, 'F-']], [5, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6894,6 +7789,7 @@ host5s0_440
   B host1s0_400
 
 host5s0_480
+  ;    [[[1, 0, 4, 4, '+']], [5, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6905,6 +7801,7 @@ host5s0_480
   MOV pc,lr
 
 host5s0_4C0
+  ;    [[[1, 0, 4, 4, '-']], [5, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6916,6 +7813,7 @@ host5s0_4C0
   MOV pc,lr
 
 host5s0_500
+  ;    [[[3, 0, 0, 2, 'F+']], [-1, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6942,6 +7840,7 @@ host5s0_500
   B host3s0_540
 
 host5s0_540
+  ;    [[[3, 0, 0, 2, 'F-']], [-1, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6967,6 +7866,7 @@ host5s0_540
   B host3s0_500
 
 host5s0_580
+  ;    [[[1, 0, 0, 4, '+']], [-1, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6978,6 +7878,7 @@ host5s0_580
   MOV pc,lr
 
 host5s0_5C0
+  ;    [[[1, 0, 0, 4, '-']], [-1, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -6989,6 +7890,7 @@ host5s0_5C0
   MOV pc,lr
 
 host5s0_700
+  ;    [[[3, 0, 0, 2, 'NF+']], [-1, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -7024,6 +7926,7 @@ host5s0_700
   B host3s0_740
 
 host5s0_740
+  ;    [[[3, 0, 0, 2, 'NF-']], [-1, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -7058,6 +7961,7 @@ host5s0_740
   B host3s0_700
 
 host5s0_780
+  ;    [[[3, 0, 0, 2, 'N+']], [-1, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -7075,6 +7979,7 @@ host5s0_780
   MOV pc,lr
 
 host5s0_7C0
+  ;    [[[3, 0, 0, 2, 'N-']], [-1, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -7092,6 +7997,7 @@ host5s0_7C0
   MOV pc,lr
 
 host5s1_000
+  ;    [[[4, 1, 1, 1, 'F+'], [2, 1, 3, 3, 'F+'], [0, 1, 5, 5, 'F+']], [6, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000005
@@ -7155,6 +8061,7 @@ host5s1_000
   B host0s1_400
 
 host5s1_040
+  ;    [[[4, 1, 1, 1, 'F-'], [2, 1, 3, 3, 'F-'], [0, 1, 5, 5, 'F-']], [6, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7215,6 +8122,7 @@ host5s1_040
   B host0s1_400
 
 host5s1_080
+  ;    [[[0, 1, 5, 5, '+']], [6, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7226,6 +8134,7 @@ host5s1_080
   MOV pc,lr
 
 host5s1_0C0
+  ;    [[[0, 1, 5, 5, '-']], [6, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7237,6 +8146,7 @@ host5s1_0C0
   MOV pc,lr
 
 host5s1_100
+  ;    [[[4, 1, 1, 1, 'F+']], [0, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7262,6 +8172,7 @@ host5s1_100
   B host4s1_540
 
 host5s1_140
+  ;    [[[4, 1, 1, 1, 'F-']], [0, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7287,6 +8198,7 @@ host5s1_140
   B host4s1_500
 
 host5s1_180
+  ;    [[[0, 1, 1, 5, '+']], [0, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7296,6 +8208,7 @@ host5s1_180
   MOV pc,lr
 
 host5s1_1C0
+  ;    [[[0, 1, 1, 5, '-']], [0, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7305,6 +8218,7 @@ host5s1_1C0
   MOV pc,lr
 
 host5s1_300
+  ;    [[[4, 1, 1, 1, 'NF+']], [0, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -7338,6 +8252,7 @@ host5s1_300
   B host4s1_740
 
 host5s1_340
+  ;    [[[4, 1, 1, 1, 'NF-']], [0, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -7371,6 +8286,7 @@ host5s1_340
   B host4s1_700
 
 host5s1_380
+  ;    [[[4, 1, 1, 1, 'N+']], [0, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -7385,6 +8301,7 @@ host5s1_380
   MOV pc,lr
 
 host5s1_3C0
+  ;    [[[4, 1, 1, 1, 'N-']], [0, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -7399,6 +8316,7 @@ host5s1_3C0
   MOV pc,lr
 
 host5s1_400
+  ;    [[[3, 1, 2, 2, 'F+'], [1, 1, 4, 4, 'F+'], [0, 0, 6, 5, 'F+']], [6, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000000A
@@ -7457,6 +8375,7 @@ host5s1_400
   SET_IFR_RETURN
 
 host5s1_440
+  ;    [[[3, 1, 2, 2, 'F-'], [1, 1, 4, 4, 'F-'], [0, 0, 6, 5, 'F-']], [6, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7511,6 +8430,7 @@ host5s1_440
   SET_IFR_RETURN
 
 host5s1_480
+  ;    [[[0, 0, 6, 5, '+']], [6, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7522,6 +8442,7 @@ host5s1_480
   MOV pc,lr
 
 host5s1_4C0
+  ;    [[[0, 0, 6, 5, '-']], [6, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7533,6 +8454,7 @@ host5s1_4C0
   MOV pc,lr
 
 host5s1_500
+  ;    [[[3, 1, 0, 2, 'F+']], [0, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7557,6 +8479,7 @@ host5s1_500
   B host3s1_540
 
 host5s1_540
+  ;    [[[3, 1, 0, 2, 'F-']], [0, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7580,6 +8503,7 @@ host5s1_540
   B host3s1_500
 
 host5s1_580
+  ;    [[[0, 0, 0, 5, '+']], [0, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7589,6 +8513,7 @@ host5s1_580
   MOV pc,lr
 
 host5s1_5C0
+  ;    [[[0, 0, 0, 5, '-']], [0, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7598,6 +8523,7 @@ host5s1_5C0
   MOV pc,lr
 
 host5s1_700
+  ;    [[[3, 1, 0, 2, 'NF+']], [0, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -7631,6 +8557,7 @@ host5s1_700
   B host3s1_740
 
 host5s1_740
+  ;    [[[3, 1, 0, 2, 'NF-']], [0, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -7663,6 +8590,7 @@ host5s1_740
   B host3s1_700
 
 host5s1_780
+  ;    [[[3, 1, 0, 2, 'N+']], [0, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -7678,6 +8606,7 @@ host5s1_780
   MOV pc,lr
 
 host5s1_7C0
+  ;    [[[3, 1, 0, 2, 'N-']], [0, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -7693,6 +8622,7 @@ host5s1_7C0
   MOV pc,lr
 
 host5s2_000
+  ;    [[[4, 2, 1, 1, 'F+'], [2, 2, 3, 3, 'F+'], [0, 2, 5, 5, 'F+'], [0, 0, 7, 5, 'F+']], [7, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000015
@@ -7773,6 +8703,7 @@ host5s2_000
   SET_IFR_RETURN
 
 host5s2_040
+  ;    [[[4, 2, 1, 1, 'F-'], [2, 2, 3, 3, 'F-'], [0, 2, 5, 5, 'F-'], [0, 0, 7, 5, 'F-']], [7, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7849,6 +8780,7 @@ host5s2_040
   SET_IFR_RETURN
 
 host5s2_080
+  ;    [[[0, 0, 7, 5, '+']], [7, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7861,6 +8793,7 @@ host5s2_080
   MOV pc,lr
 
 host5s2_0C0
+  ;    [[[0, 0, 7, 5, '-']], [7, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7873,6 +8806,7 @@ host5s2_0C0
   MOV pc,lr
 
 host5s2_100
+  ;    [[[4, 2, 1, 1, 'F+']], [1, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7900,6 +8834,7 @@ host5s2_100
   B host4s2_540
 
 host5s2_140
+  ;    [[[4, 2, 1, 1, 'F-']], [1, 5], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -7927,6 +8862,7 @@ host5s2_140
   B host4s2_500
 
 host5s2_300
+  ;    [[[4, 2, 1, 1, 'NF+']], [1, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -7962,6 +8898,7 @@ host5s2_300
   B host4s2_740
 
 host5s2_340
+  ;    [[[4, 2, 1, 1, 'NF-']], [1, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -7997,6 +8934,7 @@ host5s2_340
   B host4s2_700
 
 host5s2_380
+  ;    [[[4, 2, 1, 1, 'N+']], [1, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -8013,6 +8951,7 @@ host5s2_380
   MOV pc,lr
 
 host5s2_3C0
+  ;    [[[4, 2, 1, 1, 'N-']], [1, 5], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -8029,6 +8968,7 @@ host5s2_3C0
   MOV pc,lr
 
 host5s2_400
+  ;    [[[3, 2, 2, 2, 'F+'], [1, 2, 4, 4, 'F+'], [0, 1, 6, 5, 'F+']], [7, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000000A
@@ -8090,6 +9030,7 @@ host5s2_400
   B host0s1_400
 
 host5s2_440
+  ;    [[[3, 2, 2, 2, 'F-'], [1, 2, 4, 4, 'F-'], [0, 1, 6, 5, 'F-']], [7, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8147,6 +9088,7 @@ host5s2_440
   B host0s1_400
 
 host5s2_480
+  ;    [[[0, 1, 6, 5, '+']], [7, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8158,6 +9100,7 @@ host5s2_480
   MOV pc,lr
 
 host5s2_4C0
+  ;    [[[0, 1, 6, 5, '-']], [7, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8169,6 +9112,7 @@ host5s2_4C0
   MOV pc,lr
 
 host5s2_500
+  ;    [[[3, 2, 0, 2, 'F+']], [-1, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8195,6 +9139,7 @@ host5s2_500
   B host3s2_540
 
 host5s2_540
+  ;    [[[3, 2, 0, 2, 'F-']], [-1, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8220,6 +9165,7 @@ host5s2_540
   B host3s2_500
 
 host5s2_580
+  ;    [[[0, 1, 0, 5, '+']], [-1, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8231,6 +9177,7 @@ host5s2_580
   MOV pc,lr
 
 host5s2_5C0
+  ;    [[[0, 1, 0, 5, '-']], [-1, 5], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8242,6 +9189,7 @@ host5s2_5C0
   MOV pc,lr
 
 host5s2_700
+  ;    [[[3, 2, 0, 2, 'NF+']], [-1, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -8277,6 +9225,7 @@ host5s2_700
   B host3s2_740
 
 host5s2_740
+  ;    [[[3, 2, 0, 2, 'NF-']], [-1, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -8311,6 +9260,7 @@ host5s2_740
   B host3s2_700
 
 host5s2_780
+  ;    [[[3, 2, 0, 2, 'N+']], [-1, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -8328,6 +9278,7 @@ host5s2_780
   MOV pc,lr
 
 host5s2_7C0
+  ;    [[[3, 2, 0, 2, 'N-']], [-1, 5], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -8345,6 +9296,7 @@ host5s2_7C0
   MOV pc,lr
 
 host6s0_000
+  ;    [[[5, 0, 1, 1, 'F+'], [3, 0, 3, 3, 'F+'], [1, 0, 5, 5, 'F+']], [6, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000005
@@ -8408,6 +9360,7 @@ host6s0_000
   B host1s0_400
 
 host6s0_040
+  ;    [[[5, 0, 1, 1, 'F-'], [3, 0, 3, 3, 'F-'], [1, 0, 5, 5, 'F-']], [6, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8468,6 +9421,7 @@ host6s0_040
   B host1s0_400
 
 host6s0_080
+  ;    [[[1, 0, 5, 5, '+']], [6, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8479,6 +9433,7 @@ host6s0_080
   MOV pc,lr
 
 host6s0_0C0
+  ;    [[[1, 0, 5, 5, '-']], [6, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8490,6 +9445,7 @@ host6s0_0C0
   MOV pc,lr
 
 host6s0_100
+  ;    [[[5, 0, 1, 1, 'F+']], [0, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8515,6 +9471,7 @@ host6s0_100
   B host5s0_540
 
 host6s0_140
+  ;    [[[5, 0, 1, 1, 'F-']], [0, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8540,6 +9497,7 @@ host6s0_140
   B host5s0_500
 
 host6s0_180
+  ;    [[[1, 0, 1, 5, '+']], [0, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8549,6 +9507,7 @@ host6s0_180
   MOV pc,lr
 
 host6s0_1C0
+  ;    [[[1, 0, 1, 5, '-']], [0, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8558,6 +9517,7 @@ host6s0_1C0
   MOV pc,lr
 
 host6s0_300
+  ;    [[[5, 0, 1, 1, 'NF+']], [0, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -8591,6 +9551,7 @@ host6s0_300
   B host5s0_740
 
 host6s0_340
+  ;    [[[5, 0, 1, 1, 'NF-']], [0, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -8624,6 +9585,7 @@ host6s0_340
   B host5s0_700
 
 host6s0_380
+  ;    [[[5, 0, 1, 1, 'N+']], [0, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -8638,6 +9600,7 @@ host6s0_380
   MOV pc,lr
 
 host6s0_3C0
+  ;    [[[5, 0, 1, 1, 'N-']], [0, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -8652,6 +9615,7 @@ host6s0_3C0
   MOV pc,lr
 
 host6s0_400
+  ;    [[[4, 0, 2, 2, 'F+'], [2, 0, 4, 4, 'F+'], [0, 0, 6, 6, 'F+']], [6, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000000A
@@ -8710,6 +9674,7 @@ host6s0_400
   SET_IFR_RETURN
 
 host6s0_440
+  ;    [[[4, 0, 2, 2, 'F-'], [2, 0, 4, 4, 'F-'], [0, 0, 6, 6, 'F-']], [6, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8764,6 +9729,7 @@ host6s0_440
   SET_IFR_RETURN
 
 host6s0_480
+  ;    [[[0, 0, 6, 6, '+']], [6, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8775,6 +9741,7 @@ host6s0_480
   MOV pc,lr
 
 host6s0_4C0
+  ;    [[[0, 0, 6, 6, '-']], [6, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8786,6 +9753,7 @@ host6s0_4C0
   MOV pc,lr
 
 host6s0_500
+  ;    [[[4, 0, 0, 2, 'F+']], [0, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8810,6 +9778,7 @@ host6s0_500
   B host4s0_540
 
 host6s0_540
+  ;    [[[4, 0, 0, 2, 'F-']], [0, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8833,6 +9802,7 @@ host6s0_540
   B host4s0_500
 
 host6s0_580
+  ;    [[[0, 0, 0, 6, '+']], [0, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8842,6 +9812,7 @@ host6s0_580
   MOV pc,lr
 
 host6s0_5C0
+  ;    [[[0, 0, 0, 6, '-']], [0, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -8851,6 +9822,7 @@ host6s0_5C0
   MOV pc,lr
 
 host6s0_700
+  ;    [[[4, 0, 0, 2, 'NF+']], [0, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -8884,6 +9856,7 @@ host6s0_700
   B host4s0_740
 
 host6s0_740
+  ;    [[[4, 0, 0, 2, 'NF-']], [0, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -8916,6 +9889,7 @@ host6s0_740
   B host4s0_700
 
 host6s0_780
+  ;    [[[4, 0, 0, 2, 'N+']], [0, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -8931,6 +9905,7 @@ host6s0_780
   MOV pc,lr
 
 host6s0_7C0
+  ;    [[[4, 0, 0, 2, 'N-']], [0, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -8946,6 +9921,7 @@ host6s0_7C0
   MOV pc,lr
 
 host6s1_000
+  ;    [[[5, 1, 1, 1, 'F+'], [3, 1, 3, 3, 'F+'], [1, 1, 5, 5, 'F+'], [0, 0, 7, 6, 'F+']], [7, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000015
@@ -9026,6 +10002,7 @@ host6s1_000
   SET_IFR_RETURN
 
 host6s1_040
+  ;    [[[5, 1, 1, 1, 'F-'], [3, 1, 3, 3, 'F-'], [1, 1, 5, 5, 'F-'], [0, 0, 7, 6, 'F-']], [7, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9102,6 +10079,7 @@ host6s1_040
   SET_IFR_RETURN
 
 host6s1_080
+  ;    [[[0, 0, 7, 6, '+']], [7, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9114,6 +10092,7 @@ host6s1_080
   MOV pc,lr
 
 host6s1_0C0
+  ;    [[[0, 0, 7, 6, '-']], [7, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9126,6 +10105,7 @@ host6s1_0C0
   MOV pc,lr
 
 host6s1_100
+  ;    [[[5, 1, 1, 1, 'F+']], [1, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9153,6 +10133,7 @@ host6s1_100
   B host5s1_540
 
 host6s1_140
+  ;    [[[5, 1, 1, 1, 'F-']], [1, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9180,6 +10161,7 @@ host6s1_140
   B host5s1_500
 
 host6s1_180
+  ;    [[[0, 0, 1, 6, '+']], [1, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9191,6 +10173,7 @@ host6s1_180
   MOV pc,lr
 
 host6s1_1C0
+  ;    [[[0, 0, 1, 6, '-']], [1, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9202,6 +10185,7 @@ host6s1_1C0
   MOV pc,lr
 
 host6s1_300
+  ;    [[[5, 1, 1, 1, 'NF+']], [1, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -9237,6 +10221,7 @@ host6s1_300
   B host5s1_740
 
 host6s1_340
+  ;    [[[5, 1, 1, 1, 'NF-']], [1, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -9272,6 +10257,7 @@ host6s1_340
   B host5s1_700
 
 host6s1_380
+  ;    [[[5, 1, 1, 1, 'N+']], [1, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -9288,6 +10274,7 @@ host6s1_380
   MOV pc,lr
 
 host6s1_3C0
+  ;    [[[5, 1, 1, 1, 'N-']], [1, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -9304,6 +10291,7 @@ host6s1_3C0
   MOV pc,lr
 
 host6s1_400
+  ;    [[[4, 1, 2, 2, 'F+'], [2, 1, 4, 4, 'F+'], [0, 1, 6, 6, 'F+']], [7, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000000A
@@ -9365,6 +10353,7 @@ host6s1_400
   B host0s1_400
 
 host6s1_440
+  ;    [[[4, 1, 2, 2, 'F-'], [2, 1, 4, 4, 'F-'], [0, 1, 6, 6, 'F-']], [7, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9422,6 +10411,7 @@ host6s1_440
   B host0s1_400
 
 host6s1_480
+  ;    [[[0, 1, 6, 6, '+']], [7, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9433,6 +10423,7 @@ host6s1_480
   MOV pc,lr
 
 host6s1_4C0
+  ;    [[[0, 1, 6, 6, '-']], [7, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9444,6 +10435,7 @@ host6s1_4C0
   MOV pc,lr
 
 host6s1_500
+  ;    [[[4, 1, 0, 2, 'F+']], [-1, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9470,6 +10462,7 @@ host6s1_500
   B host4s1_540
 
 host6s1_540
+  ;    [[[4, 1, 0, 2, 'F-']], [-1, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9495,6 +10488,7 @@ host6s1_540
   B host4s1_500
 
 host6s1_580
+  ;    [[[0, 1, 0, 6, '+']], [-1, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9506,6 +10500,7 @@ host6s1_580
   MOV pc,lr
 
 host6s1_5C0
+  ;    [[[0, 1, 0, 6, '-']], [-1, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9517,6 +10512,7 @@ host6s1_5C0
   MOV pc,lr
 
 host6s1_700
+  ;    [[[4, 1, 0, 2, 'NF+']], [-1, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -9552,6 +10548,7 @@ host6s1_700
   B host4s1_740
 
 host6s1_740
+  ;    [[[4, 1, 0, 2, 'NF-']], [-1, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -9586,6 +10583,7 @@ host6s1_740
   B host4s1_700
 
 host6s1_780
+  ;    [[[4, 1, 0, 2, 'N+']], [-1, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -9603,6 +10601,7 @@ host6s1_780
   MOV pc,lr
 
 host6s1_7C0
+  ;    [[[4, 1, 0, 2, 'N-']], [-1, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -9620,6 +10619,7 @@ host6s1_7C0
   MOV pc,lr
 
 host6s2_000
+  ;    [[[5, 2, 1, 1, 'F+'], [3, 2, 3, 3, 'F+'], [1, 2, 5, 5, 'F+'], [0, 1, 7, 6, 'F+']], [8, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000015
@@ -9702,6 +10702,7 @@ host6s2_000
   B host0s1_400
 
 host6s2_040
+  ;    [[[5, 2, 1, 1, 'F-'], [3, 2, 3, 3, 'F-'], [1, 2, 5, 5, 'F-'], [0, 1, 7, 6, 'F-']], [8, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9780,6 +10781,7 @@ host6s2_040
   B host0s1_400
 
 host6s2_080
+  ;    [[[0, 1, 7, 6, '+']], [8, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9791,6 +10793,7 @@ host6s2_080
   MOV pc,lr
 
 host6s2_0C0
+  ;    [[[0, 1, 7, 6, '-']], [8, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9802,6 +10805,7 @@ host6s2_0C0
   MOV pc,lr
 
 host6s2_100
+  ;    [[[5, 2, 1, 1, 'F+']], [0, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9827,6 +10831,7 @@ host6s2_100
   B host5s2_540
 
 host6s2_140
+  ;    [[[5, 2, 1, 1, 'F-']], [0, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9852,6 +10857,7 @@ host6s2_140
   B host5s2_500
 
 host6s2_180
+  ;    [[[0, 1, 1, 6, '+']], [0, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9861,6 +10867,7 @@ host6s2_180
   MOV pc,lr
 
 host6s2_1C0
+  ;    [[[0, 1, 1, 6, '-']], [0, 6], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -9870,6 +10877,7 @@ host6s2_1C0
   MOV pc,lr
 
 host6s2_300
+  ;    [[[5, 2, 1, 1, 'NF+']], [0, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -9903,6 +10911,7 @@ host6s2_300
   B host5s2_740
 
 host6s2_340
+  ;    [[[5, 2, 1, 1, 'NF-']], [0, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -9936,6 +10945,7 @@ host6s2_340
   B host5s2_700
 
 host6s2_380
+  ;    [[[5, 2, 1, 1, 'N+']], [0, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -9950,6 +10960,7 @@ host6s2_380
   MOV pc,lr
 
 host6s2_3C0
+  ;    [[[5, 2, 1, 1, 'N-']], [0, 6], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -9964,6 +10975,7 @@ host6s2_3C0
   MOV pc,lr
 
 host6s2_400
+  ;    [[[4, 2, 2, 2, 'F+'], [2, 2, 4, 4, 'F+'], [0, 2, 6, 6, 'F+'], [0, 0, 8, 6, 'F+']], [8, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000002A
@@ -10040,6 +11052,7 @@ host6s2_400
   SET_IFR_RETURN
 
 host6s2_440
+  ;    [[[4, 2, 2, 2, 'F-'], [2, 2, 4, 4, 'F-'], [0, 2, 6, 6, 'F-'], [0, 0, 8, 6, 'F-']], [8, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10111,6 +11124,7 @@ host6s2_440
   SET_IFR_RETURN
 
 host6s2_480
+  ;    [[[0, 0, 8, 6, '+']], [8, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10122,6 +11136,7 @@ host6s2_480
   MOV pc,lr
 
 host6s2_4C0
+  ;    [[[0, 0, 8, 6, '-']], [8, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10133,6 +11148,7 @@ host6s2_4C0
   MOV pc,lr
 
 host6s2_500
+  ;    [[[4, 2, 0, 2, 'F+']], [0, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10157,6 +11173,7 @@ host6s2_500
   B host4s2_540
 
 host6s2_540
+  ;    [[[4, 2, 0, 2, 'F-']], [0, 6], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10180,6 +11197,7 @@ host6s2_540
   B host4s2_500
 
 host6s2_700
+  ;    [[[4, 2, 0, 2, 'NF+']], [0, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -10213,6 +11231,7 @@ host6s2_700
   B host4s2_740
 
 host6s2_740
+  ;    [[[4, 2, 0, 2, 'NF-']], [0, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -10245,6 +11264,7 @@ host6s2_740
   B host4s2_700
 
 host6s2_780
+  ;    [[[4, 2, 0, 2, 'N+']], [0, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -10260,6 +11280,7 @@ host6s2_780
   MOV pc,lr
 
 host6s2_7C0
+  ;    [[[4, 2, 0, 2, 'N-']], [0, 6], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -10275,6 +11296,7 @@ host6s2_7C0
   MOV pc,lr
 
 host7s0_000
+  ;    [[[6, 0, 1, 1, 'F+'], [4, 0, 3, 3, 'F+'], [2, 0, 5, 5, 'F+'], [0, 0, 7, 7, 'F+']], [7, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000015
@@ -10355,6 +11377,7 @@ host7s0_000
   SET_IFR_RETURN
 
 host7s0_040
+  ;    [[[6, 0, 1, 1, 'F-'], [4, 0, 3, 3, 'F-'], [2, 0, 5, 5, 'F-'], [0, 0, 7, 7, 'F-']], [7, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10431,6 +11454,7 @@ host7s0_040
   SET_IFR_RETURN
 
 host7s0_080
+  ;    [[[0, 0, 7, 7, '+']], [7, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10443,6 +11467,7 @@ host7s0_080
   MOV pc,lr
 
 host7s0_0C0
+  ;    [[[0, 0, 7, 7, '-']], [7, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10455,6 +11480,7 @@ host7s0_0C0
   MOV pc,lr
 
 host7s0_100
+  ;    [[[6, 0, 1, 1, 'F+']], [1, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10482,6 +11508,7 @@ host7s0_100
   B host6s0_540
 
 host7s0_140
+  ;    [[[6, 0, 1, 1, 'F-']], [1, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10509,6 +11536,7 @@ host7s0_140
   B host6s0_500
 
 host7s0_180
+  ;    [[[0, 0, 1, 7, '+']], [1, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10520,6 +11548,7 @@ host7s0_180
   MOV pc,lr
 
 host7s0_1C0
+  ;    [[[0, 0, 1, 7, '-']], [1, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10531,6 +11560,7 @@ host7s0_1C0
   MOV pc,lr
 
 host7s0_300
+  ;    [[[6, 0, 1, 1, 'NF+']], [1, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -10566,6 +11596,7 @@ host7s0_300
   B host6s0_740
 
 host7s0_340
+  ;    [[[6, 0, 1, 1, 'NF-']], [1, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -10601,6 +11632,7 @@ host7s0_340
   B host6s0_700
 
 host7s0_380
+  ;    [[[6, 0, 1, 1, 'N+']], [1, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -10617,6 +11649,7 @@ host7s0_380
   MOV pc,lr
 
 host7s0_3C0
+  ;    [[[6, 0, 1, 1, 'N-']], [1, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -10633,6 +11666,7 @@ host7s0_3C0
   MOV pc,lr
 
 host7s0_400
+  ;    [[[5, 0, 2, 2, 'F+'], [3, 0, 4, 4, 'F+'], [1, 0, 6, 6, 'F+']], [7, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000000A
@@ -10694,6 +11728,7 @@ host7s0_400
   B host1s0_400
 
 host7s0_440
+  ;    [[[5, 0, 2, 2, 'F-'], [3, 0, 4, 4, 'F-'], [1, 0, 6, 6, 'F-']], [7, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10751,6 +11786,7 @@ host7s0_440
   B host1s0_400
 
 host7s0_480
+  ;    [[[1, 0, 6, 6, '+']], [7, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10762,6 +11798,7 @@ host7s0_480
   MOV pc,lr
 
 host7s0_4C0
+  ;    [[[1, 0, 6, 6, '-']], [7, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10773,6 +11810,7 @@ host7s0_4C0
   MOV pc,lr
 
 host7s0_500
+  ;    [[[5, 0, 0, 2, 'F+']], [-1, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10799,6 +11837,7 @@ host7s0_500
   B host5s0_540
 
 host7s0_540
+  ;    [[[5, 0, 0, 2, 'F-']], [-1, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10824,6 +11863,7 @@ host7s0_540
   B host5s0_500
 
 host7s0_580
+  ;    [[[1, 0, 0, 6, '+']], [-1, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10835,6 +11875,7 @@ host7s0_580
   MOV pc,lr
 
 host7s0_5C0
+  ;    [[[1, 0, 0, 6, '-']], [-1, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -10846,6 +11887,7 @@ host7s0_5C0
   MOV pc,lr
 
 host7s0_700
+  ;    [[[5, 0, 0, 2, 'NF+']], [-1, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -10881,6 +11923,7 @@ host7s0_700
   B host5s0_740
 
 host7s0_740
+  ;    [[[5, 0, 0, 2, 'NF-']], [-1, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -10915,6 +11958,7 @@ host7s0_740
   B host5s0_700
 
 host7s0_780
+  ;    [[[5, 0, 0, 2, 'N+']], [-1, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -10932,6 +11976,7 @@ host7s0_780
   MOV pc,lr
 
 host7s0_7C0
+  ;    [[[5, 0, 0, 2, 'N-']], [-1, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -10949,6 +11994,7 @@ host7s0_7C0
   MOV pc,lr
 
 host7s1_000
+  ;    [[[6, 1, 1, 1, 'F+'], [4, 1, 3, 3, 'F+'], [2, 1, 5, 5, 'F+'], [0, 1, 7, 7, 'F+']], [8, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000015
@@ -11031,6 +12077,7 @@ host7s1_000
   B host0s1_400
 
 host7s1_040
+  ;    [[[6, 1, 1, 1, 'F-'], [4, 1, 3, 3, 'F-'], [2, 1, 5, 5, 'F-'], [0, 1, 7, 7, 'F-']], [8, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11109,6 +12156,7 @@ host7s1_040
   B host0s1_400
 
 host7s1_080
+  ;    [[[0, 1, 7, 7, '+']], [8, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11120,6 +12168,7 @@ host7s1_080
   MOV pc,lr
 
 host7s1_0C0
+  ;    [[[0, 1, 7, 7, '-']], [8, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11131,6 +12180,7 @@ host7s1_0C0
   MOV pc,lr
 
 host7s1_100
+  ;    [[[6, 1, 1, 1, 'F+']], [0, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11156,6 +12206,7 @@ host7s1_100
   B host6s1_540
 
 host7s1_140
+  ;    [[[6, 1, 1, 1, 'F-']], [0, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11181,6 +12232,7 @@ host7s1_140
   B host6s1_500
 
 host7s1_180
+  ;    [[[0, 1, 1, 7, '+']], [0, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11190,6 +12242,7 @@ host7s1_180
   MOV pc,lr
 
 host7s1_1C0
+  ;    [[[0, 1, 1, 7, '-']], [0, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11199,6 +12252,7 @@ host7s1_1C0
   MOV pc,lr
 
 host7s1_300
+  ;    [[[6, 1, 1, 1, 'NF+']], [0, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -11232,6 +12286,7 @@ host7s1_300
   B host6s1_740
 
 host7s1_340
+  ;    [[[6, 1, 1, 1, 'NF-']], [0, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -11265,6 +12320,7 @@ host7s1_340
   B host6s1_700
 
 host7s1_380
+  ;    [[[6, 1, 1, 1, 'N+']], [0, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -11279,6 +12335,7 @@ host7s1_380
   MOV pc,lr
 
 host7s1_3C0
+  ;    [[[6, 1, 1, 1, 'N-']], [0, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -11293,6 +12350,7 @@ host7s1_3C0
   MOV pc,lr
 
 host7s1_400
+  ;    [[[5, 1, 2, 2, 'F+'], [3, 1, 4, 4, 'F+'], [1, 1, 6, 6, 'F+'], [0, 0, 8, 7, 'F+']], [8, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000002A
@@ -11369,6 +12427,7 @@ host7s1_400
   SET_IFR_RETURN
 
 host7s1_440
+  ;    [[[5, 1, 2, 2, 'F-'], [3, 1, 4, 4, 'F-'], [1, 1, 6, 6, 'F-'], [0, 0, 8, 7, 'F-']], [8, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11440,6 +12499,7 @@ host7s1_440
   SET_IFR_RETURN
 
 host7s1_480
+  ;    [[[0, 0, 8, 7, '+']], [8, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11451,6 +12511,7 @@ host7s1_480
   MOV pc,lr
 
 host7s1_4C0
+  ;    [[[0, 0, 8, 7, '-']], [8, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11462,6 +12523,7 @@ host7s1_4C0
   MOV pc,lr
 
 host7s1_500
+  ;    [[[5, 1, 0, 2, 'F+']], [0, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11486,6 +12548,7 @@ host7s1_500
   B host5s1_540
 
 host7s1_540
+  ;    [[[5, 1, 0, 2, 'F-']], [0, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11509,6 +12572,7 @@ host7s1_540
   B host5s1_500
 
 host7s1_580
+  ;    [[[0, 0, 0, 7, '+']], [0, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11518,6 +12582,7 @@ host7s1_580
   MOV pc,lr
 
 host7s1_5C0
+  ;    [[[0, 0, 0, 7, '-']], [0, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11527,6 +12592,7 @@ host7s1_5C0
   MOV pc,lr
 
 host7s1_700
+  ;    [[[5, 1, 0, 2, 'NF+']], [0, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -11560,6 +12626,7 @@ host7s1_700
   B host5s1_740
 
 host7s1_740
+  ;    [[[5, 1, 0, 2, 'NF-']], [0, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -11592,6 +12659,7 @@ host7s1_740
   B host5s1_700
 
 host7s1_780
+  ;    [[[5, 1, 0, 2, 'N+']], [0, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -11607,6 +12675,7 @@ host7s1_780
   MOV pc,lr
 
 host7s1_7C0
+  ;    [[[5, 1, 0, 2, 'N-']], [0, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -11622,6 +12691,7 @@ host7s1_7C0
   MOV pc,lr
 
 host7s2_000
+  ;    [[[6, 2, 1, 1, 'F+'], [4, 2, 3, 3, 'F+'], [2, 2, 5, 5, 'F+'], [0, 2, 7, 7, 'F+'], [0, 0, 9, 7, 'F+']], [9, 7], 0]
   MOV r2,r2,ROR r7
   MOV r12,#&40000000
   ORR r12,r12,#&00000055
@@ -11723,6 +12793,7 @@ host7s2_000
   SET_IFR_RETURN
 
 host7s2_040
+  ;    [[[6, 2, 1, 1, 'F-'], [4, 2, 3, 3, 'F-'], [2, 2, 5, 5, 'F-'], [0, 2, 7, 7, 'F-'], [0, 0, 9, 7, 'F-']], [9, 7], 0]
   MOV r2,r2,ROR r7
   MOV r12,#&40000000
   ORR r12,r12,#&00000055
@@ -11819,6 +12890,7 @@ host7s2_040
   SET_IFR_RETURN
 
 host7s2_080
+  ;    [[[0, 0, 9, 7, '+']], [9, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11831,6 +12903,7 @@ host7s2_080
   MOV pc,lr
 
 host7s2_0C0
+  ;    [[[0, 0, 9, 7, '-']], [9, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11843,6 +12916,7 @@ host7s2_0C0
   MOV pc,lr
 
 host7s2_100
+  ;    [[[6, 2, 1, 1, 'F+']], [1, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11870,6 +12944,7 @@ host7s2_100
   B host6s2_540
 
 host7s2_140
+  ;    [[[6, 2, 1, 1, 'F-']], [1, 7], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -11897,6 +12972,7 @@ host7s2_140
   B host6s2_500
 
 host7s2_300
+  ;    [[[6, 2, 1, 1, 'NF+']], [1, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -11932,6 +13008,7 @@ host7s2_300
   B host6s2_740
 
 host7s2_340
+  ;    [[[6, 2, 1, 1, 'NF-']], [1, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -11967,6 +13044,7 @@ host7s2_340
   B host6s2_700
 
 host7s2_380
+  ;    [[[6, 2, 1, 1, 'N+']], [1, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -11983,6 +13061,7 @@ host7s2_380
   MOV pc,lr
 
 host7s2_3C0
+  ;    [[[6, 2, 1, 1, 'N-']], [1, 7], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -11999,6 +13078,7 @@ host7s2_3C0
   MOV pc,lr
 
 host7s2_400
+  ;    [[[5, 2, 2, 2, 'F+'], [3, 2, 4, 4, 'F+'], [1, 2, 6, 6, 'F+'], [0, 1, 8, 7, 'F+']], [9, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000002A
@@ -12078,6 +13158,7 @@ host7s2_400
   B host0s1_400
 
 host7s2_440
+  ;    [[[5, 2, 2, 2, 'F-'], [3, 2, 4, 4, 'F-'], [1, 2, 6, 6, 'F-'], [0, 1, 8, 7, 'F-']], [9, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12152,6 +13233,7 @@ host7s2_440
   B host0s1_400
 
 host7s2_480
+  ;    [[[0, 1, 8, 7, '+']], [9, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12163,6 +13245,7 @@ host7s2_480
   MOV pc,lr
 
 host7s2_4C0
+  ;    [[[0, 1, 8, 7, '-']], [9, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12174,6 +13257,7 @@ host7s2_4C0
   MOV pc,lr
 
 host7s2_500
+  ;    [[[5, 2, 0, 2, 'F+']], [-1, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12200,6 +13284,7 @@ host7s2_500
   B host5s2_540
 
 host7s2_540
+  ;    [[[5, 2, 0, 2, 'F-']], [-1, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12225,6 +13310,7 @@ host7s2_540
   B host5s2_500
 
 host7s2_580
+  ;    [[[0, 1, 0, 7, '+']], [-1, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12236,6 +13322,7 @@ host7s2_580
   MOV pc,lr
 
 host7s2_5C0
+  ;    [[[0, 1, 0, 7, '-']], [-1, 7], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12247,6 +13334,7 @@ host7s2_5C0
   MOV pc,lr
 
 host7s2_700
+  ;    [[[5, 2, 0, 2, 'NF+']], [-1, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -12282,6 +13370,7 @@ host7s2_700
   B host5s2_740
 
 host7s2_740
+  ;    [[[5, 2, 0, 2, 'NF-']], [-1, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -12316,6 +13405,7 @@ host7s2_740
   B host5s2_700
 
 host7s2_780
+  ;    [[[5, 2, 0, 2, 'N+']], [-1, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -12333,6 +13423,7 @@ host7s2_780
   MOV pc,lr
 
 host7s2_7C0
+  ;    [[[5, 2, 0, 2, 'N-']], [-1, 7], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -12350,6 +13441,7 @@ host7s2_7C0
   MOV pc,lr
 
 host8s0_000
+  ;    [[[7, 0, 1, 1, 'F+'], [5, 0, 3, 3, 'F+'], [3, 0, 5, 5, 'F+'], [1, 0, 7, 7, 'F+']], [8, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&40000015
@@ -12432,6 +13524,7 @@ host8s0_000
   B host1s0_400
 
 host8s0_040
+  ;    [[[7, 0, 1, 1, 'F-'], [5, 0, 3, 3, 'F-'], [3, 0, 5, 5, 'F-'], [1, 0, 7, 7, 'F-']], [8, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12510,6 +13603,7 @@ host8s0_040
   B host1s0_400
 
 host8s0_080
+  ;    [[[1, 0, 7, 7, '+']], [8, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12521,6 +13615,7 @@ host8s0_080
   MOV pc,lr
 
 host8s0_0C0
+  ;    [[[1, 0, 7, 7, '-']], [8, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12532,6 +13627,7 @@ host8s0_0C0
   MOV pc,lr
 
 host8s0_100
+  ;    [[[7, 0, 1, 1, 'F+']], [0, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12557,6 +13653,7 @@ host8s0_100
   B host7s0_540
 
 host8s0_140
+  ;    [[[7, 0, 1, 1, 'F-']], [0, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12582,6 +13679,7 @@ host8s0_140
   B host7s0_500
 
 host8s0_180
+  ;    [[[1, 0, 1, 7, '+']], [0, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12591,6 +13689,7 @@ host8s0_180
   MOV pc,lr
 
 host8s0_1C0
+  ;    [[[1, 0, 1, 7, '-']], [0, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12600,6 +13699,7 @@ host8s0_1C0
   MOV pc,lr
 
 host8s0_300
+  ;    [[[7, 0, 1, 1, 'NF+']], [0, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -12633,6 +13733,7 @@ host8s0_300
   B host7s0_740
 
 host8s0_340
+  ;    [[[7, 0, 1, 1, 'NF-']], [0, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -12666,6 +13767,7 @@ host8s0_340
   B host7s0_700
 
 host8s0_380
+  ;    [[[7, 0, 1, 1, 'N+']], [0, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -12680,6 +13782,7 @@ host8s0_380
   MOV pc,lr
 
 host8s0_3C0
+  ;    [[[7, 0, 1, 1, 'N-']], [0, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -12694,6 +13797,7 @@ host8s0_3C0
   MOV pc,lr
 
 host8s0_400
+  ;    [[[6, 0, 2, 2, 'F+'], [4, 0, 4, 4, 'F+'], [2, 0, 6, 6, 'F+'], [0, 0, 8, 8, 'F+']], [8, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000002A
@@ -12770,6 +13874,7 @@ host8s0_400
   SET_IFR_RETURN
 
 host8s0_440
+  ;    [[[6, 0, 2, 2, 'F-'], [4, 0, 4, 4, 'F-'], [2, 0, 6, 6, 'F-'], [0, 0, 8, 8, 'F-']], [8, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12841,6 +13946,7 @@ host8s0_440
   SET_IFR_RETURN
 
 host8s0_480
+  ;    [[[0, 0, 8, 8, '+']], [8, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12852,6 +13958,7 @@ host8s0_480
   MOV pc,lr
 
 host8s0_4C0
+  ;    [[[0, 0, 8, 8, '-']], [8, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12863,6 +13970,7 @@ host8s0_4C0
   MOV pc,lr
 
 host8s0_500
+  ;    [[[6, 0, 0, 2, 'F+']], [0, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12887,6 +13995,7 @@ host8s0_500
   B host6s0_540
 
 host8s0_540
+  ;    [[[6, 0, 0, 2, 'F-']], [0, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12910,6 +14019,7 @@ host8s0_540
   B host6s0_500
 
 host8s0_580
+  ;    [[[0, 0, 0, 8, '+']], [0, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12919,6 +14029,7 @@ host8s0_580
   MOV pc,lr
 
 host8s0_5C0
+  ;    [[[0, 0, 0, 8, '-']], [0, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -12928,6 +14039,7 @@ host8s0_5C0
   MOV pc,lr
 
 host8s0_700
+  ;    [[[6, 0, 0, 2, 'NF+']], [0, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -12961,6 +14073,7 @@ host8s0_700
   B host6s0_740
 
 host8s0_740
+  ;    [[[6, 0, 0, 2, 'NF-']], [0, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -12993,6 +14106,7 @@ host8s0_740
   B host6s0_700
 
 host8s0_780
+  ;    [[[6, 0, 0, 2, 'N+']], [0, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -13008,6 +14122,7 @@ host8s0_780
   MOV pc,lr
 
 host8s0_7C0
+  ;    [[[6, 0, 0, 2, 'N-']], [0, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -13023,6 +14138,7 @@ host8s0_7C0
   MOV pc,lr
 
 host8s1_000
+  ;    [[[7, 1, 1, 1, 'F+'], [5, 1, 3, 3, 'F+'], [3, 1, 5, 5, 'F+'], [1, 1, 7, 7, 'F+'], [0, 0, 9, 8, 'F+']], [9, 8], 0]
   MOV r2,r2,ROR r7
   MOV r12,#&40000000
   ORR r12,r12,#&00000055
@@ -13124,6 +14240,7 @@ host8s1_000
   SET_IFR_RETURN
 
 host8s1_040
+  ;    [[[7, 1, 1, 1, 'F-'], [5, 1, 3, 3, 'F-'], [3, 1, 5, 5, 'F-'], [1, 1, 7, 7, 'F-'], [0, 0, 9, 8, 'F-']], [9, 8], 0]
   MOV r2,r2,ROR r7
   MOV r12,#&40000000
   ORR r12,r12,#&00000055
@@ -13220,6 +14337,7 @@ host8s1_040
   SET_IFR_RETURN
 
 host8s1_080
+  ;    [[[0, 0, 9, 8, '+']], [9, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13232,6 +14350,7 @@ host8s1_080
   MOV pc,lr
 
 host8s1_0C0
+  ;    [[[0, 0, 9, 8, '-']], [9, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13244,6 +14363,7 @@ host8s1_0C0
   MOV pc,lr
 
 host8s1_100
+  ;    [[[7, 1, 1, 1, 'F+']], [1, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13271,6 +14391,7 @@ host8s1_100
   B host7s1_540
 
 host8s1_140
+  ;    [[[7, 1, 1, 1, 'F-']], [1, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13298,6 +14419,7 @@ host8s1_140
   B host7s1_500
 
 host8s1_180
+  ;    [[[0, 0, 1, 8, '+']], [1, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13309,6 +14431,7 @@ host8s1_180
   MOV pc,lr
 
 host8s1_1C0
+  ;    [[[0, 0, 1, 8, '-']], [1, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13320,6 +14443,7 @@ host8s1_1C0
   MOV pc,lr
 
 host8s1_300
+  ;    [[[7, 1, 1, 1, 'NF+']], [1, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -13355,6 +14479,7 @@ host8s1_300
   B host7s1_740
 
 host8s1_340
+  ;    [[[7, 1, 1, 1, 'NF-']], [1, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -13390,6 +14515,7 @@ host8s1_340
   B host7s1_700
 
 host8s1_380
+  ;    [[[7, 1, 1, 1, 'N+']], [1, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -13406,6 +14532,7 @@ host8s1_380
   MOV pc,lr
 
 host8s1_3C0
+  ;    [[[7, 1, 1, 1, 'N-']], [1, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -13422,6 +14549,7 @@ host8s1_3C0
   MOV pc,lr
 
 host8s1_400
+  ;    [[[6, 1, 2, 2, 'F+'], [4, 1, 4, 4, 'F+'], [2, 1, 6, 6, 'F+'], [0, 1, 8, 8, 'F+']], [9, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   EOR r2,r2,#&8000002A
@@ -13501,6 +14629,7 @@ host8s1_400
   B host0s1_400
 
 host8s1_440
+  ;    [[[6, 1, 2, 2, 'F-'], [4, 1, 4, 4, 'F-'], [2, 1, 6, 6, 'F-'], [0, 1, 8, 8, 'F-']], [9, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13575,6 +14704,7 @@ host8s1_440
   B host0s1_400
 
 host8s1_480
+  ;    [[[0, 1, 8, 8, '+']], [9, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13586,6 +14716,7 @@ host8s1_480
   MOV pc,lr
 
 host8s1_4C0
+  ;    [[[0, 1, 8, 8, '-']], [9, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13597,6 +14728,7 @@ host8s1_4C0
   MOV pc,lr
 
 host8s1_500
+  ;    [[[6, 1, 0, 2, 'F+']], [-1, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13623,6 +14755,7 @@ host8s1_500
   B host6s1_540
 
 host8s1_540
+  ;    [[[6, 1, 0, 2, 'F-']], [-1, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13648,6 +14781,7 @@ host8s1_540
   B host6s1_500
 
 host8s1_580
+  ;    [[[0, 1, 0, 8, '+']], [-1, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13659,6 +14793,7 @@ host8s1_580
   MOV pc,lr
 
 host8s1_5C0
+  ;    [[[0, 1, 0, 8, '-']], [-1, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13670,6 +14805,7 @@ host8s1_5C0
   MOV pc,lr
 
 host8s1_700
+  ;    [[[6, 1, 0, 2, 'NF+']], [-1, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -13705,6 +14841,7 @@ host8s1_700
   B host6s1_740
 
 host8s1_740
+  ;    [[[6, 1, 0, 2, 'NF-']], [-1, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -13739,6 +14876,7 @@ host8s1_740
   B host6s1_700
 
 host8s1_780
+  ;    [[[6, 1, 0, 2, 'N+']], [-1, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -13756,6 +14894,7 @@ host8s1_780
   MOV pc,lr
 
 host8s1_7C0
+  ;    [[[6, 1, 0, 2, 'N-']], [-1, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -13773,6 +14912,7 @@ host8s1_7C0
   MOV pc,lr
 
 host8s2_000
+  ;    [[[7, 2, 1, 1, 'F+'], [5, 2, 3, 3, 'F+'], [3, 2, 5, 5, 'F+'], [1, 2, 7, 7, 'F+'], [0, 1, 9, 8, 'F+']], [10, 8], 0]
   MOV r2,r2,ROR r7
   MOV r12,#&40000000
   ORR r12,r12,#&00000055
@@ -13876,6 +15016,7 @@ host8s2_000
   B host0s1_400
 
 host8s2_040
+  ;    [[[7, 2, 1, 1, 'F-'], [5, 2, 3, 3, 'F-'], [3, 2, 5, 5, 'F-'], [1, 2, 7, 7, 'F-'], [0, 1, 9, 8, 'F-']], [10, 8], 0]
   MOV r2,r2,ROR r7
   MOV r12,#&40000000
   ORR r12,r12,#&00000055
@@ -13974,6 +15115,7 @@ host8s2_040
   B host0s1_400
 
 host8s2_080
+  ;    [[[0, 1, 9, 8, '+']], [10, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13985,6 +15127,7 @@ host8s2_080
   MOV pc,lr
 
 host8s2_0C0
+  ;    [[[0, 1, 9, 8, '-']], [10, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -13996,6 +15139,7 @@ host8s2_0C0
   MOV pc,lr
 
 host8s2_100
+  ;    [[[7, 2, 1, 1, 'F+']], [0, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -14021,6 +15165,7 @@ host8s2_100
   B host7s2_540
 
 host8s2_140
+  ;    [[[7, 2, 1, 1, 'F-']], [0, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -14046,6 +15191,7 @@ host8s2_140
   B host7s2_500
 
 host8s2_180
+  ;    [[[0, 1, 1, 8, '+']], [0, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -14055,6 +15201,7 @@ host8s2_180
   MOV pc,lr
 
 host8s2_1C0
+  ;    [[[0, 1, 1, 8, '-']], [0, 8], 0]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -14064,6 +15211,7 @@ host8s2_1C0
   MOV pc,lr
 
 host8s2_300
+  ;    [[[7, 2, 1, 1, 'NF+']], [0, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -14097,6 +15245,7 @@ host8s2_300
   B host7s2_740
 
 host8s2_340
+  ;    [[[7, 2, 1, 1, 'NF-']], [0, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -14130,6 +15279,7 @@ host8s2_340
   B host7s2_700
 
 host8s2_380
+  ;    [[[7, 2, 1, 1, 'N+']], [0, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -14144,6 +15294,7 @@ host8s2_380
   MOV pc,lr
 
 host8s2_3C0
+  ;    [[[7, 2, 1, 1, 'N-']], [0, 8], 0]
   MOV r2,r2,ROR r7
   AND r3,r7,#&1E
   ORRS r2,r2,r2,LSR #1
@@ -14158,6 +15309,7 @@ host8s2_3C0
   MOV pc,lr
 
 host8s2_400
+  ;    [[[6, 2, 2, 2, 'F+'], [4, 2, 4, 4, 'F+'], [2, 2, 6, 6, 'F+'], [0, 2, 8, 8, 'F+'], [0, 0, 10, 8, 'F+']], [10, 8], 1]
   MOV r2,r2,ROR r7
   MOV r12,#&80000000
   ORR r12,r12,#&000000AA
@@ -14254,6 +15406,7 @@ host8s2_400
   SET_IFR_RETURN
 
 host8s2_440
+  ;    [[[6, 2, 2, 2, 'F-'], [4, 2, 4, 4, 'F-'], [2, 2, 6, 6, 'F-'], [0, 2, 8, 8, 'F-'], [0, 0, 10, 8, 'F-']], [10, 8], 1]
   MOV r2,r2,ROR r7
   MOV r12,#&80000000
   ORR r12,r12,#&000000AA
@@ -14344,6 +15497,7 @@ host8s2_440
   SET_IFR_RETURN
 
 host8s2_480
+  ;    [[[0, 0, 10, 8, '+']], [10, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -14355,6 +15509,7 @@ host8s2_480
   MOV pc,lr
 
 host8s2_4C0
+  ;    [[[0, 0, 10, 8, '-']], [10, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -14366,6 +15521,7 @@ host8s2_4C0
   MOV pc,lr
 
 host8s2_500
+  ;    [[[6, 2, 0, 2, 'F+']], [0, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -14390,6 +15546,7 @@ host8s2_500
   B host6s2_540
 
 host8s2_540
+  ;    [[[6, 2, 0, 2, 'F-']], [0, 8], 1]
   MOV r2,r2,ROR r7
   ORR r2,r2,r2,ROR #1
   SHIFT_INTERRUPTQUEUE_START
@@ -14413,6 +15570,7 @@ host8s2_540
   B host6s2_500
 
 host8s2_700
+  ;    [[[6, 2, 0, 2, 'NF+']], [0, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -14446,6 +15604,7 @@ host8s2_700
   B host6s2_740
 
 host8s2_740
+  ;    [[[6, 2, 0, 2, 'NF-']], [0, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -14478,6 +15637,7 @@ host8s2_740
   B host6s2_700
 
 host8s2_780
+  ;    [[[6, 2, 0, 2, 'N+']], [0, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E
@@ -14493,6 +15653,7 @@ host8s2_780
   MOV pc,lr
 
 host8s2_7C0
+  ;    [[[6, 2, 0, 2, 'N-']], [0, 8], 1]
   SUB r3,r7,#1
   MOV r2,r2,ROR r3
   AND r3,r3,#&1E

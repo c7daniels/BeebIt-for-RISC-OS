@@ -22,6 +22,9 @@ Optimise6502WorkAreas SETL {TRUE}
 Optimise6502Timing SETL {TRUE}
 Optimise6502Flow SETL {TRUE}
 
+  GBLL CompareOptimise6502Timing
+CompareOptimise6502Timing SETL {FALSE}
+
 NFLAG EQU &80
 VFLAG EQU &40
 UFLAG EQU &20

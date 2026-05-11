@@ -479,8 +479,17 @@ $name.split
   MACRO
   R6502_OPCODE_CYCLES_BODY $n,$ns,$continuationtype,$label
   LCLA counter
+  LCLA nvalue
+nvalue SETA $n
+;;;multicycle routine selection
+  LCLL selected
+selected SETL {TRUE}
+  [ $n+$ns<5
+selected SETL {TRUE}
+  ]
+;;;end of multicycle routine selection
 counter SETA $n
-  IF Optimise6502Timing
+  IF Optimise6502Timing && selected
 
   ADD r12,r0,#:INDEX:HOST_STEPROUTINES+((($n)*3+$ns-1):SHL:7)
   SUBS r7,r7,#($n+$ns):SHL:12
@@ -493,7 +502,11 @@ counter SETA $n
   ELSE
   ADR lr,%F1
   ENDIF
+  [ $n+$ns>1 && CompareOptimise6502Timing
+  B r6502opcc$ns
+  |
   LDRCS pc,[r12,r3,LSR #4]
+  ]
   [ $n+$ns>1
   B r6502opcodecycles$ns.split
   |

@@ -88,6 +88,10 @@
   IMPORT |r6502opcodecycles1split|
   IMPORT |r6502opcodecycles2split|
 
+  IMPORT |r6502opcc0|
+  IMPORT |r6502opcc1|
+  IMPORT |r6502opcc2|
+
   IMPORT |host_r6502cycle0s1|
   IMPORT |host_r6502cycle1|
 
