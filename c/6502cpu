@@ -19,7 +19,7 @@
 
 static_assert(offsetof(R6502ZONEMAP, DC) == 0, "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, CC) == (0x3000>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
-static_assert(offsetof(R6502ZONEMAP, BC) == ((0x3C00>>2)+3) * sizeof(uintptr_t), "Expecting zones at specific offsets");
+static_assert(offsetof(R6502ZONEMAP, BC) == ((0x3C00>>2)+4) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(offsetof(R6502ZONEMAP, AC) == (0x3F00>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 static_assert(sizeof(R6502ZONEMAP) == (0x4000>>2) * sizeof(uintptr_t), "Expecting zones at specific offsets");
 
@@ -585,6 +585,7 @@ static R6502CPUMAP* r6502completecycleuninterruptedfetchreturn(R6502CPUMAP* ctop
   }
   else if (ctop[-1].transition1 == R6502_YIELD_TRANSITION)
   {
+    ctop[-1].sequencenumber = ctop[-1].m;
     ctop[-1].execute_cpu_state = ctop[-1].cpu_state;
     ctop[-1].cpu_state = ctop[-1].sequences[R6502_YIELD_SEQUENCE];
   }
@@ -607,6 +608,7 @@ static R6502CPUMAP* r6502completecycleearlyinterruptfetchreturn(R6502CPUMAP* cto
   }
   else if (ctop[-1].transition1 == R6502_YIELD_TRANSITION)
   {
+    ctop[-1].sequencenumber = ctop[-1].m;
     ctop[-1].execute_cpu_state = ctop[-1].cpu_state;
     ctop[-1].cpu_state = ctop[-1].sequences[R6502_YIELD_SEQUENCE];
   }
@@ -630,6 +632,7 @@ static R6502CPUMAP* r6502completecycleinterruptfetchreturn(R6502CPUMAP* ctop,
   }
   else if (ctop[-1].transition1 == R6502_YIELD_TRANSITION)
   {
+    ctop[-1].sequencenumber = ctop[-1].m;
     ctop[-1].execute_cpu_state = ctop[-1].cpu_state;
     ctop[-1].cpu_state = ctop[-1].sequences[R6502_YIELD_SEQUENCE];
   }
@@ -2336,7 +2339,6 @@ R6502CPUMAP* r6502startyield(R6502CPUMAP* ctop)
 
 void r6502reset(R6502CPUMAP* ctop, const R6502OP* const* mainsequences, const R6502OP* const* extrasequences)
 {
-  const R6502OP* s;
   int i;
 
   /*it is assumed that shift fields for AArch32 byte/word aliasing
@@ -2358,13 +2360,32 @@ void r6502reset(R6502CPUMAP* ctop, const R6502OP* const* mainsequences, const R6
     ctop[-1].sequences[R6502_MAIN_SEQUENCE_COUNT+i] = extrasequences[i];
   }
 
+  ctop[-1].execute_cpu_state = ctop[-1].sequences[R6502_RESET_SEQUENCE];
+  ctop[-1].address_code = (ctop[-1].address_code & 0xFFFF0000) | ADDRESSING_BASECODE;
+}
+
+void r6502swapopcode07(R6502CPUMAP* ctop)
+{
+  const R6502OP* s;
+#ifndef BEEBIT_NO_ASM
+  void* r;
+#endif
   s = ctop[-1].sequences[R6502_OPCODE_07_SEQUENCE];
 
   ctop[-1].sequences[R6502_OPCODE_07_SEQUENCE] = ctop[-1].sequences[0x07];
   ctop[-1].sequences[0x07] = s;
 
-  ctop[-1].execute_cpu_state = ctop[-1].sequences[R6502_RESET_SEQUENCE];
-  ctop[-1].address_code = (ctop[-1].address_code & 0xFFFF0000) | ADDRESSING_BASECODE;
+#ifndef BEEBIT_NO_ASM
+  r = ctop[-1].opcoderoutines[R6502_OPCODE_07_SEQUENCE];
+
+  ctop[-1].opcoderoutines[R6502_OPCODE_07_SEQUENCE] = ctop[-1].opcoderoutines[0x07];
+  ctop[-1].opcoderoutines[0x07] = r;
+
+  r = ctop[-1].o_opcoderoutines[R6502_OPCODE_07_SEQUENCE];
+
+  ctop[-1].o_opcoderoutines[R6502_OPCODE_07_SEQUENCE] = ctop[-1].o_opcoderoutines[0x07];
+  ctop[-1].o_opcoderoutines[0x07] = r;
+#endif
 }
 
 static R6502CPUMAP* r6502readmemoryread(R6502CPUMAP* ctop, uint8_t* p)
@@ -2381,7 +2402,7 @@ void r6502readmemory(R6502CPUMAP* ctop, char* buffer, uintptr_t naddress, int nc
 
   for ( ; ncount > 0; ncount--, buffer++)
   {
-    R6502_ADDRESS_FOR_READ(ctop, address_code, rds, rds, rds, r6502readmemoryread)
+    R6502_TOUCH_ADDRESS(ctop, address_code, rds, rds, rds, r6502readmemoryread)
     *buffer = ctop[-1].m;
 
     address_code = (address_code + 0x10000) & 0xFFFFFFFF;
@@ -2396,13 +2417,26 @@ void r6502beforesnapshot(R6502CPUMAP* ctop)
     ctop[-1].interruptqueue_ps &= NOTIFLAG;
 }
 
+static R6502CPUMAP* r6502opcoderead(R6502CPUMAP* ctop, uint8_t* p)
+{
+  ctop[-1].sequencenumber = *p;
+  return ctop;
+}
+
+static R6502CPUMAP* r6502opcodereadspecial(R6502CPUMAP* ctop, uintptr_t address_code)
+{
+  ctop[-1].readspecialaction(ctop, address_code);
+  ctop[-1].sequencenumber = ctop[-1].m;
+  return ctop;
+}
+
 void r6502aftersnapshot(R6502CPUMAP* ctop)
 {
   uintptr_t address_code = ((ctop[-1].sync_pc_code<<16) & 0xFFFF0000) | ADDRESSING_BASECODE;
   /*a refetch from an I/O address can have side-effects and/or yield a different opcode*/
-  R6502READSPECIALOP rds = ctop[-1].readspecialaction;
+  R6502READSPECIALOP rds = r6502opcodereadspecial;
 
-  R6502_ADDRESS_FOR_READ(ctop, address_code, rds, rds, rds, r6502readmemoryread)
+  R6502_TOUCH_ADDRESS(ctop, address_code, rds, rds, rds, r6502opcoderead)
   ctop[-1].execute_cpu_state = ctop[-1].sequences[ctop[-1].m];
 
   if (ctop[-1].interruptqueue_ps & IFLAG)

@@ -34,6 +34,7 @@ all: @.!RunImage @.RipROMs
 
 RunImage = @.o.main @.o.beebit \
   @.o.6502cpu @.o.6502cpu!! @.o.6502opc07 @.o.6502opc07s \
+  @.o.6502ops1 @.o.6502ops2 @.o.6502ops3 @.o.6502ops4 \
   @.o.65c12cpu @.o.65c12cpu!! \
   @.o.6522sysvia @.o.6522usrvia @.o.6845crtc @.o.6850acia \
   @.o.76489sound @.o.tube @.o.host @.o.hosts @.o.hoststeps \
@@ -130,8 +131,41 @@ o.6502opc07s: h.6502zmaps
 o.6502opc07s: h.6502cmaps
 o.6502opc07s: h.6502cpus
 o.6502opc07s: h.hostmaps
+o.6502opc07s: h.6502ops
 o.6502opc07s: h.RegNames
 o.6502opc07s: h.SWInames
+o.6502ops1: s.6502ops1
+o.6502ops1: h.6502zmaps
+o.6502ops1: h.6502cmaps
+o.6502ops1: h.6502cpus
+o.6502ops1: h.hostmaps
+o.6502ops1: h.hosts
+o.6502ops1: h.6502ops
+o.6502ops1: h.RegNames
+o.6502ops2: s.6502ops2
+o.6502ops2: h.6502zmaps
+o.6502ops2: h.6502cmaps
+o.6502ops2: h.6502cpus
+o.6502ops2: h.hostmaps
+o.6502ops2: h.hosts
+o.6502ops2: h.6502ops
+o.6502ops2: h.RegNames
+o.6502ops3: s.6502ops3
+o.6502ops3: h.6502zmaps
+o.6502ops3: h.6502cmaps
+o.6502ops3: h.6502cpus
+o.6502ops3: h.hostmaps
+o.6502ops3: h.hosts
+o.6502ops3: h.6502ops
+o.6502ops3: h.RegNames
+o.6502ops4: s.6502ops4
+o.6502ops4: h.6502zmaps
+o.6502ops4: h.6502cmaps
+o.6502ops4: h.6502cpus
+o.6502ops4: h.hostmaps
+o.6502ops4: h.hosts
+o.6502ops4: h.6502ops
+o.6502ops4: h.RegNames
 o.65c12cpu:	c.65c12cpu
 o.65c12cpu:	h.beebit
 o.65c12cpu:	h.6502cpu

@@ -1,0 +1,570 @@
+;>6502ops.h
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Opcode routines based on cycle-level CPU emulation
+;
+; (C) Copyright Crispian Daniels, 2026
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+
+  MACRO
+  R6502_OPCODE_PUSH
+  [ !Optimise6502WorkAreas && Optimise6502Links
+  STMFD sp!,{r4-r9}
+  ]
+  [ !Optimise6502WorkAreas && !Optimise6502Links
+  STMFD sp!,{r4-r9,lr}
+  ]
+  [ !Optimise6502WorkAreas
+  HOST_LOAD_WORK_AREA
+  ]
+  [ Optimise6502WorkAreas && !Optimise6502Links
+  STR lr,[sp, #-4]!
+  ]
+  MEND
+
+  MACRO
+  R6502_OPCODE_POP
+  [ !Optimise6502WorkAreas
+  HOST_STORE_WORK_AREA
+  ]
+  [ !Optimise6502WorkAreas && Optimise6502Links
+  LDMFD sp!,{r4-r9}
+  ]
+  [ !Optimise6502WorkAreas && !Optimise6502Links
+  LDMFD sp!,{r4-r9,lr}
+  ]
+  [ Optimise6502WorkAreas && !Optimise6502Links
+  LDR lr, [sp], #4
+  ]
+  MEND
+
+  MACRO
+  R6502_FOLD_OR_TRAP $continuationtype,$tag
+  AND r2,r1,#&F000000F
+  ADR lr,%F1
+  LDR pc,[r0,-r2,ROR #24]
+  DCD s_$tag,s1_$tag,s2_$tag
+1
+  [ "$continuationtype"!="inline"
+  B d_$tag
+  ]
+  MEND
+
+  MACRO
+  R6502_IMPLIED_FOLD_OR_TRAP $tag
+  ADD r1,r6,#1:SHL:16
+  R6502_FOLD_OR_TRAP ,$tag
+  MEND
+
+  MACRO
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  ADD r1,r6,#1:SHL:16
+  R6502_FOLD_OR_TRAP ,r6502simpleimplied
+  MEND
+
+  MACRO
+  R6502_OPERAND_FOLD_OR_TRAP $offset,$tag,$ocontinuation,$icontinuation,$link
+  ADD r1,r6,#$offset:SHL:16
+  AND r2,r1,#&F000000F
+  ADR lr,%F1
+  LDR pc,[r0,-r2,ROR #24]
+  [ "$link"!=""
+  DCD $link
+  ]
+  DCD $ocontinuation
+  DCD s_$tag,s1_$tag,s2_$tag
+1
+  B $icontinuation
+  MEND
+
+  MACRO
+  R6502_OPERAND_LO_FOLD_OR_TRAP $ocontinuation,$icontinuation,$link
+  R6502_OPERAND_FOLD_OR_TRAP 1,r6502operand,$ocontinuation,$icontinuation,$link
+  MEND
+
+  MACRO
+  R6502_OPERAND_LO_TWICE_FOLD_OR_TRAP $ocontinuation,$icontinuation,$link
+  R6502_OPERAND_FOLD_OR_TRAP 1,r6502operandtwice,$ocontinuation,$icontinuation,$link
+  MEND
+
+  MACRO
+  R6502_OPERAND_HI_FOLD_OR_TRAP $ocontinuation,$icontinuation,$link
+  R6502_OPERAND_FOLD_OR_TRAP 2,r6502wait1operand,$ocontinuation,$icontinuation,$link
+  MEND
+
+  MACRO
+  R6502_OPERAND_HI_TWICE_FOLD_OR_TRAP $ocontinuation,$icontinuation,$link
+  R6502_OPERAND_FOLD_OR_TRAP 2,r6502wait1operandtwice,$ocontinuation,$icontinuation,$link
+  MEND
+
+  MACRO
+  R6502_INDIRECT_FOLD_OR_TRAP $continuationtype,$n,$ocontinuation,$icontinuation
+  AND r2,r1,#&F000000F
+  ADR lr,%F1
+  LDR pc,[r0,-r2,ROR #24]
+  DCD $ocontinuation
+  DCD s_r6502indirect$n,s1_r6502indirect$n,s2_r6502indirect$n
+1
+  [ "$continuationtype"!="inline"
+  B $icontinuation
+  ]
+  MEND
+
+  MACRO
+  R6502_TOUCH_OR_TRAP $continuationtype,$tag
+  AND r2,r1,#&F000000F-ADDRESSING_FOLDFLAG
+  ADR lr,%F1
+  LDR pc,[r0,-r2,ROR #24]
+  DCD s_$tag,s1_$tag,s2_$tag
+1
+  [ "$continuationtype"!="inline"
+  B d_$tag
+  ]
+  MEND
+
+  MACRO
+  R6502_NOFOLD_TO_SPLIT1_LINK $offset
+  SUB r3,r3,#20+$offset
+  MEND
+
+  MACRO
+  R6502_SCAN1_SPLIT $name
+$name.split
+  SUB r8,r8,#1
+  B $name.split1
+  MEND
+
+  MACRO
+  R6502_SCAN2_SPLIT $name
+$name.split
+  ADR r3,%F1
+  B r6502scan2split
+1
+  DCD $name.split1
+  DCD $name.split2
+  MEND
+
+  MACRO
+  R6502_SCAN3_SPLIT $name
+$name.split
+  ADR r3,%F1
+  B r6502scan3split
+1
+  DCD $name.split1
+  DCD $name.split2
+  DCD $name.split3
+  MEND
+
+  MACRO
+  R6502_GENERIC_SCAN2_SPLIT $name,$basename,$link
+$name.split
+  ADR r3,%F1
+  B r6502scan2split
+1
+  DCD $basename.split1
+  DCD $basename.split2
+  DCD $link
+  MEND
+
+  MACRO
+  R6502_GENERIC_SCAN3_SPLIT $name,$basename,$link
+$name.split
+  ADR r3,%F1
+  B r6502scan3split
+1
+  DCD $basename.split1
+  DCD $basename.split2
+  DCD $basename.split3
+  DCD $link
+  MEND
+
+  MACRO
+  R6502_OPCODE_READ_SPECIAL
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDREADOPS
+  MOV lr,pc
+  LDR pc,[r3,r1,LSR #14]
+  MEND
+
+  MACRO
+  R6502_OPCODE_WRITE_SPECIAL
+  SUB r3,r0,#(&FC00:SHL:2)-:INDEX:HOST_BRIDGEDWRITEOPS
+  MOV lr,pc
+  LDR pc,[r3,r1,LSR #14]
+  MEND
+
+  MACRO
+  R6502_WAIT_REGISTER_SAVE $mode
+  IF "$mode"=="move"
+  MOV r4,r1
+  ELIF "$mode"=="push"
+  STR r1,[sp, #-4]!
+  ELIF "$mode"=="pushwithlink"
+  STMFD sp!,{r1,lr}
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_WAIT_REGISTER_RESTORE $mode
+  IF "$mode"=="move"
+  MOV r1,r4
+  ELIF "$mode"=="pop"
+  LDR r1, [sp], #4
+  ELIF "$mode"=="popwithlink"
+  LDMFD sp!,{r1,lr}
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_WAIT_HANDLERS $continuationtype,$n,$savemode,$type,$tag,$stretching
+  LCLA nvalue
+  LCLS stail
+  LCLS s1tail
+nvalue SETA $n
+stail SETS "s_$type.$tag.tail"
+  [ $stretching==0
+s1tail SETS "s_$type.$tag.tail"
+  |
+s1tail SETS "s1_$type.$tag.tail"
+  ]
+s_$type.wait$nvalue.$tag
+  R6502_WAIT_REGISTER_SAVE $savemode
+  [ $n>0
+  R6502_OPCODE_CYCLES_BRANCH $n,0,$stail
+  |
+  B $stail
+  ]
+
+s1_$type.wait$nvalue.$tag
+  R6502_WAIT_REGISTER_SAVE $savemode
+  [ ($n&1)==0
+  R6502_OPCODE_CYCLES_BRANCH $n,1,$s1tail
+  |
+  R6502_OPCODE_CYCLES_BRANCH $n,2,$s1tail
+  ]
+
+s2_$type.wait$nvalue.$tag
+  R6502_WAIT_REGISTER_SAVE $savemode
+  [ ($n&1)==0
+  R6502_OPCODE_CYCLES_BRANCH $n,2,$s1tail
+  |
+  R6502_OPCODE_CYCLES_BRANCH $n,1,$s1tail
+  ]
+
+  [ "$continuationtype"!="inline"
+d_$type.wait$nvalue.$tag
+  ]
+  MEND
+
+  MACRO
+  R6502_TAIL_ENTRY $restoremode,$type,$tag,$stretching
+  [ $stretching==0
+s_$type.$tag.tail
+  |
+s1_$type.$tag.tail
+  ]
+  R6502_WAIT_REGISTER_RESTORE $restoremode
+  MEND
+
+  MACRO
+  R6502_TOUCH_OR_WAIT $continuationtype,$n,$type,$tag
+  LCLA nvalue
+nvalue SETA $n
+  R6502_TOUCH_OR_TRAP $continuationtype,$type.wait$nvalue.$tag
+  MEND
+
+  MACRO
+  R6502_OPCODE_FETCH_RETURN $type,$outfold
+  LCLS icr
+  [ Optimise6502WorkAreas
+icr SETS "r2"
+  |
+icr SETS "r1"
+  ]
+  [ "$type"!="uninterrupted"
+  AND $icr,r5,r5,LSR #6
+  ]
+  R6502_OPCODE_POP
+  LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
+  IF "$type"=="earlyinterrupt"
+  TST $icr,#R6502_NMI_IRQ_ENABLE:SHL:16
+  CMPEQ r3,#R6502_REGULAR_TRANSITION
+  ELIF "$type"=="interrupt"
+  TST $icr,#R6502_NMI_IRQ_ENABLE:SHL:12
+  CMPEQ r3,#R6502_REGULAR_TRANSITION
+  ELSE
+  CMP r3,#R6502_YIELD_TRANSITION
+  ENDIF
+  [ $outfold==0
+  ADD r1,r0,#:INDEX:R6502_OPCODEROUTINES
+  |
+  ADD r1,r0,#:INDEX:R6502_O_OPCODEROUTINES
+  ]
+  IF "$type"=="earlyinterrupt"
+  LDRNE pc,[r0,#:INDEX:R6502_OPCODEEARLYINTERRUPTTRAP]
+  ELIF "$type"=="interrupt"
+  LDRNE pc,[r0,#:INDEX:R6502_OPCODEINTERRUPTTRAP]
+  ELSE
+  LDRHS pc,[r0,#:INDEX:R6502_OPCODEUNINTERRUPTEDTRAP]
+  ENDIF
+  R6502_OPCODE_RETURN
+  MEND
+
+  MACRO
+  R6502_O_OPCODE_HEADER $name
+o_$name.routine
+  R6502_OPCODE_PUSH
+  MEND
+
+  MACRO
+  R6502_DECIMAL_SET_O_OPCODE_HEADER $name
+o_$name.routine
+  R6502_OPCODE_PUSH
+  TST r5,#DFLAG
+  BEQ o_$name.body
+  MEND
+
+  MACRO
+  R6502_DECIMAL_CLEAR_O_OPCODE_HEADER $name
+o_$name.body
+  MEND
+
+  MACRO
+  R6502_OPCODE_HEADER $name
+  DCD o_$name.routine
+$name.routine
+  R6502_OPCODE_PUSH
+$name.infold
+  MEND
+
+  MACRO
+  R6502_DECIMAL_SET_OPCODE_HEADER $name,$dname
+  DCD o_$name.routine
+$name.routine
+  R6502_OPCODE_PUSH
+  TST r5,#DFLAG
+  BEQ $name.infold
+$dname.infold
+  MEND
+
+  MACRO
+  R6502_DECIMAL_CLEAR_OPCODE_HEADER $name
+$name.infold
+  MEND
+
+  MACRO
+  R6502_OPCODE_STEP $name,$n
+  ADDS r8,r8,#$n
+  BCS $name.split
+  MEND
+
+  MACRO
+  R6502_OPCODE_SCAN $name,$n
+  LDRB r2,[r9,r8]
+  ADDS r8,r8,#$n
+  BCS $name.split
+  MEND
+
+  MACRO
+  R6502_SCAN1_ADDRESSING_SPLIT $name
+$name.split
+  SUB r8,r8,#1
+  MEND
+
+  MACRO
+  R6502_SCAN2_ADDRESSING_SPLIT $name
+$name.split
+  SUBS r8,r8,#1
+  BCC $name.split2
+  SUB r8,r8,#1
+  MEND
+
+  MACRO
+  R6502_SCAN3_ADDRESSING_SPLIT $name
+$name.split
+  SUBS r8,r8,#1
+  BCC $name.split3
+  SUBS r8,r8,#1
+  BCC $name.split2
+  SUB r8,r8,#1
+  MEND
+
+  MACRO
+  R6502_SCAN_OPCODE_ENTRY $length,$name
+  R6502_OPCODE_HEADER $name
+  R6502_OPCODE_SCAN $name,$length
+  MEND
+
+  MACRO
+  R6502_DECIMAL_SET_SCAN_OPCODE_ENTRY $length,$name,$dname
+  R6502_DECIMAL_SET_OPCODE_HEADER $name,$dname
+  R6502_OPCODE_SCAN $dname,$length
+  MEND
+
+  MACRO
+  R6502_DECIMAL_CLEAR_SCAN_OPCODE_ENTRY $length,$name
+  R6502_DECIMAL_CLEAR_OPCODE_HEADER $name
+  R6502_OPCODE_SCAN $name,$length
+  MEND
+
+  MACRO
+  R6502_BYPASS_OPCODE_ENTRY $length,$name
+  R6502_OPCODE_HEADER $name
+  R6502_OPCODE_STEP $name,$length
+  MEND
+
+  MACRO
+  R6502_LOAD_FOLDED_OPCODE $offset
+  [ $offset!=0
+  SUB r4,r8,#$offset
+  [ Optimise6502WorkAreas
+  LDRB r4,[r9,r4]
+  |
+  LDRB r2,[r9,r4]
+  ]
+  |
+  [ Optimise6502WorkAreas
+  LDRB r4,[r9,r8]
+  |
+  LDRB r2,[r9,r8]
+  ]
+  ]
+  MEND
+
+  MACRO
+  R6502_OPCODE_CYCLES_BODY $n,$ns,$continuationtype,$label
+  LCLA counter
+counter SETA $n
+  IF Optimise6502Timing
+
+  ADD r12,r0,#:INDEX:HOST_STEPROUTINES+((($n)*3+$ns-1):SHL:7)
+  SUBS r7,r7,#($n+$ns):SHL:12
+  AND r3,r7,#&7C0
+  LDR r2,[r0,#:INDEX:HOST_KEYCOLUMNFLAGS]
+  IF "$continuationtype"=="pop"
+  LDR lr, [sp], #4
+  ELIF "$continuationtype"=="branch"
+  LDR lr,%F1
+  ELSE
+  ADR lr,%F1
+  ENDIF
+  LDRCS pc,[r12,r3,LSR #4]
+  [ $n+$ns>1
+  B r6502opcodecycles$ns.split
+  |
+  B r6502opcodecyclenosplit
+  ]
+
+  ELSE
+  WHILE counter>0
+  [ counter+$ns>1
+  BL host_r6502cycle1
+  |
+  IF "$continuationtype"=="pop"
+  LDR lr, [sp], #4
+  ELIF "$continuationtype"=="branch"
+  LDR lr,%F1
+  ELSE
+  ADR lr,%F1
+  ENDIF
+  B host_r6502cycle1
+  ]
+counter SETA counter-1
+  WEND
+counter SETA $ns
+  WHILE counter>0
+  [ counter>1
+  BL host_r6502cycle0s1
+  |
+  IF "$continuationtype"=="pop"
+  LDR lr, [sp], #4
+  ELIF "$continuationtype"=="branch"
+  LDR lr,%F1
+  ELSE
+  ADR lr,%F1
+  ENDIF
+  B host_r6502cycle0s1
+  ]
+counter SETA counter-1
+  WEND
+  ENDIF
+  IF "$continuationtype"!="pop"
+1
+  IF "$continuationtype"=="branch"
+  DCD $label
+  ENDIF
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_OPCODE_CYCLES $n,$ns
+  R6502_OPCODE_CYCLES_BODY $n,$ns,,
+  MEND
+
+  MACRO
+  R6502_OPCODE_CYCLES_POP $n,$ns
+  R6502_OPCODE_CYCLES_BODY $n,$ns,pop,
+  MEND
+
+  MACRO
+  R6502_OPCODE_CYCLES_BRANCH $n,$ns,$label
+  R6502_OPCODE_CYCLES_BODY $n,$ns,branch,$label
+  MEND
+
+  MACRO
+  R6502_OPCODE_RETURN
+  [ !Optimise6502WorkAreas
+  STR r2,[r0,#:INDEX:R6502_SEQUENCENUMBER]
+  ]
+  [ Optimise6502Links
+  R6502_LOAD_OPCODE_ENTRY pc,r1
+  |
+  R6502_REFERENCE_OPCODE_ENTRY r1,r1
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  MOV pc,lr
+  ]
+  MEND
+
+  MACRO
+  R6502_OPCODE_YIELD_RETURN
+  [ Optimise6502Links
+  LDR pc,[r0,#:INDEX:R6502_CONTINUELINK]
+  |
+  MOV pc,lr
+  ]
+  MEND
+
+  MACRO
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN $n,$type
+  LCLA nm1
+nm1 SETA $n-1
+  MOV r1,r6
+  [ $n>1
+  R6502_FOLD_OR_TRAP ,r6502wait$nm1.$type.fetch
+  |
+  R6502_FOLD_OR_TRAP ,r6502$type.fetch
+  ]
+  MEND
+
+  MACRO
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN $n,$type
+  [ $n>0
+  R6502_OPCODE_CYCLES_BRANCH $n,0,r6502atfold$type.fetch
+  |
+  B r6502atfold$type.fetch
+  ]
+  MEND
+
+  MACRO
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN $n,$type
+  [ $n>0
+  R6502_OPCODE_CYCLES_BRANCH $n,0,r6502infold$type.fetch
+  |
+  B r6502infold$type.fetch
+  ]
+  MEND
+
+  END

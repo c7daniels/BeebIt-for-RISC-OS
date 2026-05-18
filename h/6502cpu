@@ -28,7 +28,7 @@
 #define NOTZFLAG 0xFFFFFFFDU
 #define NOTCFLAG 0xFFFFFFFEU
 
-#define ADDRESSING_MODIFYFLAG 0x01
+#define ADDRESSING_FOLDFLAG 0x01
 #define ADDRESSING_BASECODE 0x0F
 
 #define R6502_REGULAR_TRANSITION 0
@@ -54,31 +54,21 @@
 /*the assembly language addressing routines are not directly callable from C*/
 #ifdef BEEBIT_NO_ASM
 #define R6502_INVOKE_ADDRESSING(CTOP, ADDRCODE, CALLBACKS) \
-  CTOP[-1].addressingops[((((ADDRCODE)>>28)|((ADDRCODE)<<4))^0x1F)&0x1F].op(CTOP, (ADDRCODE)|ADDRESSING_MODIFYFLAG, CALLBACKS);
+  CTOP[-1].addressingops[((((ADDRCODE)>>28)|((ADDRCODE)<<4))^0x1F)&0x1F].op(CTOP, (ADDRCODE), CALLBACKS);
 #else
 #define R6502_INVOKE_ADDRESSING(CTOP, ADDRCODE, CALLBACKS) \
   r6502invokeaddressing(CTOP, ADDRCODE, CALLBACKS);
 #endif
 
-/*an assembly language version of R6502_ADDRESS_FOR_READ appears in h/6502cpus*/
-#define R6502_ADDRESS_FOR_READ(CTOP, ADDRCODE, RDS, RD1S, RD2S, RD) \
+/*an assembly language version of R6502_TOUCH_ADDRESS appears in h/6502cpus*/
+#define R6502_TOUCH_ADDRESS(CTOP, ADDRCODE, RDS, RD1S, RD2S, RD) \
   { \
     const R6502ADDRESSINGCALLBACKS rdcallbacks = {RDS, RD1S, RD2S, RD}; \
-    R6502_INVOKE_ADDRESSING(CTOP, (ADDRCODE)&~ADDRESSING_MODIFYFLAG, &rdcallbacks) \
+    R6502_INVOKE_ADDRESSING(CTOP, (ADDRCODE)&~ADDRESSING_FOLDFLAG, &rdcallbacks) \
   }
 
-/*an assembly language version of R6502_ADDRESS_FOR_MODIFY appears in h/6502cpus*/
-#define R6502_ADDRESS_FOR_MODIFY(CTOP, ADDRCODE, MDS, MD1S, MD2S, MD) \
-  { \
-    const R6502ADDRESSINGCALLBACKS mdcallbacks = {MDS, MD1S, MD2S, MD}; \
-    R6502_INVOKE_ADDRESSING(CTOP, ADDRCODE, &mdcallbacks) \
-  }
-
-#define R6502_READ_BRANCH(CTOP, ADDRCODE, TAG) \
-  R6502_ADDRESS_FOR_READ(CTOP, ADDRCODE, s_##TAG, s1_##TAG, s2_##TAG, m_##TAG)
-
-#define R6502_MODIFY_BRANCH(CTOP, ADDRCODE, TAG) \
-  R6502_ADDRESS_FOR_MODIFY(CTOP, ADDRCODE, s_##TAG, s1_##TAG, s2_##TAG, m_##TAG)
+#define R6502_STRETCHING_TOUCH_OR_BRANCH(CTOP, ADDRCODE, TAG) \
+  R6502_TOUCH_ADDRESS(CTOP, ADDRCODE, s_##TAG, s1_##TAG, s2_##TAG, m_##TAG)
 
 #define R6502_CYCLE_STRETCH_RETURN(CTOP) \
   return (*CTOP[-1].stretchcycleaction)(CTOP);
@@ -118,26 +108,26 @@
 
 #define R6502_CYCLE_READ_RETURN(CTOP, ADDRCODE) \
   { \
-    R6502_READ_BRANCH(CTOP, ADDRCODE, r6502cyclereadreturn) \
+    R6502_STRETCHING_TOUCH_OR_BRANCH(CTOP, ADDRCODE, r6502cyclereadreturn) \
     return CTOP; \
   }
 
 #define R6502_CYCLE_DISCARD_RETURN(CTOP, ADDRCODE) \
   { \
-    R6502_READ_BRANCH(CTOP, ADDRCODE, r6502cyclediscardreturn) \
+    R6502_STRETCHING_TOUCH_OR_BRANCH(CTOP, ADDRCODE, r6502cyclediscardreturn) \
     return CTOP; \
   }
 
 #define R6502_CYCLE_WRITE_RETURN(CTOP, ADDRCODE) \
   { \
-    R6502_MODIFY_BRANCH(CTOP, ADDRCODE, r6502cyclewritereturn) \
+    R6502_STRETCHING_TOUCH_OR_BRANCH(CTOP, ADDRCODE, r6502cyclewritereturn) \
     return CTOP; \
   }
 
 #define R6502_CYCLE_FETCH_RETURN(TYPE, CTOP, PCCODE) \
   { \
     CTOP[-1].sync_pc_code = PCCODE; \
-    R6502_READ_BRANCH(CTOP, CTOP[-1].sync_pc_code, r6502cycle##TYPE##fetchreturn) \
+    R6502_STRETCHING_TOUCH_OR_BRANCH(CTOP, CTOP[-1].sync_pc_code, r6502cycle##TYPE##fetchreturn) \
     return CTOP; \
   }
 
@@ -918,6 +908,7 @@ extern R6502CPUMAP* r6502yieldstep(R6502CPUMAP* ctop, uintptr_t incremented_cpu_
 extern R6502CPUMAP* r6502startyield(R6502CPUMAP* ctop);
 
 extern void r6502reset(R6502CPUMAP* ctop, const R6502OP* const* mainsequences, const R6502OP* const* extrasequences);
+extern void r6502swapopcode07(R6502CPUMAP* ctop);
 
 extern void r6502readmemory(R6502CPUMAP* ctop, char* buffer, uintptr_t naddress, int ncount);
 extern void r6502beforesnapshot(R6502CPUMAP* ctop);

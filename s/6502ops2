@@ -1,0 +1,2303 @@
+;>6502ops2.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Opcode routines based on cycle-level CPU emulation
+;
+; (C) Copyright Crispian Daniels, 2026
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+  GET h.6502zmaps
+
+  GET h.6502cmaps
+
+  GET h.6502cpus
+
+  GET h.hostmaps
+
+  GET h.hosts
+
+  GET h.6502ops
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET h.RegNames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+  IMPORT |s_r6502operand|
+  IMPORT |s1_r6502operand|
+  IMPORT |s2_r6502operand|
+  IMPORT |s_r6502operandtwice|
+  IMPORT |s1_r6502operandtwice|
+  IMPORT |s2_r6502operandtwice|
+  IMPORT |s_r6502wait1operand|
+  IMPORT |s1_r6502wait1operand|
+  IMPORT |s2_r6502wait1operand|
+  IMPORT |s_r6502wait1operandtwice|
+  IMPORT |s1_r6502wait1operandtwice|
+  IMPORT |s2_r6502wait1operandtwice|
+  IMPORT |r6502scan2split|
+  IMPORT |r6502scan3split|
+  IMPORT |s_r6502wait00000001interruptfetch|
+  IMPORT |s1_r6502wait00000001interruptfetch|
+  IMPORT |s2_r6502wait00000001interruptfetch|
+  IMPORT |d_r6502wait00000001interruptfetch|
+  IMPORT |s_r6502wait00000002interruptfetch|
+  IMPORT |s1_r6502wait00000002interruptfetch|
+  IMPORT |s2_r6502wait00000002interruptfetch|
+  IMPORT |d_r6502wait00000002interruptfetch|
+  IMPORT |s_r6502wait00000003interruptfetch|
+  IMPORT |s1_r6502wait00000003interruptfetch|
+  IMPORT |s2_r6502wait00000003interruptfetch|
+  IMPORT |d_r6502wait00000003interruptfetch|
+  IMPORT |s_r6502wait00000004interruptfetch|
+  IMPORT |s1_r6502wait00000004interruptfetch|
+  IMPORT |s2_r6502wait00000004interruptfetch|
+  IMPORT |d_r6502wait00000004interruptfetch|
+  IMPORT |s_r6502wait00000005interruptfetch|
+  IMPORT |s1_r6502wait00000005interruptfetch|
+  IMPORT |s2_r6502wait00000005interruptfetch|
+  IMPORT |d_r6502wait00000005interruptfetch|
+  IMPORT |s_r6502wait00000006interruptfetch|
+  IMPORT |s1_r6502wait00000006interruptfetch|
+  IMPORT |s2_r6502wait00000006interruptfetch|
+  IMPORT |d_r6502wait00000006interruptfetch|
+  IMPORT |r6502atfoldinterruptfetch|
+  IMPORT |r6502infoldinterruptfetch|
+  IMPORT |r6502opcodecyclenosplit|
+  IMPORT |r6502opcodecycles0split|
+  IMPORT |r6502opcodecycles1split|
+  IMPORT |r6502opcodecycles2split|
+
+  IMPORT |host_r6502cycle0s1|
+  IMPORT |host_r6502cycle1|
+
+; Export global symbols
+
+  EXPORT |r65c12dopzpgxnofold|
+  EXPORT |r6502dopimmsplit1|
+  EXPORT |r6502dopzpgsplit1|
+  EXPORT |r6502dopzpgxsplit1|
+  EXPORT |r65c12dopzpgxsplit1|
+  EXPORT |r6502dopimmsplit2|
+  EXPORT |r6502dopzpgsplit2|
+  EXPORT |r6502dopzpgxsplit2|
+  EXPORT |r65c12dopzpgxsplit2|
+  EXPORT |r6502loadabsnofold|
+  EXPORT |r6502loadabssplit1|
+  EXPORT |r6502loadabssplit2|
+  EXPORT |r6502loadabssplit3|
+  EXPORT |r6502loadabsxnofold|
+  EXPORT |r6502loadabsxsplit1|
+  EXPORT |r6502loadabsxsplit2|
+  EXPORT |r6502loadabsxsplit3|
+  EXPORT |r6502adcimmroutine|
+  EXPORT |r6502adczpgroutine|
+  EXPORT |r6502adczpgxroutine|
+  EXPORT |r6502adcpreindexedroutine|
+  EXPORT |r6502adcpostindexedroutine|
+  EXPORT |r6502adcabsroutine|
+  EXPORT |r6502adcabsxroutine|
+  EXPORT |r6502adcabsyroutine|
+  EXPORT |r65c12adcimmroutine|
+  EXPORT |r65c12adczpgroutine|
+  EXPORT |r65c12adczpgxroutine|
+  EXPORT |r65c12adcpreindexedroutine|
+  EXPORT |r65c12adcnonindexedroutine|
+  EXPORT |r65c12adcpostindexedroutine|
+  EXPORT |r65c12adcabsroutine|
+  EXPORT |r65c12adcabsxroutine|
+  EXPORT |r65c12adcabsyroutine|
+  EXPORT |r6502alrimmroutine|
+  EXPORT |r6502ancimmroutine|
+  EXPORT |r6502andimmroutine|
+  EXPORT |r6502andzpgroutine|
+  EXPORT |r6502andzpgxroutine|
+  EXPORT |r6502andpreindexedroutine|
+  EXPORT |r6502andpostindexedroutine|
+  EXPORT |r6502andabsroutine|
+  EXPORT |r6502andabsxroutine|
+  EXPORT |r6502andabsyroutine|
+  EXPORT |r65c12andzpgxroutine|
+  EXPORT |r65c12andpreindexedroutine|
+  EXPORT |r65c12andnonindexedroutine|
+  EXPORT |r65c12andpostindexedroutine|
+  EXPORT |r65c12andabsxroutine|
+  EXPORT |r65c12andabsyroutine|
+  EXPORT |r6502aneimmroutine|
+  EXPORT |r6502arrimmroutine|
+  EXPORT |r6502bitzpgroutine|
+  EXPORT |r6502bitabsroutine|
+  EXPORT |r65c12bitimmroutine|
+  EXPORT |r65c12bitzpgxroutine|
+  EXPORT |r65c12bitabsxroutine|
+  EXPORT |r6502cmpimmroutine|
+  EXPORT |r6502cmpzpgroutine|
+  EXPORT |r6502cmpzpgxroutine|
+  EXPORT |r6502cmppreindexedroutine|
+  EXPORT |r6502cmppostindexedroutine|
+  EXPORT |r6502cmpabsroutine|
+  EXPORT |r6502cmpabsxroutine|
+  EXPORT |r6502cmpabsyroutine|
+  EXPORT |r65c12cmpzpgxroutine|
+  EXPORT |r65c12cmppreindexedroutine|
+  EXPORT |r65c12cmpnonindexedroutine|
+  EXPORT |r65c12cmppostindexedroutine|
+  EXPORT |r65c12cmpabsxroutine|
+  EXPORT |r65c12cmpabsyroutine|
+  EXPORT |r6502cpximmroutine|
+  EXPORT |r6502cpxzpgroutine|
+  EXPORT |r6502cpxabsroutine|
+  EXPORT |r6502cpyimmroutine|
+  EXPORT |r6502cpyzpgroutine|
+  EXPORT |r6502cpyabsroutine|
+  EXPORT |r6502eorimmroutine|
+  EXPORT |r6502eorzpgroutine|
+  EXPORT |r6502eorzpgxroutine|
+  EXPORT |r6502eorpreindexedroutine|
+  EXPORT |r6502eorpostindexedroutine|
+  EXPORT |r6502eorabsroutine|
+  EXPORT |r6502eorabsxroutine|
+  EXPORT |r6502eorabsyroutine|
+  EXPORT |r65c12eorzpgxroutine|
+  EXPORT |r65c12eorpreindexedroutine|
+  EXPORT |r65c12eornonindexedroutine|
+  EXPORT |r65c12eorpostindexedroutine|
+  EXPORT |r65c12eorabsxroutine|
+  EXPORT |r65c12eorabsyroutine|
+  EXPORT |r6502lasabsyroutine|
+  EXPORT |r6502laxzpgroutine|
+  EXPORT |r6502laxzpgyroutine|
+  EXPORT |r6502laxpreindexedroutine|
+  EXPORT |r6502laxpostindexedroutine|
+  EXPORT |r6502laxabsroutine|
+  EXPORT |r6502laxabsyroutine|
+  EXPORT |r6502ldaimmroutine|
+  EXPORT |r6502ldazpgroutine|
+  EXPORT |r6502ldazpgxroutine|
+  EXPORT |r6502ldapreindexedroutine|
+  EXPORT |r6502ldapostindexedroutine|
+  EXPORT |r6502ldaabsroutine|
+  EXPORT |r6502ldaabsxroutine|
+  EXPORT |r6502ldaabsyroutine|
+  EXPORT |r65c12ldazpgxroutine|
+  EXPORT |r65c12ldapreindexedroutine|
+  EXPORT |r65c12ldanonindexedroutine|
+  EXPORT |r65c12ldapostindexedroutine|
+  EXPORT |r65c12ldaabsxroutine|
+  EXPORT |r65c12ldaabsyroutine|
+  EXPORT |r6502ldximmroutine|
+  EXPORT |r6502ldxzpgroutine|
+  EXPORT |r6502ldxzpgyroutine|
+  EXPORT |r6502ldxabsroutine|
+  EXPORT |r6502ldxabsyroutine|
+  EXPORT |r65c12ldxzpgyroutine|
+  EXPORT |r65c12ldxabsyroutine|
+  EXPORT |r6502ldyimmroutine|
+  EXPORT |r6502ldyzpgroutine|
+  EXPORT |r6502ldyzpgxroutine|
+  EXPORT |r6502ldyabsroutine|
+  EXPORT |r6502ldyabsxroutine|
+  EXPORT |r65c12ldyzpgxroutine|
+  EXPORT |r65c12ldyabsxroutine|
+  EXPORT |r6502lxaimmroutine|
+  EXPORT |r6502oraimmroutine|
+  EXPORT |r6502orazpgroutine|
+  EXPORT |r6502orazpgxroutine|
+  EXPORT |r6502orapreindexedroutine|
+  EXPORT |r6502orapostindexedroutine|
+  EXPORT |r6502oraabsroutine|
+  EXPORT |r6502oraabsxroutine|
+  EXPORT |r6502oraabsyroutine|
+  EXPORT |r65c12orazpgxroutine|
+  EXPORT |r65c12orapreindexedroutine|
+  EXPORT |r65c12oranonindexedroutine|
+  EXPORT |r65c12orapostindexedroutine|
+  EXPORT |r65c12oraabsxroutine|
+  EXPORT |r65c12oraabsyroutine|
+  EXPORT |r6502sbcimmroutine|
+  EXPORT |r6502sbczpgroutine|
+  EXPORT |r6502sbczpgxroutine|
+  EXPORT |r6502sbcpreindexedroutine|
+  EXPORT |r6502sbcpostindexedroutine|
+  EXPORT |r6502sbcabsroutine|
+  EXPORT |r6502sbcabsxroutine|
+  EXPORT |r6502sbcabsyroutine|
+  EXPORT |r65c12sbcimmroutine|
+  EXPORT |r65c12sbczpgroutine|
+  EXPORT |r65c12sbczpgxroutine|
+  EXPORT |r65c12sbcpreindexedroutine|
+  EXPORT |r65c12sbcnonindexedroutine|
+  EXPORT |r65c12sbcpostindexedroutine|
+  EXPORT |r65c12sbcabsroutine|
+  EXPORT |r65c12sbcabsxroutine|
+  EXPORT |r65c12sbcabsyroutine|
+  EXPORT |r6502sbximmroutine|
+  EXPORT |r6502topabsroutine|
+  EXPORT |r6502topabsxroutine|
+
+  MACRO
+  LOAD_IMM_ACTION
+  MOV lr,pc
+  LDR pc,[r3,#8]
+  MEND
+
+  MACRO
+  LOAD_ZPG_ACTION
+  ADD lr,pc,#4
+  LDRB r2,[r0,r2]
+  LDR pc,[r3,#8]
+  MEND
+
+  MACRO
+  LOAD_ZPGX_ACTION
+  ADD r2,r4,r2,LSL #24
+  ADD lr,pc,#4
+  LDRB r2,[r0,r2,LSR #24]
+  LDR pc,[r3,#8]
+  MEND
+
+  MACRO
+  LOAD_ZPGIND_ACTION
+  LDR r3, [sp], #4
+  MOV lr,pc
+  LDR pc,[r3,#8]
+  MEND
+
+  MACRO
+  LOAD_ABS_ACTION
+  LDR r3, [sp], #4
+  MOV lr,pc
+  LDR pc,[r3,#12]
+  MEND
+
+  MACRO
+  NMOS_DECIMAL_ADC_ACTION
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  MOV r2,r2,LSL #24
+  TEQ r2,r5,LSR #1   ;jdl** ARM c =6502 c
+  ORR r1,r1,r1,ROR #8
+  ORR r2,r2,#&000FF000
+  AND r1,r1,#&F000000F
+  ORR r2,r2,#&00000FF0
+  ADD r1,r1,#6
+  ORR r2,r2,r2,ROR #24
+  BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRMI r5,r5,#NFLAG
+  ORRVS r5,r5,#VFLAG
+  CMPCC r1,#&A0000000
+  SUB r2,r1,#6
+  ADDCS r1,r1,#&60000000
+  ORRCS r5,r5,#CFLAG
+  TST r1,#&80
+  SUBNE r1,r1,#6
+  AND r1,r1,#&F000000F
+  TST r2,#&F000000F
+  ORR r1,r1,r1,LSR #24
+  ORREQ r5,r5,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  MEND
+
+  MACRO
+  NMOS_ADC_ACTION
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  MOV r2,r2,LSL #24
+  TEQ r2,r5,LSR #1   ;jdl** ARM c =6502 c
+  SUB r1,r1,#1:SHL:8
+  BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r2,r1,ROR #8
+  ORRMI r5,r5,#NFLAG
+  ORRVS r5,r5,#VFLAG
+  ORRCS r5,r5,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  ORREQ r5,r5,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  MEND
+
+  MACRO
+  CMOS_DECIMAL_ADC_ACTION
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  TEQ r2,r5,LSR #1   ;jdl** ARM c =6502 c
+  MOV r2,r2,LSL #24
+  ORR r1,r1,r1,ROR #8
+  ORR r2,r2,#&000FF000
+  AND r1,r1,#&F000000F
+  ORR r2,r2,#&00000FF0
+  ADD r1,r1,#6
+  ORR r2,r2,r2,ROR #24
+  BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRVS r5,r5,#VFLAG
+  CMPCC r1,#&A0000000
+  SUB r2,r1,#6
+  ADDCS r1,r1,#&60000000
+  ORRCS r5,r5,#CFLAG
+  TST r1,#&80
+  SUBNE r1,r1,#6
+  ANDS r1,r1,#&F000000F
+  ORR r1,r1,r1,LSR #24
+  ORRMI r5,r5,#NFLAG
+  ORREQ r5,r5,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  MEND
+
+  MACRO
+  CMOS_ADC_ACTION
+  MOV r2,r2,LSL #24
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  TEQ r2,r5,LSR #1   ;jdl** ARM c =6502 c
+  SUB r1,r1,#1:SHL:8
+  BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r2,r1,ROR #8
+  ORRMI r5,r5,#NFLAG
+  ORRVS r5,r5,#VFLAG
+  ORRCS r5,r5,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  ORREQ r5,r5,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  MEND
+
+  MACRO
+  ALR_ACTION
+  LDRB r3,[r0,#:INDEX:R6502_A]
+  BIC r5,r5,#NFLAG|ZFLAG|CFLAG
+  AND r3,r3,r2
+  MOVS r3,r3,LSR #1
+  ORREQ r5,r5,#ZFLAG
+  STRB r3,[r0,#:INDEX:R6502_A]
+  ORRCS r5,r5,#CFLAG
+  MEND
+
+  MACRO
+  ANC_ACTION
+  LDR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG|CFLAG
+  ANDS r3,r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  ORRMI r5,r5,#CFLAG
+  MEND
+
+  MACRO
+  AND_ACTION
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  ANDS r1,r1,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  ANE_ACTION
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  ANDS r1,r1,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  ARR_ACTION
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  MOVS r3,r5,LSL #31
+  AND r2,r2,r1
+  BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
+  MOV r1,r3,LSR #24
+  ORRMI r5,r5,#NFLAG
+  ORRS r1,r1,r2,LSR #1
+  ORREQ r5,r5,#ZFLAG
+  MOV r3,r1,LSL #25
+  EORS r3,r3,r2,LSL #25
+  ORRMI r5,r5,#VFLAG
+  TST r5,#DFLAG
+  BNE %F0
+  TST r2,#NFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  ORRNE r5,r5,#CFLAG
+  B %F1
+0
+  CMP r2,#&50
+  ADDHS r1,r1,#&60
+  ORRHS r5,r5,#CFLAG
+  AND r2,r2,#&0F
+  CMP r2,#&05
+  MOVHS r1,r1,ROR #4
+  ADDHS r1,r1,#&60000000
+  MOVHS r1,r1,ROR #28
+  STRB r1,[r0,#:INDEX:R6502_A]
+1
+  MEND
+
+  MACRO
+  BIT_IMM_ACTION
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  TST r1,r2
+  BICNE r5,r5,#ZFLAG
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  BIT_ACTION
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  BIC r5,r5,#NFLAG|VFLAG|ZFLAG
+  TST r1,r2
+  AND r3,r2,#NFLAG|VFLAG
+  ORREQ r5,r5,#ZFLAG
+  ORR r5,r5,r3
+  MEND
+
+  MACRO
+  CMP_ACTION
+  LDR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG|CFLAG
+  SUBS r3,r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  ORREQ r5,r5,#ZFLAG
+  ORRCS r5,r5,#CFLAG
+  MEND
+
+  MACRO
+  CPX_ACTION
+  LDR r3,[r0,#:INDEX:R6502_X_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG|CFLAG
+  SUBS r3,r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  ORREQ r5,r5,#ZFLAG
+  ORRCS r5,r5,#CFLAG
+  MEND
+
+  MACRO
+  CPY_ACTION
+  LDR r3,[r0,#:INDEX:R6502_Y_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG|CFLAG
+  SUBS r3,r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  ORREQ r5,r5,#ZFLAG
+  ORRCS r5,r5,#CFLAG
+  MEND
+
+  MACRO
+  EOR_ACTION
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  EORS r1,r1,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  LAS_ACTION
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  BIC r5,r5,#NFLAG|ZFLAG
+  ANDS r2,r1,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  MOV r1,r2,LSR #24
+  STR r2,[r0,#:INDEX:R6502_A_SHIFT]
+  STR r2,[r0,#:INDEX:R6502_X_SHIFT]
+  STRB r1,[r0,#:INDEX:R6502_SP_CODE+3]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  LAX_ACTION
+  BIC r5,r5,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  LDA_ACTION
+  BIC r5,r5,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  LDX_ACTION
+  BIC r5,r5,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  LDY_ACTION
+  BIC r5,r5,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_Y]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  LXA_ACTION
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  ORR r1,r1,#&EE000000
+  ANDS r1,r1,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  STR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  ORA_ACTION
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  ORRS r1,r1,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  NMOS_DECIMAL_SBC_ACTION
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  MOV r2,r2,LSL #24
+  TEQ r2,r5,LSR #1   ;jdl** ARM c =6502 c
+  ORR r2,r2,r2,ROR #24
+  ORR r1,r1,r1,ROR #8
+  AND r2,r2,#&F000000F
+  AND r1,r1,#&F000000F
+  MVN r2,r2
+  BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRCS r5,r5,#CFLAG
+  ORRMI r5,r5,#NFLAG
+  ORRVS r5,r5,#VFLAG
+  MOV r2,r1
+  SUBCC r1,r1,#&60000000
+  TST r1,#&80
+  SUBNE r1,r1,#6
+  AND r1,r1,#&F000000F
+  TST r2,#&F000000F
+  ORR r1,r1,r1,LSR #24
+  ORREQ r5,r5,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  MEND
+
+  MACRO
+  NMOS_SBC_ACTION
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  MOV r2,r2,LSL #24
+  TEQ r2,r5,LSR #1   ;jdl** ARM c =6502 c
+  BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
+  RSCS r1,r2,r1,ROR #8
+  ORRMI r5,r5,#NFLAG
+  ORRVS r5,r5,#VFLAG
+  ORRCS r5,r5,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  ORREQ r5,r5,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  MEND
+
+  MACRO
+  CMOS_DECIMAL_SBC_ACTION
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  TEQ r2,r5,LSR #1   ;jdl** ARM c =6502 c
+  ORR r2,r2,r2,ROR #8
+  ORR r1,r1,r1,ROR #8
+  AND r2,r2,#&F000000F
+  AND r1,r1,#&F000000F
+  MVN r2,r2
+  BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
+  ADCS r1,r1,r2
+  ORRCS r5,r5,#CFLAG
+  ORRVS r5,r5,#VFLAG
+  MOV r2,r1
+  SUBCC r1,r1,#&60000000
+  TST r1,#&80
+  ADDNE r1,r1,#&F000000A
+  ANDS r1,r1,#&F000000F
+  ORR r1,r1,r1,LSR #24
+  ORRMI r5,r5,#NFLAG
+  ORREQ r5,r5,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  MEND
+
+  MACRO
+  CMOS_SBC_ACTION
+  MOV r2,r2,LSL #24
+  LDRB r1,[r0,#:INDEX:R6502_A]
+  TEQ r2,r5,LSR #1   ;jdl** ARM c =6502 c
+  BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
+  RSCS r1,r2,r1,ROR #8
+  ORRMI r5,r5,#NFLAG
+  ORRVS r5,r5,#VFLAG
+  ORRCS r5,r5,#CFLAG
+  MOVS r1,r1,LSR#24 ;(a=(a>>24) jdl** also (z=(a=0))
+  ORREQ r5,r5,#ZFLAG
+  STRB r1,[r0,#:INDEX:R6502_A]
+  MEND
+
+  MACRO
+  SBX_ACTION
+  LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
+  LDR r3,[r0,#:INDEX:R6502_X_SHIFT]
+  AND r1,r1,r3
+  SUBS r1,r1,r2,LSL #24
+  BIC r5,r5,#NFLAG|ZFLAG|CFLAG
+  STR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  ORRMI r5,r5,#NFLAG
+  ORREQ r5,r5,#ZFLAG
+  ORRCS r5,r5,#CFLAG
+  MEND
+
+  MACRO
+  TOP_ACTION
+  MEND
+
+r6502decimaladcaction
+  NMOS_DECIMAL_ADC_ACTION
+  MOV pc,lr
+
+r6502adcaction
+  NMOS_ADC_ACTION
+  MOV pc,lr
+
+r65c12decimaladcaction
+  CMOS_DECIMAL_ADC_ACTION
+  MOV pc,lr
+
+r65c12adcaction
+  CMOS_ADC_ACTION
+  MOV pc,lr
+
+r6502alraction
+  ALR_ACTION
+  MOV pc,lr
+
+r6502ancaction
+  ANC_ACTION
+  MOV pc,lr
+
+r6502andaction
+  AND_ACTION
+  MOV pc,lr
+
+r6502aneaction
+  ANE_ACTION
+  MOV pc,lr
+
+r6502arraction
+  ARR_ACTION
+  MOV pc,lr
+
+r65c12bitimmaction
+  BIT_IMM_ACTION
+  MOV pc,lr
+
+r6502bitaction
+  BIT_ACTION
+  MOV pc,lr
+
+r6502cmpaction
+  CMP_ACTION
+  MOV pc,lr
+
+r6502cpxaction
+  CPX_ACTION
+  MOV pc,lr
+
+r6502cpyaction
+  CPY_ACTION
+  MOV pc,lr
+
+r6502eoraction
+  EOR_ACTION
+  MOV pc,lr
+
+r6502lasaction
+  LAS_ACTION
+  MOV pc,lr
+
+r6502laxaction
+  LAX_ACTION
+  MOV pc,lr
+
+r6502ldaaction
+  LDA_ACTION
+  MOV pc,lr
+
+r6502ldxaction
+  LDX_ACTION
+  MOV pc,lr
+
+r6502ldyaction
+  LDY_ACTION
+  MOV pc,lr
+
+r6502lxaaction
+  LXA_ACTION
+  MOV pc,lr
+
+r6502oraaction
+  ORA_ACTION
+  MOV pc,lr
+
+r6502decimalsbcaction
+  NMOS_DECIMAL_SBC_ACTION
+  MOV pc,lr
+
+r6502sbcaction
+  NMOS_SBC_ACTION
+  MOV pc,lr
+
+r65c12decimalsbcaction
+  CMOS_DECIMAL_SBC_ACTION
+  MOV pc,lr
+
+r65c12sbcaction
+  CMOS_SBC_ACTION
+  MOV pc,lr
+
+r6502sbxaction
+  SBX_ACTION
+r6502topaction
+  MOV pc,lr
+
+  MACRO
+  R6502_DECIMAL_RETURN_WAIT_ACTION $n,$ctype,$tag
+  [ "$tag"=="loadzpg"
+  ADD r6,r6,#2:SHL:16
+  |
+  ADD r6,r6,#3:SHL:16
+  ]
+  R6502_OPCODE_$ctype._ADDRESSED_RETURN $n+2,interrupt
+  MEND
+
+  MACRO
+  R6502_DECIMAL_RETURN_WAITS $n,$type,$ctype,$tag
+  R6502_WAIT_HANDLERS ,$n,move,$type,decimal$tag.return,0
+  R6502_DECIMAL_RETURN_WAIT_ACTION $n,$ctype,$tag
+  MEND
+
+  MACRO
+  R6502_DECIMAL_RETURN_TAIL $type,$ctype,$tag
+  R6502_TAIL_ENTRY move,$type,decimal$tag.return,0
+  R6502_OPCODE_READ_SPECIAL
+  R6502_DECIMAL_RETURN_WAIT_ACTION 0,$ctype,$tag
+  MEND
+
+  MACRO
+  R6502_LOAD_ACTION $n,$ctype,$tag,$mode,$special,$aname
+  [ "$aname"!="TOP"
+  [ $special==0
+  LDRB r2,[r2]
+  |
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  ]
+  ]
+  $aname._ACTION
+  [ "$ctype"=="NOFOLD"
+  LCLA n1value
+n1value SETA $n+1
+  ADD r1,r6,#2:SHL:16
+  R6502_TOUCH_OR_TRAP ,r65c12nofoldwait$n1value.decimalload$mode.return
+  |
+  [ "$mode"=="zpgind"
+  ADD r6,r6,#2:SHL:16
+  |
+  ADD r6,r6,#3:SHL:16
+  ]
+  [ "$tag"=="decimalload" || "$aname"=="CMOS_DECIMAL_ADC" || "$aname"=="CMOS_DECIMAL_SBC"
+  R6502_OPCODE_$ctype._ADDRESSED_RETURN $n+3,interrupt
+  |
+  R6502_OPCODE_$ctype._ADDRESSED_RETURN $n+2,interrupt
+  ]
+  ]
+  MEND
+
+  MACRO
+  R6502_LOAD_WAITS $n,$type,$ctype,$tag,$mode,$aname
+  [ "$type"=="r6502" || "$type"=="r65c12"
+  R6502_WAIT_HANDLERS inline,$n,move,$type,$tag.$mode,0
+  |
+  R6502_WAIT_HANDLERS ,$n,move,$type,$tag.$mode,0
+  R6502_LOAD_ACTION $n,$ctype,$tag,$mode,0,$aname
+  ]
+  MEND
+
+  MACRO
+  R6502_LOAD_TAIL $type,$ctype,$tag,$mode,$aname
+  R6502_TAIL_ENTRY move,$type,$tag.$mode,0
+  R6502_OPCODE_READ_SPECIAL
+  R6502_LOAD_ACTION 0,$ctype,$tag,$mode,1,$aname
+  MEND
+
+  MACRO
+  R6502_PAGE_INCREMENT_ACTION $continuationtype,$r,$n,$type,$tag,$mode,$aname
+  ADD r1,$r,#1:SHL:24
+  R6502_TOUCH_OR_WAIT $continuationtype,$n+1,$type,$tag.$mode
+  [ "$continuationtype"=="inline"
+  R6502_LOAD_ACTION $n+1,INFOLD,$tag,$mode,0,$aname
+  ]
+  MEND
+
+  MACRO
+  R6502_PAGE_INCREMENT_WAITS $n,$type,$tag,$mode
+  [ "$type"=="r6502" || "$type"=="r65c12"
+  R6502_WAIT_HANDLERS inline,$n,move,$type,pageincrement$tag.$mode,0
+  |
+  R6502_WAIT_HANDLERS ,$n,move,$type,pageincrement$tag.$mode,0
+  R6502_PAGE_INCREMENT_ACTION ,r1,$n,$type,$tag,$mode,
+  ]
+  MEND
+
+  MACRO
+  R6502_PAGE_INCREMENT_WAIT_TAIL $type,$tag,$mode,$aname
+  R6502_TAIL_ENTRY move,$type,pageincrement$tag.$mode,0
+  R6502_OPCODE_READ_SPECIAL
+  [ "$type"=="r6502" || "$type"=="r65c12"
+  R6502_PAGE_INCREMENT_ACTION inline,r4,0,$type,$tag,$mode,$aname
+  |
+  R6502_PAGE_INCREMENT_ACTION ,r4,0,$type,$tag,$mode,
+  ]
+  MEND
+
+  MACRO
+  R6502_PAGE_INCREMENT_LOAD $n,$type,$tag,$mode,$aname
+  R6502_TOUCH_OR_WAIT inline,$n,$type,pageincrement$tag.$mode
+  R6502_PAGE_INCREMENT_ACTION inline,r1,$n,$type,$tag,$mode,$aname
+  MEND
+
+  MACRO
+  R6502_LOAD $n,$type,$tag,$mode,$aname
+  R6502_TOUCH_OR_WAIT inline,$n,$type,$tag.$mode
+  R6502_LOAD_ACTION $n,INFOLD,$tag,$mode,0,$aname
+  MEND
+
+  MACRO
+  R6502_O_LOAD_OPCODE_BODY $type,$tag,$mode
+  LCLS genericload
+  LCLS action
+  IF "$type"=="r65c12" && ("$tag"=="decimaladc" || "$tag"=="decimalsbc")
+genericload SETS "r65c12decimalload"
+  ELIF "$type"=="r65c12" && !("$mode"=="imm" || "$mode"=="zpg" || "$mode"=="abs")
+genericload SETS "r65c12load"
+  ELSE
+genericload SETS "r6502load"
+  ENDIF
+  IF "$tag"=="bit" && "$mode"=="imm"
+action SETS "$type.$tag.immaction"
+  ELIF "$type"=="r65c12" && ("$tag"=="adc" || "$tag"=="sbc" || "$tag"=="decimaladc" || "$tag"=="decimalsbc")
+action SETS "r65c12$tag.action"
+  ELSE
+action SETS "r6502$tag.action"
+  ENDIF
+  [ "$type"=="r65c12" && ("$mode"=="zpgx" || "$mode"=="zpgy" || "$mode"=="preindexed")
+  R6502_OPERAND_LO_TWICE_FOLD_OR_TRAP $genericload.$mode.nofold,$type.$tag.$mode.infold,$action
+  |
+  R6502_OPERAND_LO_FOLD_OR_TRAP $genericload.$mode.nofold,$type.$tag.$mode.infold,$action
+  ]
+  MEND
+
+  MACRO
+  R6502_O_LOAD_OPCODE $type,$tag,$mode
+  [ "$tag"=="adc" || "$tag"=="sbc"
+  R6502_DECIMAL_SET_O_OPCODE_HEADER $type.$tag.$mode
+  R6502_O_LOAD_OPCODE_BODY $type,decimal$tag,$mode
+  R6502_DECIMAL_CLEAR_O_OPCODE_HEADER $type.$tag.$mode
+  R6502_O_LOAD_OPCODE_BODY $type,$tag,$mode
+  |
+  R6502_O_OPCODE_HEADER $type.$tag.$mode
+  R6502_O_LOAD_OPCODE_BODY $type,$tag,$mode
+  ]
+  MEND
+
+  MACRO
+  R6502_LOAD_OPCODE_SPLIT $type,$tag,$mode
+  LCLS lengthdigit
+  LCLS genericload
+  LCLS action
+  [ "$mode"=="abs" || "$mode"=="absx" || "$mode"=="absy"
+lengthdigit SETS "3"
+  |
+lengthdigit SETS "2"
+  ]
+  IF "$type"=="r65c12" && ("$tag"=="decimaladc" || "$tag"=="decimalsbc")
+genericload SETS "r65c12decimalload"
+  ELIF "$type"=="r65c12" && ("$mode"=="nonindexed" || "$mode"=="postindexed" || "$mode"=="absx" || "$mode"=="absy")
+genericload SETS "r65c12load"
+  ELSE
+genericload SETS "r6502load"
+  ENDIF
+  IF "$tag"=="bit" && "$mode"=="imm"
+action SETS "$type.$tag.immaction"
+  ELIF "$type"=="r65c12" && ("$tag"=="adc" || "$tag"=="sbc" || "$tag"=="decimaladc" || "$tag"=="decimalsbc")
+action SETS "r65c12$tag.action"
+  ELSE
+action SETS "r6502$tag.action"
+  ENDIF
+  R6502_GENERIC_SCAN$lengthdigit._SPLIT $type.$tag.$mode,$genericload.$mode,$action
+  MEND
+
+  MACRO
+  R6502_LOAD_OPCODE_BODY $type,$tag,$mode,$aname
+  LCLS resolvedaname
+  LCLS waittype
+  IF "$tag"=="adc" || "$tag"=="sbc"
+  [ "$type"=="r65c12"
+resolvedaname SETS "CMOS_$aname"
+  |
+resolvedaname SETS "NMOS_$aname"
+  ]
+waittype SETS "$type"
+  ELIF "$tag"=="decimaladc" || "$tag"=="decimalsbc"
+  [ "$type"=="r65c12"
+resolvedaname SETS "CMOS_DECIMAL_$aname"
+  |
+resolvedaname SETS "NMOS_DECIMAL_$aname"
+  ]
+waittype SETS "$type"
+  ELSE
+resolvedaname SETS "$aname"
+waittype SETS "r6502"
+  ENDIF
+  IF "$mode"=="imm"
+  $resolvedaname._ACTION
+  ADD r6,r6,#2:SHL:16
+  [ "$resolvedaname"=="CMOS_DECIMAL_$aname"
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 3,interrupt
+  |
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  ]
+  ELIF "$mode"=="zpg"
+  [ "$resolvedaname"!="CMOS_DECIMAL_$aname"
+  ADD r6,r6,#2:SHL:16
+  ]
+  LDRB r2,[r0,r2]
+  $resolvedaname._ACTION
+  [ "$resolvedaname"=="CMOS_DECIMAL_$aname"
+  MOV r1,r6
+  R6502_TOUCH_OR_TRAP ,r65c12infoldwait00000002decimalloadzpgreturn
+  |
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 3,interrupt
+  ]
+  ELIF "$mode"=="zpgx" || "$mode"=="zpgy"
+  [ "$mode"=="zpgx"
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  |
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  ]
+  ADD r2,r4,r2,LSL #24
+  [ "$resolvedaname"!="CMOS_DECIMAL_$aname"
+  ADD r6,r6,#2:SHL:16
+  ]
+  LDRB r2,[r0,r2,LSR #24]
+  $resolvedaname._ACTION
+  [ "$resolvedaname"=="CMOS_DECIMAL_$aname"
+  MOV r1,r6
+  R6502_TOUCH_OR_TRAP ,r65c12infoldwait00000003decimalloadzpgreturn
+  |
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 4,interrupt
+  ]
+  ELIF "$mode"=="preindexed"
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_LOAD 4,$waittype,$tag,zpgind,$resolvedaname
+  ELIF "$mode"=="nonindexed"
+  MOV r2,r2,LSL #24
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_LOAD 3,$waittype,$tag,zpgind,$resolvedaname
+  ELIF "$mode"=="postindexed"
+  MOV r2,r2,LSL #24
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_LOAD 3,$waittype,$tag,zpgind,$resolvedaname
+1
+  [ "$type"=="r65c12"
+  ADD r1,r1,#1:SHL:24
+  R6502_LOAD 4,$waittype,$tag,zpgind,$resolvedaname
+  |
+  R6502_PAGE_INCREMENT_LOAD 3,$waittype,$tag,zpgind,$resolvedaname
+  ]
+  ELIF "$mode"=="abs"
+  SUB r3,r8,#2
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_LOAD 2,$waittype,$tag,abs,$resolvedaname
+  ELIF "$mode"=="absx" || "$mode"=="absy"
+  [ "$mode"=="absx"
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  |
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  ]
+  SUB r3,r8,#2
+  ADDS r2,r1,r2,LSL #24
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_LOAD 2,$waittype,$tag,abs,$resolvedaname
+1
+  [ "$type"=="r65c12"
+  ADD r1,r1,#1:SHL:24
+  R6502_LOAD 3,$waittype,$tag,abs,$resolvedaname
+  |
+  R6502_PAGE_INCREMENT_LOAD 2,$waittype,$tag,abs,$resolvedaname
+  ]
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_LOAD_OPCODE $type,$tag,$mode,$aname
+  LCLS lengthdigit
+  [ "$mode"=="abs" || "$mode"=="absx" || "$mode"=="absy"
+lengthdigit SETS "3"
+  |
+lengthdigit SETS "2"
+  ]
+  R6502_O_LOAD_OPCODE $type,$tag,$mode
+  R6502_LOAD_OPCODE_SPLIT $type,$tag,$mode
+  [ "$tag"=="adc" || "$tag"=="sbc"
+  R6502_LOAD_OPCODE_SPLIT $type,decimal$tag,$mode
+  R6502_DECIMAL_SET_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode,$type.decimal$tag.$mode
+  R6502_LOAD_OPCODE_BODY $type,decimal$tag,$mode,$aname
+  R6502_DECIMAL_CLEAR_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode
+  R6502_LOAD_OPCODE_BODY $type,$tag,$mode,$aname
+  |
+  R6502_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode
+  R6502_LOAD_OPCODE_BODY $type,$tag,$mode,$aname
+  ]
+  MEND
+
+r6502loadimmnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502loadimmsplit1
+  LOAD_IMM_ACTION
+r6502dopimmsplit1
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 2,interrupt
+
+r65c12decimalloadimmnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r65c12decimalloadimmsplit1
+  LOAD_IMM_ACTION
+  MOV r1,r6
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000001decimalloadzpgreturn
+
+r6502loadzpgnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502loadzpgsplit1
+  LOAD_ZPG_ACTION
+d_r65c12outfoldwait00000001decimalloadzpgreturn
+r65c12dopzpgxnofold
+r6502dopzpgsplit1
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 3,interrupt
+
+r65c12decimalloadzpgnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+  LOAD_ZPG_ACTION
+  ADD r1,r6,#1:SHL:16
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000002decimalloadzpgreturn
+
+r65c12decimalloadzpgsplit1
+  LOAD_ZPG_ACTION
+d_r65c12outfoldwait00000002decimalloadzpgreturn
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 4,interrupt
+
+r65c12decimalloadzpgxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  LOAD_ZPGX_ACTION
+  ADD r1,r6,#1:SHL:16
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000002decimalloadzpgreturn
+
+r65c12loadzpgxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  LOAD_ZPGX_ACTION
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 3,interrupt
+
+r6502loadzpgxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502loadzpgxsplit1
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  LOAD_ZPGX_ACTION
+r6502dopzpgxsplit1
+r65c12dopzpgxsplit1
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 4,interrupt
+
+r65c12loadzpgynofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LOAD_ZPGX_ACTION
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 3,interrupt
+
+r6502loadzpgynofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502loadzpgysplit1
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LOAD_ZPGX_ACTION
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 4,interrupt
+
+r65c12decimalloadzpgxsplit1
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  LOAD_ZPGX_ACTION
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 5,interrupt
+
+r6502loadpreindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502loadpreindexedsplit1
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000004loadzpgind
+
+r65c12loadpreindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003loadzpgind
+
+r65c12decimalloadpreindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000003decimalloadzpgind
+
+r65c12decimalloadpreindexedsplit1
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000004decimalloadzpgind
+
+r65c12loadnonindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r65c12loadnonindexedsplit1
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003loadzpgind
+
+r65c12decimalloadnonindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r65c12decimalloadnonindexedsplit1
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000003decimalloadzpgind
+
+r6502loadpostindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502loadpostindexedsplit1
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003loadzpgind
+1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003pageincrementloadzpgind
+
+r65c12loadpostindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r65c12loadpostindexedsplit1
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003loadzpgind
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000004loadzpgind
+
+r65c12decimalloadpostindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r65c12decimalloadpostindexedsplit1
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000003decimalloadzpgind
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000004decimalloadzpgind
+
+r6502loadabsnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r6502loadabssplit1
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  STR r3,[sp, #-4]!
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502loadabssplit1part2,r6502loadabssplit1part2,
+
+r65c12decimalloadabsnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r65c12decimalloadabssplit1
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  STR r3,[sp, #-4]!
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r65c12decimalloadabssplit1part2,r65c12decimalloadabssplit1part2,
+
+r6502loadabsxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r6502loadabsxsplit1
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502loadabssplit1part2,r6502loadabssplit1part2,
+1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502loadabsxsplit1part2,r6502loadabsxsplit1part2,
+
+r6502loadabsynofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r6502loadabsysplit1
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502loadabssplit1part2,r6502loadabssplit1part2,
+1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502loadabsxsplit1part2,r6502loadabsxsplit1part2,
+
+r65c12loadabsxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r65c12loadabsxsplit1
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502loadabssplit1part2,r6502loadabssplit1part2,
+1
+  R6502_OPERAND_HI_TWICE_FOLD_OR_TRAP s_r65c12loadabsxsplit1part2,r65c12loadabsxsplit1part2,
+
+r65c12loadabsynofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r65c12loadabsysplit1
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502loadabssplit1part2,r6502loadabssplit1part2,
+1
+  R6502_OPERAND_HI_TWICE_FOLD_OR_TRAP s_r65c12loadabsxsplit1part2,r65c12loadabsxsplit1part2,
+
+r65c12decimalloadabsxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r65c12decimalloadabsxsplit1
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r65c12decimalloadabssplit1part2,r65c12decimalloadabssplit1part2,
+1
+  R6502_OPERAND_HI_TWICE_FOLD_OR_TRAP s_r65c12decimalloadabsxsplit1part2,r65c12decimalloadabsxsplit1part2,
+
+r65c12decimalloadabsynofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r65c12decimalloadabsysplit1
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r65c12decimalloadabssplit1part2,r65c12decimalloadabssplit1part2,
+1
+  R6502_OPERAND_HI_TWICE_FOLD_OR_TRAP s_r65c12decimalloadabsxsplit1part2,r65c12decimalloadabsxsplit1part2,
+
+s_r6502loadabssplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000001loadabs
+
+r6502loadabssplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502infoldwait00000002loadabs
+
+s_r65c12decimalloadabssplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r65c12nofoldwait00000001decimalloadabs
+
+r65c12decimalloadabssplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r65c12infoldwait00000002decimalloadabs
+
+s_r6502loadabsxsplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000001pageincrementloadabs
+
+r6502loadabsxsplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502infoldwait00000002pageincrementloadabs
+
+s_r65c12loadabsxsplit1part2
+  ORR r1,r4,r2,LSL #24
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000001loadabs
+
+r65c12loadabsxsplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502infoldwait00000003loadabs
+
+s_r65c12decimalloadabsxsplit1part2
+  ORR r1,r4,r2,LSL #24
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r65c12nofoldwait00000001decimalloadabs
+
+r65c12decimalloadabsxsplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r65c12infoldwait00000003decimalloadabs
+
+  R6502_WAIT_HANDLERS inline,1,move,r65c12nofold,decimalloadabsreturn,0
+  R6502_WAIT_HANDLERS inline,2,move,r65c12nofold,decimalloadabsreturn,0
+  R6502_WAIT_HANDLERS inline,3,move,r65c12nofold,decimalloadabsreturn,0
+
+d_r65c12nofoldwait00000001decimalloadabsreturn
+  ADD r6,r6,#3:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 3,interrupt
+
+d_r65c12nofoldwait00000002decimalloadabsreturn
+  ADD r6,r6,#3:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 4,interrupt
+
+d_r65c12nofoldwait00000003decimalloadabsreturn
+  ADD r6,r6,#3:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 5,interrupt
+
+s_r65c12nofolddecimalloadabsreturntail
+  MOV r1,r4
+  R6502_OPCODE_READ_SPECIAL
+  ADD r6,r6,#3:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 2,interrupt
+
+r6502loadimmsplit2
+  LOAD_IMM_ACTION
+r6502dopimmsplit2
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 2,interrupt
+
+r65c12decimalloadimmsplit2
+  LOAD_IMM_ACTION
+  MOV r1,r6
+  R6502_TOUCH_OR_TRAP ,r65c12atfoldwait00000001decimalloadzpgreturn
+
+r6502loadzpgsplit2
+  LOAD_ZPG_ACTION
+d_r65c12atfoldwait00000001decimalloadzpgreturn
+r6502dopzpgsplit2
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 3,interrupt
+
+r65c12decimalloadzpgsplit2
+  LOAD_ZPG_ACTION
+d_r65c12atfoldwait00000002decimalloadzpgreturn
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 4,interrupt
+
+r6502loadzpgxsplit2
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  LOAD_ZPGX_ACTION
+r6502dopzpgxsplit2
+r65c12dopzpgxsplit2
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 4,interrupt
+
+r6502loadzpgysplit2
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LOAD_ZPGX_ACTION
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 4,interrupt
+
+r65c12decimalloadzpgxsplit2
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  LOAD_ZPGX_ACTION
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 5,interrupt
+
+r6502loadpreindexedsplit2
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000004loadzpgind
+
+r65c12decimalloadpreindexedsplit2
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r65c12atfoldwait00000004decimalloadzpgind
+
+r65c12loadnonindexedsplit2
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003loadzpgind
+
+r65c12decimalloadnonindexedsplit2
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r65c12atfoldwait00000003decimalloadzpgind
+
+r6502loadpostindexedsplit2
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003loadzpgind
+1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003pageincrementloadzpgind
+
+r65c12loadpostindexedsplit2
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003loadzpgind
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000004loadzpgind
+
+r65c12decimalloadpostindexedsplit2
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r65c12atfoldwait00000003decimalloadzpgind
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r65c12atfoldwait00000004decimalloadzpgind
+
+r6502loadabssplit2
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002loadabs
+
+r65c12decimalloadabssplit2
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000002decimalloadabs
+
+r6502loadabsxsplit2
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002loadabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002pageincrementloadabs
+
+r6502loadabsysplit2
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002loadabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002pageincrementloadabs
+
+r65c12loadabsxsplit2
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002loadabs
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003loadabs
+
+r65c12loadabsysplit2
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002loadabs
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003loadabs
+
+r65c12decimalloadabsxsplit2
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000002decimalloadabs
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000003decimalloadabs
+
+r65c12decimalloadabsysplit2
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000002decimalloadabs
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r65c12outfoldwait00000003decimalloadabs
+
+r6502loadabssplit3
+  STR r3,[sp, #-4]!
+  SUB r3,r8,#1
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002loadabs
+
+r65c12decimalloadabssplit3
+  STR r3,[sp, #-4]!
+  SUB r3,r8,#1
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r65c12atfoldwait00000002decimalloadabs
+
+r6502loadabsxsplit3
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  SUB r3,r8,#1
+  ADDS r2,r1,r2,LSL #24
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002loadabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002pageincrementloadabs
+
+r6502loadabsysplit3
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  SUB r3,r8,#1
+  ADDS r2,r1,r2,LSL #24
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002loadabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002pageincrementloadabs
+
+r65c12loadabsxsplit3
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  SUB r3,r8,#1
+  ADDS r2,r1,r2,LSL #24
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002loadabs
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003loadabs
+
+r65c12loadabsysplit3
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  SUB r3,r8,#1
+  ADDS r2,r1,r2,LSL #24
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002loadabs
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003loadabs
+
+r65c12decimalloadabsxsplit3
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  SUB r3,r8,#1
+  ADDS r2,r1,r2,LSL #24
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r65c12atfoldwait00000002decimalloadabs
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r65c12atfoldwait00000003decimalloadabs
+
+r65c12decimalloadabsysplit3
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  SUB r3,r8,#1
+  ADDS r2,r1,r2,LSL #24
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r65c12atfoldwait00000002decimalloadabs
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r65c12atfoldwait00000003decimalloadabs
+
+  R6502_LOAD_OPCODE r6502,adc,imm,ADC
+  R6502_LOAD_OPCODE r6502,adc,zpg,ADC
+  R6502_LOAD_OPCODE r6502,adc,zpgx,ADC
+  R6502_LOAD_OPCODE r6502,adc,preindexed,ADC
+  R6502_LOAD_OPCODE r6502,adc,postindexed,ADC
+  R6502_LOAD_OPCODE r6502,adc,abs,ADC
+  R6502_LOAD_OPCODE r6502,adc,absx,ADC
+  R6502_LOAD_OPCODE r6502,adc,absy,ADC
+
+  R6502_LOAD_OPCODE r65c12,adc,imm,ADC
+  R6502_LOAD_OPCODE r65c12,adc,zpg,ADC
+  R6502_LOAD_OPCODE r65c12,adc,zpgx,ADC
+  R6502_LOAD_OPCODE r65c12,adc,preindexed,ADC
+  R6502_LOAD_OPCODE r65c12,adc,nonindexed,ADC
+  R6502_LOAD_OPCODE r65c12,adc,postindexed,ADC
+  R6502_LOAD_OPCODE r65c12,adc,abs,ADC
+  R6502_LOAD_OPCODE r65c12,adc,absx,ADC
+  R6502_LOAD_OPCODE r65c12,adc,absy,ADC
+
+  R6502_LOAD_OPCODE r6502,alr,imm,ALR
+
+  R6502_LOAD_OPCODE r6502,anc,imm,ANC
+
+  R6502_LOAD_OPCODE r6502,and,imm,AND
+  R6502_LOAD_OPCODE r6502,and,zpg,AND
+  R6502_LOAD_OPCODE r6502,and,zpgx,AND
+  R6502_LOAD_OPCODE r6502,and,preindexed,AND
+  R6502_LOAD_OPCODE r6502,and,postindexed,AND
+  R6502_LOAD_OPCODE r6502,and,abs,AND
+  R6502_LOAD_OPCODE r6502,and,absx,AND
+  R6502_LOAD_OPCODE r6502,and,absy,AND
+
+  R6502_LOAD_OPCODE r65c12,and,zpgx,AND
+  R6502_LOAD_OPCODE r65c12,and,preindexed,AND
+  R6502_LOAD_OPCODE r65c12,and,nonindexed,AND
+  R6502_LOAD_OPCODE r65c12,and,postindexed,AND
+  R6502_LOAD_OPCODE r65c12,and,absx,AND
+  R6502_LOAD_OPCODE r65c12,and,absy,AND
+
+  R6502_LOAD_OPCODE r6502,ane,imm,ANE
+
+  R6502_LOAD_OPCODE r6502,arr,imm,ARR
+
+  R6502_LOAD_OPCODE r6502,bit,zpg,BIT
+  R6502_LOAD_OPCODE r6502,bit,abs,BIT
+
+  R6502_LOAD_OPCODE r65c12,bit,imm,BIT_IMM
+  R6502_LOAD_OPCODE r65c12,bit,zpgx,BIT
+  R6502_LOAD_OPCODE r65c12,bit,absx,BIT
+
+  R6502_LOAD_OPCODE r6502,cmp,imm,CMP
+  R6502_LOAD_OPCODE r6502,cmp,zpg,CMP
+  R6502_LOAD_OPCODE r6502,cmp,zpgx,CMP
+  R6502_LOAD_OPCODE r6502,cmp,preindexed,CMP
+  R6502_LOAD_OPCODE r6502,cmp,postindexed,CMP
+  R6502_LOAD_OPCODE r6502,cmp,abs,CMP
+  R6502_LOAD_OPCODE r6502,cmp,absx,CMP
+  R6502_LOAD_OPCODE r6502,cmp,absy,CMP
+
+  R6502_LOAD_OPCODE r65c12,cmp,zpgx,CMP
+  R6502_LOAD_OPCODE r65c12,cmp,preindexed,CMP
+  R6502_LOAD_OPCODE r65c12,cmp,nonindexed,CMP
+  R6502_LOAD_OPCODE r65c12,cmp,postindexed,CMP
+  R6502_LOAD_OPCODE r65c12,cmp,absx,CMP
+  R6502_LOAD_OPCODE r65c12,cmp,absy,CMP
+
+  R6502_LOAD_OPCODE r6502,cpx,imm,CPX
+  R6502_LOAD_OPCODE r6502,cpx,zpg,CPX
+  R6502_LOAD_OPCODE r6502,cpx,abs,CPX
+
+  R6502_LOAD_OPCODE r6502,cpy,imm,CPY
+  R6502_LOAD_OPCODE r6502,cpy,zpg,CPY
+  R6502_LOAD_OPCODE r6502,cpy,abs,CPY
+
+  R6502_LOAD_OPCODE r6502,eor,imm,EOR
+  R6502_LOAD_OPCODE r6502,eor,zpg,EOR
+  R6502_LOAD_OPCODE r6502,eor,zpgx,EOR
+  R6502_LOAD_OPCODE r6502,eor,preindexed,EOR
+  R6502_LOAD_OPCODE r6502,eor,postindexed,EOR
+  R6502_LOAD_OPCODE r6502,eor,abs,EOR
+  R6502_LOAD_OPCODE r6502,eor,absx,EOR
+  R6502_LOAD_OPCODE r6502,eor,absy,EOR
+
+  R6502_LOAD_OPCODE r65c12,eor,zpgx,EOR
+  R6502_LOAD_OPCODE r65c12,eor,preindexed,EOR
+  R6502_LOAD_OPCODE r65c12,eor,nonindexed,EOR
+  R6502_LOAD_OPCODE r65c12,eor,postindexed,EOR
+  R6502_LOAD_OPCODE r65c12,eor,absx,EOR
+  R6502_LOAD_OPCODE r65c12,eor,absy,EOR
+
+  R6502_LOAD_OPCODE r6502,las,absy,LAS
+
+  R6502_LOAD_OPCODE r6502,lax,zpg,LAX
+  R6502_LOAD_OPCODE r6502,lax,zpgy,LAX
+  R6502_LOAD_OPCODE r6502,lax,preindexed,LAX
+  R6502_LOAD_OPCODE r6502,lax,postindexed,LAX
+  R6502_LOAD_OPCODE r6502,lax,abs,LAX
+  R6502_LOAD_OPCODE r6502,lax,absy,LAX
+
+  R6502_LOAD_OPCODE r6502,lda,imm,LDA
+  R6502_LOAD_OPCODE r6502,lda,zpg,LDA
+  R6502_LOAD_OPCODE r6502,lda,zpgx,LDA
+  R6502_LOAD_OPCODE r6502,lda,preindexed,LDA
+  R6502_LOAD_OPCODE r6502,lda,postindexed,LDA
+  R6502_LOAD_OPCODE r6502,lda,abs,LDA
+  R6502_LOAD_OPCODE r6502,lda,absx,LDA
+  R6502_LOAD_OPCODE r6502,lda,absy,LDA
+
+  R6502_LOAD_OPCODE r65c12,lda,zpgx,LDA
+  R6502_LOAD_OPCODE r65c12,lda,preindexed,LDA
+  R6502_LOAD_OPCODE r65c12,lda,nonindexed,LDA
+  R6502_LOAD_OPCODE r65c12,lda,postindexed,LDA
+  R6502_LOAD_OPCODE r65c12,lda,absx,LDA
+  R6502_LOAD_OPCODE r65c12,lda,absy,LDA
+
+  R6502_LOAD_OPCODE r6502,ldx,imm,LDX
+  R6502_LOAD_OPCODE r6502,ldx,zpg,LDX
+  R6502_LOAD_OPCODE r6502,ldx,zpgy,LDX
+  R6502_LOAD_OPCODE r6502,ldx,abs,LDX
+  R6502_LOAD_OPCODE r6502,ldx,absy,LDX
+
+  R6502_LOAD_OPCODE r65c12,ldx,zpgy,LDX
+  R6502_LOAD_OPCODE r65c12,ldx,absy,LDX
+
+  R6502_LOAD_OPCODE r6502,ldy,imm,LDY
+  R6502_LOAD_OPCODE r6502,ldy,zpg,LDY
+  R6502_LOAD_OPCODE r6502,ldy,zpgx,LDY
+  R6502_LOAD_OPCODE r6502,ldy,abs,LDY
+  R6502_LOAD_OPCODE r6502,ldy,absx,LDY
+
+  R6502_LOAD_OPCODE r65c12,ldy,zpgx,LDY
+  R6502_LOAD_OPCODE r65c12,ldy,absx,LDY
+
+  R6502_LOAD_OPCODE r6502,lxa,imm,LXA
+
+  R6502_LOAD_OPCODE r6502,ora,imm,ORA
+  R6502_LOAD_OPCODE r6502,ora,zpg,ORA
+  R6502_LOAD_OPCODE r6502,ora,zpgx,ORA
+  R6502_LOAD_OPCODE r6502,ora,preindexed,ORA
+  R6502_LOAD_OPCODE r6502,ora,postindexed,ORA
+  R6502_LOAD_OPCODE r6502,ora,abs,ORA
+  R6502_LOAD_OPCODE r6502,ora,absx,ORA
+  R6502_LOAD_OPCODE r6502,ora,absy,ORA
+
+  R6502_LOAD_OPCODE r65c12,ora,zpgx,ORA
+  R6502_LOAD_OPCODE r65c12,ora,preindexed,ORA
+  R6502_LOAD_OPCODE r65c12,ora,nonindexed,ORA
+  R6502_LOAD_OPCODE r65c12,ora,postindexed,ORA
+  R6502_LOAD_OPCODE r65c12,ora,absx,ORA
+  R6502_LOAD_OPCODE r65c12,ora,absy,ORA
+
+  R6502_LOAD_OPCODE r6502,sbc,imm,SBC
+  R6502_LOAD_OPCODE r6502,sbc,zpg,SBC
+  R6502_LOAD_OPCODE r6502,sbc,zpgx,SBC
+  R6502_LOAD_OPCODE r6502,sbc,preindexed,SBC
+  R6502_LOAD_OPCODE r6502,sbc,postindexed,SBC
+  R6502_LOAD_OPCODE r6502,sbc,abs,SBC
+  R6502_LOAD_OPCODE r6502,sbc,absx,SBC
+  R6502_LOAD_OPCODE r6502,sbc,absy,SBC
+
+  R6502_LOAD_OPCODE r65c12,sbc,imm,SBC
+  R6502_LOAD_OPCODE r65c12,sbc,zpg,SBC
+  R6502_LOAD_OPCODE r65c12,sbc,zpgx,SBC
+  R6502_LOAD_OPCODE r65c12,sbc,preindexed,SBC
+  R6502_LOAD_OPCODE r65c12,sbc,nonindexed,SBC
+  R6502_LOAD_OPCODE r65c12,sbc,postindexed,SBC
+  R6502_LOAD_OPCODE r65c12,sbc,abs,SBC
+  R6502_LOAD_OPCODE r65c12,sbc,absx,SBC
+  R6502_LOAD_OPCODE r65c12,sbc,absy,SBC
+
+  R6502_LOAD_OPCODE r6502,sbx,imm,SBX
+
+  R6502_LOAD_OPCODE r6502,top,abs,TOP
+  R6502_LOAD_OPCODE r6502,top,absx,TOP
+
+  R6502_LOAD_WAITS 1,r65c12nofold,NOFOLD,decimalload,abs,LOAD_ABS
+  R6502_LOAD_TAIL r65c12nofold,NOFOLD,decimalload,abs,LOAD_ABS
+
+  R6502_WAIT_HANDLERS inline,1,move,r65c12outfold,decimalloadzpgreturn,0
+  R6502_WAIT_HANDLERS inline,2,move,r65c12outfold,decimalloadzpgreturn,0
+  R6502_DECIMAL_RETURN_WAITS 4,r65c12outfold,OUTFOLD,loadzpg
+  R6502_DECIMAL_RETURN_WAITS 5,r65c12outfold,OUTFOLD,loadzpg
+  R6502_DECIMAL_RETURN_TAIL r65c12outfold,OUTFOLD,loadzpg
+
+  R6502_LOAD_WAITS 1,r65c12outfold,OUTFOLD,decimalload,zpgind,LOAD_ZPGIND
+  R6502_LOAD_WAITS 3,r65c12outfold,OUTFOLD,decimalload,zpgind,LOAD_ZPGIND
+  R6502_LOAD_WAITS 4,r65c12outfold,OUTFOLD,decimalload,zpgind,LOAD_ZPGIND
+  R6502_LOAD_TAIL r65c12outfold,OUTFOLD,decimalload,zpgind,LOAD_ZPGIND
+
+  R6502_LOAD_WAITS 1,r6502outfold,OUTFOLD,load,zpgind,LOAD_ZPGIND
+  R6502_LOAD_WAITS 3,r6502outfold,OUTFOLD,load,zpgind,LOAD_ZPGIND
+  R6502_LOAD_WAITS 4,r6502outfold,OUTFOLD,load,zpgind,LOAD_ZPGIND
+  R6502_PAGE_INCREMENT_WAITS 3,r6502outfold,load,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502outfold,load,zpgind,LOAD_ZPGIND
+  R6502_LOAD_TAIL r6502outfold,OUTFOLD,load,zpgind,LOAD_ZPGIND
+
+  R6502_LOAD_WAITS 2,r65c12outfold,OUTFOLD,decimalload,abs,LOAD_ABS
+  R6502_LOAD_WAITS 3,r65c12outfold,OUTFOLD,decimalload,abs,LOAD_ABS
+  R6502_LOAD_TAIL r65c12outfold,OUTFOLD,decimalload,abs,LOAD_ABS
+
+  R6502_LOAD_WAITS 1,r6502outfold,OUTFOLD,load,abs,LOAD_ABS
+  R6502_LOAD_WAITS 2,r6502outfold,OUTFOLD,load,abs,LOAD_ABS
+  R6502_LOAD_WAITS 3,r6502outfold,OUTFOLD,load,abs,LOAD_ABS
+  R6502_PAGE_INCREMENT_WAITS 1,r6502outfold,load,abs
+  R6502_PAGE_INCREMENT_WAITS 2,r6502outfold,load,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502outfold,load,abs,LOAD_ABS
+  R6502_LOAD_TAIL r6502outfold,OUTFOLD,load,abs,LOAD_ABS
+
+  R6502_WAIT_HANDLERS inline,1,move,r65c12atfold,decimalloadzpgreturn,0
+  R6502_WAIT_HANDLERS inline,2,move,r65c12atfold,decimalloadzpgreturn,0
+  R6502_DECIMAL_RETURN_WAITS 4,r65c12atfold,ATFOLD,loadzpg
+  R6502_DECIMAL_RETURN_WAITS 5,r65c12atfold,ATFOLD,loadzpg
+  R6502_DECIMAL_RETURN_TAIL r65c12atfold,ATFOLD,loadzpg
+
+  R6502_LOAD_WAITS 1,r65c12atfold,ATFOLD,decimalload,zpgind,LOAD_ZPGIND
+  R6502_LOAD_WAITS 3,r65c12atfold,ATFOLD,decimalload,zpgind,LOAD_ZPGIND
+  R6502_LOAD_WAITS 4,r65c12atfold,ATFOLD,decimalload,zpgind,LOAD_ZPGIND
+  R6502_LOAD_TAIL r65c12atfold,ATFOLD,decimalload,zpgind,LOAD_ZPGIND
+
+  R6502_LOAD_WAITS 1,r6502atfold,ATFOLD,load,zpgind,LOAD_ZPGIND
+  R6502_LOAD_WAITS 3,r6502atfold,ATFOLD,load,zpgind,LOAD_ZPGIND
+  R6502_LOAD_WAITS 4,r6502atfold,ATFOLD,load,zpgind,LOAD_ZPGIND
+  R6502_PAGE_INCREMENT_WAITS 3,r6502atfold,load,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502atfold,load,zpgind,LOAD_ZPGIND
+  R6502_LOAD_TAIL r6502atfold,ATFOLD,load,zpgind,LOAD_ZPGIND
+
+  R6502_LOAD_WAITS 2,r65c12atfold,ATFOLD,decimalload,abs,LOAD_ABS
+  R6502_LOAD_WAITS 3,r65c12atfold,ATFOLD,decimalload,abs,LOAD_ABS
+  R6502_LOAD_TAIL r65c12atfold,ATFOLD,decimalload,abs,LOAD_ABS
+
+  R6502_LOAD_WAITS 1,r6502atfold,ATFOLD,load,abs,LOAD_ABS
+  R6502_LOAD_WAITS 2,r6502atfold,ATFOLD,load,abs,LOAD_ABS
+  R6502_LOAD_WAITS 3,r6502atfold,ATFOLD,load,abs,LOAD_ABS
+  R6502_PAGE_INCREMENT_WAITS 2,r6502atfold,load,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502atfold,load,abs,LOAD_ABS
+  R6502_LOAD_TAIL r6502atfold,ATFOLD,load,abs,LOAD_ABS
+
+  R6502_DECIMAL_RETURN_WAITS 1,r65c12infold,INFOLD,loadzpg
+  R6502_DECIMAL_RETURN_WAITS 2,r65c12infold,INFOLD,loadzpg
+  R6502_DECIMAL_RETURN_WAITS 3,r65c12infold,INFOLD,loadzpg
+  R6502_DECIMAL_RETURN_TAIL r65c12infold,INFOLD,loadzpg
+
+  R6502_LOAD_WAITS 2,r65c12infold,INFOLD,decimalload,abs,LOAD_ABS
+  R6502_LOAD_WAITS 3,r65c12infold,INFOLD,decimalload,abs,LOAD_ABS
+  R6502_LOAD_TAIL r65c12infold,INFOLD,decimalload,abs,LOAD_ABS
+
+  R6502_LOAD_WAITS 1,r6502infold,INFOLD,load,abs,LOAD_ABS
+  R6502_LOAD_WAITS 2,r6502infold,INFOLD,load,abs,LOAD_ABS
+  R6502_LOAD_WAITS 3,r6502infold,INFOLD,load,abs,LOAD_ABS
+  R6502_PAGE_INCREMENT_WAITS 2,r6502infold,load,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502infold,load,abs,LOAD_ABS
+  R6502_LOAD_TAIL r6502infold,INFOLD,load,abs,LOAD_ABS
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,decimaladc,zpgind,NMOS_DECIMAL_ADC
+  R6502_LOAD_WAITS 3,r6502,INFOLD,decimaladc,zpgind,NMOS_DECIMAL_ADC
+  R6502_LOAD_WAITS 4,r6502,INFOLD,decimaladc,zpgind,NMOS_DECIMAL_ADC
+  R6502_PAGE_INCREMENT_WAITS 3,r6502,decimaladc,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,decimaladc,zpgind,NMOS_DECIMAL_ADC
+  R6502_LOAD_TAIL r6502,INFOLD,decimaladc,zpgind,NMOS_DECIMAL_ADC
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,adc,zpgind,NMOS_ADC
+  R6502_LOAD_WAITS 3,r6502,INFOLD,adc,zpgind,NMOS_ADC
+  R6502_LOAD_WAITS 4,r6502,INFOLD,adc,zpgind,NMOS_ADC
+  R6502_PAGE_INCREMENT_WAITS 3,r6502,adc,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,adc,zpgind,NMOS_ADC
+  R6502_LOAD_TAIL r6502,INFOLD,adc,zpgind,NMOS_ADC
+
+  R6502_LOAD_WAITS 3,r65c12,INFOLD,decimaladc,zpgind,CMOS_DECIMAL_ADC
+  R6502_LOAD_WAITS 4,r65c12,INFOLD,decimaladc,zpgind,CMOS_DECIMAL_ADC
+  R6502_LOAD_TAIL r65c12,INFOLD,decimaladc,zpgind,CMOS_DECIMAL_ADC
+
+  R6502_LOAD_WAITS 3,r65c12,INFOLD,adc,zpgind,CMOS_ADC
+  R6502_LOAD_WAITS 4,r65c12,INFOLD,adc,zpgind,CMOS_ADC
+  R6502_LOAD_TAIL r65c12,INFOLD,adc,zpgind,CMOS_ADC
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,decimaladc,abs,NMOS_DECIMAL_ADC
+  R6502_LOAD_WAITS 2,r6502,INFOLD,decimaladc,abs,NMOS_DECIMAL_ADC
+  R6502_LOAD_WAITS 3,r6502,INFOLD,decimaladc,abs,NMOS_DECIMAL_ADC
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,decimaladc,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,decimaladc,abs,NMOS_DECIMAL_ADC
+  R6502_LOAD_TAIL r6502,INFOLD,decimaladc,abs,NMOS_DECIMAL_ADC
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,adc,abs,NMOS_ADC
+  R6502_LOAD_WAITS 2,r6502,INFOLD,adc,abs,NMOS_ADC
+  R6502_LOAD_WAITS 3,r6502,INFOLD,adc,abs,NMOS_ADC
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,adc,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,adc,abs,NMOS_ADC
+  R6502_LOAD_TAIL r6502,INFOLD,adc,abs,NMOS_ADC
+
+  R6502_LOAD_WAITS 2,r65c12,INFOLD,decimaladc,abs,CMOS_DECIMAL_ADC
+  R6502_LOAD_WAITS 3,r65c12,INFOLD,decimaladc,abs,CMOS_DECIMAL_ADC
+  R6502_LOAD_TAIL r65c12,INFOLD,decimaladc,abs,CMOS_DECIMAL_ADC
+
+  R6502_LOAD_WAITS 2,r65c12,INFOLD,adc,abs,CMOS_ADC
+  R6502_LOAD_WAITS 3,r65c12,INFOLD,adc,abs,CMOS_ADC
+  R6502_LOAD_TAIL r65c12,INFOLD,adc,abs,CMOS_ADC
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,and,zpgind,AND
+  R6502_LOAD_WAITS 3,r6502,INFOLD,and,zpgind,AND
+  R6502_LOAD_WAITS 4,r6502,INFOLD,and,zpgind,AND
+  R6502_PAGE_INCREMENT_WAITS 3,r6502,and,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,and,zpgind,AND
+  R6502_LOAD_TAIL r6502,INFOLD,and,zpgind,AND
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,and,abs,AND
+  R6502_LOAD_WAITS 2,r6502,INFOLD,and,abs,AND
+  R6502_LOAD_WAITS 3,r6502,INFOLD,and,abs,AND
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,and,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,and,abs,AND
+  R6502_LOAD_TAIL r6502,INFOLD,and,abs,AND
+
+  R6502_LOAD_WAITS 2,r6502,INFOLD,bit,abs,BIT
+  R6502_LOAD_WAITS 3,r6502,INFOLD,bit,abs,BIT
+  R6502_LOAD_TAIL r6502,INFOLD,bit,abs,BIT
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,cmp,zpgind,CMP
+  R6502_LOAD_WAITS 3,r6502,INFOLD,cmp,zpgind,CMP
+  R6502_LOAD_WAITS 4,r6502,INFOLD,cmp,zpgind,CMP
+  R6502_PAGE_INCREMENT_WAITS 3,r6502,cmp,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,cmp,zpgind,CMP
+  R6502_LOAD_TAIL r6502,INFOLD,cmp,zpgind,CMP
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,cmp,abs,CMP
+  R6502_LOAD_WAITS 2,r6502,INFOLD,cmp,abs,CMP
+  R6502_LOAD_WAITS 3,r6502,INFOLD,cmp,abs,CMP
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,cmp,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,cmp,abs,CMP
+  R6502_LOAD_TAIL r6502,INFOLD,cmp,abs,CMP
+
+  R6502_LOAD_WAITS 2,r6502,INFOLD,cpx,abs,CPX
+  R6502_LOAD_TAIL r6502,INFOLD,cpx,abs,CPX
+
+  R6502_LOAD_WAITS 2,r6502,INFOLD,cpy,abs,CPY
+  R6502_LOAD_TAIL r6502,INFOLD,cpy,abs,CPY
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,eor,zpgind,EOR
+  R6502_LOAD_WAITS 3,r6502,INFOLD,eor,zpgind,EOR
+  R6502_LOAD_WAITS 4,r6502,INFOLD,eor,zpgind,EOR
+  R6502_PAGE_INCREMENT_WAITS 3,r6502,eor,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,eor,zpgind,EOR
+  R6502_LOAD_TAIL r6502,INFOLD,eor,zpgind,EOR
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,eor,abs,EOR
+  R6502_LOAD_WAITS 2,r6502,INFOLD,eor,abs,EOR
+  R6502_LOAD_WAITS 3,r6502,INFOLD,eor,abs,EOR
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,eor,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,eor,abs,EOR
+  R6502_LOAD_TAIL r6502,INFOLD,eor,abs,EOR
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,las,abs,LAS
+  R6502_LOAD_WAITS 2,r6502,INFOLD,las,abs,LAS
+  R6502_LOAD_WAITS 3,r6502,INFOLD,las,abs,LAS
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,las,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,las,abs,LAS
+  R6502_LOAD_TAIL r6502,INFOLD,las,abs,LAS
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,lax,zpgind,LAX
+  R6502_LOAD_WAITS 3,r6502,INFOLD,lax,zpgind,LAX
+  R6502_LOAD_WAITS 4,r6502,INFOLD,lax,zpgind,LAX
+  R6502_PAGE_INCREMENT_WAITS 3,r6502,lax,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,lax,zpgind,LAX
+  R6502_LOAD_TAIL r6502,INFOLD,lax,zpgind,LAX
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,lax,abs,LAX
+  R6502_LOAD_WAITS 2,r6502,INFOLD,lax,abs,LAX
+  R6502_LOAD_WAITS 3,r6502,INFOLD,lax,abs,LAX
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,lax,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,lax,abs,LAX
+  R6502_LOAD_TAIL r6502,INFOLD,lax,abs,LAX
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,lda,zpgind,LDA
+  R6502_LOAD_WAITS 3,r6502,INFOLD,lda,zpgind,LDA
+  R6502_LOAD_WAITS 4,r6502,INFOLD,lda,zpgind,LDA
+  R6502_PAGE_INCREMENT_WAITS 3,r6502,lda,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,lda,zpgind,LDA
+  R6502_LOAD_TAIL r6502,INFOLD,lda,zpgind,LDA
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,lda,abs,LDA
+  R6502_LOAD_WAITS 2,r6502,INFOLD,lda,abs,LDA
+  R6502_LOAD_WAITS 3,r6502,INFOLD,lda,abs,LDA
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,lda,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,lda,abs,LDA
+  R6502_LOAD_TAIL r6502,INFOLD,lda,abs,LDA
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,ldx,abs,LDX
+  R6502_LOAD_WAITS 2,r6502,INFOLD,ldx,abs,LDX
+  R6502_LOAD_WAITS 3,r6502,INFOLD,ldx,abs,LDX
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,ldx,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,ldx,abs,LDX
+  R6502_LOAD_TAIL r6502,INFOLD,ldx,abs,LDX
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,ldy,abs,LDY
+  R6502_LOAD_WAITS 2,r6502,INFOLD,ldy,abs,LDY
+  R6502_LOAD_WAITS 3,r6502,INFOLD,ldy,abs,LDY
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,ldy,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,ldy,abs,LDY
+  R6502_LOAD_TAIL r6502,INFOLD,ldy,abs,LDY
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,ora,zpgind,ORA
+  R6502_LOAD_WAITS 3,r6502,INFOLD,ora,zpgind,ORA
+  R6502_LOAD_WAITS 4,r6502,INFOLD,ora,zpgind,ORA
+  R6502_PAGE_INCREMENT_WAITS 3,r6502,ora,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,ora,zpgind,ORA
+  R6502_LOAD_TAIL r6502,INFOLD,ora,zpgind,ORA
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,ora,abs,ORA
+  R6502_LOAD_WAITS 2,r6502,INFOLD,ora,abs,ORA
+  R6502_LOAD_WAITS 3,r6502,INFOLD,ora,abs,ORA
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,ora,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,ora,abs,ORA
+  R6502_LOAD_TAIL r6502,INFOLD,ora,abs,ORA
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,decimalsbc,zpgind,NMOS_DECIMAL_SBC
+  R6502_LOAD_WAITS 3,r6502,INFOLD,decimalsbc,zpgind,NMOS_DECIMAL_SBC
+  R6502_LOAD_WAITS 4,r6502,INFOLD,decimalsbc,zpgind,NMOS_DECIMAL_SBC
+  R6502_PAGE_INCREMENT_WAITS 3,r6502,decimalsbc,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,decimalsbc,zpgind,NMOS_DECIMAL_SBC
+  R6502_LOAD_TAIL r6502,INFOLD,decimalsbc,zpgind,NMOS_DECIMAL_SBC
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,sbc,zpgind,NMOS_SBC
+  R6502_LOAD_WAITS 3,r6502,INFOLD,sbc,zpgind,NMOS_SBC
+  R6502_LOAD_WAITS 4,r6502,INFOLD,sbc,zpgind,NMOS_SBC
+  R6502_PAGE_INCREMENT_WAITS 3,r6502,sbc,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,sbc,zpgind,NMOS_SBC
+  R6502_LOAD_TAIL r6502,INFOLD,sbc,zpgind,NMOS_SBC
+
+  R6502_LOAD_WAITS 3,r65c12,INFOLD,decimalsbc,zpgind,CMOS_DECIMAL_SBC
+  R6502_LOAD_WAITS 4,r65c12,INFOLD,decimalsbc,zpgind,CMOS_DECIMAL_SBC
+  R6502_LOAD_TAIL r65c12,INFOLD,decimalsbc,zpgind,CMOS_DECIMAL_SBC
+
+  R6502_LOAD_WAITS 3,r65c12,INFOLD,sbc,zpgind,CMOS_SBC
+  R6502_LOAD_WAITS 4,r65c12,INFOLD,sbc,zpgind,CMOS_SBC
+  R6502_LOAD_TAIL r65c12,INFOLD,sbc,zpgind,CMOS_SBC
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,decimalsbc,abs,NMOS_DECIMAL_SBC
+  R6502_LOAD_WAITS 2,r6502,INFOLD,decimalsbc,abs,NMOS_DECIMAL_SBC
+  R6502_LOAD_WAITS 3,r6502,INFOLD,decimalsbc,abs,NMOS_DECIMAL_SBC
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,decimalsbc,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,decimalsbc,abs,NMOS_DECIMAL_SBC
+  R6502_LOAD_TAIL r6502,INFOLD,decimalsbc,abs,NMOS_DECIMAL_SBC
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,sbc,abs,NMOS_SBC
+  R6502_LOAD_WAITS 2,r6502,INFOLD,sbc,abs,NMOS_SBC
+  R6502_LOAD_WAITS 3,r6502,INFOLD,sbc,abs,NMOS_SBC
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,sbc,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,sbc,abs,NMOS_SBC
+  R6502_LOAD_TAIL r6502,INFOLD,sbc,abs,NMOS_SBC
+
+  R6502_LOAD_WAITS 2,r65c12,INFOLD,decimalsbc,abs,CMOS_DECIMAL_SBC
+  R6502_LOAD_WAITS 3,r65c12,INFOLD,decimalsbc,abs,CMOS_DECIMAL_SBC
+  R6502_LOAD_TAIL r65c12,INFOLD,decimalsbc,abs,CMOS_DECIMAL_SBC
+
+  R6502_LOAD_WAITS 2,r65c12,INFOLD,sbc,abs,CMOS_SBC
+  R6502_LOAD_WAITS 3,r65c12,INFOLD,sbc,abs,CMOS_SBC
+  R6502_LOAD_TAIL r65c12,INFOLD,sbc,abs,CMOS_SBC
+
+  R6502_LOAD_WAITS 1,r6502,INFOLD,top,abs,TOP
+  R6502_LOAD_WAITS 2,r6502,INFOLD,top,abs,TOP
+  R6502_LOAD_WAITS 3,r6502,INFOLD,top,abs,TOP
+  R6502_PAGE_INCREMENT_WAITS 2,r6502,top,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL r6502,top,abs,TOP
+  R6502_LOAD_TAIL r6502,INFOLD,top,abs,TOP
+
+
+;Data Area
+
+;  AREA    |C$$data|, DATA
+
+  END

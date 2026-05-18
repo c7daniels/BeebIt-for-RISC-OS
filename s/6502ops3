@@ -1,0 +1,1326 @@
+;>6502ops3.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Opcode routines based on cycle-level CPU emulation
+;
+; (C) Copyright Crispian Daniels, 2026
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+  GET h.6502zmaps
+
+  GET h.6502cmaps
+
+  GET h.6502cpus
+
+  GET h.hostmaps
+
+  GET h.hosts
+
+  GET h.6502ops
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET h.RegNames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+  IMPORT |s_r6502operand|
+  IMPORT |s1_r6502operand|
+  IMPORT |s2_r6502operand|
+  IMPORT |s_r6502operandtwice|
+  IMPORT |s1_r6502operandtwice|
+  IMPORT |s2_r6502operandtwice|
+  IMPORT |s_r6502wait1operand|
+  IMPORT |s1_r6502wait1operand|
+  IMPORT |s2_r6502wait1operand|
+  IMPORT |s_r6502wait1operandtwice|
+  IMPORT |s1_r6502wait1operandtwice|
+  IMPORT |s2_r6502wait1operandtwice|
+  IMPORT |r6502scan2split|
+  IMPORT |r6502scan3split|
+  IMPORT |s_r6502wait00000001interruptfetch|
+  IMPORT |s1_r6502wait00000001interruptfetch|
+  IMPORT |s2_r6502wait00000001interruptfetch|
+  IMPORT |d_r6502wait00000001interruptfetch|
+  IMPORT |s_r6502wait00000002interruptfetch|
+  IMPORT |s1_r6502wait00000002interruptfetch|
+  IMPORT |s2_r6502wait00000002interruptfetch|
+  IMPORT |d_r6502wait00000002interruptfetch|
+  IMPORT |s_r6502wait00000003interruptfetch|
+  IMPORT |s1_r6502wait00000003interruptfetch|
+  IMPORT |s2_r6502wait00000003interruptfetch|
+  IMPORT |d_r6502wait00000003interruptfetch|
+  IMPORT |s_r6502wait00000004interruptfetch|
+  IMPORT |s1_r6502wait00000004interruptfetch|
+  IMPORT |s2_r6502wait00000004interruptfetch|
+  IMPORT |d_r6502wait00000004interruptfetch|
+  IMPORT |s_r6502wait00000005interruptfetch|
+  IMPORT |s1_r6502wait00000005interruptfetch|
+  IMPORT |s2_r6502wait00000005interruptfetch|
+  IMPORT |d_r6502wait00000005interruptfetch|
+  IMPORT |r6502atfoldinterruptfetch|
+  IMPORT |r6502infoldinterruptfetch|
+  IMPORT |r6502opcodecyclenosplit|
+  IMPORT |r6502opcodecycles0split|
+  IMPORT |r6502opcodecycles1split|
+  IMPORT |r6502opcodecycles2split|
+
+  IMPORT |host_r6502cycle0s1|
+  IMPORT |host_r6502cycle1|
+
+; Export global symbols
+
+  EXPORT |r6502saxzpgroutine|
+  EXPORT |r6502saxzpgyroutine|
+  EXPORT |r6502saxpreindexedroutine|
+  EXPORT |r6502saxabsroutine|
+  EXPORT |r6502shapostindexedroutine|
+  EXPORT |r6502shaabsyroutine|
+  EXPORT |r6502shxabsyroutine|
+  EXPORT |r6502shyabsxroutine|
+  EXPORT |r6502stazpgroutine|
+  EXPORT |r6502stazpgxroutine|
+  EXPORT |r6502stapreindexedroutine|
+  EXPORT |r6502stapostindexedroutine|
+  EXPORT |r6502staabsroutine|
+  EXPORT |r6502staabsxroutine|
+  EXPORT |r6502staabsyroutine|
+  EXPORT |r65c12stazpgxroutine|
+  EXPORT |r65c12stapreindexedroutine|
+  EXPORT |r65c12stanonindexedroutine|
+  EXPORT |r65c12stapostindexedroutine|
+  EXPORT |r65c12staabsxroutine|
+  EXPORT |r65c12staabsyroutine|
+  EXPORT |r6502stxzpgroutine|
+  EXPORT |r6502stxzpgyroutine|
+  EXPORT |r6502stxabsroutine|
+  EXPORT |r65c12stxzpgyroutine|
+  EXPORT |r6502styzpgroutine|
+  EXPORT |r6502styzpgxroutine|
+  EXPORT |r6502styabsroutine|
+  EXPORT |r65c12styzpgxroutine|
+  EXPORT |r65c12stzzpgroutine|
+  EXPORT |r65c12stzzpgxroutine|
+  EXPORT |r65c12stzabsroutine|
+  EXPORT |r65c12stzabsxroutine|
+  EXPORT |r6502tasabsyroutine|
+
+  MACRO
+  STORE_ZPGIND_ACTION $r
+  LDR r3, [sp], #4
+  [ "$r"!="r2"
+  STR r2,[sp, #-4]!
+  ]
+  MOV lr,pc
+  LDR pc,[r3,#8]
+  [ "$r"!="r2"
+  MOV $r,r2
+  LDR r2, [sp], #4
+  ]
+  MEND
+
+  MACRO
+  STORE_ABS_ACTION $r
+  LDR r3, [sp], #4
+  [ "$r"!="r2"
+  STR r2,[sp, #-4]!
+  ]
+  MOV lr,pc
+  LDR pc,[r3,#12]
+  [ "$r"!="r2"
+  MOV $r,r2
+  LDR r2, [sp], #4
+  ]
+  MEND
+
+  MACRO
+  SAX_ACTION $r
+  LDRB $r,[r0,#:INDEX:R6502_A]
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  AND $r,$r,r3
+  MEND
+
+  MACRO
+  SH_ACTION $r
+  LDRB $r,[r0,#:INDEX:R6502_LATCH+2]
+  MEND
+
+  MACRO
+  STA_ACTION $r
+  LDRB $r,[r0,#:INDEX:R6502_A]
+  MEND
+
+  MACRO
+  STX_ACTION $r
+  LDRB $r,[r0,#:INDEX:R6502_X]
+  MEND
+
+  MACRO
+  STY_ACTION $r
+  LDRB $r,[r0,#:INDEX:R6502_Y]
+  MEND
+
+  MACRO
+  STZ_ACTION $r
+  MOV $r,#0
+  MEND
+
+  MACRO
+  SHA_INPUT
+  LDRB r4,[r0,#:INDEX:R6502_A]
+  LDRB r1,[r0,#:INDEX:R6502_X]
+  AND r4,r1,r4
+  MEND
+
+  MACRO
+  SHX_INPUT
+  LDRB r4,[r0,#:INDEX:R6502_X]
+  MEND
+
+  MACRO
+  SHY_INPUT
+  LDRB r4,[r0,#:INDEX:R6502_Y]
+  MEND
+
+  MACRO
+  TAS_INPUT
+  LDRB r4,[r0,#:INDEX:R6502_A]
+  LDRB r1,[r0,#:INDEX:R6502_X]
+  AND r4,r1,r4
+  STRB r4,[r0,#:INDEX:R6502_SP_CODE+3]
+  MEND
+
+  MACRO
+  TANGLED_INCREMENT_PAGE $r
+  LDRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  BIC $r,$r,#&FF000000
+  ORR $r,$r,r2,LSL #24
+  MEND
+
+|r6502saxaction|
+  SAX_ACTION r2
+  MOV pc,lr
+
+|r6502shaction|
+  SH_ACTION r2
+  MOV pc,lr
+
+|r6502staaction|
+  STA_ACTION r2
+  MOV pc,lr
+
+|r6502stxaction|
+  STX_ACTION r2
+  MOV pc,lr
+
+|r6502styaction|
+  STY_ACTION r2
+  MOV pc,lr
+
+|r65c12stzaction|
+  STZ_ACTION r2
+  MOV pc,lr
+
+  MACRO
+  R6502_STORE_ZPG_TAIL $tag,$ctype,$aname
+$tag.zpgtail
+  $aname._ACTION r2
+  STRB r2,[r4]
+  R6502_OPCODE_$ctype._ADDRESSED_RETURN 2,interrupt
+  MEND
+
+  MACRO
+  R6502_STORE_ACTION $n,$r,$ctype,$mode,$special,$aname
+  $aname._ACTION $r
+  [ "$mode"=="zpgind"
+  ADD r6,r6,#2:SHL:16
+  |
+  ADD r6,r6,#3:SHL:16
+  ]
+  [ $special==0
+  [ "$r"=="r2"
+  STRB r2,[r4]
+  |
+  STRB $r,[r2]
+  ]
+  |
+  R6502_OPCODE_WRITE_SPECIAL
+  ]
+  R6502_OPCODE_$ctype._ADDRESSED_RETURN $n+2,interrupt
+  MEND
+
+  MACRO
+  R6502_STORE_WAITS $entrytype,$n,$type,$ctype,$tag,$mode,$aname
+  [ "$entrytype"=="inpage"
+  LCLA nm1value
+nm1value SETA $n-1
+  R6502_WAIT_HANDLERS inline,$nm1value,move,$type,inpage$tag.$mode,1
+  ]
+  [ "$type"=="r6502" || "$type"=="r65c12"
+  R6502_WAIT_HANDLERS inline,$n,move,$type,$tag.$mode,0
+  |
+  R6502_WAIT_HANDLERS ,$n,move,$type,$tag.$mode,0
+  [ "$entrytype"=="inpage"
+d_$type.wait$nm1value.inpage$tag.$mode
+  ]
+  MOV r4,r2
+  R6502_OPCODE_CYCLES $n,0
+  R6502_STORE_ACTION 0,r2,$ctype,$mode,0,$aname
+  ]
+  MEND
+
+  MACRO
+  R6502_STORE_TAIL $entrytype,$type,$ctype,$tag,$mode,$aname
+  [ "$entrytype"=="inpage"
+  R6502_TAIL_ENTRY move,$type,inpage$tag.$mode,0
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  ]
+  R6502_TAIL_ENTRY move,$type,$tag.$mode,0
+  R6502_STORE_ACTION 0,r2,$ctype,$mode,1,$aname
+  [ "$entrytype"=="inpage"
+  R6502_TAIL_ENTRY move,$type,inpage$tag.$mode,1
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES_BRANCH 1,1,s_$type.$tag.$mode.tail
+  ]
+  MEND
+
+  MACRO
+  R6502_PAGE_INCREMENT_ACTION $continuationtype,$incrementtype,$r,$n,$type,$tag,$mode
+  [ "$incrementtype"=="tangled"
+  [ "$r"!="r1"
+  MOV r1,$r
+  ]
+  |
+  ADD r1,$r,#1:SHL:24
+  ]
+  R6502_TOUCH_OR_WAIT $continuationtype,$n+1,$type,$tag.$mode
+  MEND
+
+  MACRO
+  R6502_PAGE_INCREMENT_WAITS $incrementtype,$n,$type,$tag,$mode
+  [ "$type"=="r6502" || "$type"=="r65c12"
+  R6502_WAIT_HANDLERS inline,$n,move,$type,$incrementtype.pageincrement$tag.$mode,0
+  |
+  R6502_WAIT_HANDLERS ,$n,move,$type,$incrementtype.pageincrement$tag.$mode,0
+  [ "$incrementtype"=="tangled"
+  TANGLED_INCREMENT_PAGE r1
+  ]
+  R6502_PAGE_INCREMENT_ACTION ,$incrementtype,r1,$n,$type,$tag,$mode
+  ]
+  MEND
+
+  MACRO
+  R6502_PAGE_INCREMENT_WAIT_TAIL $incrementtype,$type,$tag,$mode,$aname
+  R6502_TAIL_ENTRY move,$type,$incrementtype.pageincrement$tag.$mode,0
+  [ "$incrementtype"=="tangled"
+  TANGLED_INCREMENT_PAGE r4
+  ]
+  R6502_OPCODE_READ_SPECIAL
+  [ "$type"=="r6502" || "$type"=="r65c12"
+  R6502_PAGE_INCREMENT_ACTION inline,$incrementtype,r4,0,$type,$tag,$mode
+  R6502_STORE_ACTION 1,r4,INFOLD,$mode,0,$aname
+  |
+  R6502_PAGE_INCREMENT_ACTION ,$incrementtype,r4,0,$type,$tag,$mode
+  ]
+  MEND
+
+  MACRO
+  R6502_STORE_INPUT $tag
+  IF "$tag"=="sha"
+  SHA_INPUT
+  ELIF "$tag"=="shx"
+  SHX_INPUT
+  ELIF "$tag"=="shy"
+  SHY_INPUT
+  ELIF "$tag"=="tas"
+  TAS_INPUT
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_IN_PAGE_STORE $n,$type,$tag,$mode,$aname
+  R6502_TOUCH_OR_WAIT inline,$n,$type,inpage$tag.$mode
+  MOV r4,r2
+  R6502_OPCODE_CYCLES $n+1,0
+  R6502_STORE_ACTION 0,r2,INFOLD,$mode,0,$aname
+  MEND
+
+  MACRO
+  R6502_PAGE_INCREMENT_STORE $n,$type,$tag,$mode,$aname
+  [ "$tag"=="sh"
+  R6502_TOUCH_OR_WAIT inline,$n,$type,tangledpageincrement$tag.$mode
+  TANGLED_INCREMENT_PAGE r1
+  R6502_PAGE_INCREMENT_ACTION inline,tangled,r1,$n,$type,$tag,$mode
+  |
+  R6502_TOUCH_OR_WAIT inline,$n,$type,pageincrement$tag.$mode
+  R6502_PAGE_INCREMENT_ACTION inline,,r1,$n,$type,$tag,$mode
+  ]
+  MOV r4,r2
+  R6502_OPCODE_CYCLES $n+1,0
+  R6502_STORE_ACTION 0,r2,INFOLD,$mode,0,$aname
+  MEND
+
+  MACRO
+  R6502_STORE $n,$type,$tag,$mode,$aname
+  R6502_TOUCH_OR_WAIT inline,$n,$type,$tag.$mode
+  MOV r4,r2
+  R6502_OPCODE_CYCLES $n,0
+  R6502_STORE_ACTION 0,r2,INFOLD,$mode,0,$aname
+  MEND
+
+  MACRO
+  R6502_O_STORE_OPCODE_BODY $type,$tag,$mode
+  LCLS genericstore
+  LCLS action
+  IF "$tag"=="sha" || "$tag"=="shx" || "$tag"=="shy" || "$tag"=="tas"
+genericstore SETS "r6502tangledstore"
+  ELIF "$type"=="r65c12" && !("$mode"=="zpg" || "$mode"=="abs")
+genericstore SETS "r65c12store"
+  ELSE
+genericstore SETS "r6502store"
+  ENDIF
+  IF "$tag"=="sha" || "$tag"=="shx" || "$tag"=="shy" || "$tag"=="tas"
+action SETS "r6502shaction"
+  ELIF "$tag"=="stz"
+action SETS "r65c12$tag.action"
+  ELSE
+action SETS "r6502$tag.action"
+  ENDIF
+  [ "$genericstore"=="r6502tangledstore"
+  R6502_STORE_INPUT $tag
+  ]
+  [ "$type"=="r65c12" && ("$mode"=="zpgx" || "$mode"=="zpgy" || "$mode"=="preindexed")
+  R6502_OPERAND_LO_TWICE_FOLD_OR_TRAP $genericstore.$mode.nofold,$type.$tag.$mode.infold,$action
+  |
+  R6502_OPERAND_LO_FOLD_OR_TRAP $genericstore.$mode.nofold,$type.$tag.$mode.infold,$action
+  ]
+  MEND
+
+  MACRO
+  R6502_O_STORE_OPCODE $type,$tag,$mode
+  R6502_O_OPCODE_HEADER $type.$tag.$mode
+  R6502_O_STORE_OPCODE_BODY $type,$tag,$mode
+  MEND
+
+  MACRO
+  R6502_STORE_OPCODE_SPLIT $type,$tag,$mode
+  LCLS lengthdigit
+  LCLS genericstore
+  LCLS action
+  [ "$mode"=="abs" || "$mode"=="absx" || "$mode"=="absy"
+lengthdigit SETS "3"
+  |
+lengthdigit SETS "2"
+  ]
+  IF "$tag"=="sha" || "$tag"=="shx" || "$tag"=="shy" || "$tag"=="tas"
+genericstore SETS "r6502tangledstore"
+  ELIF "$type"=="r65c12" && ("$mode"=="nonindexed" || "$mode"=="postindexed" || "$mode"=="absx" || "$mode"=="absy")
+genericstore SETS "r65c12store"
+  ELSE
+genericstore SETS "r6502store"
+  ENDIF
+  IF "$tag"=="sha" || "$tag"=="shx" || "$tag"=="shy" || "$tag"=="tas"
+action SETS "r6502shaction"
+  ELIF "$tag"=="stz"
+action SETS "r65c12$tag.action"
+  ELSE
+action SETS "r6502$tag.action"
+  ENDIF
+  [ "$genericstore"=="r6502tangledstore"
+  R6502_STORE_INPUT $tag
+  ]
+  R6502_GENERIC_SCAN$lengthdigit._SPLIT $type.$tag.$mode,$genericstore.$mode,$action
+  MEND
+
+  MACRO
+  R6502_STORE_OPCODE_BODY $type,$tag,$mode,$aname
+  LCLS waittype
+  IF "$tag"=="stz"
+waittype SETS "r65c12"
+  ELSE
+waittype SETS "r6502"
+  ENDIF
+  IF "$mode"=="zpg"
+  ADD r6,r6,#2:SHL:16
+  ADD r4,r0,r2
+  R6502_OPCODE_CYCLES_BRANCH 1,0,$waittype.$tag.zpgtail
+  ELIF "$mode"=="zpgx" || "$mode"=="zpgy"
+  [ "$mode"=="zpgx"
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  |
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  ]
+  ADD r2,r4,r2,LSL #24
+  ADD r6,r6,#2:SHL:16
+  ADD r4,r0,r2,LSR #24
+  R6502_OPCODE_CYCLES_BRANCH 2,0,$waittype.$tag.zpgtail
+  ELIF "$mode"=="preindexed"
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_STORE 4,$waittype,$tag,zpgind,$aname
+  ELIF "$mode"=="nonindexed"
+  MOV r2,r2,LSL #24
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_STORE 3,$waittype,$tag,zpgind,$aname
+  ELIF "$mode"=="postindexed"
+  MOV r2,r2,LSL #24
+  ADD r3,r2,#1:SHL:24
+  [ "$aname"=="SH"
+  LDR r12,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r12,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ADD r2,r3,#1
+  AND r2,r2,r4
+  ORR r1,r1,r3,LSL #24
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  BCS %F1
+  R6502_IN_PAGE_STORE 3,$waittype,sh,zpgind,$aname
+1
+  R6502_PAGE_INCREMENT_STORE 3,$waittype,sh,zpgind,$aname
+  |
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_IN_PAGE_STORE 3,$waittype,$tag,zpgind,$aname
+1
+  [ "$type"=="r65c12"
+  ADD r1,r1,#1:SHL:24
+  R6502_STORE 4,$waittype,$tag,zpgind,$aname
+  |
+  R6502_PAGE_INCREMENT_STORE 3,$waittype,$tag,zpgind,$aname
+  ]
+  ]
+  ELIF "$mode"=="abs"
+  SUB r3,r8,#2
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_STORE 2,$waittype,$tag,abs,$aname
+  ELIF "$mode"=="absx" || "$mode"=="absy"
+  [ "$mode"=="absx"
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  |
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  ]
+  SUB r3,r8,#2
+  ADDS r2,r1,r2,LSL #24
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  [ "$aname"=="SH"
+  ADD r2,r3,#1
+  AND r2,r2,r4
+  ORR r1,r1,r3,LSL #24
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  BCS %F1
+  R6502_IN_PAGE_STORE 2,$waittype,sh,abs,$aname
+1
+  R6502_PAGE_INCREMENT_STORE 2,$waittype,sh,abs,$aname
+  |
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_IN_PAGE_STORE 2,$waittype,$tag,abs,$aname
+1
+  [ "$type"=="r65c12"
+  ADD r1,r1,#1:SHL:24
+  R6502_STORE 3,$waittype,$tag,abs,$aname
+  |
+  R6502_PAGE_INCREMENT_STORE 2,$waittype,$tag,abs,$aname
+  ]
+  ]
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_STORE_OPCODE $type,$tag,$mode,$aname
+  LCLS lengthdigit
+  [ "$mode"=="abs" || "$mode"=="absx" || "$mode"=="absy"
+lengthdigit SETS "3"
+  |
+lengthdigit SETS "2"
+  ]
+  R6502_O_STORE_OPCODE $type,$tag,$mode
+  R6502_STORE_OPCODE_SPLIT $type,$tag,$mode
+  [ "$tag"=="sha" || "$tag"=="shx" || "$tag"=="shy" || "$tag"=="tas"
+  R6502_OPCODE_HEADER $type.$tag.$mode
+  R6502_STORE_INPUT $tag
+  R6502_OPCODE_SCAN $type.$tag.$mode,$lengthdigit
+  |
+  R6502_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode
+  ]
+  R6502_STORE_OPCODE_BODY $type,$tag,$mode,$aname
+  MEND
+
+r6502storezpgnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502storezpgsplit1
+  ADD r6,r6,#2:SHL:16
+  STR r3,[sp, #-4]!
+  ADD r4,r0,r2
+  R6502_OPCODE_CYCLES_BRANCH 1,0,r6502outfoldstorezpgtail
+
+r65c12storezpgxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  ADD r6,r6,#2:SHL:16
+  STR r3,[sp, #-4]!
+  ADD r4,r0,r2,LSR #24
+  R6502_OPCODE_CYCLES_BRANCH 1,0,r6502outfoldstorezpgtail
+
+r6502storezpgxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502storezpgxsplit1
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  ADD r6,r6,#2:SHL:16
+  STR r3,[sp, #-4]!
+  ADD r4,r0,r2,LSR #24
+  R6502_OPCODE_CYCLES_BRANCH 2,0,r6502outfoldstorezpgtail
+
+r65c12storezpgynofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  ADD r6,r6,#2:SHL:16
+  STR r3,[sp, #-4]!
+  ADD r4,r0,r2,LSR #24
+  R6502_OPCODE_CYCLES_BRANCH 1,0,r6502outfoldstorezpgtail
+
+r6502storezpgynofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502storezpgysplit1
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  ADD r6,r6,#2:SHL:16
+  STR r3,[sp, #-4]!
+  ADD r4,r0,r2,LSR #24
+  R6502_OPCODE_CYCLES_BRANCH 2,0,r6502outfoldstorezpgtail
+
+r6502storepreindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502storepreindexedsplit1
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000004storezpgind
+
+r65c12storepreindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003storezpgind
+
+r65c12storenonindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r65c12storenonindexedsplit1
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003storezpgind
+
+r6502storepostindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502storepostindexedsplit1
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003inpagestorezpgind
+1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003pageincrementstorezpgind
+
+r65c12storepostindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r65c12storepostindexedsplit1
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003inpagestorezpgind
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000004storezpgind
+
+r6502tangledstorepostindexednofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 8
+r6502tangledstorepostindexedsplit1
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r12,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r12,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ADD r2,r3,#1
+  AND r2,r2,r4
+  ORR r1,r1,r3,LSL #24
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003inpagestorezpgind
+1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003tangledpageincrementstorezpgind
+
+r6502storeabsnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r6502storeabssplit1
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  STR r3,[sp, #-4]!
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502storeabssplit1part2,r6502storeabssplit1part2,
+
+s_r6502storeabssplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000001storeabs
+
+r6502storeabssplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502infoldwait00000002storeabs
+
+r6502storeabsxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r6502storeabsxsplit1
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502storeabsxinpagesplit1part2,r6502storeabsxinpagesplit1part2,
+1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502storeabsxsplit1part2,r6502storeabsxsplit1part2,
+
+r6502storeabsynofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r6502storeabsysplit1
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502storeabsxinpagesplit1part2,r6502storeabsxinpagesplit1part2,
+1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502storeabsxsplit1part2,r6502storeabsxsplit1part2,
+
+r6502tangledstoreabsxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r6502tangledstoreabsxsplit1
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  STRB r4,[r0,#:INDEX:R6502_LATCH+2]
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502tangledstoreabsxinpagesplit1part2,r6502tangledstoreabsxinpagesplit1part2,
+1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502tangledstoreabsxsplit1part2,r6502tangledstoreabsxsplit1part2,
+
+r6502tangledstoreabsynofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r6502tangledstoreabsysplit1
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  STRB r4,[r0,#:INDEX:R6502_LATCH+2]
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502tangledstoreabsxinpagesplit1part2,r6502tangledstoreabsxinpagesplit1part2,
+1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502tangledstoreabsxsplit1part2,r6502tangledstoreabsxsplit1part2,
+
+s_r6502storeabsxinpagesplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000001inpagestoreabs
+
+r6502storeabsxinpagesplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502infoldwait00000002inpagestoreabs
+
+s_r6502storeabsxsplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000001pageincrementstoreabs
+
+r6502storeabsxsplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502infoldwait00000002pageincrementstoreabs
+
+s_r6502tangledstoreabsxinpagesplit1part2
+  LDRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  ORR r1,r4,r2,LSL #24
+  ADD r2,r2,#1
+  AND r2,r2,r3
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000001inpagestoreabs
+
+r6502tangledstoreabsxinpagesplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  LDRB r3,[r0,#:INDEX:R6502_LATCH+2]
+  ORR r1,r4,r2,LSL #24
+  ADD r2,r2,#1
+  AND r2,r2,r3
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  R6502_TOUCH_OR_TRAP ,r6502infoldwait00000002inpagestoreabs
+
+s_r6502tangledstoreabsxsplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000001tangledpageincrementstoreabs
+
+r6502tangledstoreabsxsplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502infoldwait00000002tangledpageincrementstoreabs
+
+r65c12storeabsxnofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r65c12storeabsxsplit1
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r65c12storeabsxinpagesplit1part2,r65c12storeabsxinpagesplit1part2,
+1
+  R6502_OPERAND_HI_TWICE_FOLD_OR_TRAP s_r65c12storeabsxsplit1part2,r65c12storeabsxsplit1part2,
+
+r65c12storeabsynofold
+  R6502_NOFOLD_TO_SPLIT1_LINK 12
+r65c12storeabsysplit1
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  ADDS r2,r1,r2,LSL #24
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSR #8
+  BCS %F1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r65c12storeabsxinpagesplit1part2,r65c12storeabsxinpagesplit1part2,
+1
+  R6502_OPERAND_HI_TWICE_FOLD_OR_TRAP s_r65c12storeabsxsplit1part2,r65c12storeabsxsplit1part2,
+
+s_r65c12storeabsxinpagesplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000001inpagestoreabs
+
+r65c12storeabsxinpagesplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502infoldwait00000002inpagestoreabs
+
+s_r65c12storeabsxsplit1part2
+  ORR r1,r4,r2,LSL #24
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000001storeabs
+
+r65c12storeabsxsplit1part2
+  LDR r2,[r9,r8]
+  ADD r8,r8,#2
+  ORR r1,r4,r2,LSL #24
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502infoldwait00000002storeabs
+
+r6502storezpgsplit2
+  ADD r6,r6,#2:SHL:16
+  STR r3,[sp, #-4]!
+  ADD r4,r0,r2
+  R6502_OPCODE_CYCLES_BRANCH 1,0,r6502atfoldstorezpgtail
+
+r6502storezpgxsplit2
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  ADD r6,r6,#2:SHL:16
+  STR r3,[sp, #-4]!
+  ADD r4,r0,r2,LSR #24
+  R6502_OPCODE_CYCLES_BRANCH 2,0,r6502atfoldstorezpgtail
+
+r6502storezpgysplit2
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  ADD r6,r6,#2:SHL:16
+  STR r3,[sp, #-4]!
+  ADD r4,r0,r2,LSR #24
+  R6502_OPCODE_CYCLES_BRANCH 2,0,r6502atfoldstorezpgtail
+
+r6502storepreindexedsplit2
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  ADD r2,r4,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000004storezpgind
+
+r65c12storenonindexedsplit2
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003storezpgind
+
+r6502storepostindexedsplit2
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003inpagestorezpgind
+1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003pageincrementstorezpgind
+
+r65c12storepostindexedsplit2
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003inpagestorezpgind
+1
+  ADD r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000004storezpgind
+
+r6502tangledstorepostindexedsplit2
+  MOV r2,r2,LSL #24
+  STR r3,[sp, #-4]!
+  ADD r3,r2,#1:SHL:24
+  LDR r12,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r12,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ADD r2,r3,#1
+  AND r2,r2,r4
+  ORR r1,r1,r3,LSL #24
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003inpagestorezpgind
+1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003tangledpageincrementstorezpgind
+
+r6502storeabssplit2
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002storeabs
+
+r6502storeabsxsplit2
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002inpagestoreabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002pageincrementstoreabs
+
+r6502storeabsysplit2
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002inpagestoreabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002pageincrementstoreabs
+
+r6502tangledstoreabsxsplit2
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ADD r2,r3,#1
+  AND r2,r2,r4
+  ORR r1,r1,r3,LSL #24
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002inpagestoreabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002tangledpageincrementstoreabs
+
+r6502tangledstoreabsysplit2
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ADD r2,r3,#1
+  AND r2,r2,r4
+  ORR r1,r1,r3,LSL #24
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002inpagestoreabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000002tangledpageincrementstoreabs
+
+r65c12storeabsxsplit2
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  ADDCS r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003storeabs
+
+r65c12storeabsysplit2
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  ADDCS r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502outfoldwait00000003storeabs
+
+r6502storeabssplit3
+  STR r3,[sp, #-4]!
+  SUB r3,r8,#1
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002storeabs
+
+r6502storeabsxsplit3
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002inpagestoreabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002pageincrementstoreabs
+
+r6502storeabsysplit3
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002inpagestoreabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002pageincrementstoreabs
+
+r6502tangledstoreabsxsplit3
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ADD r2,r3,#1
+  AND r2,r2,r4
+  ORR r1,r1,r3,LSL #24
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002inpagestoreabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002tangledpageincrementstoreabs
+
+r6502tangledstoreabsysplit3
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ADD r2,r3,#1
+  AND r2,r2,r4
+  ORR r1,r1,r3,LSL #24
+  STRB r2,[r0,#:INDEX:R6502_LATCH+2]
+  BCS %F1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002inpagestoreabs
+1
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000002tangledpageincrementstoreabs
+
+r65c12storeabsxsplit3
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  ADDCS r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003storeabs
+
+r65c12storeabsysplit3
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  STR r3,[sp, #-4]!
+  LDRB r3,[r9,r8]
+  ADDS r2,r1,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  ADDCS r1,r1,#1:SHL:24
+  R6502_TOUCH_OR_TRAP ,r6502atfoldwait00000003storeabs
+
+  R6502_STORE_OPCODE r6502,sax,zpg,SAX
+  R6502_STORE_OPCODE r6502,sax,zpgy,SAX
+  R6502_STORE_OPCODE r6502,sax,preindexed,SAX
+  R6502_STORE_OPCODE r6502,sax,abs,SAX
+
+  R6502_STORE_OPCODE r6502,sha,postindexed,SH
+
+  R6502_STORE_OPCODE r6502,sha,absy,SH
+
+  R6502_STORE_OPCODE r6502,shx,absy,SH
+
+  R6502_STORE_OPCODE r6502,shy,absx,SH
+
+  R6502_STORE_OPCODE r6502,sta,zpg,STA
+  R6502_STORE_OPCODE r6502,sta,zpgx,STA
+  R6502_STORE_OPCODE r6502,sta,preindexed,STA
+  R6502_STORE_OPCODE r6502,sta,postindexed,STA
+  R6502_STORE_OPCODE r6502,sta,abs,STA
+  R6502_STORE_OPCODE r6502,sta,absx,STA
+  R6502_STORE_OPCODE r6502,sta,absy,STA
+
+  R6502_STORE_OPCODE r65c12,sta,zpgx,STA
+  R6502_STORE_OPCODE r65c12,sta,preindexed,STA
+  R6502_STORE_OPCODE r65c12,sta,nonindexed,STA
+  R6502_STORE_OPCODE r65c12,sta,postindexed,STA
+  R6502_STORE_OPCODE r65c12,sta,absx,STA
+  R6502_STORE_OPCODE r65c12,sta,absy,STA
+
+  R6502_STORE_OPCODE r6502,stx,zpg,STX
+  R6502_STORE_OPCODE r6502,stx,zpgy,STX
+  R6502_STORE_OPCODE r6502,stx,abs,STX
+
+  R6502_STORE_OPCODE r65c12,stx,zpgy,STX
+
+  R6502_STORE_OPCODE r6502,sty,zpg,STY
+  R6502_STORE_OPCODE r6502,sty,zpgx,STY
+  R6502_STORE_OPCODE r6502,sty,abs,STY
+
+  R6502_STORE_OPCODE r65c12,sty,zpgx,STY
+
+  R6502_STORE_OPCODE r65c12,stz,zpg,STZ
+  R6502_STORE_OPCODE r65c12,stz,zpgx,STZ
+  R6502_STORE_OPCODE r65c12,stz,abs,STZ
+  R6502_STORE_OPCODE r65c12,stz,absx,STZ
+
+  R6502_STORE_OPCODE r6502,tas,absy,SH
+
+  R6502_STORE_ZPG_TAIL r6502outfoldstore,OUTFOLD,STORE_ZPGIND
+
+  R6502_STORE_WAITS ,1,r6502outfold,OUTFOLD,store,zpgind,STORE_ZPGIND
+  R6502_STORE_WAITS ,3,r6502outfold,OUTFOLD,store,zpgind,STORE_ZPGIND
+  R6502_STORE_WAITS inpage,4,r6502outfold,OUTFOLD,store,zpgind,STORE_ZPGIND
+  R6502_PAGE_INCREMENT_WAITS ,3,r6502outfold,store,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL ,r6502outfold,store,zpgind,STORE_ZPGIND
+  R6502_PAGE_INCREMENT_WAITS tangled,3,r6502outfold,store,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL tangled,r6502outfold,store,zpgind,STORE_ZPGIND
+  R6502_STORE_TAIL inpage,r6502outfold,OUTFOLD,store,zpgind,STORE_ZPGIND
+
+  R6502_STORE_WAITS ,1,r6502outfold,OUTFOLD,store,abs,STORE_ABS
+  R6502_STORE_WAITS inpage,2,r6502outfold,OUTFOLD,store,abs,STORE_ABS
+  R6502_STORE_WAITS inpage,3,r6502outfold,OUTFOLD,store,abs,STORE_ABS
+  R6502_PAGE_INCREMENT_WAITS ,1,r6502outfold,store,abs
+  R6502_PAGE_INCREMENT_WAITS ,2,r6502outfold,store,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL ,r6502outfold,store,abs,STORE_ABS
+  R6502_PAGE_INCREMENT_WAITS tangled,1,r6502outfold,store,abs
+  R6502_PAGE_INCREMENT_WAITS tangled,2,r6502outfold,store,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL tangled,r6502outfold,store,abs,STORE_ABS
+  R6502_STORE_TAIL inpage,r6502outfold,OUTFOLD,store,abs,STORE_ABS
+
+  R6502_STORE_ZPG_TAIL r6502atfoldstore,ATFOLD,STORE_ZPGIND
+
+  R6502_STORE_WAITS ,1,r6502atfold,ATFOLD,store,zpgind,STORE_ZPGIND
+  R6502_STORE_WAITS ,3,r6502atfold,ATFOLD,store,zpgind,STORE_ZPGIND
+  R6502_STORE_WAITS inpage,4,r6502atfold,ATFOLD,store,zpgind,STORE_ZPGIND
+  R6502_PAGE_INCREMENT_WAITS ,3,r6502atfold,store,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL ,r6502atfold,store,zpgind,STORE_ZPGIND
+  R6502_PAGE_INCREMENT_WAITS tangled,3,r6502atfold,store,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL tangled,r6502atfold,store,zpgind,STORE_ZPGIND
+  R6502_STORE_TAIL inpage,r6502atfold,ATFOLD,store,zpgind,STORE_ZPGIND
+
+  R6502_STORE_WAITS ,1,r6502atfold,ATFOLD,store,abs,STORE_ABS
+  R6502_STORE_WAITS inpage,2,r6502atfold,ATFOLD,store,abs,STORE_ABS
+  R6502_STORE_WAITS inpage,3,r6502atfold,ATFOLD,store,abs,STORE_ABS
+  R6502_PAGE_INCREMENT_WAITS ,2,r6502atfold,store,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL ,r6502atfold,store,abs,STORE_ABS
+  R6502_PAGE_INCREMENT_WAITS tangled,2,r6502atfold,store,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL tangled,r6502atfold,store,abs,STORE_ABS
+  R6502_STORE_TAIL inpage,r6502atfold,ATFOLD,store,abs,STORE_ABS
+
+  R6502_STORE_WAITS ,1,r6502infold,INFOLD,store,abs,STORE_ABS
+  R6502_STORE_WAITS inpage,2,r6502infold,INFOLD,store,abs,STORE_ABS
+  R6502_STORE_WAITS inpage,3,r6502infold,INFOLD,store,abs,STORE_ABS
+  R6502_PAGE_INCREMENT_WAITS ,2,r6502infold,store,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL ,r6502infold,store,abs,STORE_ABS
+  R6502_PAGE_INCREMENT_WAITS tangled,2,r6502infold,store,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL tangled,r6502infold,store,abs,STORE_ABS
+  R6502_STORE_TAIL inpage,r6502infold,INFOLD,store,abs,STORE_ABS
+
+  R6502_STORE_ZPG_TAIL r6502sax,INFOLD,SAX
+
+  R6502_STORE_WAITS ,4,r6502,INFOLD,sax,zpgind,SAX
+  R6502_STORE_TAIL ,r6502,INFOLD,sax,zpgind,SAX
+
+  R6502_STORE_WAITS ,2,r6502,INFOLD,sax,abs,SAX
+  R6502_STORE_TAIL ,r6502,INFOLD,sax,abs,SAX
+
+  R6502_STORE_WAITS ,1,r6502,INFOLD,sh,zpgind,SH
+  R6502_STORE_WAITS inpage,4,r6502,INFOLD,sh,zpgind,SH
+  R6502_PAGE_INCREMENT_WAITS tangled,3,r6502,sh,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL tangled,r6502,sh,zpgind,SH
+  R6502_STORE_TAIL inpage,r6502,INFOLD,sh,zpgind,SH
+
+  R6502_STORE_WAITS ,1,r6502,INFOLD,sh,abs,SH
+  R6502_STORE_WAITS inpage,3,r6502,INFOLD,sh,abs,SH
+  R6502_PAGE_INCREMENT_WAITS tangled,2,r6502,sh,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL tangled,r6502,sh,abs,SH
+  R6502_STORE_TAIL inpage,r6502,INFOLD,sh,abs,SH
+
+  R6502_STORE_ZPG_TAIL r6502sta,INFOLD,STA
+
+  R6502_STORE_WAITS ,1,r6502,INFOLD,sta,zpgind,STA
+  R6502_STORE_WAITS ,3,r6502,INFOLD,sta,zpgind,STA
+  R6502_STORE_WAITS inpage,4,r6502,INFOLD,sta,zpgind,STA
+  R6502_PAGE_INCREMENT_WAITS ,3,r6502,sta,zpgind
+  R6502_PAGE_INCREMENT_WAIT_TAIL ,r6502,sta,zpgind,STA
+  R6502_STORE_TAIL inpage,r6502,INFOLD,sta,zpgind,STA
+
+  R6502_STORE_WAITS ,1,r6502,INFOLD,sta,abs,STA
+  R6502_STORE_WAITS inpage,2,r6502,INFOLD,sta,abs,STA
+  R6502_STORE_WAITS inpage,3,r6502,INFOLD,sta,abs,STA
+  R6502_PAGE_INCREMENT_WAITS ,2,r6502,sta,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL ,r6502,sta,abs,STA
+  R6502_STORE_TAIL inpage,r6502,INFOLD,sta,abs,STA
+
+  R6502_STORE_ZPG_TAIL r6502stx,INFOLD,STX
+
+  R6502_STORE_WAITS ,2,r6502,INFOLD,stx,abs,STX
+  R6502_STORE_TAIL ,r6502,INFOLD,stx,abs,STX
+
+  R6502_STORE_ZPG_TAIL r6502sty,INFOLD,STY
+
+  R6502_STORE_WAITS ,2,r6502,INFOLD,sty,abs,STY
+  R6502_STORE_TAIL ,r6502,INFOLD,sty,abs,STY
+
+  R6502_STORE_ZPG_TAIL r65c12stz,INFOLD,STZ
+
+  R6502_STORE_WAITS ,1,r65c12,INFOLD,stz,abs,STZ
+  R6502_STORE_WAITS inpage,2,r65c12,INFOLD,stz,abs,STZ
+  R6502_STORE_WAITS inpage,3,r65c12,INFOLD,stz,abs,STZ
+  R6502_PAGE_INCREMENT_WAITS ,2,r65c12,stz,abs
+  R6502_PAGE_INCREMENT_WAIT_TAIL ,r65c12,stz,abs,STZ
+  R6502_STORE_TAIL inpage,r65c12,INFOLD,stz,abs,STZ
+
+
+;Data Area
+
+;  AREA    |C$$data|, DATA
+
+  END

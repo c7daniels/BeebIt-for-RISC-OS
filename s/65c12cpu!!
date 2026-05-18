@@ -42,6 +42,193 @@
   IMPORT |s_r6502cycleinterruptfetchpopreturn|
   IMPORT |s1_r6502cycleinterruptfetchpopreturn|
   IMPORT |s2_r6502cycleinterruptfetchpopreturn|
+  IMPORT |r6502patchsequences|
+  IMPORT |r6502noproutine|
+  IMPORT |r6502clcroutine|
+  IMPORT |r6502secroutine|
+  IMPORT |r6502cliroutine|
+  IMPORT |r6502seiroutine|
+  IMPORT |r6502cldroutine|
+  IMPORT |r6502sedroutine|
+  IMPORT |r6502clvroutine|
+  IMPORT |r6502taxroutine|
+  IMPORT |r6502tayroutine|
+  IMPORT |r6502txaroutine|
+  IMPORT |r6502txsroutine|
+  IMPORT |r6502tyaroutine|
+  IMPORT |r6502tsxroutine|
+  IMPORT |r6502phproutine|
+  IMPORT |r6502plproutine|
+  IMPORT |r6502pharoutine|
+  IMPORT |r6502plaroutine|
+  IMPORT |r6502jmproutine|
+  IMPORT |r6502bitzpgroutine|
+  IMPORT |r6502bitabsroutine|
+  IMPORT |r6502oraimmroutine|
+  IMPORT |r6502orazpgroutine|
+  IMPORT |r6502oraabsroutine|
+  IMPORT |r6502andimmroutine|
+  IMPORT |r6502andzpgroutine|
+  IMPORT |r6502andabsroutine|
+  IMPORT |r6502eorimmroutine|
+  IMPORT |r6502eorzpgroutine|
+  IMPORT |r6502eorabsroutine|
+  IMPORT |r6502ldaimmroutine|
+  IMPORT |r6502ldazpgroutine|
+  IMPORT |r6502ldaabsroutine|
+  IMPORT |r6502ldyimmroutine|
+  IMPORT |r6502ldyzpgroutine|
+  IMPORT |r6502ldyabsroutine|
+  IMPORT |r6502ldximmroutine|
+  IMPORT |r6502ldxzpgroutine|
+  IMPORT |r6502ldxabsroutine|
+  IMPORT |r6502cmpimmroutine|
+  IMPORT |r6502cmpzpgroutine|
+  IMPORT |r6502cmpabsroutine|
+  IMPORT |r6502cpximmroutine|
+  IMPORT |r6502cpxzpgroutine|
+  IMPORT |r6502cpxabsroutine|
+  IMPORT |r6502cpyimmroutine|
+  IMPORT |r6502cpyzpgroutine|
+  IMPORT |r6502cpyabsroutine|
+  IMPORT |r6502dopimmroutine|
+  IMPORT |r6502dopzpgroutine|
+  IMPORT |r65c12dopzpgxroutine|
+  IMPORT |r6502topabsroutine|
+  IMPORT |r6502aslaroutine|
+  IMPORT |r6502aslzpgroutine|
+  IMPORT |r6502rolaroutine|
+  IMPORT |r6502rolzpgroutine|
+  IMPORT |r6502lsraroutine|
+  IMPORT |r6502lsrzpgroutine|
+  IMPORT |r6502roraroutine|
+  IMPORT |r6502rorzpgroutine|
+  IMPORT |r6502dexroutine|
+  IMPORT |r6502deyroutine|
+  IMPORT |r6502deczpgroutine|
+  IMPORT |r6502inxroutine|
+  IMPORT |r6502inyroutine|
+  IMPORT |r6502inczpgroutine|
+  IMPORT |r6502stazpgroutine|
+  IMPORT |r6502staabsroutine|
+  IMPORT |r6502stxzpgroutine|
+  IMPORT |r6502stxabsroutine|
+  IMPORT |r6502styzpgroutine|
+  IMPORT |r6502styabsroutine|
+  IMPORT |r6502jsrroutine|
+  IMPORT |r6502rtiroutine|
+  IMPORT |r6502rtsroutine|
+  IMPORT |r65c12fastnoproutine|
+  IMPORT |r65c12phxroutine|
+  IMPORT |r65c12plxroutine|
+  IMPORT |r65c12phyroutine|
+  IMPORT |r65c12plyroutine|
+  IMPORT |r65c12bplroutine|
+  IMPORT |r65c12bmiroutine|
+  IMPORT |r65c12bvcroutine|
+  IMPORT |r65c12bvsroutine|
+  IMPORT |r65c12bccroutine|
+  IMPORT |r65c12bcsroutine|
+  IMPORT |r65c12bneroutine|
+  IMPORT |r65c12beqroutine|
+  IMPORT |r65c12braroutine|
+  IMPORT |r65c12bitimmroutine|
+  IMPORT |r65c12bitzpgxroutine|
+  IMPORT |r65c12bitabsxroutine|
+  IMPORT |r65c12orazpgxroutine|
+  IMPORT |r65c12oranonindexedroutine|
+  IMPORT |r65c12orapreindexedroutine|
+  IMPORT |r65c12oraabsxroutine|
+  IMPORT |r65c12oraabsyroutine|
+  IMPORT |r65c12orapostindexedroutine|
+  IMPORT |r65c12andzpgxroutine|
+  IMPORT |r65c12andnonindexedroutine|
+  IMPORT |r65c12andpreindexedroutine|
+  IMPORT |r65c12andabsxroutine|
+  IMPORT |r65c12andabsyroutine|
+  IMPORT |r65c12andpostindexedroutine|
+  IMPORT |r65c12eorzpgxroutine|
+  IMPORT |r65c12eornonindexedroutine|
+  IMPORT |r65c12eorpreindexedroutine|
+  IMPORT |r65c12eorabsxroutine|
+  IMPORT |r65c12eorabsyroutine|
+  IMPORT |r65c12eorpostindexedroutine|
+  IMPORT |r65c12adcimmroutine|
+  IMPORT |r65c12adczpgroutine|
+  IMPORT |r65c12adcabsroutine|
+  IMPORT |r65c12adczpgxroutine|
+  IMPORT |r65c12adcnonindexedroutine|
+  IMPORT |r65c12adcpreindexedroutine|
+  IMPORT |r65c12adcabsxroutine|
+  IMPORT |r65c12adcabsyroutine|
+  IMPORT |r65c12adcpostindexedroutine|
+  IMPORT |r65c12ldapreindexedroutine|
+  IMPORT |r65c12ldapostindexedroutine|
+  IMPORT |r65c12ldanonindexedroutine|
+  IMPORT |r65c12ldazpgxroutine|
+  IMPORT |r65c12ldaabsyroutine|
+  IMPORT |r65c12ldaabsxroutine|
+  IMPORT |r65c12ldxzpgyroutine|
+  IMPORT |r65c12ldxabsyroutine|
+  IMPORT |r65c12ldyzpgxroutine|
+  IMPORT |r65c12ldyabsxroutine|
+  IMPORT |r65c12cmpzpgxroutine|
+  IMPORT |r65c12cmpnonindexedroutine|
+  IMPORT |r65c12cmppreindexedroutine|
+  IMPORT |r65c12cmpabsxroutine|
+  IMPORT |r65c12cmpabsyroutine|
+  IMPORT |r65c12cmppostindexedroutine|
+  IMPORT |r65c12sbcimmroutine|
+  IMPORT |r65c12sbczpgroutine|
+  IMPORT |r65c12sbcabsroutine|
+  IMPORT |r65c12sbczpgxroutine|
+  IMPORT |r65c12sbcnonindexedroutine|
+  IMPORT |r65c12sbcpreindexedroutine|
+  IMPORT |r65c12sbcabsxroutine|
+  IMPORT |r65c12sbcabsyroutine|
+  IMPORT |r65c12sbcpostindexedroutine|
+  IMPORT |r65c12slowtopFFabsroutine|
+  IMPORT |r65c12aslabsroutine|
+  IMPORT |r65c12aslzpgxroutine|
+  IMPORT |r65c12aslabsxroutine|
+  IMPORT |r65c12rolabsroutine|
+  IMPORT |r65c12rolzpgxroutine|
+  IMPORT |r65c12rolabsxroutine|
+  IMPORT |r65c12lsrabsroutine|
+  IMPORT |r65c12lsrzpgxroutine|
+  IMPORT |r65c12lsrabsxroutine|
+  IMPORT |r65c12rorabsroutine|
+  IMPORT |r65c12rorzpgxroutine|
+  IMPORT |r65c12rorabsxroutine|
+  IMPORT |r65c12decaroutine|
+  IMPORT |r65c12deczpgxroutine|
+  IMPORT |r65c12decabsroutine|
+  IMPORT |r65c12decabsxroutine|
+  IMPORT |r65c12incaroutine|
+  IMPORT |r65c12incabsroutine|
+  IMPORT |r65c12inczpgxroutine|
+  IMPORT |r65c12incabsxroutine|
+  IMPORT |r65c12tsbzpgroutine|
+  IMPORT |r65c12tsbabsroutine|
+  IMPORT |r65c12trbzpgroutine|
+  IMPORT |r65c12trbabsroutine|
+  IMPORT |r65c12stazpgxroutine|
+  IMPORT |r65c12stanonindexedroutine|
+  IMPORT |r65c12stapreindexedroutine|
+  IMPORT |r65c12staabsxroutine|
+  IMPORT |r65c12staabsyroutine|
+  IMPORT |r65c12stapostindexedroutine|
+  IMPORT |r65c12stxzpgyroutine|
+  IMPORT |r65c12styzpgxroutine|
+  IMPORT |r65c12stzzpgroutine|
+  IMPORT |r65c12stzabsroutine|
+  IMPORT |r65c12stzzpgxroutine|
+  IMPORT |r65c12stzabsxroutine|
+  IMPORT |r65c12jmpindroutine|
+  IMPORT |r65c12jmpxindroutine|
+  IMPORT |r65c12resetroutine|
+  IMPORT |r65c12interruptroutine|
+  IMPORT |r65c12brkroutine|
 
 ; Export global symbols
 
@@ -90,6 +277,7 @@
   EXPORT |r65c12breadcrumbpushedtoresetlostep|
   EXPORT |r65c12breadcrumbpushedtointerruptlostep|
   EXPORT |r65c12breadcrumbpushedtobrklostep|
+  EXPORT |r65c12assemblyroutinereset|
 
 ;// IMPLIED STEPS
 |r65c12fastnopstep|
@@ -740,6 +928,299 @@ r65c12branchtakenstep2
   STR r1,[r0,#:INDEX:R6502_ADDRESS_CODE]
   R6502_CYCLE_UPDATE_POP
   R6502_CYCLE_VECTOR_READ_RETURN
+
+|r65c12assemblyroutinereset|
+  [ Optimise6502Flow
+  LDR r1,=r65c12opcoderoutines
+  B r6502patchsequences
+  |
+  MOV pc,lr
+  ]
+
+r65c12opcoderoutines
+  DCD r65c12brkroutine ;&00
+  DCD r65c12orapreindexedroutine ;&01
+  DCD r6502dopimmroutine ;&02
+  DCD r65c12fastnoproutine ;&03
+  DCD r65c12tsbzpgroutine ;&04
+  DCD r6502orazpgroutine ;&05
+  DCD r6502aslzpgroutine ;&06
+  DCD r65c12fastnoproutine ;&07
+  DCD r6502phproutine ;&08
+  DCD r6502oraimmroutine ;&09
+  DCD r6502aslaroutine ;&0A
+  DCD r65c12fastnoproutine ;&0B
+  DCD r65c12tsbabsroutine ;&0C
+  DCD r6502oraabsroutine ;&0D
+  DCD r65c12aslabsroutine ;&0E
+  DCD r65c12fastnoproutine ;&0F
+
+  DCD r65c12bplroutine ;&10
+  DCD r65c12orapostindexedroutine ;&11
+  DCD r65c12oranonindexedroutine ;&12
+  DCD r65c12fastnoproutine ;&13
+  DCD r65c12trbzpgroutine ;&14
+  DCD r65c12orazpgxroutine ;&15
+  DCD r65c12aslzpgxroutine ;&16
+  DCD r65c12fastnoproutine ;&17
+  DCD r6502clcroutine ;&18
+  DCD r65c12oraabsyroutine ;&19
+  DCD r65c12incaroutine ;&1A
+  DCD r65c12fastnoproutine ;&1B
+  DCD r65c12trbabsroutine ;&1C
+  DCD r65c12oraabsxroutine ;&1D
+  DCD r65c12aslabsxroutine ;&1E
+  DCD r65c12fastnoproutine ;&1F
+
+  DCD r6502jsrroutine ;&20
+  DCD r65c12andpreindexedroutine ;&21
+  DCD r6502dopimmroutine ;&22
+  DCD r65c12fastnoproutine ;&23
+  DCD r6502bitzpgroutine ;&24
+  DCD r6502andzpgroutine ;&25
+  DCD r6502rolzpgroutine ;&26
+  DCD r65c12fastnoproutine ;&27
+  DCD r6502plproutine ;&28
+  DCD r6502andimmroutine ;&29
+  DCD r6502rolaroutine ;&2A
+  DCD r65c12fastnoproutine ;&2B
+  DCD r6502bitabsroutine ;&2C
+  DCD r6502andabsroutine ;&2D
+  DCD r65c12rolabsroutine ;&2E
+  DCD r65c12fastnoproutine ;&2F
+
+  DCD r65c12bmiroutine ;&30
+  DCD r65c12andpostindexedroutine ;&31
+  DCD r65c12andnonindexedroutine ;&32
+  DCD r65c12fastnoproutine ;&33
+  DCD r65c12bitzpgxroutine ;&34
+  DCD r65c12andzpgxroutine ;&35
+  DCD r65c12rolzpgxroutine ;&36
+  DCD r65c12fastnoproutine ;&37
+  DCD r6502secroutine ;&38
+  DCD r65c12andabsyroutine ;&39
+  DCD r65c12decaroutine ;&3A
+  DCD r65c12fastnoproutine ;&3B
+  DCD r65c12bitabsxroutine ;&3C
+  DCD r65c12andabsxroutine ;&3D
+  DCD r65c12rolabsxroutine ;&3E
+  DCD r65c12fastnoproutine ;&3F
+
+  DCD r6502rtiroutine ;&40
+  DCD r65c12eorpreindexedroutine ;&41
+  DCD r6502dopimmroutine ;&42
+  DCD r65c12fastnoproutine ;&43
+  DCD r6502dopzpgroutine ;&44
+  DCD r6502eorzpgroutine ;&45
+  DCD r6502lsrzpgroutine ;&46
+  DCD r65c12fastnoproutine ;&47
+  DCD r6502pharoutine ;&48
+  DCD r6502eorimmroutine ;&49
+  DCD r6502lsraroutine ;&4A
+  DCD r65c12fastnoproutine ;&4B
+  DCD r6502jmproutine ;&4C
+  DCD r6502eorabsroutine ;&4D
+  DCD r65c12lsrabsroutine ;&4E
+  DCD r65c12fastnoproutine ;&4F
+
+  DCD r65c12bvcroutine ;&50
+  DCD r65c12eorpostindexedroutine ;&51
+  DCD r65c12eornonindexedroutine ;&52
+  DCD r65c12fastnoproutine ;&53
+  DCD r65c12dopzpgxroutine ;&54
+  DCD r65c12eorzpgxroutine ;&55
+  DCD r65c12lsrzpgxroutine ;&56
+  DCD r65c12fastnoproutine ;&57
+  DCD r6502cliroutine ;&58
+  DCD r65c12eorabsyroutine ;&59
+  DCD r65c12phyroutine ;&5A
+  DCD r65c12fastnoproutine ;&5B
+  DCD r65c12slowtopFFabsroutine ;&5C
+  DCD r65c12eorabsxroutine ;&5D
+  DCD r65c12lsrabsxroutine ;&5E
+  DCD r65c12fastnoproutine ;&5F
+
+  DCD r6502rtsroutine ;&60
+  DCD r65c12adcpreindexedroutine ;&61
+  DCD r6502dopimmroutine ;&62
+  DCD r65c12fastnoproutine ;&63
+  DCD r65c12stzzpgroutine ;&64
+  DCD r65c12adczpgroutine ;&65
+  DCD r6502rorzpgroutine ;&66
+  DCD r65c12fastnoproutine ;&67
+  DCD r6502plaroutine ;&68
+  DCD r65c12adcimmroutine ;&69
+  DCD r6502roraroutine ;&6A
+  DCD r65c12fastnoproutine ;&6B
+  DCD r65c12jmpindroutine ;&6C
+  DCD r65c12adcabsroutine ;&6D
+  DCD r65c12rorabsroutine ;&6E
+  DCD r65c12fastnoproutine ;&6F
+
+  DCD r65c12bvsroutine ;&70
+  DCD r65c12adcpostindexedroutine ;&71
+  DCD r65c12adcnonindexedroutine ;&72
+  DCD r65c12fastnoproutine ;&73
+  DCD r65c12stzzpgxroutine ;&74
+  DCD r65c12adczpgxroutine ;&75
+  DCD r65c12rorzpgxroutine ;&76
+  DCD r65c12fastnoproutine ;&77
+  DCD r6502seiroutine ;&78
+  DCD r65c12adcabsyroutine ;&79
+  DCD r65c12plyroutine ;&7A
+  DCD r65c12fastnoproutine ;&7B
+  DCD r65c12jmpxindroutine ;&7C
+  DCD r65c12adcabsxroutine ;&7D
+  DCD r65c12rorabsxroutine ;&7E
+  DCD r65c12fastnoproutine ;&7F
+
+  DCD r65c12braroutine ;&80
+  DCD r65c12stapreindexedroutine ;&81
+  DCD r6502dopimmroutine ;&82
+  DCD r65c12fastnoproutine ;&83
+  DCD r6502styzpgroutine ;&84
+  DCD r6502stazpgroutine ;&85
+  DCD r6502stxzpgroutine ;&86
+  DCD r65c12fastnoproutine ;&87
+  DCD r6502deyroutine ;&88
+  DCD r65c12bitimmroutine ;&89
+  DCD r6502txaroutine ;&8A
+  DCD r65c12fastnoproutine ;&8B
+  DCD r6502styabsroutine ;&8C
+  DCD r6502staabsroutine ;&8D
+  DCD r6502stxabsroutine ;&8E
+  DCD r65c12fastnoproutine ;&8F
+
+  DCD r65c12bccroutine ;&90
+  DCD r65c12stapostindexedroutine ;&91
+  DCD r65c12stanonindexedroutine ;&92
+  DCD r65c12fastnoproutine ;&93
+  DCD r65c12styzpgxroutine ;&94
+  DCD r65c12stazpgxroutine ;&95
+  DCD r65c12stxzpgyroutine ;&96
+  DCD r65c12fastnoproutine ;&97
+  DCD r6502tyaroutine ;&98
+  DCD r65c12staabsyroutine ;&99
+  DCD r6502txsroutine ;&9A
+  DCD r65c12fastnoproutine ;&9B
+  DCD r65c12stzabsroutine ;&9C
+  DCD r65c12staabsxroutine ;&9D
+  DCD r65c12stzabsxroutine ;&9E
+  DCD r65c12fastnoproutine ;&9F
+
+  DCD r6502ldyimmroutine ;&A0
+  DCD r65c12ldapreindexedroutine ;&A1
+  DCD r6502ldximmroutine ;&A2
+  DCD r65c12fastnoproutine ;&A3
+  DCD r6502ldyzpgroutine ;&A4
+  DCD r6502ldazpgroutine ;&A5
+  DCD r6502ldxzpgroutine ;&A6
+  DCD r65c12fastnoproutine ;&A7
+  DCD r6502tayroutine ;&A8
+  DCD r6502ldaimmroutine ;&A9
+  DCD r6502taxroutine ;&AA
+  DCD r65c12fastnoproutine ;&AB
+  DCD r6502ldyabsroutine ;&AC
+  DCD r6502ldaabsroutine ;&AD
+  DCD r6502ldxabsroutine ;&AE
+  DCD r65c12fastnoproutine ;&AF
+
+  DCD r65c12bcsroutine ;&B0
+  DCD r65c12ldapostindexedroutine ;&B1
+  DCD r65c12ldanonindexedroutine ;&B2
+  DCD r65c12fastnoproutine ;&B3
+  DCD r65c12ldyzpgxroutine ;&B4
+  DCD r65c12ldazpgxroutine ;&B5
+  DCD r65c12ldxzpgyroutine ;&B6
+  DCD r65c12fastnoproutine ;&B7
+  DCD r6502clvroutine ;&B8
+  DCD r65c12ldaabsyroutine ;&B9
+  DCD r6502tsxroutine ;&BA
+  DCD r65c12fastnoproutine ;&BB
+  DCD r65c12ldyabsxroutine ;&BC
+  DCD r65c12ldaabsxroutine ;&BD
+  DCD r65c12ldxabsyroutine ;&BE
+  DCD r65c12fastnoproutine ;&BF
+
+  DCD r6502cpyimmroutine ;&C0
+  DCD r65c12cmppreindexedroutine ;&C1
+  DCD r6502dopimmroutine ;&C2
+  DCD r65c12fastnoproutine ;&C3
+  DCD r6502cpyzpgroutine ;&C4
+  DCD r6502cmpzpgroutine ;&C5
+  DCD r6502deczpgroutine ;&C6
+  DCD r65c12fastnoproutine ;&C7
+  DCD r6502inyroutine ;&C8
+  DCD r6502cmpimmroutine ;&C9
+  DCD r6502dexroutine ;&CA
+  DCD r65c12fastnoproutine ;&CB
+  DCD r6502cpyabsroutine ;&CC
+  DCD r6502cmpabsroutine ;&CD
+  DCD r65c12decabsroutine ;&CE
+  DCD r65c12fastnoproutine ;&CF
+
+  DCD r65c12bneroutine ;&D0
+  DCD r65c12cmppostindexedroutine ;&D1
+  DCD r65c12cmpnonindexedroutine ;&D2
+  DCD r65c12fastnoproutine ;&D3
+  DCD r65c12dopzpgxroutine ;&D4
+  DCD r65c12cmpzpgxroutine ;&D5
+  DCD r65c12deczpgxroutine ;&D6
+  DCD r65c12fastnoproutine ;&D7
+  DCD r6502cldroutine ;&D8
+  DCD r65c12cmpabsyroutine ;&D9
+  DCD r65c12phxroutine ;&DA
+  DCD r65c12fastnoproutine ;&DB
+  DCD r6502topabsroutine ;&DC
+  DCD r65c12cmpabsxroutine ;&DD
+  DCD r65c12decabsxroutine ;&DE
+  DCD r65c12fastnoproutine ;&DF
+
+  DCD r6502cpximmroutine ;&E0
+  DCD r65c12sbcpreindexedroutine ;&E1
+  DCD r6502dopimmroutine ;&E2
+  DCD r65c12fastnoproutine ;&E3
+  DCD r6502cpxzpgroutine ;&E4
+  DCD r65c12sbczpgroutine ;&E5
+  DCD r6502inczpgroutine ;&E6
+  DCD r65c12fastnoproutine ;&E7
+  DCD r6502inxroutine ;&E8
+  DCD r65c12sbcimmroutine ;&E9
+  DCD r6502noproutine ;&EA
+  DCD r65c12fastnoproutine ;&EB
+  DCD r6502cpxabsroutine ;&EC
+  DCD r65c12sbcabsroutine ;&ED
+  DCD r65c12incabsroutine ;&EE
+  DCD r65c12fastnoproutine ;&EF
+
+  DCD r65c12beqroutine ;&F0
+  DCD r65c12sbcpostindexedroutine ;&F1
+  DCD r65c12sbcnonindexedroutine ;&F2
+  DCD r65c12fastnoproutine ;&F3
+  DCD r65c12dopzpgxroutine ;&F4
+  DCD r65c12sbczpgxroutine ;&F5
+  DCD r65c12inczpgxroutine ;&F6
+  DCD r65c12fastnoproutine ;&F7
+  DCD r6502sedroutine ;&F8
+  DCD r65c12sbcabsyroutine ;&F9
+  DCD r65c12plxroutine ;&FA
+  DCD r65c12fastnoproutine ;&FB
+  DCD r6502topabsroutine ;&FC
+  DCD r65c12sbcabsxroutine ;&FD
+  DCD r65c12incabsxroutine ;&FE
+  DCD r65c12fastnoproutine ;&FF
+
+  DCD 0
+  DCD r65c12interruptroutine
+  DCD r65c12resetroutine
+  DCD 0
+  DCD 0
+  DCD 0
+  DCD 0
+  DCD 0
+  DCD 0
+  DCD 0
+
 
 ;Data Area
 

@@ -428,10 +428,8 @@ struct R6502CPUMAP* romselwrite_b(struct R6502CPUMAP* ctop, uintptr_t address_co
 {
   HOSTMAP* htop = (HOSTMAP*)ctop;
   int nrom = (value & 0x0F);
-  ctop[-1].addressingops[0x07].op = ctop[-1].addressingops[0x06].op
-      = ctop[-1].addressingops[0x05].op = ctop[-1].addressingops[0x04].op = htop[-1].modify8000s[nrom];
   ctop[-1].addressingops[0x17].op = ctop[-1].addressingops[0x16].op
-      = ctop[-1].addressingops[0x15].op = ctop[-1].addressingops[0x14].op = htop[-1].read8000s[nrom];
+      = ctop[-1].addressingops[0x15].op = ctop[-1].addressingops[0x14].op = htop[-1].touch8000s[nrom];
   htop[-1].romsel = value;
   return ctop;
 }
@@ -443,40 +441,29 @@ struct R6502CPUMAP* romselwrite_bp(struct R6502CPUMAP* ctop, uintptr_t address_c
   if (value & 0x80)
   {
     /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
-    ctop[-1].addressingops[0x07].op = ctop[-1].addressingops[0x06].op
-        = ctop[-1].addressingops[0x05].op = htop[-1].paging.address8000_ram;
     ctop[-1].addressingops[0x17].op = ctop[-1].addressingops[0x16].op
-        = ctop[-1].addressingops[0x15].op = htop[-1].paging.address8000_ram;
+        = ctop[-1].addressingops[0x15].op = htop[-1].paging.touch8000_ram;
     if (htop[-1].acccon & 0x80)
     {
       /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
-      ctop[-1].addressingops[0x0C].op = ctop[-1].addressingops[0x0B].op
-          = ctop[-1].addressingops[0x0A].op = ctop[-1].addressingops[0x09].op
-          = ctop[-1].addressingops[0x08].op = htop[-1].paging.address3000_ramram_e;
       ctop[-1].addressingops[0x1C].op = ctop[-1].addressingops[0x1B].op
           = ctop[-1].addressingops[0x1A].op = ctop[-1].addressingops[0x19].op
-          = ctop[-1].addressingops[0x18].op = htop[-1].paging.address3000_ramram_e;
+          = ctop[-1].addressingops[0x18].op = htop[-1].paging.touch3000_ramram_e;
     }
   }
   else
   {
-    ctop[-1].addressingops[0x07].op = ctop[-1].addressingops[0x06].op
-        = ctop[-1].addressingops[0x05].op = htop[-1].modify8000s[nrom];
     ctop[-1].addressingops[0x17].op = ctop[-1].addressingops[0x16].op
-        = ctop[-1].addressingops[0x15].op = htop[-1].read8000s[nrom];
+        = ctop[-1].addressingops[0x15].op = htop[-1].touch8000s[nrom];
     if (htop[-1].acccon & 0x80)
     {
       /*ACCCON b7 (VDUSEL) (&3000-&7FFF)*/
-      ctop[-1].addressingops[0x0C].op = ctop[-1].addressingops[0x0B].op
-          = ctop[-1].addressingops[0x0A].op = ctop[-1].addressingops[0x09].op
-          = ctop[-1].addressingops[0x08].op = htop[-1].paging.address3000_ram_x;
       ctop[-1].addressingops[0x1C].op = ctop[-1].addressingops[0x1B].op
           = ctop[-1].addressingops[0x1A].op = ctop[-1].addressingops[0x19].op
-          = ctop[-1].addressingops[0x18].op = htop[-1].paging.address3000_ram_x;
+          = ctop[-1].addressingops[0x18].op = htop[-1].paging.touch3000_ram_x;
     }
   }
-  ctop[-1].addressingops[0x04].op = htop[-1].modify8000s[nrom];
-  ctop[-1].addressingops[0x14].op = htop[-1].read8000s[nrom];
+  ctop[-1].addressingops[0x14].op = htop[-1].touch8000s[nrom];
   htop[-1].romsel = value;
   return ctop;
 }
@@ -488,19 +475,15 @@ struct R6502CPUMAP* romselwrite_m(struct R6502CPUMAP* ctop, uintptr_t address_co
   if (value & 0x80)
   {
     /*ROMSEL b7 (RAM) (&8000-&8FFF)*/
-    ctop[-1].addressingops[0x07].op = htop[-1].paging.address8000_ram;
-    ctop[-1].addressingops[0x17].op = htop[-1].paging.address8000_ram;
+    ctop[-1].addressingops[0x17].op = htop[-1].paging.touch8000_ram;
   }
   else
   {
-    ctop[-1].addressingops[0x07].op = htop[-1].modify8000s[nrom];
-    ctop[-1].addressingops[0x17].op = htop[-1].read8000s[nrom];
+    ctop[-1].addressingops[0x17].op = htop[-1].touch8000s[nrom];
   }
 
-  ctop[-1].addressingops[0x06].op = ctop[-1].addressingops[0x05].op
-      = ctop[-1].addressingops[0x04].op = htop[-1].modify8000s[nrom];
   ctop[-1].addressingops[0x16].op = ctop[-1].addressingops[0x15].op
-      = ctop[-1].addressingops[0x14].op = htop[-1].read8000s[nrom];
+      = ctop[-1].addressingops[0x14].op = htop[-1].touch8000s[nrom];
   htop[-1].romsel = value;
   return ctop;
 }
@@ -514,28 +497,19 @@ struct R6502CPUMAP* accconwrite_bp(struct R6502CPUMAP* ctop, uintptr_t address_c
     if (htop[-1].romsel & 0x80)
     {
       /*ROMSEL b7 (RAM) (&8000-&AFFF)*/
-      ctop[-1].addressingops[0x0C].op = ctop[-1].addressingops[0x0B].op
-          = ctop[-1].addressingops[0x0A].op = ctop[-1].addressingops[0x09].op
-          = ctop[-1].addressingops[0x08].op = htop[-1].paging.address3000_ramram_e;
       ctop[-1].addressingops[0x1C].op = ctop[-1].addressingops[0x1B].op
           = ctop[-1].addressingops[0x1A].op = ctop[-1].addressingops[0x19].op
-          = ctop[-1].addressingops[0x18].op = htop[-1].paging.address3000_ramram_e;
+          = ctop[-1].addressingops[0x18].op = htop[-1].paging.touch3000_ramram_e;
     }
     else
     {
-      ctop[-1].addressingops[0x0C].op = ctop[-1].addressingops[0x0B].op
-          = ctop[-1].addressingops[0x0A].op = ctop[-1].addressingops[0x09].op
-          = ctop[-1].addressingops[0x08].op = htop[-1].paging.address3000_ram_x;
       ctop[-1].addressingops[0x1C].op = ctop[-1].addressingops[0x1B].op
           = ctop[-1].addressingops[0x1A].op = ctop[-1].addressingops[0x19].op
-          = ctop[-1].addressingops[0x18].op = htop[-1].paging.address3000_ram_x;
+          = ctop[-1].addressingops[0x18].op = htop[-1].paging.touch3000_ram_x;
     }
   }
   else
   {
-    ctop[-1].addressingops[0x0C].op = ctop[-1].addressingops[0x0B].op
-        = ctop[-1].addressingops[0x0A].op = ctop[-1].addressingops[0x09].op
-        = ctop[-1].addressingops[0x08].op = ctop[-1].addressingops[0x0F].op;
     ctop[-1].addressingops[0x1C].op = ctop[-1].addressingops[0x1B].op
         = ctop[-1].addressingops[0x1A].op = ctop[-1].addressingops[0x19].op
         = ctop[-1].addressingops[0x18].op = ctop[-1].addressingops[0x1F].op;
@@ -551,64 +525,49 @@ struct R6502CPUMAP* accconwrite_m(struct R6502CPUMAP* ctop, uintptr_t address_co
   {
     case 0x00:
       /*RAM*/
-      ctop[-1].addressingops[0x0C].op = ctop[-1].addressingops[0x0B].op
-          = ctop[-1].addressingops[0x0A].op = ctop[-1].addressingops[0x09].op
-          = ctop[-1].addressingops[0x08].op = ctop[-1].addressingops[0x0F].op;
       ctop[-1].addressingops[0x1C].op = ctop[-1].addressingops[0x1B].op
           = ctop[-1].addressingops[0x1A].op = ctop[-1].addressingops[0x19].op
           = ctop[-1].addressingops[0x18].op = ctop[-1].addressingops[0x1F].op;
       break;
     case 0x02:
       /*ACCCON b1 (E)*/
-      ctop[-1].addressingops[0x0C].op = ctop[-1].addressingops[0x0B].op
-          = ctop[-1].addressingops[0x0A].op = ctop[-1].addressingops[0x09].op
-          = ctop[-1].addressingops[0x08].op = htop[-1].paging.address3000_ramram_e;
       ctop[-1].addressingops[0x1C].op = ctop[-1].addressingops[0x1B].op
           = ctop[-1].addressingops[0x1A].op = ctop[-1].addressingops[0x19].op
-          = ctop[-1].addressingops[0x18].op = htop[-1].paging.address3000_ramram_e;
+          = ctop[-1].addressingops[0x18].op = htop[-1].paging.touch3000_ramram_e;
       break;
     case 0x04:
     case 0x06:
       /*ACCCON b2 (X)*/
-      ctop[-1].addressingops[0x0C].op = ctop[-1].addressingops[0x0B].op
-          = ctop[-1].addressingops[0x0A].op = ctop[-1].addressingops[0x09].op
-          = ctop[-1].addressingops[0x08].op = htop[-1].paging.address3000_ram_x;
       ctop[-1].addressingops[0x1C].op = ctop[-1].addressingops[0x1B].op
           = ctop[-1].addressingops[0x1A].op = ctop[-1].addressingops[0x19].op
-          = ctop[-1].addressingops[0x18].op = htop[-1].paging.address3000_ram_x;
+          = ctop[-1].addressingops[0x18].op = htop[-1].paging.touch3000_ram_x;
       break;
   }
   if (value & 0x08)
   {
     /*ACCCON b3 (Y)*/
     /*&C000-&DFFF*/
-    ctop[-1].addressingops[0x03].op = ctop[-1].addressingops[0x02].op = htop[-1].paging.addressC000_y;
-    ctop[-1].addressingops[0x13].op = ctop[-1].addressingops[0x12].op = htop[-1].paging.addressC000_y;
+    ctop[-1].addressingops[0x13].op = ctop[-1].addressingops[0x12].op = htop[-1].paging.touchC000_y;
   }
   else
   {
     /*&C000-&DFFF*/
-    ctop[-1].addressingops[0x03].op = ctop[-1].addressingops[0x02].op = ctop[-1].addressingops[0x01].op;
     ctop[-1].addressingops[0x13].op = ctop[-1].addressingops[0x12].op = ctop[-1].addressingops[0x11].op;
-
   }
   switch (value & 0x60)
   {
     case 0x00:
       /*FRED, JIM*/
-      htop[-1].readmFC00 = htop[-1].paging.addressFC00;
-      htop[-1].modifymFC00 = htop[-1].paging.addressFC00;
+      htop[-1].touchmFC00 = htop[-1].paging.touchFC00;
       break;
     case 0x20:
       /*IFJ*/
-      htop[-1].readmFC00 = htop[-1].paging.addressFC00_ifj;
-      htop[-1].modifymFC00 = htop[-1].paging.addressFC00_ifj;
+      htop[-1].touchmFC00 = htop[-1].paging.touchFC00_ifj;
       break;
     case 0x40:
     case 0x60:
       /*TST*/
-      htop[-1].readmFC00 = ctop[-1].addressingops[0x11].op;
-      htop[-1].modifymFC00 = ctop[-1].addressingops[0x01].op;
+      htop[-1].touchmFC00 = ctop[-1].addressingops[0x11].op;
       break;
   }
 
