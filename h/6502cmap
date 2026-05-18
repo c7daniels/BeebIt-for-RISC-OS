@@ -34,6 +34,8 @@ typedef struct R6502CPUMAP
 {
   // AArch32 offsets -&4000 - -&1001
   const R6502OP* sequences[R6502_SEQUENCE_ALLOWANCE];
+  void* o_opcoderoutines[R6502_SEQUENCE_ALLOWANCE];
+  void* opcoderoutines[R6502_SEQUENCE_ALLOWANCE];
   R6502_DP_ZONE DP;
 
   // AArch32 offsets -&1000 - -&401
@@ -42,19 +44,25 @@ typedef struct R6502CPUMAP
   R6502_CP_ZONE CP;
 
   // AArch32 offsets -&400 - -&101
-  uintptr_t interruptqueue_ps;
-  uintptr_t togominusone_cyclestate;
   R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
+  /*the 5 fields below are arranged for an AArch32 multiple load/store optimisation*/
+  uintptr_t interruptqueue_ps;
+  uintptr_t sync_pc_code; /*shifted program counter with bits for an AArch32 access optimisation*/
+  uintptr_t togominusone_cyclestate;
+  uintptr_t foldindex;
+  uintptr_t foldbase;
+  /*the 5 fields above are arranged for an AArch32 multiple load/store optimisation*/
+  uintptr_t foldfloor;
   R6502BYTESHIFT a_shift; uint8_t a; /*register*/
   R6502BYTESHIFT x_shift; uint8_t x; /*register*/
   R6502BYTESHIFT y_shift; uint8_t y; /*register*/
   uintptr_t sp_code; /*rotated stack pointer*/
-  uintptr_t sync_pc_code; /*shifted program counter with bits for an AArch32 access optimisation*/
   uintptr_t last_pc_code;
   uintptr_t latch; /*shifted addressing temporary byte*/
   uintptr_t address_code;
   uintptr_t fixed_address_code;
   uintptr_t stretched_address_code;
+  uintptr_t sequencenumber;
   const R6502OP* cpu_state; /*pointer to current step*/
   const R6502OP* stretched_cpu_state; /*pointer to stretched step*/
   const R6502OP* execute_cpu_state;
@@ -67,8 +75,11 @@ typedef struct R6502CPUMAP
   R6502WRITESPECIALOP writebridgedaction;
   uintptr_t continuelink; /*storage for the Optimise6502Links optimisation*/
   uintptr_t yieldlink; /*storage for the Optimise6502Links optimisation*/
+  uintptr_t opcodeuninterruptedtrap;
+  uintptr_t opcodeearlyinterrupttrap;
+  uintptr_t opcodeinterrupttrap;
   uintptr_t lbreak;
-  uintptr_t BC_unused[16];
+  uintptr_t BC_unused[9];
   R6502_BP_ZONE BP;
 
   // AArch32 offsets -&100 - -&01

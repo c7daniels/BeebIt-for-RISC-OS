@@ -38,11 +38,11 @@ typedef struct R6502CPUMAP* (*R6502WRITESPECIALOP)(struct R6502CPUMAP* ctop, uin
 typedef struct R6502CPUMAP* (*R6502PERIPHERALOP)(struct R6502CPUMAP* ctop); /*returning the first parameter leaves it in r0 for the next call from AArch32 assembly language*/
 
 /*outline of a storage map for both 6502 CPU and peripheral emulation*/
-typedef uintptr_t R6502_DC_ZONE[288];
-typedef uintptr_t R6502_DP_ZONE[2784];
+typedef uintptr_t R6502_DC_ZONE[864];
+typedef uintptr_t R6502_DP_ZONE[2208];
 typedef uintptr_t R6502_CC_ZONE[132];
 typedef uintptr_t R6502_CP_ZONE[636];
-typedef uintptr_t R6502_BC_ZONE[42];
+typedef uintptr_t R6502_BC_ZONE[41];
 typedef uintptr_t R6502_BP_ZONE[147];
 typedef uintptr_t R6502_AC_ZONE[1];
 typedef uintptr_t R6502_AP_ZONE[63];
@@ -61,9 +61,10 @@ typedef struct R6502ZONEMAP
   R6502_CP_ZONE CP;
 
   // AArch32 offsets -&400 - -&101
-  uintptr_t interruptqueue_ps;
-  uintptr_t togominusone_cyclestate;
   R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
+  uintptr_t interruptqueue_ps;
+  uintptr_t sync_pc_code;
+  uintptr_t togominusone_cyclestate;
   R6502_BC_ZONE BC;
   R6502_BP_ZONE BP;
 

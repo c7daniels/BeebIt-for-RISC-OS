@@ -1,0 +1,2490 @@
+;>6502ops1.s
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Opcode routines based on cycle-level CPU emulation
+;
+; (C) Copyright Crispian Daniels, 2026
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+  GET h.6502zmaps
+
+  GET h.6502cmaps
+
+  GET h.6502cpus
+
+  GET h.hostmaps
+
+  GET h.hosts
+
+  GET h.6502ops
+
+; Use the GET directive to include register definitions as if typed here
+
+  GET h.RegNames
+
+; Area name C$$code advisable as wanted to link with C output
+
+  AREA |C$$code|, CODE, READONLY
+
+; Import global symbols
+
+  IMPORT |r65c12dopzpgxnofold|
+  IMPORT |r6502dopimmsplit1|
+  IMPORT |r6502dopzpgsplit1|
+  IMPORT |r6502dopzpgxsplit1|
+  IMPORT |r65c12dopzpgxsplit1|
+  IMPORT |r6502dopimmsplit2|
+  IMPORT |r6502dopzpgsplit2|
+  IMPORT |r6502dopzpgxsplit2|
+  IMPORT |r65c12dopzpgxsplit2|
+  IMPORT |r6502loadabsnofold|
+  IMPORT |r6502loadabssplit1|
+  IMPORT |r6502loadabssplit2|
+  IMPORT |r6502loadabssplit3|
+  IMPORT |r6502loadabsxnofold|
+  IMPORT |r6502loadabsxsplit1|
+  IMPORT |r6502loadabsxsplit2|
+  IMPORT |r6502loadabsxsplit3|
+
+  IMPORT |host_r6502cycle0s1|
+  IMPORT |host_r6502cycle1|
+
+  IMPORT |assemblyhostadvancetimers|
+
+; Export global symbols
+
+  EXPORT |s_r6502operand|
+  EXPORT |s1_r6502operand|
+  EXPORT |s2_r6502operand|
+  EXPORT |s_r6502operandtwice|
+  EXPORT |s1_r6502operandtwice|
+  EXPORT |s2_r6502operandtwice|
+  EXPORT |s_r6502wait1operand|
+  EXPORT |s1_r6502wait1operand|
+  EXPORT |s2_r6502wait1operand|
+  EXPORT |s_r6502wait1operandtwice|
+  EXPORT |s1_r6502wait1operandtwice|
+  EXPORT |s2_r6502wait1operandtwice|
+  EXPORT |r6502scan2split|
+  EXPORT |r6502scan3split|
+  EXPORT |s_r6502wait00000001uninterruptedfetch|
+  EXPORT |s1_r6502wait00000001uninterruptedfetch|
+  EXPORT |s2_r6502wait00000001uninterruptedfetch|
+  EXPORT |d_r6502wait00000001uninterruptedfetch|
+  EXPORT |s_r6502wait00000004uninterruptedfetch|
+  EXPORT |s1_r6502wait00000004uninterruptedfetch|
+  EXPORT |s2_r6502wait00000004uninterruptedfetch|
+  EXPORT |d_r6502wait00000004uninterruptedfetch|
+  EXPORT |s_r6502wait00000005uninterruptedfetch|
+  EXPORT |s1_r6502wait00000005uninterruptedfetch|
+  EXPORT |s2_r6502wait00000005uninterruptedfetch|
+  EXPORT |d_r6502wait00000005uninterruptedfetch|
+  EXPORT |s_r6502wait00000001interruptfetch|
+  EXPORT |s1_r6502wait00000001interruptfetch|
+  EXPORT |s2_r6502wait00000001interruptfetch|
+  EXPORT |d_r6502wait00000001interruptfetch|
+  EXPORT |s_r6502wait00000002interruptfetch|
+  EXPORT |s1_r6502wait00000002interruptfetch|
+  EXPORT |s2_r6502wait00000002interruptfetch|
+  EXPORT |d_r6502wait00000002interruptfetch|
+  EXPORT |s_r6502wait00000003interruptfetch|
+  EXPORT |s1_r6502wait00000003interruptfetch|
+  EXPORT |s2_r6502wait00000003interruptfetch|
+  EXPORT |d_r6502wait00000003interruptfetch|
+  EXPORT |s_r6502wait00000004interruptfetch|
+  EXPORT |s1_r6502wait00000004interruptfetch|
+  EXPORT |s2_r6502wait00000004interruptfetch|
+  EXPORT |d_r6502wait00000004interruptfetch|
+  EXPORT |s_r6502wait00000005interruptfetch|
+  EXPORT |s1_r6502wait00000005interruptfetch|
+  EXPORT |s2_r6502wait00000005interruptfetch|
+  EXPORT |d_r6502wait00000005interruptfetch|
+  EXPORT |s_r6502wait00000006interruptfetch|
+  EXPORT |s1_r6502wait00000006interruptfetch|
+  EXPORT |s2_r6502wait00000006interruptfetch|
+  EXPORT |d_r6502wait00000006interruptfetch|
+  EXPORT |s_r6502wait00000007interruptfetch|
+  EXPORT |s1_r6502wait00000007interruptfetch|
+  EXPORT |s2_r6502wait00000007interruptfetch|
+  EXPORT |d_r6502wait00000007interruptfetch|
+  EXPORT |r6502atfolduninterruptedfetch|
+  EXPORT |r6502atfoldearlyinterruptfetch|
+  EXPORT |r6502atfoldinterruptfetch|
+  EXPORT |r6502infolduninterruptedfetch|
+  EXPORT |r6502infoldearlyinterruptfetch|
+  EXPORT |r6502infoldinterruptfetch|
+  EXPORT |r65c12fastnoproutine|
+  EXPORT |r6502noproutine|
+  EXPORT |r6502aslaroutine|
+  EXPORT |r6502rolaroutine|
+  EXPORT |r6502lsraroutine|
+  EXPORT |r6502roraroutine|
+  EXPORT |r65c12decaroutine|
+  EXPORT |r6502dexroutine|
+  EXPORT |r6502deyroutine|
+  EXPORT |r65c12incaroutine|
+  EXPORT |r6502inxroutine|
+  EXPORT |r6502inyroutine|
+  EXPORT |r6502taxroutine|
+  EXPORT |r6502tayroutine|
+  EXPORT |r6502tsxroutine|
+  EXPORT |r6502txaroutine|
+  EXPORT |r6502txsroutine|
+  EXPORT |r6502tyaroutine|
+  EXPORT |r6502clcroutine|
+  EXPORT |r6502secroutine|
+  EXPORT |r6502cliroutine|
+  EXPORT |r6502seiroutine|
+  EXPORT |r6502clvroutine|
+  EXPORT |r6502cldroutine|
+  EXPORT |r6502sedroutine|
+  EXPORT |r6502pharoutine|
+  EXPORT |r6502phproutine|
+  EXPORT |r65c12phxroutine|
+  EXPORT |r65c12phyroutine|
+  EXPORT |r6502plaroutine|
+  EXPORT |r6502plproutine|
+  EXPORT |r65c12plxroutine|
+  EXPORT |r65c12plyroutine|
+  EXPORT |r6502rtiroutine|
+  EXPORT |r6502rtsroutine|
+  EXPORT |r6502jamroutine|
+  EXPORT |r6502resetroutine|
+  EXPORT |r65c12resetroutine|
+  EXPORT |r6502interruptroutine|
+  EXPORT |r65c12interruptroutine|
+  EXPORT |r6502brkroutine|
+  EXPORT |r65c12brkroutine|
+  EXPORT |r6502dopimmroutine|
+  EXPORT |r6502bplroutine|
+  EXPORT |r6502bmiroutine|
+  EXPORT |r6502bvcroutine|
+  EXPORT |r6502bvsroutine|
+  EXPORT |r6502bccroutine|
+  EXPORT |r6502bcsroutine|
+  EXPORT |r6502bneroutine|
+  EXPORT |r6502beqroutine|
+  EXPORT |r65c12braroutine|
+  EXPORT |r65c12bplroutine|
+  EXPORT |r65c12bmiroutine|
+  EXPORT |r65c12bvcroutine|
+  EXPORT |r65c12bvsroutine|
+  EXPORT |r65c12bccroutine|
+  EXPORT |r65c12bcsroutine|
+  EXPORT |r65c12bneroutine|
+  EXPORT |r65c12beqroutine|
+  EXPORT |r6502dopzpgroutine|
+  EXPORT |r6502dopzpgxroutine|
+  EXPORT |r65c12dopzpgxroutine|
+  EXPORT |r65c12slowtopFFabsroutine|
+  EXPORT |r6502jsrroutine|
+  EXPORT |r6502jmproutine|
+  EXPORT |r6502jmpindroutine|
+  EXPORT |r65c12jmpindroutine|
+  EXPORT |r65c12jmpxindroutine|
+  EXPORT |r6502opcodeuninterruptedtrap|
+  EXPORT |r6502opcodeearlyinterrupttrap|
+  EXPORT |r6502opcodeinterrupttrap|
+  EXPORT |r6502opcodecyclenosplit|
+  EXPORT |r6502opcodecycles0split|
+  EXPORT |r6502opcodecycles1split|
+  EXPORT |r6502opcodecycles2split|
+
+
+  MACRO
+  ASLA_ACTION
+  LDR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG|CFLAG
+  MOVS r3,r3,LSL #1
+  ORRMI r5,r5,#NFLAG
+  STR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  ORRCS r5,r5,#CFLAG
+  MEND
+
+  MACRO
+  ROLA_ACTION
+  TST r5,#CFLAG
+  LDR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG|CFLAG
+  ORRNE r3,r3,#&800000
+  MOVS r3,r3,LSL #1
+  ORRMI r5,r5,#NFLAG
+  STR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  ORRCS r5,r5,#CFLAG
+  MEND
+
+  MACRO
+  LSRA_ACTION
+  LDRB r3,[r0,#:INDEX:R6502_A]
+  BIC r5,r5,#NFLAG|ZFLAG|CFLAG
+  MOVS r3,r3,LSR #1
+  ORREQ r5,r5,#ZFLAG
+  STRB r3,[r0,#:INDEX:R6502_A]
+  ORRCS r5,r5,#CFLAG
+  MEND
+
+  MACRO
+  RORA_ACTION
+  LDRB r3,[r0,#:INDEX:R6502_A]
+  TST r5,#CFLAG
+  BIC r5,r5,#NFLAG|ZFLAG|CFLAG
+  ORRNE r3,r3,#&100
+  ORRNE r5,r5,#NFLAG
+  MOVS r3,r3,LSR #1
+  ORREQ r5,r5,#ZFLAG
+  STRB r3,[r0,#:INDEX:R6502_A]
+  ORRCS r5,r5,#CFLAG
+  MEND
+
+  MACRO
+  DECA_ACTION
+  LDR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  SUBS r3,r3,#1:SHL:24
+  ORRMI r5,r5,#NFLAG
+  STR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  DEX_ACTION
+  LDR r3,[r0,#:INDEX:R6502_X_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  SUBS r3,r3,#1:SHL:24
+  ORRMI r5,r5,#NFLAG
+  STR r3,[r0,#:INDEX:R6502_X_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  DEY_ACTION
+  LDR r3,[r0,#:INDEX:R6502_Y_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  SUBS r3,r3,#1:SHL:24
+  ORRMI r5,r5,#NFLAG
+  STR r3,[r0,#:INDEX:R6502_Y_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  INCA_ACTION
+  LDR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  ADDS r3,r3,#1:SHL:24
+  ORRMI r5,r5,#NFLAG
+  STR r3,[r0,#:INDEX:R6502_A_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  INX_ACTION
+  LDR r3,[r0,#:INDEX:R6502_X_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  ADDS r3,r3,#1:SHL:24
+  ORRMI r5,r5,#NFLAG
+  STR r3,[r0,#:INDEX:R6502_X_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  INY_ACTION
+  LDR r3,[r0,#:INDEX:R6502_Y_SHIFT]
+  BIC r5,r5,#NFLAG|ZFLAG
+  ADDS r3,r3,#1:SHL:24
+  ORRMI r5,r5,#NFLAG
+  STR r3,[r0,#:INDEX:R6502_Y_SHIFT]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  TAX_ACTION
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  BIC r5,r5,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  TAY_ACTION
+  LDRB r2,[r0,#:INDEX:R6502_A]
+  BIC r5,r5,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_Y]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  TSX_ACTION
+  LDRB r2,[r0,#:INDEX:R6502_SP_CODE+3]
+  BIC r5,r5,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_X]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  TXA_ACTION
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  BIC r5,r5,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  TXS_ACTION
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  STRB r2,[r0,#:INDEX:R6502_SP_CODE+3]
+  MEND
+
+  MACRO
+  TYA_ACTION
+  LDRB r2,[r0,#:INDEX:R6502_Y]
+  BIC r5,r5,#NFLAG|ZFLAG
+  MOVS r3,r2,LSL #24
+  ORRMI r5,r5,#NFLAG
+  STRB r2,[r0,#:INDEX:R6502_A]
+  ORREQ r5,r5,#ZFLAG
+  MEND
+
+  MACRO
+  CLI_ACTION
+  ORR r5,r5,#R6502_IRQ_ENABLE
+  MEND
+
+  MACRO
+  CLI_SHIFTED_ACTION
+  ORR r5,r5,#(R6502_IRQ_ENABLE<<4)|R6502_IRQ_ENABLE
+  MEND
+
+  MACRO
+  SEI_ACTION
+  BIC r5,r5,#R6502_IRQ_ENABLE
+  MEND
+
+  MACRO
+  SEI_SHIFTED_ACTION
+  BIC r5,r5,#(R6502_IRQ_ENABLE<<4)|R6502_IRQ_ENABLE
+  MEND
+
+  MACRO
+  PLP_ACTION
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  ADD r1,r1,#1:SHL:24
+  LDRB r2,[r0,r1,ROR #24]
+  BIC r5,r5,#&FF
+  TST r2,#IFLAG
+  ORR r5,r5,#UFLAG|BFLAG|IFLAG
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  BICNE r5,r5,#R6502_IRQ_ENABLE
+  ORREQ r5,r5,#R6502_IRQ_ENABLE
+  ORR r5,r5,r2
+  MEND
+
+  MACRO
+  PLP_SHIFTED_ACTION
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  BIC r5,r5,#&FF
+  ADD r1,r1,#1:SHL:24
+  LDRB r2,[r0,r1,ROR #24]
+  ORR r5,r5,#UFLAG|BFLAG|IFLAG
+  TST r2,#IFLAG
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  BICNE r5,r5,#(R6502_IRQ_ENABLE<<4)|R6502_IRQ_ENABLE
+  ORREQ r5,r5,#(R6502_IRQ_ENABLE<<4)|R6502_IRQ_ENABLE
+  ORR r5,r5,r2
+  MEND
+
+  MACRO
+  R6502_O_PUSH $name,$r
+  R6502_O_OPCODE_HEADER $name
+  IF "$r"=="P"
+  AND r4,r5,#&FF
+  TST r5,#R6502_IRQ_ENABLE
+  BICNE r4,r4,#IFLAG
+  ELSE
+  LDRB r4,[r0,#:INDEX:R6502_$r]
+  ENDIF
+  R6502_IMPLIED_FOLD_OR_TRAP r6502push
+  MEND
+
+  MACRO
+  R6502_PUSH $name,$r
+  R6502_OPCODE_HEADER $name
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  IF "$r"=="P"
+  AND r2,r5,#&FF
+  TST r5,#R6502_IRQ_ENABLE
+  SUB r3,r1,#1:SHL:24
+  BICNE r2,r2,#IFLAG
+  ELSE
+  LDRB r2,[r0,#:INDEX:R6502_$r]
+  SUB r3,r1,#1:SHL:24
+  ENDIF
+  STRB r2,[r0,r1,ROR #24]
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  R6502_OPCODE_STEP r6502push,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  MEND
+
+  MACRO
+  R6502_O_PULL $name,$r
+  R6502_O_OPCODE_HEADER $name
+  IF "$r"=="P"
+  R6502_IMPLIED_FOLD_OR_TRAP $name
+  ELSE
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  BIC r5,r5,#NFLAG|ZFLAG
+  ADD r1,r1,#1:SHL:24
+  LDRB r2,[r0,r1,ROR #24]
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOVS r3,r2,LSL #24
+  STRB r2,[r0,#:INDEX:R6502_$r]
+  ORRMI r5,r5,#NFLAG
+  ORREQ r5,r5,#ZFLAG
+  R6502_IMPLIED_FOLD_OR_TRAP r6502pull
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_PULL $name,$r
+  R6502_OPCODE_HEADER $name
+  IF "$r"=="P"
+  R6502_OPCODE_CYCLES 4,0
+  PLP_SHIFTED_ACTION
+  R6502_OPCODE_SCAN r6502plp,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 0,interrupt
+  ELSE
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  BIC r5,r5,#NFLAG|ZFLAG
+  ADD r1,r1,#1:SHL:24
+  LDRB r2,[r0,r1,ROR #24]
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOVS r3,r2,LSL #24
+  STRB r2,[r0,#:INDEX:R6502_$r]
+  ORRMI r5,r5,#NFLAG
+  ORREQ r5,r5,#ZFLAG
+  R6502_OPCODE_STEP r6502pull,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 4,interrupt
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_RTI_PART1 $r
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV $r,#ADDRESSING_BASECODE
+  ADD r1,r1,#2:SHL:24
+  LDRB r2,[r0,r1,ROR #24]
+  ADD r1,r1,#1:SHL:24
+  LDRB r3,[r0,r1,ROR #24]
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  ORR $r,$r,r2,LSL #16
+  ORR $r,$r,r3,LSL #24
+  MEND
+
+  MACRO
+  R6502_RTI_PART2 $r
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  BIC r5,r5,#&FF
+  SUB r1,r1,#2:SHL:24
+  LDRB r2,[r0,r1,ROR #24]
+  MOV r1,$r
+  [ "$r"!="r6"
+  MOV r6,$r
+  ]
+  ORR r5,r5,#UFLAG|BFLAG|IFLAG
+  TST r2,#IFLAG
+  BICNE r5,r5,#R6502_IRQ_ENABLE
+  ORREQ r5,r5,#R6502_IRQ_ENABLE
+  ORR r5,r5,r2
+  MEND
+
+  MACRO
+  R6502_RTS_POP
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r4,#ADDRESSING_BASECODE
+  ADD r1,r1,#1:SHL:24
+  LDRB r2,[r0,r1,ROR #24]
+  ADD r1,r1,#1:SHL:24
+  LDRB r3,[r0,r1,ROR #24]
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  ORR r1,r4,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  ADD r4,r1,#1:SHL:16
+  MEND
+
+  MACRO
+  R6502_JAM_WAIT $name,$name2,$special,$stretch
+$name.yieldedref
+  DCD $name.yielded
+$name.yielded
+  R6502_OPCODE_PUSH
+$name.wait
+  [ $stretch!=0
+  R6502_OPCODE_CYCLES 0,1
+  ]
+  [ $special!=0
+  MOV r1,r6
+  R6502_OPCODE_READ_SPECIAL
+  ]
+  R6502_OPCODE_CYCLES 1,0
+$name
+  [ "$name2"!=""
+$name2
+  ]
+  LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
+  CMP r3,#R6502_REGULAR_TRANSITION
+  BEQ $name.wait
+  R6502_OPCODE_POP
+  CMP r3,#R6502_RESET_TRANSITION
+  BEQ r6502jamreset
+  ADD r1,r0,#:INDEX:R6502_SEQUENCES
+  ADR r2,$name.yieldedref
+  LDR r1,[r1,#R6502_YIELD_SEQUENCE:SHL:2]
+  STR r2,[r0,#:INDEX:R6502_EXECUTE_CPU_STATE]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502_OPCODE_YIELD_RETURN
+  MEND
+
+  MACRO
+  R6502_RESET_WAIT $name,$name2,$special,$stretch
+$name.wait
+  [ $stretch!=0
+  R6502_OPCODE_CYCLES 0,1
+  ]
+  [ $special!=0
+  MOV r1,r6
+  R6502_OPCODE_READ_SPECIAL
+  ]
+  R6502_OPCODE_CYCLES 1,0
+$name
+  [ "$name2"!=""
+$name2
+  ]
+  LDR r3,[r0,#:INDEX:R6502_LBREAK]
+  TST r3,r3
+  BNE $name.wait
+  [ $stretch!=0
+  R6502_OPCODE_CYCLES 0,1
+  ]
+  [ $special!=0
+  MOV r1,r6
+  R6502_OPCODE_READ_SPECIAL
+  ]
+  MEND
+
+  MACRO
+  R6502_RESET_CONTINUE $name
+  MOV r2,#0
+  STRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  MOV lr,pc
+  LDR pc,[r0,#:INDEX:R6502_RESETCONTINUINGACTION]
+  LDR r2,[r0,#:INDEX:R6502_TRANSITION2]
+  ADD r3,r0,#&FF00
+  STR r2,[r0,#:INDEX:R6502_TRANSITION1]
+  LDR r2,[r0,#:INDEX:R6502_LBREAK]
+  LDR r3,[r3,#&FC]
+  TST r2,r2
+  MOV r6,#ADDRESSING_BASECODE
+  MOVNE r2,#R6502_RESET_TRANSITION
+  STRNE r2,[r0,#:INDEX:R6502_TRANSITION1]
+  ORR r1,r6,r3,LSL #16
+  ORR r6,r6,r3,LSL #16
+  R6502_FOLD_OR_TRAP ,$name
+  MEND
+
+  MACRO
+  R6502_RESET_PART2 $shiftedmore
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  BIC r5,r5,#(R6502_IRQ_ENABLE<<4)|R6502_IRQ_ENABLE
+  [ $shiftedmore==0
+  BIC r5,r5,#(R6502_IRQ_ENABLE<<8)
+  |
+  BIC r5,r5,#(R6502_IRQ_ENABLE<<12)|(R6502_IRQ_ENABLE<<8)
+  ]
+  SUB r1,r1,#3:SHL:24
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MEND
+
+  MACRO
+  R65C12_RESET_PART2
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r4,LSR #24
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r4,LSR #16
+  SUB r1,r1,#1:SHL:24
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  TST r5,#R6502_IRQ_ENABLE
+  MOV r2,r5
+  SUB r3,r1,#3:SHL:24
+  SUB r1,r1,#2:SHL:24
+  BICEQ r2,r2,#BFLAG
+  BICNE r2,r2,#BFLAG|IFLAG
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  BIC r5,r5,#DFLAG
+  BIC r5,r5,#R6502_IRQ_ENABLE
+  MEND
+
+  MACRO
+  R6502_INTERRUPT $cleard
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r6,LSR #24
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r6,LSR #16
+  SUB r1,r1,#1:SHL:24
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  TST r5,#R6502_IRQ_ENABLE
+  MOV r2,r5
+  SUB r3,r1,#3:SHL:24
+  SUB r1,r1,#2:SHL:24
+  BICEQ r2,r2,#BFLAG
+  BICNE r2,r2,#BFLAG|IFLAG
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  [ $cleard!=0
+  BIC r5,r5,#DFLAG
+  ]
+  TST r5,#(R6502_NMI_ENABLE<<4)
+  ADD r3,r0,#&FF00
+  TSTNE r5,#(R6502_NMI<<4)
+  BICNE r5,r5,#R6502_NMI_IRQ_ENABLE
+  BICEQ r5,r5,#R6502_IRQ_ENABLE
+  LDRNE r3,[r3,#&F8]
+  LDREQ r3,[r3,#&FC]
+  MOV r6,#ADDRESSING_BASECODE
+  MOV r3,r3,LSR #16
+  ORR r1,r6,r3,LSL #16
+  ORR r6,r6,r3,LSL #16
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+  MEND
+
+  MACRO
+  R6502_BRK $cleard,$interruptible
+  ADD r4,r6,#2:SHL:16
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r4,LSR #24
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r4,LSR #16
+  SUB r1,r1,#1:SHL:24
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  TST r5,#R6502_IRQ_ENABLE
+  MOV r2,r5
+  SUB r3,r1,#3:SHL:24
+  SUB r1,r1,#2:SHL:24
+  BICNE r2,r2,#IFLAG
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  [ $cleard!=0
+  BIC r5,r5,#DFLAG
+  ]
+  TST r5,#(R6502_NMI_ENABLE<<4)
+  ADD r3,r0,#&FF00
+  TSTNE r5,#(R6502_NMI<<4)
+  BICNE r5,r5,#R6502_NMI_IRQ_ENABLE
+  BICEQ r5,r5,#R6502_IRQ_ENABLE
+  [ $interruptible==0
+  LDR r3,[r3,#&FC]
+  |
+  LDRNE r3,[r3,#&F8]
+  LDREQ r3,[r3,#&FC]
+  ]
+  MOV r6,#ADDRESSING_BASECODE
+  MOV r3,r3,LSR #16
+  ORR r1,r6,r3,LSL #16
+  ORR r6,r6,r3,LSL #16
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+  MEND
+
+  MACRO
+  R6502_O_FLAG_CLEAR_OR_SET $name,$flag,$operation
+  R6502_O_OPCODE_HEADER $name
+  IF "$flag"=="IFLAG"
+  R6502_IMPLIED_FOLD_OR_TRAP $name
+  ELSE
+  [ "$operation"=="set"
+  ORR r5,r5,#$flag
+  |
+  BIC r5,r5,#$flag
+  ]
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_FLAG_CLEAR_OR_SET $name,$flag,$operation
+  R6502_OPCODE_HEADER $name
+  IF "$flag"=="IFLAG"
+  R6502_OPCODE_CYCLES 2,0
+  [ "$operation"=="set"
+  SEI_SHIFTED_ACTION
+  |
+  CLI_SHIFTED_ACTION
+  ]
+  R6502_OPCODE_SCAN r6502iflagclearorset,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 0,interrupt
+  ELSE
+  [ "$operation"=="set"
+  ORR r5,r5,#$flag
+  |
+  BIC r5,r5,#$flag
+  ]
+  R6502_OPCODE_STEP r6502flagclearorset,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_CALCULATE_BRANCH $r
+  TST r2,#&80
+  ADD r3,r6,#2:SHL:16
+  SUBNE r2,r2,#1:SHL:8
+  ADD $r,r3,r2,LSL #16
+  EOR r3,r3,$r
+  TST r3,#&FF:SHL:24
+  MEND
+
+  MACRO
+  R6502_O_CONDITIONAL_BRANCH $name,$branch,$flag,$condition
+o_$name.routine
+  R6502_OPCODE_PUSH
+  TST r5,#$flag
+  [ "$condition"=="set"
+  BNE o_$branch
+  |
+  BEQ o_$branch
+  ]
+  R6502_OPERAND_LO_FOLD_OR_TRAP r6502dopimmsplit1,r6502dopimminfold,
+  MEND
+
+  MACRO
+  R6502_CONDITIONAL_BRANCH $name,$branch,$flag,$condition
+  DCD o_$name.routine
+$name.routine
+  R6502_OPCODE_PUSH
+  TST r5,#$flag
+  [ "$condition"=="set"
+  BNE $branch.infold
+  |
+  BEQ $branch.infold
+  ]
+  ADDS r8,r8,#2
+  BCS r6502dopimmsplit
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  MEND
+
+  MACRO
+  R6502_SPLIT1_JSR $stretch
+  R6502_OPCODE_CYCLES 2,0
+  ADD r3,r6,#2:SHL:16
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r3,LSR #24
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  ADD r3,r6,#2:SHL:16
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r3,LSR #16
+  SUB r1,r1,#1:SHL:24
+  STRB r2,[r0,r1,ROR #24]
+  SUB r1,r1,#1:SHL:24
+  STR r1,[r0,#:INDEX:R6502_SP_CODE]
+  R6502_OPCODE_CYCLES_BRANCH 1,$stretch,s_r6502jsrsplit1part2
+  MEND
+
+  MACRO
+  R6502_JSR_PUSH
+  R6502_OPCODE_CYCLES 2,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r4,LSR #24
+  STRB r2,[r0,r1,ROR #24]
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r2,r4,LSR #16
+  SUB r3,r1,#2:SHL:24
+  SUB r1,r1,#1:SHL:24
+  STRB r2,[r0,r1,ROR #24]
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  MOV r1,r6
+  MEND
+
+  MACRO
+  R6502_INFOLD_JMPIND
+  MOV r3,r8,ROR #8
+  ADD r3,r3,#1:SHL:24
+  LDRB r2,[r9,r8]
+  MOV r3,r3,ROR #24
+  LDRB r3,[r9,r3]
+  MOV r6,#ADDRESSING_BASECODE
+  ORR r6,r6,r2,LSL #16
+  ORR r6,r6,r3,LSL #24
+  MOV r1,r6
+  MEND
+
+  MACRO
+  R65C12_INFOLD_JMPIND
+  ADDS r3,r8,#1
+  LDRB r2,[r9,r8]
+  BCS r65c12jmpindpart2split
+  LDRB r3,[r9,r3]
+  MOV r6,#ADDRESSING_BASECODE
+  ORR r6,r6,r2,LSL #16
+  ORR r6,r6,r3,LSL #24
+  MOV r1,r6
+  MEND
+
+  MACRO
+  R6502_FOLDED_FETCH_ACTION $n,$type
+  ADDS r8,r8,#1
+  BCS %F1
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN $n,$type
+1
+  SUB r8,r8,#1
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN $n,$type
+  MEND
+
+  MACRO
+  R6502_WAIT_FETCH_ROUTINES $n,$type
+  R6502_WAIT_HANDLERS ,$n,move,r6502,$type.fetch,0
+  R6502_FOLDED_FETCH_ACTION $n+1,$type
+  MEND
+
+|s_r6502simpleimplied|
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES_BRANCH 1,0,s_r6502simpleimpliedtail
+
+|s1_r6502simpleimplied|
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s1_r6502simpleimpliedtail
+
+|s2_r6502simpleimplied|
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s1_r6502simpleimpliedtail
+
+s1_r6502simpleimpliedtail
+  ADD r1,r6,#1:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 1,1
+s_r6502simpleimpliedtail
+  ADD r6,r6,#1:SHL:16
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|d_r6502simpleimplied|
+  ADD r8,r8,#1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+
+|s_r6502push|
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r3,r1,#1:SHL:24
+  STRB r4,[r0,r1,ROR #24]
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  R6502_OPCODE_CYCLES_BRANCH 1,0,s_r6502pushtail
+
+|s1_r6502push|
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s1_r6502pushtail
+
+|s2_r6502push|
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s1_r6502pushtail
+
+s1_r6502pushtail
+  ADD r1,r6,#1:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r3,r1,#1:SHL:24
+  STRB r4,[r0,r1,ROR #24]
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  R6502_OPCODE_CYCLES 1,2
+s_r6502pushtail
+  ADD r6,r6,#1:SHL:16
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|d_r6502push|
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1,[r0,#:INDEX:R6502_SP_CODE]
+  SUB r3,r1,#1:SHL:24
+  STRB r4,[r0,r1,ROR #24]
+  STR r3,[r0,#:INDEX:R6502_SP_CODE]
+  ADD r8,r8,#1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+
+|s_r6502pull|
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES_BRANCH 3,0,s_r6502pulltail
+
+|s1_r6502pull|
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s1_r6502pulltail
+
+|s2_r6502pull|
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s1_r6502pulltail
+
+s1_r6502pulltail
+  ADD r1,r6,#1:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 3,1
+s_r6502pulltail
+  ADD r6,r6,#1:SHL:16
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|d_r6502pull|
+  ADD r8,r8,#1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 4,interrupt
+
+|s_r6502operand|
+  STR lr,[sp, #-4]!
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDR r3, [sp], #4
+  LDR pc,[r3,#-16]
+
+|s1_r6502operand|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s_r6502operandtail
+
+|s2_r6502operand|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s_r6502operandtail
+
+s_r6502operandtail
+  LDR r1, [sp], #4
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDR r3, [sp], #4
+  LDR pc,[r3,#-16]
+
+|s_r6502operandtwice|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES_BRANCH 1,0,s_r6502operandtwicetail
+
+|s1_r6502operandtwice|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s1_r6502operandtwicetail
+
+|s2_r6502operandtwice|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s1_r6502operandtwicetail
+
+|s_r6502wait1operand|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 1,0,s_r6502operandtail
+
+|s1_r6502wait1operand|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 1,2,s_r6502operandtail
+
+|s2_r6502wait1operand|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 1,1,s_r6502operandtail
+
+|s_r6502wait1operandtwice|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES 1,0
+  LDR r1, [sp]
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES_BRANCH 1,0,s_r6502operandtwicetail
+
+|s1_r6502wait1operandtwice|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 1,2,s1_r6502operandtwicetail
+
+|s2_r6502wait1operandtwice|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 1,1,s1_r6502operandtwicetail
+
+s_r6502operandtwicetail
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDR r1, [sp], #4
+  STR r2,[sp, #-4]!
+  R6502_OPCODE_READ_SPECIAL
+  LDMFD sp!,{r2,r3}
+  LDR pc,[r3,#-16]
+
+s1_r6502operandtwicetail
+  LDR r1, [sp]
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 1,1
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDR r1, [sp], #4
+  STR r2,[sp, #-4]!
+  R6502_OPCODE_READ_SPECIAL
+  LDMFD sp!,{r2,r3}
+  LDR pc,[r3,#-16]
+
+|s_r6502indirect1|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 1,0,s_r6502indirecttail
+
+|s1_r6502indirect1|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 1,2,s_r6502indirecttail
+
+|s2_r6502indirect1|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 1,1,s_r6502indirecttail
+
+|s_r6502indirect2|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 2,0,s_r6502indirecttail
+
+|s1_r6502indirect2|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 2,1,s_r6502indirecttail
+
+|s2_r6502indirect2|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 2,2,s_r6502indirecttail
+
+|s_r6502indirect3|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 3,0,s_r6502indirecttail
+
+|s1_r6502indirect3|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 3,2,s_r6502indirecttail
+
+|s2_r6502indirect3|
+  STMFD sp!,{r1,lr}
+  R6502_OPCODE_CYCLES_BRANCH 3,1,s_r6502indirecttail
+
+s_r6502indirecttail
+  LDR r1, [sp]
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  LDMFD sp!,{r1,r3}
+  LDR pc,[r3,#-16]
+
+|r6502scan2split|
+  SUBS r8,r8,#1
+  LDRCC pc,[r3,#4]
+  SUB r8,r8,#1
+  LDR pc,[r3]
+
+|r6502scan3split|
+  SUBS r8,r8,#1
+  LDRCC pc,[r3,#8]
+  SUBS r8,r8,#1
+  LDRCC pc,[r3,#4]
+  SUB r8,r8,#1
+  LDR pc,[r3]
+
+|r6502atfolduninterruptedfetch|
+  R6502_LOAD_FOLDED_OPCODE 0
+  R6502_OPCODE_FETCH_RETURN uninterrupted,1
+
+|r6502atfoldearlyinterruptfetch|
+  R6502_LOAD_FOLDED_OPCODE 0
+  R6502_OPCODE_FETCH_RETURN earlyinterrupt,1
+
+|r6502atfoldinterruptfetch|
+  R6502_LOAD_FOLDED_OPCODE 0
+  R6502_OPCODE_FETCH_RETURN interrupt,1
+
+|r6502infolduninterruptedfetch|
+  R6502_LOAD_FOLDED_OPCODE 1
+  R6502_OPCODE_FETCH_RETURN uninterrupted,0
+
+|r6502infoldearlyinterruptfetch|
+  R6502_LOAD_FOLDED_OPCODE 1
+  R6502_OPCODE_FETCH_RETURN earlyinterrupt,0
+
+|r6502infoldinterruptfetch|
+  R6502_LOAD_FOLDED_OPCODE 1
+  R6502_OPCODE_FETCH_RETURN interrupt,0
+
+|s_r6502uninterruptedfetchtail|
+  MOV r1,r4
+s_r6502uninterruptedfetch
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  R6502_LOAD_SPECIAL_OPCODE
+  R6502_OPCODE_FETCH_RETURN uninterrupted,1
+
+s1_r6502uninterruptedfetch
+  R6502_WAIT_REGISTER_SAVE move
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s_r6502uninterruptedfetchtail
+
+s2_r6502uninterruptedfetch
+  R6502_WAIT_REGISTER_SAVE move
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s_r6502uninterruptedfetchtail
+
+d_r6502uninterruptedfetch
+  R6502_FOLDED_FETCH_ACTION 1,uninterrupted
+
+|s_r6502earlyinterruptfetchtail|
+  MOV r1,r4
+s_r6502earlyinterruptfetch
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  R6502_LOAD_SPECIAL_OPCODE
+  R6502_OPCODE_FETCH_RETURN earlyinterrupt,1
+
+|s_r6502interruptfetchtail|
+  MOV r1,r4
+s_r6502interruptfetch
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 1,0
+  R6502_LOAD_SPECIAL_OPCODE
+  R6502_OPCODE_FETCH_RETURN interrupt,1
+
+  R6502_WAIT_FETCH_ROUTINES 1,uninterrupted
+  R6502_WAIT_FETCH_ROUTINES 4,uninterrupted
+  R6502_WAIT_FETCH_ROUTINES 5,uninterrupted
+
+  R6502_WAIT_FETCH_ROUTINES 1,earlyinterrupt
+  R6502_WAIT_FETCH_ROUTINES 2,earlyinterrupt
+
+  R6502_WAIT_FETCH_ROUTINES 1,interrupt
+  R6502_WAIT_FETCH_ROUTINES 2,interrupt
+  R6502_WAIT_FETCH_ROUTINES 3,interrupt
+  R6502_WAIT_FETCH_ROUTINES 4,interrupt
+  R6502_WAIT_FETCH_ROUTINES 5,interrupt
+  R6502_WAIT_FETCH_ROUTINES 6,interrupt
+  R6502_WAIT_FETCH_ROUTINES 7,interrupt
+
+  R6502_O_OPCODE_HEADER r65c12fastnop
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 1,uninterrupted
+
+  R6502_O_OPCODE_HEADER r6502nop
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502asla
+  ASLA_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502rola
+  ROLA_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502lsra
+  LSRA_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502rora
+  RORA_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+
+  R6502_O_OPCODE_HEADER r65c12deca
+  DECA_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502dex
+  DEX_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502dey
+  DEY_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r65c12inca
+  INCA_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502inx
+  INX_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502iny
+  INY_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+
+  R6502_O_OPCODE_HEADER r6502tax
+  TAX_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502tay
+  TAY_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502tsx
+  TSX_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502txa
+  TXA_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502txs
+  TXS_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+  R6502_O_OPCODE_HEADER r6502tya
+  TYA_ACTION
+  R6502_SIMPLE_IMPLIED_FOLD_OR_TRAP
+
+  R6502_O_PUSH r6502pha,A
+  R6502_O_PUSH r6502php,P
+  R6502_O_PUSH r65c12phx,X
+  R6502_O_PUSH r65c12phy,Y
+
+  R6502_O_PULL r6502pla,A
+  R6502_O_PULL r6502plp,P
+  R6502_O_PULL r65c12plx,X
+  R6502_O_PULL r65c12ply,Y
+
+  R6502_O_OPCODE_HEADER r6502rti
+  R6502_RTI_PART1 r4
+  R6502_IMPLIED_FOLD_OR_TRAP r6502rti
+
+  R6502_O_OPCODE_HEADER r6502rts
+  R6502_IMPLIED_FOLD_OR_TRAP r6502rts
+
+  R6502_O_OPCODE_HEADER r6502jam
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502jam
+
+  R6502_O_OPCODE_HEADER r6502reset
+  LDRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  TST r2,r2
+  BNE %F1
+  MOV r2,#1
+  STRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  ADR lr,%F1
+  LDR pc,[r0,#:INDEX:R6502_RESETSTARTINGACTION]
+1
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502reset
+
+  R6502_O_OPCODE_HEADER r65c12reset
+  LDRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  TST r2,r2
+  BNE %F1
+  MOV r2,#1
+  STRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  ADR lr,%F1
+  LDR pc,[r0,#:INDEX:R6502_RESETSTARTINGACTION]
+1
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r65c12reset
+
+  R6502_O_OPCODE_HEADER r6502interrupt
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502interrupt
+
+  R6502_O_OPCODE_HEADER r65c12interrupt
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r65c12interrupt
+
+  R6502_O_OPCODE_HEADER r6502brk
+  R6502_OPERAND_LO_FOLD_OR_TRAP r6502brkcontinue,r6502brkcontinue,
+
+  R6502_O_OPCODE_HEADER r65c12brk
+  R6502_OPERAND_LO_FOLD_OR_TRAP r65c12brkcontinue,r65c12brkcontinue,
+
+  R6502_O_FLAG_CLEAR_OR_SET r6502clc,CFLAG,clear
+  R6502_O_FLAG_CLEAR_OR_SET r6502sec,CFLAG,set
+  R6502_O_FLAG_CLEAR_OR_SET r6502cli,IFLAG,clear
+  R6502_O_FLAG_CLEAR_OR_SET r6502sei,IFLAG,set
+  R6502_O_FLAG_CLEAR_OR_SET r6502clv,VFLAG,clear
+  R6502_O_FLAG_CLEAR_OR_SET r6502cld,DFLAG,clear
+  R6502_O_FLAG_CLEAR_OR_SET r6502sed,DFLAG,set
+
+  R6502_O_OPCODE_HEADER r6502dopimm
+  R6502_OPERAND_LO_FOLD_OR_TRAP r6502dopimmsplit1,r6502dopimminfold,
+
+o_r6502bra
+  R6502_OPERAND_LO_FOLD_OR_TRAP r6502brasplit1,r6502brainfold,
+
+o_r65c12braroutine
+  R6502_OPCODE_PUSH
+o_r65c12bra
+  R6502_OPERAND_LO_FOLD_OR_TRAP r65c12brasplit1,r65c12brainfold,
+
+  R6502_O_CONDITIONAL_BRANCH r6502bpl,r6502bra,NFLAG,clear
+  R6502_O_CONDITIONAL_BRANCH r6502bmi,r6502bra,NFLAG,set
+  R6502_O_CONDITIONAL_BRANCH r6502bvc,r6502bra,VFLAG,clear
+  R6502_O_CONDITIONAL_BRANCH r6502bvs,r6502bra,VFLAG,set
+  R6502_O_CONDITIONAL_BRANCH r6502bcc,r6502bra,CFLAG,clear
+  R6502_O_CONDITIONAL_BRANCH r6502bcs,r6502bra,CFLAG,set
+  R6502_O_CONDITIONAL_BRANCH r6502bne,r6502bra,ZFLAG,clear
+  R6502_O_CONDITIONAL_BRANCH r6502beq,r6502bra,ZFLAG,set
+
+  R6502_O_CONDITIONAL_BRANCH r65c12bpl,r65c12bra,NFLAG,clear
+  R6502_O_CONDITIONAL_BRANCH r65c12bmi,r65c12bra,NFLAG,set
+  R6502_O_CONDITIONAL_BRANCH r65c12bvc,r65c12bra,VFLAG,clear
+  R6502_O_CONDITIONAL_BRANCH r65c12bvs,r65c12bra,VFLAG,set
+  R6502_O_CONDITIONAL_BRANCH r65c12bcc,r65c12bra,CFLAG,clear
+  R6502_O_CONDITIONAL_BRANCH r65c12bcs,r65c12bra,CFLAG,set
+  R6502_O_CONDITIONAL_BRANCH r65c12bne,r65c12bra,ZFLAG,clear
+  R6502_O_CONDITIONAL_BRANCH r65c12beq,r65c12bra,ZFLAG,set
+
+  R6502_O_OPCODE_HEADER r6502dopzpg
+  R6502_OPERAND_LO_FOLD_OR_TRAP r6502dopzpgsplit1,r6502dopzpginfold,
+
+  R6502_O_OPCODE_HEADER r6502dopzpgx
+  R6502_OPERAND_LO_FOLD_OR_TRAP r6502dopzpgxsplit1,r6502dopzpgxinfold,
+
+  R6502_O_OPCODE_HEADER r65c12dopzpgx
+  R6502_OPERAND_LO_TWICE_FOLD_OR_TRAP r65c12dopzpgxnofold,r65c12dopzpgxinfold,
+
+  R6502_O_OPCODE_HEADER r65c12slowtopFFabs
+  R6502_OPERAND_LO_FOLD_OR_TRAP r65c12slowtopFFabssplit1,r65c12slowtopFFabsinfold,
+
+  R6502_O_OPCODE_HEADER r6502jsr
+  R6502_OPERAND_LO_FOLD_OR_TRAP r6502jsrsplit1,r6502jsrinfold,
+
+  R6502_O_OPCODE_HEADER r6502jmp
+  R6502_OPERAND_LO_FOLD_OR_TRAP r6502jmpsplit1,r6502jmpinfold,
+
+  R6502_O_OPCODE_HEADER r6502jmpind
+  R6502_OPERAND_LO_FOLD_OR_TRAP r6502jmpindsplit1,r6502jmpindinfold,
+
+  R6502_O_OPCODE_HEADER r65c12jmpind
+  R6502_OPERAND_LO_FOLD_OR_TRAP r65c12jmpindsplit1,r65c12jmpindinfold,
+
+  R6502_O_OPCODE_HEADER r65c12jmpxind
+  R6502_OPERAND_LO_FOLD_OR_TRAP r65c12jmpxindsplit1,r65c12jmpxindinfold,
+
+r65c12fastnopsplit1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 1,uninterrupted
+
+|s_r6502cli|
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES_BRANCH 1,0,s_r6502clitail
+
+|s1_r6502cli|
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s1_r6502clitail
+
+|s2_r6502cli|
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s1_r6502clitail
+
+s1_r6502clitail
+  ADD r1,r6,#1:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 1,1
+s_r6502clitail
+  CLI_ACTION
+  ADD r6,r6,#1:SHL:16
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|d_r6502cli|
+  R6502_OPCODE_CYCLES 2,0
+  CLI_SHIFTED_ACTION
+  ADD r8,r8,#1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 0,interrupt
+
+|s_r6502sei|
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES_BRANCH 1,0,s_r6502seitail
+
+|s1_r6502sei|
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s1_r6502seitail
+
+|s2_r6502sei|
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s1_r6502seitail
+
+s1_r6502seitail
+  ADD r1,r6,#1:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 1,1
+s_r6502seitail
+  SEI_ACTION
+  ADD r6,r6,#1:SHL:16
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|d_r6502sei|
+  R6502_OPCODE_CYCLES 2,0
+  SEI_SHIFTED_ACTION
+  ADD r8,r8,#1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 0,interrupt
+
+|s_r6502plp|
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES_BRANCH 3,0,s_r6502plptail
+
+|s1_r6502plp|
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s1_r6502plptail
+
+|s2_r6502plp|
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s1_r6502plptail
+
+s1_r6502plptail
+  ADD r1,r6,#1:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 3,1
+s_r6502plptail
+  PLP_ACTION
+  ADD r6,r6,#1:SHL:16
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|d_r6502plp|
+  R6502_OPCODE_CYCLES 4,0
+  PLP_SHIFTED_ACTION
+  ADD r8,r8,#1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 0,interrupt
+
+|s_r6502rti|
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES_BRANCH 3,0,s_r6502rtitail
+
+|s1_r6502rti|
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s1_r6502rtitail
+
+|s2_r6502rti|
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s1_r6502rtitail
+
+s1_r6502rtitail
+  ADD r1,r6,#1:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 3,0
+s_r6502rtitail
+  R6502_RTI_PART2 r4
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+
+|d_r6502rti|
+  R6502_OPCODE_CYCLES 3,0
+  R6502_RTI_PART2 r4
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+
+|s_r6502rts|
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES_BRANCH 4,0,s_r6502rtstail
+
+|s1_r6502rts|
+  R6502_OPCODE_CYCLES_BRANCH 0,1,s1_r6502rtstail
+
+|s2_r6502rts|
+  R6502_OPCODE_CYCLES_BRANCH 0,2,s1_r6502rtstail
+
+s1_r6502rtstail
+  ADD r1,r6,#1:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  R6502_OPCODE_CYCLES 4,0
+s_r6502rtstail
+  R6502_RTS_POP
+  R6502_FOLD_OR_TRAP ,r6502rtspart2
+
+|d_r6502rts|
+  R6502_OPCODE_CYCLES 4,0
+  R6502_RTS_POP
+  R6502_FOLD_OR_TRAP ,r6502rtspart2
+
+|s_r6502rtspart2|
+  R6502_OPCODE_READ_SPECIAL
+  MOV r6,r4
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 2,interrupt
+
+|s1_r6502rtspart2|
+  R6502_OPCODE_CYCLES 0,1
+  SUB r1,r4,#1:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  MOV r6,r4
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 2,interrupt
+
+|s2_r6502rtspart2|
+  R6502_OPCODE_CYCLES 0,2
+  SUB r1,r4,#1:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  MOV r6,r4
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 2,interrupt
+
+  R6502_JAM_WAIT s_r6502jam,,1,0
+  R6502_JAM_WAIT s1_r6502jam,s2_r6502jam,1,1
+  R6502_JAM_WAIT d_r6502jam,,0,0
+
+r6502jamreset
+  ADD r1,r0,#:INDEX:R6502_O_OPCODEROUTINES
+  R6502_SET_SEQUENCE_NUMBER R6502_RESET_SEQUENCE
+  R6502_OPCODE_RETURN
+
+  R6502_RESET_WAIT s_r6502reset,,1,0
+  R6502_RESET_CONTINUE r6502resetpart2
+
+  R6502_RESET_WAIT s1_r6502reset,s2_r6502reset,1,1
+  R6502_RESET_CONTINUE r6502resetpart2
+
+  R6502_RESET_WAIT d_r6502reset,,0,0
+  R6502_RESET_CONTINUE r6502resetpart2
+
+  R6502_RESET_WAIT s_r65c12reset,,1,0
+  MOV r4,r6
+  R6502_RESET_CONTINUE r65c12resetpart2
+
+  R6502_RESET_WAIT s1_r65c12reset,s2_r65c12reset,1,1
+  MOV r4,r6
+  R6502_RESET_CONTINUE r65c12resetpart2
+
+  R6502_RESET_WAIT d_r65c12reset,,0,0
+  MOV r4,r6
+  R6502_RESET_CONTINUE r65c12resetpart2
+
+|s_r6502resetpart2|
+  R6502_OPCODE_CYCLES 6,0
+  R6502_RESET_PART2 0
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|s1_r6502resetpart2|
+  R6502_OPCODE_CYCLES 6,1
+  R6502_RESET_PART2 0
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|s2_r6502resetpart2|
+  R6502_OPCODE_CYCLES 6,2
+  R6502_RESET_PART2 0
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|d_r6502resetpart2|
+  R6502_OPCODE_CYCLES 7,0
+  R6502_RESET_PART2 1
+  R6502_FOLDED_FETCH_ACTION 0,interrupt
+
+|s_r65c12resetpart2|
+  R65C12_RESET_PART2
+  R6502_OPCODE_CYCLES 2,0
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|s1_r65c12resetpart2|
+  R65C12_RESET_PART2
+  R6502_OPCODE_CYCLES 2,1
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|s2_r65c12resetpart2|
+  R65C12_RESET_PART2
+  R6502_OPCODE_CYCLES 2,2
+  MOV r1,r6
+  B s_r6502interruptfetch
+
+|d_r65c12resetpart2|
+  R65C12_RESET_PART2
+  R6502_FOLDED_FETCH_ACTION 3,interrupt
+
+|s_r6502interrupt|
+  R6502_OPCODE_READ_SPECIAL
+  R6502_INTERRUPT 0
+
+|s1_r6502interrupt|
+  R6502_OPCODE_CYCLES 0,1
+  MOV r1,r6
+  R6502_OPCODE_READ_SPECIAL
+  R6502_INTERRUPT 0
+
+|s2_r6502interrupt|
+  R6502_OPCODE_CYCLES 0,2
+  MOV r1,r6
+  R6502_OPCODE_READ_SPECIAL
+  R6502_INTERRUPT 0
+
+|d_r6502interrupt|
+  R6502_INTERRUPT 0
+
+|s_r65c12interrupt|
+  R6502_OPCODE_READ_SPECIAL
+  R6502_INTERRUPT 1
+
+|s1_r65c12interrupt|
+  R6502_OPCODE_CYCLES 0,1
+  MOV r1,r6
+  R6502_OPCODE_READ_SPECIAL
+  R6502_INTERRUPT 1
+
+|s2_r65c12interrupt|
+  R6502_OPCODE_CYCLES 0,2
+  MOV r1,r6
+  R6502_OPCODE_READ_SPECIAL
+  R6502_INTERRUPT 1
+
+|d_r65c12interrupt|
+  R6502_INTERRUPT 1
+
+r6502iflagclearorsetsplit1
+r6502plpsplit1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 0,interrupt
+
+r6502shiftsplit1
+r6502decorincrsplit1
+r6502transfersplit1
+r6502flagclearorsetsplit1
+r6502pushsplit1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 2,interrupt
+
+r6502pullsplit1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 4,interrupt
+
+r6502brasplit1
+  R6502_CALCULATE_BRANCH r4
+  ADD r1,r6,#2:SHL:16
+  BNE r6502brasplit1differentpage
+  R6502_FOLD_OR_TRAP ,r6502outfoldwait00000001bra
+r65c12brasplit1
+  R6502_CALCULATE_BRANCH r4
+  ADD r1,r6,#2:SHL:16
+  BNE r6502brasplit1differentpage
+  R6502_FOLD_OR_TRAP ,r65c12outfoldwait00000001bra
+r6502brasplit1differentpage
+  R6502_FOLD_OR_TRAP ,r6502outfoldwait00000001pagechangebra
+
+  R6502_WAIT_HANDLERS inline,1,push,r6502outfold,bra,0
+
+d_r6502outfoldwait00000001bra
+  MOV r1,r4
+  MOV r6,r4
+  R6502_FOLD_OR_TRAP ,r6502wait00000002earlyinterruptfetch
+
+s_r6502outfoldbratail
+  LDR r1, [sp], #4
+  R6502_OPCODE_READ_SPECIAL
+  MOV r1,r4
+  MOV r6,r4
+  R6502_FOLD_OR_TRAP ,r6502wait00000001earlyinterruptfetch
+
+  R6502_WAIT_HANDLERS inline,1,push,r65c12outfold,bra,0
+
+d_r65c12outfoldwait00000001bra
+  MOV r1,r4
+  MOV r6,r4
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+
+s_r65c12outfoldbratail
+  LDR r1, [sp], #4
+  R6502_OPCODE_READ_SPECIAL
+  MOV r1,r4
+  MOV r6,r4
+  R6502_FOLD_OR_TRAP ,r6502wait00000001interruptfetch
+
+  R6502_WAIT_HANDLERS inline,1,push,r6502outfold,pagechangebra,0
+
+d_r6502outfoldwait00000001pagechangebra
+  MOV r1,r4
+  MOV r6,r4
+  R6502_FOLD_OR_TRAP ,r6502wait00000003interruptfetch
+
+s_r6502outfoldpagechangebratail
+  LDR r1, [sp], #4
+  R6502_OPCODE_READ_SPECIAL
+  ADD r1,r6,#2:SHL:16
+  BIC r1,r1,#&FF:SHL:16
+  AND r2,r4,#&FF:SHL:16
+  ORR r1,r1,r2
+  R6502_FOLD_OR_TRAP ,r65c12outfoldwait00000001bra
+
+r65c12slowtopFFabssplit1
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r65c12slowtopFFabssplit1part2,r65c12slowtopFFabssplit1part2,
+
+s_r65c12slowtopFFabssplit1part2
+  ADD r6,r6,#3:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 7,interrupt
+
+r65c12slowtopFFabssplit1part2
+  ADD r6,r6,#3:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 8,interrupt
+
+r6502jsrsplit1
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  ADD r1,r6,#2:SHL:16
+  AND r2,r1,#&F000000F
+  ADR lr,d_r6502jsrsplit1
+  LDR pc,[r0,-r2,ROR #24]
+  DCD s_r6502jsrsplit1,s1_r6502jsrsplit1,s2_r6502jsrsplit1
+d_r6502jsrsplit1
+  LDRB r2,[r9,r8]
+  ORR r3,r4,r2,LSL #24
+  ADD r4,r6,#2:SHL:16
+  MOV r6,r3
+  R6502_JSR_PUSH
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+
+s_r6502jsrsplit1
+  R6502_SPLIT1_JSR 0
+
+s1_r6502jsrsplit1
+  R6502_SPLIT1_JSR 1
+
+s2_r6502jsrsplit1
+  R6502_SPLIT1_JSR 2
+
+r6502jmpsplit1
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502jmpsplit1part2,r6502jmpsplit1part2,
+
+s_r6502jsrsplit1part2
+  ADD r1,r6,#2:SHL:16
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r2,[r0,#:INDEX:R6502_M]
+s_r6502jmpsplit1part2
+  ORR r6,r4,r2,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000001interruptfetch
+
+r6502jmpsplit1part2
+  ORR r6,r4,r2,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+
+r6502jmpindsplit1
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  R6502_OPERAND_HI_FOLD_OR_TRAP s_r6502jmpindsplit1part2,r6502jmpindsplit1part2,
+
+s_r6502jmpindsplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_INDIRECT_FOLD_OR_TRAP ,1,s_r6502jmpindpart2,r6502jmpindpart2after1
+
+r6502jmpindsplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_INDIRECT_FOLD_OR_TRAP ,2,s_r6502jmpindpart2,r6502jmpindpart2
+
+r6502jmpindpart2after1
+  MOV r3,r8,ROR #8
+  ADD r3,r3,#1:SHL:24
+  LDRB r2,[r9,r8]
+  MOV r3,r3,ROR #24
+  LDRB r3,[r9,r3]
+  MOV r6,#ADDRESSING_BASECODE
+  ORR r6,r6,r2,LSL #16
+  ORR r6,r6,r3,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000003interruptfetch
+
+r65c12jmpindsplit1
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  R6502_OPERAND_HI_TWICE_FOLD_OR_TRAP s_r65c12jmpindsplit1part2,r65c12jmpindsplit1part2,
+
+s_r65c12jmpindsplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_INDIRECT_FOLD_OR_TRAP ,1,s_r65c12jmpindpart2,r65c12jmpindpart2after2
+
+r65c12jmpindsplit1part2
+  ORR r1,r4,r2,LSL #24
+  R6502_INDIRECT_FOLD_OR_TRAP ,2,s_r65c12jmpindpart2,r65c12jmpindpart2
+
+r65c12jmpindpart2splitafter2
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  ADD r1,r1,#1:SHL:16
+  R6502_FOLD_OR_TRAP ,r65c12wait2jmpsplitind
+
+r65c12jmpindpart2after2
+  ADDS r3,r8,#1
+  LDRB r2,[r9,r8]
+  BCS r65c12jmpindpart2splitafter2
+  LDRB r3,[r9,r3]
+  MOV r6,#ADDRESSING_BASECODE
+  ORR r6,r6,r2,LSL #16
+  ORR r6,r6,r3,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000003interruptfetch
+
+r65c12jmpxindsplit1
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  R6502_OPERAND_HI_TWICE_FOLD_OR_TRAP s_r65c12jmpxindsplit1part2,r65c12jmpxindsplit1part2,
+
+s_r65c12jmpxindsplit1part2
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  ORR r1,r4,r2,LSL #24
+  ADD r1,r1,r3,LSL #16
+  R6502_INDIRECT_FOLD_OR_TRAP ,1,s_r65c12jmpindpart2,r65c12jmpindpart2after2
+
+r65c12jmpxindsplit1part2
+  LDRB r3,[r0,#:INDEX:R6502_X]
+  ORR r1,r4,r2,LSL #24
+  ADD r1,r1,r3,LSL #16
+  R6502_INDIRECT_FOLD_OR_TRAP ,2,s_r65c12jmpindpart2,r65c12jmpindpart2
+
+r6502brasplit2
+  R6502_CALCULATE_BRANCH r6
+  ADD r2,r2,#1
+  BNE r6502bradifferentpage
+  B r6502brasamepage
+
+r65c12brasplit2
+  R6502_CALCULATE_BRANCH r6
+  ADD r2,r2,#1
+  BNE r6502bradifferentpage
+  B r65c12brasamepage
+
+r65c12slowtopFFabssplit2
+  ADD r6,r6,#3:SHL:16
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 8,interrupt
+
+r6502jsrsplit2
+  ADD r4,r6,#2:SHL:16
+  LDRB r3,[r9,r8]
+  MOV r6,#ADDRESSING_BASECODE
+  ORR r6,r6,r2,LSL #16
+  ORR r6,r6,r3,LSL #24
+  R6502_JSR_PUSH
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+
+r6502jmpsplit2
+  LDRB r3,[r9,r8]
+  MOV r6,#ADDRESSING_BASECODE
+  ORR r6,r6,r2,LSL #16
+  ORR r6,r6,r3,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+
+r6502jmpindsplit2
+  LDRB r3,[r9,r8]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_INDIRECT_FOLD_OR_TRAP ,2,s_r6502jmpindpart2,r6502jmpindpart2
+
+s_r6502jmpindpart2
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  ADD r1,r1,#1:SHL:16
+  R6502_INDIRECT_FOLD_OR_TRAP ,1,s_r6502jmpsplitindpart2,r6502jmpsplitindpart2
+
+s_r6502jmpsplitindpart2
+  ORR r6,r4,r2,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000001interruptfetch
+
+r6502jmpsplitindpart2
+  ORR r6,r4,r2,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+
+r65c12jmpindsplit2
+  LDRB r3,[r9,r8]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_INDIRECT_FOLD_OR_TRAP ,3,s_r65c12jmpindpart2,r65c12jmpindpart2
+
+s_r65c12jmpindpart2
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  ADD r1,r1,#1:SHL:16
+  R6502_FOLD_OR_TRAP ,r65c12wait1jmpsplitind
+
+r65c12jmpxindsplit2
+  LDRB r3,[r9,r8]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  ORR r1,r1,r3,LSL #24
+  ADD r1,r1,r2,LSL #16
+  R6502_INDIRECT_FOLD_OR_TRAP ,3,s_r65c12jmpindpart2,r65c12jmpindpart2
+
+s_r65c12wait1jmpsplitind
+  STR r1,[sp, #-4]!
+  R6502_OPCODE_CYCLES_BRANCH 1,0,s_r65c12wait1jmpsplitindtail
+
+s1_r65c12wait1jmpsplitind
+  STR r1,[sp, #-4]!
+  R6502_OPCODE_CYCLES_BRANCH 1,2,s_r65c12wait1jmpsplitindtail
+
+s2_r65c12wait1jmpsplitind
+  STR r1,[sp, #-4]!
+  R6502_OPCODE_CYCLES_BRANCH 1,1,s_r65c12wait1jmpsplitindtail
+
+d_r65c12wait1jmpsplitind
+  LDRB r2,[r9,r8]
+  ORR r6,r4,r2,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000002interruptfetch
+
+s_r65c12wait2jmpsplitind
+  STR r1,[sp, #-4]!
+  R6502_OPCODE_CYCLES_BRANCH 2,0,s_r65c12wait1jmpsplitindtail
+
+s1_r65c12wait2jmpsplitind
+  STR r1,[sp, #-4]!
+  R6502_OPCODE_CYCLES_BRANCH 2,1,s_r65c12wait1jmpsplitindtail
+
+s2_r65c12wait2jmpsplitind
+  STR r1,[sp, #-4]!
+  R6502_OPCODE_CYCLES_BRANCH 2,2,s_r65c12wait1jmpsplitindtail
+
+d_r65c12wait2jmpsplitind
+  LDRB r2,[r9,r8]
+  ORR r6,r4,r2,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000003interruptfetch
+
+s_r65c12wait4jmpsplitind
+  STR r1,[sp, #-4]!
+  R6502_OPCODE_CYCLES_BRANCH 4,0,s_r65c12wait1jmpsplitindtail
+
+s1_r65c12wait4jmpsplitind
+  STR r1,[sp, #-4]!
+  R6502_OPCODE_CYCLES_BRANCH 4,1,s_r65c12wait1jmpsplitindtail
+
+s2_r65c12wait4jmpsplitind
+  STR r1,[sp, #-4]!
+  R6502_OPCODE_CYCLES_BRANCH 4,2,s_r65c12wait1jmpsplitindtail
+
+d_r65c12wait4jmpsplitind
+  LDRB r2,[r9,r8]
+  ORR r6,r4,r2,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000005interruptfetch
+
+s_r65c12wait1jmpsplitindtail
+  LDR r1, [sp], #4
+  R6502_OPCODE_READ_SPECIAL
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  ORR r6,r4,r2,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502wait00000001interruptfetch
+
+r65c12slowtopFFabssplit3
+  ADD r6,r6,#3:SHL:16
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 8,interrupt
+
+  R6502_SCAN1_SPLIT r65c12fastnop
+  R6502_BYPASS_OPCODE_ENTRY 1,r65c12fastnop
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 1,uninterrupted
+
+  R6502_SCAN1_SPLIT r6502shift
+  R6502_OPCODE_HEADER r6502nop
+  R6502_OPCODE_STEP r6502shift,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502asla
+  ASLA_ACTION
+  R6502_OPCODE_STEP r6502shift,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502rola
+  ROLA_ACTION
+  R6502_OPCODE_STEP r6502shift,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502lsra
+  LSRA_ACTION
+  R6502_OPCODE_STEP r6502shift,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502rora
+  RORA_ACTION
+  R6502_OPCODE_STEP r6502shift,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+
+  R6502_SCAN1_SPLIT r6502decorincr
+  R6502_OPCODE_HEADER r65c12deca
+  DECA_ACTION
+  R6502_OPCODE_STEP r6502decorincr,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502dex
+  DEX_ACTION
+  R6502_OPCODE_STEP r6502decorincr,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502dey
+  DEY_ACTION
+  R6502_OPCODE_STEP r6502decorincr,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r65c12inca
+  INCA_ACTION
+  R6502_OPCODE_STEP r6502decorincr,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502inx
+  INX_ACTION
+  R6502_OPCODE_STEP r6502decorincr,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502iny
+  INY_ACTION
+  R6502_OPCODE_STEP r6502decorincr,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+
+  R6502_SCAN1_SPLIT r6502transfer
+  R6502_OPCODE_HEADER r6502tax
+  TAX_ACTION
+  R6502_OPCODE_STEP r6502transfer,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502tay
+  TAY_ACTION
+  R6502_OPCODE_STEP r6502transfer,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502tsx
+  TSX_ACTION
+  R6502_OPCODE_STEP r6502transfer,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502txa
+  TXA_ACTION
+  R6502_OPCODE_STEP r6502transfer,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502txs
+  TXS_ACTION
+  R6502_OPCODE_STEP r6502transfer,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+  R6502_OPCODE_HEADER r6502tya
+  TYA_ACTION
+  R6502_OPCODE_STEP r6502transfer,1
+  ADD r6,r6,#1:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+
+  R6502_SCAN1_SPLIT r6502push
+  R6502_PUSH r6502pha,A
+  R6502_PUSH r6502php,P
+  R6502_PUSH r65c12phx,X
+  R6502_PUSH r65c12phy,Y
+
+  R6502_SCAN1_SPLIT r6502pull
+  R6502_SCAN1_SPLIT r6502plp
+  R6502_PULL r6502pla,A
+  R6502_PULL r6502plp,P
+  R6502_PULL r65c12plx,X
+  R6502_PULL r65c12ply,Y
+
+  R6502_OPCODE_HEADER r6502rti
+  R6502_RTI_PART1 r6
+  R6502_OPCODE_CYCLES 3,0
+  R6502_RTI_PART2 r6
+  R6502_FOLD_OR_TRAP inline,r6502wait00000002interruptfetch
+  R6502_FOLDED_FETCH_ACTION 3,interrupt
+
+  R6502_OPCODE_HEADER r6502rts
+  R6502_OPCODE_CYCLES 4,0
+  R6502_RTS_POP
+  R6502_FOLD_OR_TRAP inline,r6502rtspart2
+d_r6502rtspart2
+  MOV r6,r4
+  ADDS r8,r8,#2
+  BCS %F1
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+1
+  SUBS r8,r8,#1
+  BCC %F2
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 2,interrupt
+2
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 2,interrupt
+
+  R6502_OPCODE_HEADER r6502jam
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502jam
+
+  R6502_OPCODE_HEADER r6502reset
+  LDR r3,[r0,#:INDEX:R6502_FOLDFLOOR]
+  LDRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  CMP r8,r3
+  BEQ r6502crossfoldreset
+  TST r2,r2
+  BNE r6502infoldreset
+  MOV r2,#1
+  STRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  ADR lr,r6502infoldreset
+  LDR pc,[r0,#:INDEX:R6502_RESETSTARTINGACTION]
+  R6502_RESET_WAIT r6502infoldreset,,0,0
+  R6502_RESET_CONTINUE r6502resetpart2
+r6502crossfoldreset
+  TST r2,r2
+  BNE %F1
+  MOV r2,#1
+  STRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  ADR lr,%F1
+  LDR pc,[r0,#:INDEX:R6502_RESETSTARTINGACTION]
+1
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502reset
+
+  R6502_OPCODE_HEADER r65c12reset
+  LDR r3,[r0,#:INDEX:R6502_FOLDFLOOR]
+  LDRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  CMP r8,r3
+  BEQ r65c12crossfoldreset
+  TST r2,r2
+  BNE r65c12infoldreset
+  MOV r2,#1
+  STRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  ADR lr,r65c12infoldreset
+  LDR pc,[r0,#:INDEX:R6502_RESETSTARTINGACTION]
+  R6502_RESET_WAIT r65c12infoldreset,,0,0
+  MOV r4,r6
+  R6502_RESET_CONTINUE r65c12resetpart2
+r65c12crossfoldreset
+  TST r2,r2
+  BNE %F1
+  MOV r2,#1
+  STRB r2,[r0,#:INDEX:R6502_OLDRESET]
+  ADR lr,%F1
+  LDR pc,[r0,#:INDEX:R6502_RESETSTARTINGACTION]
+1
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r65c12reset
+
+  R6502_OPCODE_HEADER r6502interrupt
+  LDR r3,[r0,#:INDEX:R6502_FOLDFLOOR]
+  CMP r8,r3
+  BEQ r6502crossfoldinterrupt
+  R6502_INTERRUPT 0
+r6502crossfoldinterrupt
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r6502interrupt
+
+  R6502_OPCODE_HEADER r65c12interrupt
+  LDR r3,[r0,#:INDEX:R6502_FOLDFLOOR]
+  CMP r8,r3
+  BEQ r65c12crossfoldinterrupt
+  R6502_INTERRUPT 1
+r65c12crossfoldinterrupt
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP ,r65c12interrupt
+
+  R6502_OPCODE_HEADER r6502brk
+r6502brkcontinue
+  R6502_BRK 0,1
+
+  R6502_OPCODE_HEADER r65c12brk
+r65c12brkcontinue
+  R6502_BRK 1,0
+
+  R6502_SCAN1_SPLIT r6502iflagclearorset
+  R6502_SCAN1_SPLIT r6502flagclearorset
+  R6502_FLAG_CLEAR_OR_SET r6502clc,CFLAG,clear
+  R6502_FLAG_CLEAR_OR_SET r6502sec,CFLAG,set
+  R6502_FLAG_CLEAR_OR_SET r6502cli,IFLAG,clear
+  R6502_FLAG_CLEAR_OR_SET r6502sei,IFLAG,set
+  R6502_FLAG_CLEAR_OR_SET r6502clv,VFLAG,clear
+  R6502_FLAG_CLEAR_OR_SET r6502cld,DFLAG,clear
+  R6502_FLAG_CLEAR_OR_SET r6502sed,DFLAG,set
+
+  R6502_SCAN2_SPLIT r6502dopimm
+  R6502_BYPASS_OPCODE_ENTRY 2,r6502dopimm
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 2,interrupt
+
+  R6502_SCAN2_SPLIT r6502bra
+r6502brainfold
+  LDRB r2,[r9,r8]
+  ADDS r8,r8,#2
+  BCS r6502brasplit
+  R6502_CALCULATE_BRANCH r6
+  BNE r6502bradifferentpage
+r6502brasamepage
+  ADDS r8,r8,r2
+  BEQ r6502brasamepageatfold
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 3,earlyinterrupt
+r6502brasamepageatfold
+  SUB r8,r8,#1
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 3,earlyinterrupt
+r6502bradifferentpage
+  LDR r3,[r0,#:INDEX:R6502_FOLDFLOOR]
+  ADD r8,r8,r2
+  CMP r8,r3
+  BLS r6502bradifferentpagecrossfold
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 4,interrupt
+r6502bradifferentpagecrossfold
+  TST r8,r8
+  BEQ r6502bradifferentpageatfold
+  R6502_OPCODE_OUTFOLD_ADDRESSED_RETURN 4,interrupt
+r6502bradifferentpageatfold
+  SUB r8,r8,#1
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 4,interrupt
+
+  R6502_SCAN2_SPLIT r65c12bra
+  DCD o_r65c12braroutine
+r65c12braroutine
+  R6502_OPCODE_PUSH
+r65c12brainfold
+  LDRB r2,[r9,r8]
+  ADDS r8,r8,#2
+  BCS r65c12brasplit
+  R6502_CALCULATE_BRANCH r6
+  BNE r6502bradifferentpage
+r65c12brasamepage
+  ADDS r8,r8,r2
+  BEQ r65c12brasamepageatfold
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 3,interrupt
+r65c12brasamepageatfold
+  SUB r8,r8,#1
+  R6502_OPCODE_ATFOLD_ADDRESSED_RETURN 3,interrupt
+
+  R6502_CONDITIONAL_BRANCH r6502bpl,r6502bra,NFLAG,clear
+  R6502_CONDITIONAL_BRANCH r6502bmi,r6502bra,NFLAG,set
+  R6502_CONDITIONAL_BRANCH r6502bvc,r6502bra,VFLAG,clear
+  R6502_CONDITIONAL_BRANCH r6502bvs,r6502bra,VFLAG,set
+  R6502_CONDITIONAL_BRANCH r6502bcc,r6502bra,CFLAG,clear
+  R6502_CONDITIONAL_BRANCH r6502bcs,r6502bra,CFLAG,set
+  R6502_CONDITIONAL_BRANCH r6502bne,r6502bra,ZFLAG,clear
+  R6502_CONDITIONAL_BRANCH r6502beq,r6502bra,ZFLAG,set
+
+  R6502_CONDITIONAL_BRANCH r65c12bpl,r65c12bra,NFLAG,clear
+  R6502_CONDITIONAL_BRANCH r65c12bmi,r65c12bra,NFLAG,set
+  R6502_CONDITIONAL_BRANCH r65c12bvc,r65c12bra,VFLAG,clear
+  R6502_CONDITIONAL_BRANCH r65c12bvs,r65c12bra,VFLAG,set
+  R6502_CONDITIONAL_BRANCH r65c12bcc,r65c12bra,CFLAG,clear
+  R6502_CONDITIONAL_BRANCH r65c12bcs,r65c12bra,CFLAG,set
+  R6502_CONDITIONAL_BRANCH r65c12bne,r65c12bra,ZFLAG,clear
+  R6502_CONDITIONAL_BRANCH r65c12beq,r65c12bra,ZFLAG,set
+
+  R6502_SCAN2_SPLIT r6502dopzpg
+  R6502_BYPASS_OPCODE_ENTRY 2,r6502dopzpg
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 3,interrupt
+
+  R6502_SCAN2_SPLIT r6502dopzpgx
+  R6502_BYPASS_OPCODE_ENTRY 2,r6502dopzpgx
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 4,interrupt
+
+  R6502_SCAN2_SPLIT r65c12dopzpgx
+  R6502_BYPASS_OPCODE_ENTRY 2,r65c12dopzpgx
+  ADD r6,r6,#2:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 4,interrupt
+
+  R6502_SCAN3_SPLIT r65c12slowtopFFabs
+  R6502_SCAN_OPCODE_ENTRY 3,r65c12slowtopFFabs
+  ADD r6,r6,#3:SHL:16
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 8,interrupt
+
+  R6502_SCAN2_SPLIT r6502jsr
+  R6502_SCAN_OPCODE_ENTRY 2,r6502jsr
+  SUB r3,r8,#1
+  ADD r4,r6,#2:SHL:16
+  LDRB r3,[r9,r3]
+  MOV r6,#ADDRESSING_BASECODE
+  ORR r6,r6,r2,LSL #16
+  ORR r6,r6,r3,LSL #24
+  R6502_JSR_PUSH
+  R6502_FOLD_OR_TRAP inline,r6502wait00000002interruptfetch
+  R6502_FOLDED_FETCH_ACTION 3,interrupt
+
+  R6502_SCAN2_SPLIT r6502jmp
+  R6502_SCAN_OPCODE_ENTRY 2,r6502jmp
+  SUB r3,r8,#1
+  LDRB r3,[r9,r3]
+  MOV r6,#ADDRESSING_BASECODE
+  ORR r6,r6,r2,LSL #16
+  ORR r6,r6,r3,LSL #24
+  MOV r1,r6
+  R6502_FOLD_OR_TRAP inline,r6502wait00000002interruptfetch
+  R6502_FOLDED_FETCH_ACTION 3,interrupt
+
+  R6502_SCAN2_SPLIT r6502jmpind
+  R6502_SCAN_OPCODE_ENTRY 2,r6502jmpind
+  SUB r3,r8,#1
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_INDIRECT_FOLD_OR_TRAP inline,2,s_r6502jmpindpart2,
+r6502jmpindpart2
+  R6502_INFOLD_JMPIND
+  R6502_FOLD_OR_TRAP inline,r6502wait00000004interruptfetch
+  R6502_FOLDED_FETCH_ACTION 5,interrupt
+
+  R6502_SCAN2_SPLIT r65c12jmpind
+  R6502_SCAN_OPCODE_ENTRY 2,r65c12jmpind
+  SUB r3,r8,#1
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_INDIRECT_FOLD_OR_TRAP inline,3,s_r65c12jmpindpart2,
+r65c12jmpindpart2
+  R65C12_INFOLD_JMPIND
+  R6502_FOLD_OR_TRAP inline,r6502wait00000005interruptfetch
+  R6502_FOLDED_FETCH_ACTION 6,interrupt
+r65c12jmpindpart2split
+  MOV r4,#ADDRESSING_BASECODE
+  ORR r4,r4,r2,LSL #16
+  ADD r1,r1,#1:SHL:16
+  R6502_FOLD_OR_TRAP ,r65c12wait4jmpsplitind
+
+  R6502_SCAN2_SPLIT r65c12jmpxind
+  R6502_SCAN_OPCODE_ENTRY 2,r65c12jmpxind
+  SUB r3,r8,#1
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  LDRB r2,[r0,#:INDEX:R6502_X]
+  ORR r1,r1,r3,LSL #24
+  ADD r1,r1,r2,LSL #16
+  R6502_INDIRECT_FOLD_OR_TRAP inline,3,s_r65c12jmpindpart2,
+  R65C12_INFOLD_JMPIND
+  R6502_FOLD_OR_TRAP inline,r6502wait00000005interruptfetch
+  R6502_FOLDED_FETCH_ACTION 6,interrupt
+
+r6502opcodereset
+  R6502_SET_SEQUENCE_NUMBER R6502_RESET_SEQUENCE
+  R6502_OPCODE_RETURN
+
+r6502opcoderesetoryield
+  [ !Optimise6502WorkAreas
+  LDR r3,[r0,#:INDEX:R6502_TRANSITION1]
+  ]
+  CMP r3,#R6502_YIELD_TRANSITION
+|r6502opcodeuninterruptedtrap|
+  BHI r6502opcodereset
+  [ Optimise6502WorkAreas
+  STR r4,[r0,#:INDEX:R6502_SEQUENCENUMBER]
+  |
+  STR r2,[r0,#:INDEX:R6502_SEQUENCENUMBER]
+  ]
+  R6502_REFERENCE_OPCODE_ENTRY r2,r1
+  ADD r1,r0,#:INDEX:R6502_SEQUENCES
+  LDR r1,[r1,#R6502_YIELD_SEQUENCE:SHL:2]
+  STR r2,[r0,#:INDEX:R6502_EXECUTE_CPU_STATE]
+  STR r1,[r0,#:INDEX:R6502_CPU_STATE]
+  R6502_OPCODE_YIELD_RETURN
+
+|r6502opcodeearlyinterrupttrap|
+  [ Optimise6502WorkAreas
+  TST r2,#R6502_NMI_IRQ_ENABLE:SHL:16
+  |
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  AND r3,r3,r3,LSR #6
+  TST r3,#R6502_NMI_IRQ_ENABLE:SHL:16
+  ]
+  BEQ r6502opcoderesetoryield
+  R6502_SET_SEQUENCE_NUMBER R6502_INTERRUPT_SEQUENCE
+  R6502_OPCODE_RETURN
+
+|r6502opcodeinterrupttrap|
+  [ Optimise6502WorkAreas
+  TST r2,#R6502_NMI_IRQ_ENABLE:SHL:12
+  |
+  LDR r3,[r0,#:INDEX:R6502_INTERRUPTQUEUE_PS]
+  AND r3,r3,r3,LSR #6
+  TST r3,#R6502_NMI_IRQ_ENABLE:SHL:12
+  ]
+  BEQ r6502opcoderesetoryield
+  R6502_SET_SEQUENCE_NUMBER R6502_INTERRUPT_SEQUENCE
+  R6502_OPCODE_RETURN
+
+  MACRO
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS $n,$ns
+r6502opcodecycle$n.s$ns.afteradvancetimers
+  SUB r12,r12,#(($n)*3+$ns):SHL:7
+  MOV lr,pc
+  LDR pc,[r12,r3,LSR #4]
+  BL assemblyhostadvancetimers
+  R6502_OPCODE_CYCLES_POP $n,$ns
+  MEND
+
+  MACRO
+  OPCODE_CYCLE_SPLIT_JUMP
+  STR lr,[sp, #-4]!
+  AND r1,r7,#&0000F000
+  SUB r1,pc,r1,LSR #10
+  LDR pc,[r1,#0x3C]
+  MEND
+
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 0,1
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 0,2
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 1,0
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 1,1
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 1,2
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 2,0
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 2,1
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 2,2
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 3,0
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 3,1
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 3,2
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 4,0
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 4,1
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 4,2
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 5,0
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 5,1
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 5,2
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 6,0
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 6,1
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 6,2
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 7,0
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 7,1
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 7,2
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 8,0
+  OPCODE_CYCLES_AFTER_ADVANCE_TIMERS 8,1
+
+r6502opcodecyclenosplit
+  STR lr,[sp, #-4]!
+r6502opcodeadvancetimers
+  MOV lr,pc
+  LDR pc,[r12,r3,LSR #4]
+  LDR lr, [sp], #4
+  B assemblyhostadvancetimers
+
+r6502opcodecycles0split
+  OPCODE_CYCLE_SPLIT_JUMP
+  DCD r6502opcodeadvancetimers
+  DCD r6502opcodecycle1s0afteradvancetimers
+  DCD r6502opcodecycle2s0afteradvancetimers
+  DCD r6502opcodecycle3s0afteradvancetimers
+  DCD r6502opcodecycle4s0afteradvancetimers
+  DCD r6502opcodecycle5s0afteradvancetimers
+  DCD r6502opcodecycle6s0afteradvancetimers
+  DCD r6502opcodecycle7s0afteradvancetimers
+
+r6502opcodecycles1split
+  OPCODE_CYCLE_SPLIT_JUMP
+  DCD r6502opcodeadvancetimers
+  DCD r6502opcodecycle0s1afteradvancetimers
+  DCD r6502opcodecycle1s1afteradvancetimers
+  DCD r6502opcodecycle2s1afteradvancetimers
+  DCD r6502opcodecycle3s1afteradvancetimers
+  DCD r6502opcodecycle4s1afteradvancetimers
+  DCD r6502opcodecycle5s1afteradvancetimers
+  DCD r6502opcodecycle6s1afteradvancetimers
+  DCD r6502opcodecycle7s1afteradvancetimers
+
+r6502opcodecycles2split
+  OPCODE_CYCLE_SPLIT_JUMP
+  DCD r6502opcodeadvancetimers
+  DCD r6502opcodecycle0s1afteradvancetimers
+  DCD r6502opcodecycle0s2afteradvancetimers
+  DCD r6502opcodecycle1s2afteradvancetimers
+  DCD r6502opcodecycle2s2afteradvancetimers
+  DCD r6502opcodecycle3s2afteradvancetimers
+  DCD r6502opcodecycle4s2afteradvancetimers
+  DCD r6502opcodecycle5s2afteradvancetimers
+  DCD r6502opcodecycle6s2afteradvancetimers
+  DCD r6502opcodecycle7s2afteradvancetimers
+
+
+;Data Area
+
+;  AREA    |C$$data|, DATA
+
+  END

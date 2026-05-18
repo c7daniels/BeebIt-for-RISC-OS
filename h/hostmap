@@ -47,12 +47,12 @@ typedef struct
 
 typedef struct
 {
-  R6502ADDRESSINGOP address3000_ram_x;
-  R6502ADDRESSINGOP address3000_ramram_e;
-  R6502ADDRESSINGOP address8000_ram;
-  R6502ADDRESSINGOP addressC000_y;
-  R6502ADDRESSINGOP addressFC00;
-  R6502ADDRESSINGOP addressFC00_ifj;
+  R6502ADDRESSINGOP touch3000_ram_x;
+  R6502ADDRESSINGOP touch3000_ramram_e;
+  R6502ADDRESSINGOP touch8000_ram;
+  R6502ADDRESSINGOP touchC000_y;
+  R6502ADDRESSINGOP touchFC00;
+  R6502ADDRESSINGOP touchFC00_ifj;
   OPCODE07SCREENINGOP screenopcode07rom;
   HOSTSWAPOP swapintomemory, swapoutofmemory;
 } HOSTMAPPAGING;
@@ -221,8 +221,8 @@ typedef struct
 typedef struct HOSTMAP
 {
   // AArch32 offsets -&A000 - -&4001
-  R6502ADDRESSINGOP readhigh[1024];
-  R6502ADDRESSINGOP modifyhigh[1024];
+  R6502ADDRESSINGOP touchhigh[1024];
+  R6502ADDRESSINGOP foldhigh[1024];
   R6502READSPECIALOP specialreadops[1024];
   R6502WRITESPECIALOP specialwriteops[1024];
   R6502READSPECIALOP bridgedreadops[1024];
@@ -230,28 +230,28 @@ typedef struct HOSTMAP
 
   // AArch32 offsets -&4000 - -&1001
   R6502_DC_ZONE DC;
-  R6502ADDRESSINGOP read8000s[16];
-  R6502ADDRESSINGOP modify8000s[16];
-  uintptr_t DP_unused1[704];
-  uintptr_t steproutines[64];
-  uintptr_t DP_unused2[1984];
+  R6502ADDRESSINGOP touch8000s[16];
+  uintptr_t DP_unused1[144];
+  uintptr_t steproutines[832];
+  uintptr_t DP_unused2[1216];
 
   // AArch32 offsets -&1000 - -&401
   R6502_CC_ZONE CC;
   uintptr_t CP_unused[636];
 
   // AArch32 offsets -&400 - -&101
-  uintptr_t interruptqueue_ps;
-  uintptr_t togominusone_cyclestate;
   R6502BYTESHIFT m_shift; uint8_t m; /*value on data bus*/
+  uintptr_t interruptqueue_ps;
+  uintptr_t sync_pc_code;
+  uintptr_t togominusone_cyclestate;
   R6502_BC_ZONE BC;
   uintptr_t interrupts;
   uintptr_t keycolumnflags;
   void* zeribeep_writebyte;
   void* zeribeep_workspace;
   uintptr_t screenstartaddress;
-  R6502ADDRESSINGOP readmFC00;
-  R6502ADDRESSINGOP modifymFC00;
+  R6502ADDRESSINGOP touchmFC00;
+  void* foldmFC00;
   HOSTMAPCYCLES cycles;
   HOSTMAPPAGING paging;
   HOSTMAPBVIA B_sysvia;
