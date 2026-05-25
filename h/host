@@ -1,0 +1,169 @@
+/*>host.h
+ *
+ * BeebIt - BBC Micro Model B Emulator
+ *
+ * Cycle-level CPU emulation
+ *
+ * (C) Copyright Crispian Daniels, 2025-2026
+ *
+ * Email: <convertedgames@3insdale.me.uk>
+ */
+
+#ifndef __BEEBIT_HOST_H__
+#define __BEEBIT_HOST_H__
+
+#include "hostmap.h"
+
+#define HOST_IRQ_SOURCE_MASK 0xFF
+#define HOST_IRQ_6522SYSVIA 0x01
+#define HOST_IRQ_6522USRVIA 0x02
+#define HOST_IRQ_6850ACIA 0x04
+#define HOST_IRQ_IRR 0x08
+
+#define HOST_NMI_SOURCE_MASK 0xFF00
+#define HOST_NMI_1770FDC 0x0100
+#define HOST_NMI_8271FDC 0x0200
+
+#define HOST_SETIRQ(HTOP, SOURCE) \
+  { \
+    uintptr_t interrupts = HTOP[-1].interrupts; \
+    HTOP[-1].interrupts = interrupts | SOURCE; \
+    if (!(interrupts & HOST_IRQ_SOURCE_MASK)) \
+    { \
+      HTOP[-1].interruptqueue |= R6502_IRQ; \
+    } \
+  }
+
+#define HOST_CLEARIRQ(HTOP, SOURCE) \
+  { \
+    uintptr_t interrupts = HTOP[-1].interrupts & ~SOURCE; \
+    HTOP[-1].interrupts = interrupts; \
+    if (!(interrupts & HOST_IRQ_SOURCE_MASK)) \
+    { \
+      HTOP[-1].interruptqueue &= ~R6502_IRQ; \
+    } \
+  }
+
+#define HOST_SETNMI(HTOP, SOURCE) \
+  { \
+    uintptr_t interrupts = HTOP[-1].interrupts; \
+    HTOP[-1].interrupts = interrupts | SOURCE; \
+    if (!(interrupts & HOST_NMI_SOURCE_MASK)) \
+    { \
+      HTOP[-1].interruptqueue |= R6502_NMI; \
+    } \
+  }
+
+#define HOST_CLEARNMI(HTOP, SOURCE) \
+  { \
+    uintptr_t interrupts = HTOP[-1].interrupts & ~SOURCE; \
+    HTOP[-1].interrupts = interrupts; \
+    if (!(interrupts & HOST_NMI_SOURCE_MASK)) \
+    { \
+      HTOP[-1].interruptqueue &= ~R6502_NMI; \
+    } \
+  }
+
+#define HOST_SETSHIFTEDIRQ(HTOP, SOURCE) \
+  { \
+    uintptr_t interrupts = HTOP[-1].interrupts; \
+    HTOP[-1].interrupts = interrupts | SOURCE; \
+    if (!(interrupts & HOST_IRQ_SOURCE_MASK)) \
+    { \
+      HTOP[-1].interruptqueue |= ((R6502_IRQ<<4)|R6502_IRQ); \
+    } \
+  }
+
+#define HOST_CLEARSHIFTEDIRQ(HTOP, SOURCE) \
+  { \
+    uintptr_t interrupts = HTOP[-1].interrupts & ~SOURCE; \
+    HTOP[-1].interrupts = interrupts; \
+    if (!(interrupts & HOST_IRQ_SOURCE_MASK)) \
+    { \
+      HTOP[-1].interruptqueue &= ~((R6502_IRQ<<4)|R6502_IRQ); \
+    } \
+  }
+
+#define HOST_SETSHIFTEDNMI(HTOP, SOURCE) \
+  { \
+    uintptr_t interrupts = HTOP[-1].interrupts; \
+    HTOP[-1].interrupts = interrupts | SOURCE; \
+    if (!(interrupts & HOST_NMI_SOURCE_MASK)) \
+    { \
+      HTOP[-1].interruptqueue |= ((R6502_NMI<<4)|R6502_NMI); \
+    } \
+  }
+
+#define HOST_CLEARSHIFTEDNMI(HTOP, SOURCE) \
+  { \
+    uintptr_t interrupts = HTOP[-1].interrupts & ~SOURCE; \
+    HTOP[-1].interrupts = interrupts; \
+    if (!(interrupts & HOST_NMI_SOURCE_MASK)) \
+    { \
+      HTOP[-1].interruptqueue &= ~((R6502_NMI<<4)|R6502_NMI); \
+    } \
+  }
+
+#define HOST_LIMIT_CYCLES_TO_GO(HTOP, LIMIT) \
+  { \
+    intptr_t excess = HTOP[-1].cycles.original - (LIMIT); \
+    if (excess > 0) \
+    { \
+      HTOP[-1].cycles.original -= excess; \
+      HTOP[-1].cycles.togo -= excess; \
+    } \
+  }
+
+#define HOST_LIMIT_PERIPHERAL_CYCLES_TO_GO(HTOP, P, LIMIT) \
+  { \
+    intptr_t excess = HTOP[-1].cycles.P##_original - (LIMIT); \
+    if (excess > 0) \
+    { \
+      HTOP[-1].cycles.P##_original -= excess; \
+      HTOP[-1].cycles.P##_togo -= excess; \
+      excess = HTOP[-1].cycles.original - HTOP[-1].cycles.P##_togo; \
+      if (excess > 0) \
+      { \
+        HTOP[-1].cycles.original -= excess; \
+        HTOP[-1].cycles.togo -= excess; \
+      } \
+    } \
+  }
+
+#define HOST_GET_PERIPHERAL_CYCLE_COUNT(OUT, HTOP, P) \
+  { \
+    OUT = HTOP[-1].cycles.original - HTOP[-1].cycles.togo + HTOP[-1].cycles.P##_original - HTOP[-1].cycles.P##_togo; \
+  }
+
+#define HOST_GET_1MHZ_PERIPHERAL_TOGO_FOR_SNAPSHOT_OFFSET(OUT, HTOP, P) \
+  { \
+    OUT = HTOP[-1].cycles.original - HTOP[-1].cycles.togo; \
+    OUT += (HTOP[-1].cycles.odd^OUT^1)&1; \
+    OUT += HTOP[-1].cycles.P##_original - HTOP[-1].cycles.P##_togo; \
+  }
+
+#define HOST_GET_TOGO_FROM_WRITE_OFFSET(OUT, HTOP) \
+  { \
+    OUT = 1 + HTOP[-1].cycles.original - HTOP[-1].cycles.togo; \
+  }
+
+#define HOST_GET_1MHZ_PERIPHERAL_TOGO_FROM_WRITE_OFFSET(OUT, HTOP, P) \
+  { \
+    OUT = 2 + HTOP[-1].cycles.original - HTOP[-1].cycles.togo; \
+    OUT += HTOP[-1].cycles.P##_original - HTOP[-1].cycles.P##_togo; \
+  }
+
+extern FULLHOSTMAP hostmap;
+
+extern void swappages(uint8_t *block1, uint8_t *block2, int npagecount);
+
+extern void hostinit(void);
+extern void hostapplysoundoption(void);
+extern void hostresetcpu(void);
+extern void hostresetperipherals(void);
+extern HOSTMAP* hostadvancetimers(HOSTMAP* htop);
+extern void hostexecute(void);
+extern void hostbeforesnapshot(void);
+extern void hostaftersnapshot(void);
+
+#endif //__BEEBIT_HOST_H__

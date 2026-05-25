@@ -43,16 +43,16 @@ typedef struct {
   VERTICALVIDEOSCALES verticalscales;
   void (*initgraphics)(VIDEOSCALELUTPARAMETERS *lutparams);
   void (*initteletext)(VIDEOSCALELUTPARAMETERS *lutparams);
-  void (*scalegraphics)(int bufferaddress, int hostaddress);
-  void (*scaleteletext)(int bufferaddress, int hostaddress);
+  void (*scalegraphics)(intptr_t bufferaddress, intptr_t hostaddress);
+  void (*scaleteletext)(intptr_t bufferaddress, intptr_t hostaddress);
 } VIDEOSCALECHOICE;
 
 extern char **displayzoomicons;
 
 #ifdef VIDEOSCALE_WITH_OVERSCALE
-extern void limitedblankrow(int hostaddress, int length, int mask);
+extern void limitedblankrow(intptr_t hostaddress, int length, int mask);
 #endif
-extern int getoverscalezoomavailabilityformode(int mode);
-extern int get256linezoomavailabilityformode(int mode);
-extern int getzoomnumberformode(int mode);
-extern void videoscalechoose(int mode, VIDEOSCALECHOICE *choice);
+extern int getoverscalezoomavailabilityformode(intptr_t mode);
+extern int get256linezoomavailabilityformode(intptr_t mode);
+extern int getzoomnumberformode(intptr_t mode);
+extern void videoscalechoose(intptr_t mode, VIDEOSCALECHOICE *choice);

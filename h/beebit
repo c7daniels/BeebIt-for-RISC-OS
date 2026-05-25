@@ -12,6 +12,7 @@
  * Email: <convertedgames@3insdale.me.uk>
  */
 
+#include <stdint.h>
 #include <stdio.h>
 
 /* DEFINES */
@@ -20,14 +21,6 @@
 #define OR    ||
 #define TRUE  0xFF
 #define FALSE 0x00
-
-#define IRQ_6522SYSVIA 0x01
-#define IRQ_6522USRVIA 0x02
-#define IRQ_6850ACIA 0x04
-
-#define IRQ_NOT6522SYSVIA 0xFE
-#define IRQ_NOT6522USRVIA 0xFD
-#define IRQ_NOT6850ACIA 0xFB
 
 #define NAME_MODELB "Model B"
 #define NAME_MODELBPLUS "Model B+"
@@ -77,17 +70,8 @@
   #endif
 #endif
 
-extern char memory[0x10000]; /*65536 bytes*/
-extern char shadow[0x8000]; /*32768 bytes*/
-/*shadow replaces andy,hazel and lynne for speed*/
-/*extern char andy[0x1000];*/ /*4096 bytes*/
-/*extern char hazel[0x2000];*/ /*8192 bytes*/
-/*extern char lynne[0x5000];*/ /*20480 bytes*/
-extern char roms[16][0x4000];
-
 extern int beebit_trace;
 extern char beebit_osrom[MACHINE_COMPACT+1][128];
-extern int beebit_romwritable[16];
 extern int beebit_romwrite[(MACHINE_COMPACT*16)+16];
 extern char beebit_romimage[(MACHINE_COMPACT*16)+16][128];
 extern char beebit_rompath[128];
@@ -106,7 +90,7 @@ extern char beebit_cmosdefault[0x40];
 extern char beebit_cmos[0x40];
 
 extern int beebit_graphicsmodeselector[10]; /*selector used when the specifier is not a mode number*/
-extern int beebit_graphicsmodespecifier;
+extern intptr_t beebit_graphicsmodespecifier;
 extern int beebit_graphicsmode; /*can mode 12,15 or 21 be used for graphics?*/
 extern int beebit_currenttype;
 extern int beebit_machinetype;
@@ -124,27 +108,13 @@ extern int beebit_printer;
 extern int beebit_links; /*keyboard links*/
 extern int beebit_button1; /*joystick button 1*/
 extern int beebit_button2; /*joystick button 2*/
-extern int beebit_romsel; /*ROMSELect*/
-extern int beebit_acccon; /*ACCCON*/
-extern int beebit_memorymap; /*flags for memory/shadow swapping*/
 extern int beebit_vdusel; /*VDUSEL (0x80) for B+, D (0x01) for Master 128*/
-extern int beebit_romselected;
-extern int beebit_rommodified;
 extern int beebit_leds,host_leds;
 extern int beebit_rommask;
-extern int beebit_yield;
 extern int beebit_exit;
 
-extern int beebit_irq;
-extern int beebit_nmi;
-extern int beebit_oldnmi;
-
 extern void copyselectedromintomemory(void);
-extern void pageinrom(int nrom, int lmosram);
 extern int loadrom(char *cfilename,int nslot);
-extern void updateviatimers(int ncycles);
-extern void updateothertimers(int ncycles);
-extern void updatetimers(void);
 extern void updatekeyboard(void);
 extern int beebitsectorcount(FILE *hfile);
 extern int beebitimagedsd(int nimagetype);
