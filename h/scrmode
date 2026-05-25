@@ -33,7 +33,7 @@ extern SCREENMODEICON *screenmodeicons;
 extern int screenmoderecordcount;
 
 extern void detectscreenmodes(void);
-extern int writeusedscreenmode(int mode);
+extern int writeusedscreenmode(intptr_t mode);
 extern int writenumberedmodelist(void);
 extern int writescreenmodelist(int longlist);
 extern int findscreenmode(char *icon);
@@ -41,5 +41,5 @@ extern int getscreenmodeoverscalezoomavailability(SCREENMODERECORD* r);
 extern int getscreenmode256linezoomavailability(SCREENMODERECORD* r);
 extern int pickascreenmode(int xresmin,int yresmin);
 extern void screenmodesetblock(SCREENMODERECORD* r, int (*modeblock)[10]);
-extern int screenmodespecifymedium(int (*modeblock)[10]);
-extern int screenmodespecifyhigh(int (*modeblock)[10]);
+extern intptr_t screenmodespecifymedium(int (*modeblock)[10]);
+extern intptr_t screenmodespecifyhigh(int (*modeblock)[10]);

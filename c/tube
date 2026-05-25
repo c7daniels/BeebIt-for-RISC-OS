@@ -4,10 +4,9 @@
  *
  * (C) Copyright Michael J Foot, 1998-2002
  *
- * Email: <mjfoot@paradise.net.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "beebit.h"

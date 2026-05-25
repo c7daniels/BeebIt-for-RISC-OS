@@ -1,0 +1,69 @@
+;>6502cmaps.h
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Cycle-level CPU emulation
+;
+; (C) Copyright Crispian Daniels, 2025-2026
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+R6502_SEQUENCE_ALLOWANCE EQU 288
+
+;storage map specialised for 6502 CPU emulation
+;a C representation of this storage map appears in 6502cmap.h
+R6502CPUMAP_ORIGIN EQU -&4000
+                        ^ R6502CPUMAP_ORIGIN
+; offsets -&4000 - -&1001
+R6502_SEQUENCES         # 4 * R6502_SEQUENCE_ALLOWANCE
+R6502_DP                # SIZEOF_R6502_DP_ZONE
+
+; offsets -&1000 - -&401
+                        # &10
+R6502_ADDRESSINGOPS     # &200
+R6502_CP                # SIZEOF_R6502_CP_ZONE
+
+; offsets -&400 - -&101
+R6502_INTERRUPTQUEUE    # &4
+R6502_M_SHIFT           # &3
+R6502_M                 # &1
+R6502_A_SHIFT           # &3
+R6502_A                 # &1
+R6502_X_SHIFT           # &3
+R6502_X                 # &1
+R6502_Y_SHIFT           # &3
+R6502_Y                 # &1
+R6502_PS_SHIFT          # &3
+R6502_PS                # &1
+R6502_SP_CODE           # &4
+R6502_SYNC_PC_CODE      # &4
+R6502_LAST_PC_CODE      # &4
+R6502_LATCH             # &4
+R6502_ADDRESS_CODE      # &4
+R6502_FIXED_ADDRESS_CODE # &4
+R6502_STRETCHED_ADDRESS_CODE # &4
+R6502_CPU_STATE         # &4
+R6502_STRETCHED_CPU_STATE # &4
+R6502_EXECUTE_CPU_STATE # &4
+R6502_TRANSITION1       # &4
+R6502_TRANSITION2       # &4
+R6502_RESETSTARTINGACTION # &4
+R6502_RESETCONTINUINGACTION # &4
+R6502_CYCLEACTION       # &4
+R6502_READSPECIALACTION # &4
+R6502_WRITESPECIALACTION # &4
+R6502_YIELDLINK         # &4
+R6502_LBREAK            # &4
+                        # &4C
+R6502_BP                # SIZEOF_R6502_BP_ZONE
+
+; offsets -&100 - -&01
+R6502_OLDRESET          # &1
+R6502_COPIEDVALUE       # &1
+                        # &2
+R6502_AP                # SIZEOF_R6502_AP_ZONE
+
+SIZEOF_R6502CPUMAP      * @ - R6502CPUMAP_ORIGIN
+
+  END

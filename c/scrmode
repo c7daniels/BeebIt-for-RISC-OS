@@ -9,11 +9,11 @@
  * Email: <convertedgames@3insdale.me.uk>
  */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "6502cpu.h"
 
 #include "main.h"
 #include "kernel.h"
@@ -66,7 +66,7 @@ static int comparescreenmoderecordncolours(SCREENMODERECORD *a, SCREENMODERECORD
   return 1;
 }
 
-static int writemodevariables(int mode)
+static int writemodevariables(intptr_t mode)
 {
   char buffer[128];
   SCREENMODERECORD r;
@@ -233,7 +233,7 @@ static void detectscreenmodesbyenumeration(int writeaction)
         }
       }
 
-      if (!get256linezoomavailabilityformode((int)modeblock))
+      if (!get256linezoomavailabilityformode((intptr_t)modeblock))
         continue;
 
 #ifndef SCREEN_MODES_WITH_NCOLOUR_OPTIONS
@@ -394,7 +394,7 @@ void detectscreenmodes(void)
   }
 }
 
-int writeusedscreenmode(int mode)
+int writeusedscreenmode(intptr_t mode)
 {
   VIDEOSCALECHOICE choice;
   VIDEOSCALELUTPARAMETERS glp,tlp;
@@ -588,7 +588,7 @@ int getscreenmodeoverscalezoomavailability(SCREENMODERECORD* r)
   int modeblock[10];
 
   screenmodesetblock(r, &modeblock);
-  return getoverscalezoomavailabilityformode((int)modeblock);
+  return getoverscalezoomavailabilityformode((intptr_t)modeblock);
 }
 
 int getscreenmode256linezoomavailability(SCREENMODERECORD* r)
@@ -596,7 +596,7 @@ int getscreenmode256linezoomavailability(SCREENMODERECORD* r)
   int modeblock[10];
 
   screenmodesetblock(r, &modeblock);
-  return get256linezoomavailabilityformode((int)modeblock);
+  return get256linezoomavailabilityformode((intptr_t)modeblock);
 }
 
 int pickascreenmode(int xresmin,int yresmin)
@@ -612,7 +612,7 @@ int pickascreenmode(int xresmin,int yresmin)
     if (r->xres < xresmin || r->yres < yresmin)
       continue;
     screenmodesetblock(r,&modeblock);
-    flags = get256linezoomavailabilityformode((int)modeblock);
+    flags = get256linezoomavailabilityformode((intptr_t)modeblock);
     if (flags>>1)
       return i;
     if (flags&1)
@@ -649,7 +649,7 @@ void screenmodesetblock(SCREENMODERECORD* r, int (*modeblock)[10])
   }
 }
 
-int screenmodespecifymedium(int (*modeblock)[10])
+intptr_t screenmodespecifymedium(int (*modeblock)[10])
 {
   int c;
 
@@ -668,10 +668,10 @@ int screenmodespecifymedium(int (*modeblock)[10])
   if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) != NULL || c != 0)
     return 15;
   else
-    return (int)modeblock;
+    return (intptr_t)modeblock;
 }
 
-int screenmodespecifyhigh(int (*modeblock)[10])
+intptr_t screenmodespecifyhigh(int (*modeblock)[10])
 {
   int c;
 
@@ -690,5 +690,5 @@ int screenmodespecifyhigh(int (*modeblock)[10])
   if (_kernel_swi_c(OS_CheckModeValid,&regs,&regs,&c) != NULL || c != 0)
     return 21;
   else
-    return (int)modeblock;
+    return (intptr_t)modeblock;
 }

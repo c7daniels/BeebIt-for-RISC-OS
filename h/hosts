@@ -1,0 +1,61 @@
+;>hosts.h
+;
+; BeebIt - BBC Micro Model B Emulator
+;
+; Cycle-level CPU emulation
+;
+; (C) Copyright Crispian Daniels, 2025-2026
+;
+; Email: <convertedgames@3insdale.me.uk>
+;
+
+HOST_IRQ_SOURCE_MASK EQU &FF
+HOST_IRQ_6522SYSVIA EQU &01
+HOST_IRQ_6522USRVIA EQU &02
+HOST_IRQ_6850ACIA EQU &04
+HOST_IRQ_IRR EQU &08
+
+  MACRO
+  HOST_EXECUTE_PUSH
+  [ Optimise6502WorkAreas
+  STMFD sp!,{r5-r6,lr}
+  LDRB r5,[r0,#:INDEX:R6502_PS]
+  LDR r6,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  |
+  STR lr,[sp, #-4]!
+  ]
+  MEND
+
+  MACRO
+  HOST_EXECUTE_POP
+  [ Optimise6502WorkAreas
+  STRB r5,[r0,#:INDEX:R6502_PS]
+  STR r6,[r0,#:INDEX:R6502_SYNC_PC_CODE]
+  LDMFD sp!,{r5-r6,pc}
+  |
+  LDR pc, [sp], #4
+  ]
+  MEND
+
+  MACRO
+  HOST_ADDRESSING_RETURN_SPECIAL
+  LDR pc,[lr,#-12]
+  MEND
+
+  MACRO
+  HOST_ADDRESSING_RETURN_STRETCHSPECIAL
+  LDREQ pc,[lr,#-8]
+  LDR pc,[lr,#-4]
+  MEND
+
+  MACRO
+  HOST_ADDRESSING_RETURN_MAPPED
+  MOV pc,lr
+  MEND
+
+  MACRO
+  HOST_ADDRESSING_RETURN_MAPPEDNE
+  MOVNE pc,lr
+  MEND
+
+  END
