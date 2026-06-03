@@ -333,26 +333,68 @@ o_$name.body
   MEND
 
   MACRO
-  R6502_OPCODE_HEADER $name
-  DCD o_$name.routine
-$name.routine
-  R6502_OPCODE_PUSH
-$name.infold
+  R6502_OPCODE_VARIANT_LABEL $type,$name,$featuremask,$features
+  LCLS label
+  IF $features==0x01
+label SETS "flat_$name"
+  ENDIF
+  IF "$type"=="DCD"
+  [ ($featuremask&$features)==$features
+  DCD $label
+  |
+  DCD 0
+  ]
+  ELIF "$type"=="BEQ"
+  BEQ $label
+  ELSE
+$label
+  ENDIF
   MEND
 
   MACRO
-  R6502_DECIMAL_SET_OPCODE_HEADER $name,$dname
+  R6502_OPCODE_HEADER $name,$featuremask
   DCD o_$name.routine
+  R6502_OPCODE_VARIANT_LABEL DCD,$name.routine,$featuremask,0x01
 $name.routine
+  MEND
+
+  MACRO
+  R6502_OPCODE_ENTRY $name,$featuremask,$features
+  [ $features==0
+  R6502_OPCODE_HEADER $name,$featuremask
+  |
+  R6502_OPCODE_VARIANT_LABEL declaration,$name.routine,$featuremask,$features
+  ]
+  R6502_OPCODE_PUSH
+  [ $features==0
+$name.infold
+  ]
+  MEND
+
+  MACRO
+  R6502_DECIMAL_SET_OPCODE_ENTRY $name,$dname,$featuremask,$features
+  [ $features==0
+  R6502_OPCODE_HEADER $name,$featuremask
+  |
+  R6502_OPCODE_VARIANT_LABEL declaration,$name.routine,$featuremask,$features
+  ]
   R6502_OPCODE_PUSH
   TST r5,#DFLAG
+  [ $features==0
   BEQ $name.infold
 $dname.infold
+  |
+  R6502_OPCODE_VARIANT_LABEL BEQ,$name.infold,$featuremask,$features
+  ]
   MEND
 
   MACRO
-  R6502_DECIMAL_CLEAR_OPCODE_HEADER $name
+  R6502_DECIMAL_CLEAR_OPCODE_ENTRY $name,$featuremask,$features
+  [ $features==0
 $name.infold
+  |
+  R6502_OPCODE_VARIANT_LABEL declaration,$name.infold,$featuremask,$features
+  ]
   MEND
 
   MACRO
@@ -393,26 +435,26 @@ $name.split
   MEND
 
   MACRO
-  R6502_SCAN_OPCODE_ENTRY $length,$name
-  R6502_OPCODE_HEADER $name
+  R6502_SCAN_OPCODE_ENTRY $length,$name,$featuremask,$features
+  R6502_OPCODE_ENTRY $name,$featuremask,$features
   R6502_OPCODE_SCAN $name,$length
   MEND
 
   MACRO
-  R6502_DECIMAL_SET_SCAN_OPCODE_ENTRY $length,$name,$dname
-  R6502_DECIMAL_SET_OPCODE_HEADER $name,$dname
+  R6502_DECIMAL_SET_SCAN_OPCODE_ENTRY $length,$name,$dname,$featuremask,$features
+  R6502_DECIMAL_SET_OPCODE_ENTRY $name,$dname,$featuremask,$features
   R6502_OPCODE_SCAN $dname,$length
   MEND
 
   MACRO
-  R6502_DECIMAL_CLEAR_SCAN_OPCODE_ENTRY $length,$name
-  R6502_DECIMAL_CLEAR_OPCODE_HEADER $name
+  R6502_DECIMAL_CLEAR_SCAN_OPCODE_ENTRY $length,$name,$featuremask,$features
+  R6502_DECIMAL_CLEAR_OPCODE_ENTRY $name,$featuremask,$features
   R6502_OPCODE_SCAN $name,$length
   MEND
 
   MACRO
   R6502_BYPASS_OPCODE_ENTRY $length,$name
-  R6502_OPCODE_HEADER $name
+  R6502_OPCODE_ENTRY $name,0,0
   R6502_OPCODE_STEP $name,$length
   MEND
 

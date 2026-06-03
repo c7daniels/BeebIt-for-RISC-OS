@@ -346,15 +346,19 @@ d_$type.wait$nm1value.inpage$tag.$mode
   MEND
 
   MACRO
-  R6502_IN_PAGE_STORE $n,$type,$tag,$mode,$aname
+  R6502_IN_PAGE_STORE $n,$type,$tag,$mode,$aname,$features
   R6502_TOUCH_OR_WAIT inline,$n,$type,inpage$tag.$mode
+  [ ($features&1)==0
   MOV r4,r2
   R6502_OPCODE_CYCLES $n+1,0
   R6502_STORE_ACTION 0,r2,INFOLD,$mode,0,$aname
+  |
+  R6502_STORE_ACTION $n+1,r4,INFOLD,$mode,0,$aname
+  ]
   MEND
 
   MACRO
-  R6502_PAGE_INCREMENT_STORE $n,$type,$tag,$mode,$aname
+  R6502_PAGE_INCREMENT_STORE $n,$type,$tag,$mode,$aname,$features
   [ "$tag"=="sh"
   R6502_TOUCH_OR_WAIT inline,$n,$type,tangledpageincrement$tag.$mode
   TANGLED_INCREMENT_PAGE r1
@@ -363,17 +367,25 @@ d_$type.wait$nm1value.inpage$tag.$mode
   R6502_TOUCH_OR_WAIT inline,$n,$type,pageincrement$tag.$mode
   R6502_PAGE_INCREMENT_ACTION inline,,r1,$n,$type,$tag,$mode
   ]
+  [ ($features&1)==0
   MOV r4,r2
   R6502_OPCODE_CYCLES $n+1,0
   R6502_STORE_ACTION 0,r2,INFOLD,$mode,0,$aname
+  |
+  R6502_STORE_ACTION $n+1,r4,INFOLD,$mode,0,$aname
+  ]
   MEND
 
   MACRO
-  R6502_STORE $n,$type,$tag,$mode,$aname
+  R6502_STORE $n,$type,$tag,$mode,$aname,$features
   R6502_TOUCH_OR_WAIT inline,$n,$type,$tag.$mode
+  [ ($features&1)==0
   MOV r4,r2
   R6502_OPCODE_CYCLES $n,0
   R6502_STORE_ACTION 0,r2,INFOLD,$mode,0,$aname
+  |
+  R6502_STORE_ACTION $n,r4,INFOLD,$mode,0,$aname
+  ]
   MEND
 
   MACRO
@@ -441,29 +453,7 @@ action SETS "r6502$tag.action"
   MEND
 
   MACRO
-  R6502_STORE_OPCODE_BODY $type,$tag,$mode,$aname
-  LCLS waittype
-  IF "$tag"=="stz"
-waittype SETS "r65c12"
-  ELSE
-waittype SETS "r6502"
-  ENDIF
-  IF "$mode"=="zpg"
-  ADD r6,r6,#2:SHL:16
-  ADD r4,r0,r2
-  R6502_OPCODE_CYCLES_BRANCH 1,0,$waittype.$tag.zpgtail
-  ELIF "$mode"=="zpgx" || "$mode"=="zpgy"
-  [ "$mode"=="zpgx"
-  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
-  |
-  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
-  ]
-  ADD r2,r4,r2,LSL #24
-  ADD r6,r6,#2:SHL:16
-  ADD r4,r0,r2,LSR #24
-  R6502_OPCODE_CYCLES_BRANCH 2,0,$waittype.$tag.zpgtail
-  ELIF "$mode"=="preindexed"
-  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  R6502_STORE_PREINDEXED $type,$tag,$mode,$waittype,$aname,$features
   ADD r2,r4,r2,LSL #24
   ADD r3,r2,#1:SHL:24
   LDRB r2,[r0,r2,LSR #24]
@@ -471,8 +461,11 @@ waittype SETS "r6502"
   MOV r1,#ADDRESSING_BASECODE
   ORR r1,r1,r2,LSL #16
   ORR r1,r1,r3,LSL #24
-  R6502_STORE 4,$waittype,$tag,zpgind,$aname
-  ELIF "$mode"=="nonindexed"
+  R6502_STORE 4,$waittype,$tag,zpgind,$aname,$features
+  MEND
+
+  MACRO
+  R6502_STORE_NONINDEXED $type,$tag,$mode,$waittype,$aname,$features
   MOV r2,r2,LSL #24
   ADD r3,r2,#1:SHL:24
   LDRB r2,[r0,r2,LSR #24]
@@ -480,8 +473,11 @@ waittype SETS "r6502"
   MOV r1,#ADDRESSING_BASECODE
   ORR r1,r1,r2,LSL #16
   ORR r1,r1,r3,LSL #24
-  R6502_STORE 3,$waittype,$tag,zpgind,$aname
-  ELIF "$mode"=="postindexed"
+  R6502_STORE 3,$waittype,$tag,zpgind,$aname,$features
+  MEND
+
+  MACRO
+  R6502_STORE_POSTINDEXED $type,$tag,$mode,$waittype,$aname,$features
   MOV r2,r2,LSL #24
   ADD r3,r2,#1:SHL:24
   [ "$aname"=="SH"
@@ -496,9 +492,9 @@ waittype SETS "r6502"
   ORR r1,r1,r3,LSL #24
   STRB r2,[r0,#:INDEX:R6502_LATCH+2]
   BCS %F1
-  R6502_IN_PAGE_STORE 3,$waittype,sh,zpgind,$aname
+  R6502_IN_PAGE_STORE 3,$waittype,sh,zpgind,$aname,$features
 1
-  R6502_PAGE_INCREMENT_STORE 3,$waittype,sh,zpgind,$aname
+  R6502_PAGE_INCREMENT_STORE 3,$waittype,sh,zpgind,$aname,$features
   |
   LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
   LDRB r2,[r0,r2,LSR #24]
@@ -508,28 +504,29 @@ waittype SETS "r6502"
   ORR r1,r1,r2,LSR #8
   ORR r1,r1,r3,LSL #24
   BCS %F1
-  R6502_IN_PAGE_STORE 3,$waittype,$tag,zpgind,$aname
+  R6502_IN_PAGE_STORE 3,$waittype,$tag,zpgind,$aname,$features
 1
   [ "$type"=="r65c12"
   ADD r1,r1,#1:SHL:24
-  R6502_STORE 4,$waittype,$tag,zpgind,$aname
+  R6502_STORE 4,$waittype,$tag,zpgind,$aname,$features
   |
-  R6502_PAGE_INCREMENT_STORE 3,$waittype,$tag,zpgind,$aname
+  R6502_PAGE_INCREMENT_STORE 3,$waittype,$tag,zpgind,$aname,$features
   ]
   ]
-  ELIF "$mode"=="abs"
+  MEND
+
+  MACRO
+  R6502_STORE_ABS $type,$tag,$mode,$waittype,$aname,$features
   SUB r3,r8,#2
   LDRB r3,[r9,r3]
   MOV r1,#ADDRESSING_BASECODE
   ORR r1,r1,r2,LSL #16
   ORR r1,r1,r3,LSL #24
-  R6502_STORE 2,$waittype,$tag,abs,$aname
-  ELIF "$mode"=="absx" || "$mode"=="absy"
-  [ "$mode"=="absx"
-  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
-  |
-  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
-  ]
+  R6502_STORE 2,$waittype,$tag,abs,$aname,$features
+  MEND
+
+  MACRO
+  R6502_STORE_ABS_INDEXED $type,$tag,$mode,$waittype,$aname,$features
   SUB r3,r8,#2
   ADDS r2,r1,r2,LSL #24
   LDRB r3,[r9,r3]
@@ -541,22 +538,85 @@ waittype SETS "r6502"
   ORR r1,r1,r3,LSL #24
   STRB r2,[r0,#:INDEX:R6502_LATCH+2]
   BCS %F1
-  R6502_IN_PAGE_STORE 2,$waittype,sh,abs,$aname
+  R6502_IN_PAGE_STORE 2,$waittype,sh,abs,$aname,$features
 1
-  R6502_PAGE_INCREMENT_STORE 2,$waittype,sh,abs,$aname
+  R6502_PAGE_INCREMENT_STORE 2,$waittype,sh,abs,$aname,$features
   |
   ORR r1,r1,r3,LSL #24
   BCS %F1
-  R6502_IN_PAGE_STORE 2,$waittype,$tag,abs,$aname
+  R6502_IN_PAGE_STORE 2,$waittype,$tag,abs,$aname,$features
 1
   [ "$type"=="r65c12"
   ADD r1,r1,#1:SHL:24
-  R6502_STORE 3,$waittype,$tag,abs,$aname
+  R6502_STORE 3,$waittype,$tag,abs,$aname,$features
   |
-  R6502_PAGE_INCREMENT_STORE 2,$waittype,$tag,abs,$aname
+  R6502_PAGE_INCREMENT_STORE 2,$waittype,$tag,abs,$aname,$features
   ]
   ]
+  MEND
+
+  MACRO
+  R6502_STORE_OPCODE_BODY $type,$tag,$mode,$aname,$features
+  LCLS waittype
+  IF "$tag"=="stz"
+waittype SETS "r65c12"
+  ELSE
+waittype SETS "r6502"
   ENDIF
+  IF "$mode"=="zpg"
+  ADD r6,r6,#2:SHL:16
+  ADD r4,r0,r2
+  [ ($features&1)==0
+  R6502_OPCODE_CYCLES_BRANCH 1,0,$waittype.$tag.zpgtail
+  |
+  $aname._ACTION r2
+  STRB r2,[r4]
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 3,interrupt
+  ]
+  ELIF "$mode"=="zpgx" || "$mode"=="zpgy"
+  [ "$mode"=="zpgx"
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  |
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  ]
+  ADD r2,r4,r2,LSL #24
+  ADD r6,r6,#2:SHL:16
+  ADD r4,r0,r2,LSR #24
+  [ ($features&1)==0
+  R6502_OPCODE_CYCLES_BRANCH 2,0,$waittype.$tag.zpgtail
+  |
+  $aname._ACTION r2
+  STRB r2,[r4]
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 4,interrupt
+  ]
+  ELIF "$mode"=="preindexed"
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  R6502_STORE_PREINDEXED $type,$tag,$mode,$waittype,$aname,$features
+  ELIF "$mode"=="nonindexed"
+  R6502_STORE_NONINDEXED $type,$tag,$mode,$waittype,$aname,$features
+  ELIF "$mode"=="postindexed"
+  R6502_STORE_POSTINDEXED $type,$tag,$mode,$waittype,$aname,$features
+  ELIF "$mode"=="abs"
+  R6502_STORE_ABS $type,$tag,$mode,$waittype,$aname,$features
+  ELIF "$mode"=="absx" || "$mode"=="absy"
+  [ "$mode"=="absx"
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  |
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  ]
+  R6502_STORE_ABS_INDEXED $type,$tag,$mode,$waittype,$aname,$features
+  ENDIF
+  MEND
+
+  MACRO
+  R6502_STORE_OPCODE_ENTRY $lengthdigit,$type,$tag,$mode,$featuremask,$features
+  [ "$tag"=="sha" || "$tag"=="shx" || "$tag"=="shy" || "$tag"=="tas"
+  R6502_OPCODE_ENTRY $type.$tag.$mode,$featuremask,$features
+  R6502_STORE_INPUT $tag
+  R6502_OPCODE_SCAN $type.$tag.$mode,$lengthdigit
+  |
+  R6502_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode,$featuremask,$features
+  ]
   MEND
 
   MACRO
@@ -569,14 +629,10 @@ lengthdigit SETS "2"
   ]
   R6502_O_STORE_OPCODE $type,$tag,$mode
   R6502_STORE_OPCODE_SPLIT $type,$tag,$mode
-  [ "$tag"=="sha" || "$tag"=="shx" || "$tag"=="shy" || "$tag"=="tas"
-  R6502_OPCODE_HEADER $type.$tag.$mode
-  R6502_STORE_INPUT $tag
-  R6502_OPCODE_SCAN $type.$tag.$mode,$lengthdigit
-  |
-  R6502_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode
-  ]
-  R6502_STORE_OPCODE_BODY $type,$tag,$mode,$aname
+  R6502_STORE_OPCODE_ENTRY $lengthdigit,$type,$tag,$mode,1,0
+  R6502_STORE_OPCODE_BODY $type,$tag,$mode,$aname,0
+  R6502_STORE_OPCODE_ENTRY $lengthdigit,$type,$tag,$mode,1,1
+  R6502_STORE_OPCODE_BODY $type,$tag,$mode,$aname,1
   MEND
 
 r6502storezpgnofold

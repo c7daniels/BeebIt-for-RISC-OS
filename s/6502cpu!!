@@ -2669,39 +2669,54 @@ switchtosequence
   LDR pc, [r1], #4
 
 |r6502patchsequences|
-  STMFD sp!,{r4-r6,lr}
-  ADR r4,%F1
+  STMFD sp!,{r4-r7,lr}
+  ADR r4,%F2
+  LDR lr,[r4,r2,LSL #2]
+  ADR r4,%F3
   ADD r3,r0,#:INDEX:R6502_OPCODEUNINTERRUPTEDTRAP
   LDMIA r4,{r4-r6}
   STMIA r3,{r4-r6}
   ADD r2,r0,#:INDEX:R6502_SEQUENCES
-  ADR r4,%F2
+  ADR r4,%F4
   LDMIA r4,{r4-r6}
 0
-  LDR r3,[r1],#4
-  TST r3,r3
-  STRNE r3,[r2,#:INDEX:R6502_OPCODEROUTINES-R6502_SEQUENCES]
-  LDRNE r3,[r3,#-4]
+  LDR r7,[r1],#4
+  TST r7,r7
+  LDRNE r3,[r7,#-8]
   STRNE r3,[r2,#:INDEX:R6502_O_OPCODEROUTINES-R6502_SEQUENCES]
   STRNE r5,[r2]
   STREQ r6,[r2,#:INDEX:R6502_OPCODEROUTINES-R6502_SEQUENCES]
   STREQ r6,[r2,#:INDEX:R6502_O_OPCODEROUTINES-R6502_SEQUENCES]
+  MOVNE pc,lr
+1
   SUBS r4,r4,#1
   ADD r2,r2,#4
   BGT %B0
-  LDMFD sp!,{r4-r6,pc}
-1
+  LDMFD sp!,{r4-r7,pc}
+2
+  DCD picknofeature
+  DCD pickflatfeature
+3
   DCD r6502opcodeuninterruptedtrap
   DCD r6502opcodeearlyinterrupttrap
   DCD r6502opcodeinterrupttrap
-2
+4
   DCD R6502_MAIN_SEQUENCE_COUNT
   DCD .+8
   DCD switchtosequence
   DCD switchtoopcoderoutine
+pickflatfeature
+  LDR r3,[r7,#-4]
+  TST r3,r3
+  STRNE r3,[r2,#:INDEX:R6502_OPCODEROUTINES-R6502_SEQUENCES]
+  BNE %B1
+picknofeature
+  STR r7,[r2,#:INDEX:R6502_OPCODEROUTINES-R6502_SEQUENCES]
+  B %B1
 
 |r6502assemblyroutinereset|
   [ Optimise6502Flow
+  MOV r2,r1
   ADR r1,r6502opcoderoutines
   B r6502patchsequences
   |

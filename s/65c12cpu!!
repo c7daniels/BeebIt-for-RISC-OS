@@ -931,7 +931,8 @@ r65c12branchtakenstep2
 
 |r65c12assemblyroutinereset|
   [ Optimise6502Flow
-  LDR r1,=r65c12opcoderoutines
+  MOV r2,r1
+  ADR r1,r65c12opcoderoutines
   B r6502patchsequences
   |
   MOV pc,lr
