@@ -183,64 +183,80 @@
   EXPORT |r65c12tsbabsroutine|
 
   MACRO
-  MODIFY_ZPGIND_ACTION
+  MODIFY_ZPGIND_ACTION $r
   LDR r3, [sp], #4
+  [ "$r"!="r2"
+  STR r2,[sp, #-4]!
+  MOV r2,$r
+  ]
   MOV lr,pc
   LDR pc,[r3,#8]
+  [ "$r"!="r2"
+  MOV $r,r2
+  LDR r2, [sp], #4
+  ]
   MEND
 
   MACRO
-  MODIFY_ABS_ACTION
+  MODIFY_ABS_ACTION $r
   LDR r3, [sp], #4
+  [ "$r"!="r2"
+  STR r2,[sp, #-4]!
+  MOV r2,$r
+  ]
   MOV lr,pc
   LDR pc,[r3,#12]
+  [ "$r"!="r2"
+  MOV $r,r2
+  LDR r2, [sp], #4
+  ]
   MEND
 
   MACRO
-  ASL_ACTION
+  ASL_ACTION $r
   BIC r5,r5,#NFLAG|ZFLAG|CFLAG
-  MOVS r3,r2,LSL #25
+  MOVS r3,$r,LSL #25
   ORRMI r5,r5,#NFLAG
-  MOV r2,r3,LSR #24
+  MOV $r,r3,LSR #24
   ORREQ r5,r5,#ZFLAG
   ORRCS r5,r5,#CFLAG
   MEND
 
   MACRO
-  DCP_ACTION
+  DCP_ACTION $r
   LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
-  SUB r2,r2,#1
+  SUB $r,$r,#1
   BIC r5,r5,#NFLAG|ZFLAG|CFLAG
-  SUBS r1,r1,r2,LSL #24
+  SUBS r1,r1,$r,LSL #24
   ORRMI r5,r5,#NFLAG
   ORREQ r5,r5,#ZFLAG
   ORRCS r5,r5,#CFLAG
   MEND
 
   MACRO
-  DEC_ACTION
-  SUB r2,r2,#1
+  DEC_ACTION $r
+  SUB $r,$r,#1
   BIC r5,r5,#NFLAG|ZFLAG
-  MOVS r3,r2,LSL #24
+  MOVS r3,$r,LSL #24
   ORRMI r5,r5,#NFLAG
   ORREQ r5,r5,#ZFLAG
   MEND
 
   MACRO
-  INC_ACTION
-  ADD r2,r2,#1
+  INC_ACTION $r
+  ADD $r,$r,#1
   BIC r5,r5,#NFLAG|ZFLAG
-  MOVS r3,r2,LSL #24
+  MOVS r3,$r,LSL #24
   ORRMI r5,r5,#NFLAG
   ORREQ r5,r5,#ZFLAG
   MEND
 
   MACRO
-  ISC_ACTION
+  ISC_ACTION $r
   LDRB r1,[r0,#:INDEX:R6502_A]
-  ADD r2,r2,#1
+  ADD $r,$r,#1
   TST r5,#DFLAG
-  MOV r3,r2,LSL #24
+  MOV r3,$r,LSL #24
   BNE %F0
   TEQ r3,r5,LSR #1   ;jdl** ARM c =6502 c
   BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
@@ -275,22 +291,22 @@
   MEND
 
   MACRO
-  LSR_ACTION
+  LSR_ACTION $r
   BIC r5,r5,#NFLAG|ZFLAG|CFLAG
-  MOVS r2,r2,LSR #1
+  MOVS $r,$r,LSR #1
   ORREQ r5,r5,#ZFLAG
   ORRCS r5,r5,#CFLAG
   MEND
 
   MACRO
-  RLA_ACTION
+  RLA_ACTION $r
   TST r5,#CFLAG
-  MOV r3,r2,LSL #24
+  MOV r3,$r,LSL #24
   BIC r5,r5,#NFLAG|ZFLAG|CFLAG
   ORRNE r3,r3,#&800000
   MOVS r1,r3,LSL #1
   LDR r3,[r0,#:INDEX:R6502_A_SHIFT]
-  MOV r2,r1,LSR #24
+  MOV $r,r1,LSR #24
   ORRCS r5,r5,#CFLAG
   ANDS r3,r1,r3
   ORRMI r5,r5,#NFLAG
@@ -299,39 +315,39 @@
   MEND
 
   MACRO
-  ROL_ACTION
+  ROL_ACTION $r
   TST r5,#CFLAG
-  MOV r3,r2,LSL #24
+  MOV r3,$r,LSL #24
   BIC r5,r5,#NFLAG|ZFLAG|CFLAG
   ORRNE r3,r3,#&800000
   MOVS r3,r3,LSL #1
   ORRMI r5,r5,#NFLAG
-  MOV r2,r3,LSR #24
+  MOV $r,r3,LSR #24
   ORREQ r5,r5,#ZFLAG
   ORRCS r5,r5,#CFLAG
   MEND
 
   MACRO
-  ROR_ACTION
+  ROR_ACTION $r
   TST r5,#CFLAG
   BIC r5,r5,#NFLAG|ZFLAG|CFLAG
-  ORRNE r2,r2,#&100
+  ORRNE $r,$r,#&100
   ORRNE r5,r5,#NFLAG
-  MOVS r2,r2,LSR #1
+  MOVS $r,$r,LSR #1
   ORREQ r5,r5,#ZFLAG
   ORRCS r5,r5,#CFLAG
   MEND
 
   MACRO
-  RRA_ACTION
+  RRA_ACTION $r
   TST r5,#CFLAG
   LDRB r1,[r0,#:INDEX:R6502_A]
-  MOVEQ r3,r2
-  ORRNE r3,r2,#&100
+  MOVEQ r3,$r
+  ORRNE r3,$r,#&100
   TST r5,#DFLAG
   BNE %F0
   MOVS r3,r3,LSR #1
-  MOV r2,r3
+  MOV $r,r3
   MOV r3,r3,LSL #24
   SUB r1,r1,#1:SHL:8
   BIC r5,r5,#NFLAG|VFLAG|ZFLAG|CFLAG
@@ -344,7 +360,7 @@
 0
   MOVS r3,r3,LSR #1
   ORR r1,r1,r1,ROR #8
-  MOV r2,r3
+  MOV $r,r3
   ORR r3,r3,#&0FF00000
   AND r1,r1,#&F000000F
   ORR r3,r3,#&000FF000
@@ -369,117 +385,121 @@
   MEND
 
   MACRO
-  SLO_ACTION
+  SLO_ACTION $r
   LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
   BIC r5,r5,#NFLAG|ZFLAG|CFLAG
-  MOVS r3,r2,LSL #25
+  MOVS r3,$r,LSL #25
   ORRCS r5,r5,#CFLAG
   ORRS r1,r1,r3
-  MOV r2,r3,LSR #24
+  MOV $r,r3,LSR #24
   ORRMI r5,r5,#NFLAG
   STR r1,[r0,#:INDEX:R6502_A_SHIFT]
   ORREQ r5,r5,#ZFLAG
   MEND
 
   MACRO
-  SRE_ACTION
+  SRE_ACTION $r
   LDR r1,[r0,#:INDEX:R6502_A_SHIFT]
   BIC r5,r5,#NFLAG|ZFLAG|CFLAG
-  MOVS r2,r2,LSR #1
+  MOVS $r,$r,LSR #1
   ORRCS r5,r5,#CFLAG
-  EORS r1,r1,r2,LSL #24
+  EORS r1,r1,$r,LSL #24
   STR r1,[r0,#:INDEX:R6502_A_SHIFT]
   ORRMI r5,r5,#NFLAG
   ORREQ r5,r5,#ZFLAG
   MEND
 
   MACRO
-  TRB_ACTION
+  TRB_ACTION $r
   LDRB r3,[r0,#:INDEX:R6502_A]
-  TST r3,r2
-  BIC r2,r2,r3
+  TST r3,$r
+  BIC $r,$r,r3
   BICNE r5,r5,#ZFLAG
   ORREQ r5,r5,#ZFLAG
   MEND
 
   MACRO
-  TSB_ACTION
+  TSB_ACTION $r
   LDRB r3,[r0,#:INDEX:R6502_A]
-  TST r3,r2
-  ORR r2,r2,r3
+  TST r3,$r
+  ORR $r,$r,r3
   BICNE r5,r5,#ZFLAG
   ORREQ r5,r5,#ZFLAG
   MEND
 
 |r6502aslaction|
-  ASL_ACTION
+  ASL_ACTION r2
   MOV pc,lr
 
 |r6502dcpaction|
-  DCP_ACTION
+  DCP_ACTION r2
   MOV pc,lr
 
 |r6502decaction|
-  DEC_ACTION
+  DEC_ACTION r2
   MOV pc,lr
 
 |r6502incaction|
-  INC_ACTION
+  INC_ACTION r2
   MOV pc,lr
 
 |r6502iscaction|
-  ISC_ACTION
+  ISC_ACTION r2
   MOV pc,lr
 
 |r6502lsraction|
-  LSR_ACTION
+  LSR_ACTION r2
   MOV pc,lr
 
 |r6502rlaaction|
-  RLA_ACTION
+  RLA_ACTION r2
   MOV pc,lr
 
 |r6502rolaction|
-  ROL_ACTION
+  ROL_ACTION r2
   MOV pc,lr
 
 |r6502roraction|
-  ROR_ACTION
+  ROR_ACTION r2
   MOV pc,lr
 
 |r6502rraaction|
-  RRA_ACTION
+  RRA_ACTION r2
   MOV pc,lr
 
 |r6502sloaction|
-  SLO_ACTION
+  SLO_ACTION r2
   MOV pc,lr
 
 |r6502sreaction|
-  SRE_ACTION
+  SRE_ACTION r2
   MOV pc,lr
 
 |r65c12trbaction|
-  TRB_ACTION
+  TRB_ACTION r2
   MOV pc,lr
 
 |r65c12tsbaction|
-  TSB_ACTION
+  TSB_ACTION r2
   MOV pc,lr
 
   MACRO
   R6502_LINEAR_MODIFY_ZPG_TAIL $tag,$ctype,$aname
 $tag.zpgtail
   LDRB r2,[r4]
-  $aname._ACTION
+  $aname._ACTION r2
   STRB r2,[r4]
   R6502_OPCODE_$ctype._ADDRESSED_RETURN 2,interrupt
   MEND
 
   MACRO
-  R6502_MODIFY_ACTION $returntype,$n,$type,$ctype,$tag,$mode,$special,$stretch,$aname
+  R6502_MODIFY_ACTION $returntype,$n,$r,$type,$ctype,$tag,$mode,$special,$stretch,$aname
   [ $special==0
+  [ "$r"=="r2"
   LDRB r2,[r4]
+  |
+  LDRB $r,[r2]
+  ]
   |
   R6502_OPCODE_READ_SPECIAL
   R6502_OPCODE_CYCLES 1,$stretch
@@ -500,9 +520,13 @@ s_$type.$tag.$mode.tailreturn
   ]
   ]
   [ $stretch==0
-  $aname._ACTION
+  $aname._ACTION $r
   [ $special==0
+  [ "$r"=="r2"
   STRB r2,[r4]
+  |
+  STRB $r,[r2]
+  ]
   |
   MOV r1,r4
   R6502_OPCODE_WRITE_SPECIAL
@@ -538,7 +562,7 @@ d_$type.wait$nm1value.inpage$tag.$mode
   ]
   MOV r4,r2
   R6502_OPCODE_CYCLES $n+2,0
-  R6502_MODIFY_ACTION $returntype,0,$type,$ctype,$tag2,$mode,0,0,$aname
+  R6502_MODIFY_ACTION $returntype,0,r2,$type,$ctype,$tag2,$mode,0,0,$aname
   ]
   MEND
 
@@ -556,14 +580,14 @@ tag2 SETS "linear$tag"
   R6502_OPCODE_CYCLES 1,0
   ]
   R6502_TAIL_ENTRY move,$type,$tag2.$mode,0
-  R6502_MODIFY_ACTION $returntype,0,$type,$ctype,$tag2,$mode,1,0,$aname
+  R6502_MODIFY_ACTION $returntype,0,r2,$type,$ctype,$tag2,$mode,1,0,$aname
   [ "$entrytype"=="inpage"
   R6502_TAIL_ENTRY move,$type,inpage$tag.$mode,1
   R6502_OPCODE_READ_SPECIAL
   R6502_OPCODE_CYCLES 1,1
   ]
   R6502_TAIL_ENTRY move,$type,$tag2.$mode,1
-  R6502_MODIFY_ACTION $returntype,0,$type,$ctype,$tag2,$mode,1,1,$aname
+  R6502_MODIFY_ACTION $returntype,0,r2,$type,$ctype,$tag2,$mode,1,1,$aname
   MEND
 
   MACRO
@@ -590,43 +614,59 @@ tag2 SETS "linear$tag"
   R6502_PAGE_INCREMENT_ACTION inline,r4,0,$type,$tag,$mode
   MOV r4,r2
   R6502_OPCODE_CYCLES 3,0
-  R6502_MODIFY_ACTION interrupt,0,$type,INFOLD,linear$tag,$mode,0,0,$aname
+  R6502_MODIFY_ACTION interrupt,0,r2,$type,INFOLD,linear$tag,$mode,0,0,$aname
   |
   R6502_PAGE_INCREMENT_ACTION ,r4,0,$type,$tag,$mode
   ]
   MEND
 
   MACRO
-  R6502_IN_PAGE_MODIFY $n,$type,$tag,$mode,$aname
+  R6502_IN_PAGE_MODIFY $n,$type,$tag,$mode,$aname,$features
   R6502_TOUCH_OR_WAIT inline,$n,$type,inpage$tag.$mode
+  [ ($features&1)==0
   MOV r4,r2
   R6502_OPCODE_CYCLES $n+3,0
-  R6502_MODIFY_ACTION interrupt,0,$type,INFOLD,linear$tag,$mode,0,0,$aname
+  R6502_MODIFY_ACTION interrupt,0,r2,$type,INFOLD,linear$tag,$mode,0,0,$aname
+  |
+  R6502_MODIFY_ACTION interrupt,$n+3,r4,$type,INFOLD,linear$tag,$mode,0,0,$aname
+  ]
   MEND
 
   MACRO
-  R6502_PAGE_INCREMENT_MODIFY $n,$type,$tag,$mode,$aname
+  R6502_PAGE_INCREMENT_MODIFY $n,$type,$tag,$mode,$aname,$features
   R6502_TOUCH_OR_WAIT inline,$n,$type,pageincrement$tag.$mode
   R6502_PAGE_INCREMENT_ACTION inline,r1,$n,$type,$tag,$mode
+  [ ($features&1)==0
   MOV r4,r2
   R6502_OPCODE_CYCLES $n+3,0
-  R6502_MODIFY_ACTION interrupt,0,$type,INFOLD,linear$tag,$mode,0,0,$aname
+  R6502_MODIFY_ACTION interrupt,0,r2,$type,INFOLD,linear$tag,$mode,0,0,$aname
+  |
+  R6502_MODIFY_ACTION interrupt,$n+3,r4,$type,INFOLD,linear$tag,$mode,0,0,$aname
+  ]
   MEND
 
   MACRO
-  R6502_LINEAR_MODIFY $n,$type,$tag,$mode,$aname
+  R6502_LINEAR_MODIFY $n,$type,$tag,$mode,$aname,$features
   R6502_TOUCH_OR_WAIT inline,$n,$type,linear$tag.$mode
+  [ ($features&1)==0
   MOV r4,r2
   R6502_OPCODE_CYCLES $n+2,0
-  R6502_MODIFY_ACTION interrupt,0,$type,INFOLD,linear$tag,$mode,0,0,$aname
+  R6502_MODIFY_ACTION interrupt,0,r2,$type,INFOLD,linear$tag,$mode,0,0,$aname
+  |
+  R6502_MODIFY_ACTION interrupt,$n+2,r4,$type,INFOLD,linear$tag,$mode,0,0,$aname
+  ]
   MEND
 
   MACRO
-  R6502_MODIFY $n,$type,$tag,$mode,$aname
+  R6502_MODIFY $n,$type,$tag,$mode,$aname,$features
   R6502_TOUCH_OR_WAIT inline,$n,$type,$tag.$mode
+  [ ($features&1)==0
   MOV r4,r2
   R6502_OPCODE_CYCLES $n+2,0
-  R6502_MODIFY_ACTION uninterrupted,0,$type,INFOLD,$tag,$mode,0,0,$aname
+  R6502_MODIFY_ACTION uninterrupted,0,r2,$type,INFOLD,$tag,$mode,0,0,$aname
+  |
+  R6502_MODIFY_ACTION uninterrupted,$n+2,r4,$type,INFOLD,$tag,$mode,0,0,$aname
+  ]
   MEND
 
   MACRO
@@ -688,31 +728,7 @@ action SETS "r6502$tag.action"
   MEND
 
   MACRO
-  R6502_MODIFY_OPCODE_BODY $type,$tag,$mode,$aname
-  IF "$mode"=="zpg"
-  ADD r6,r6,#2:SHL:16
-  ADD r4,r0,r2
-  IF "$tag"=="trb" || "$tag"=="tsb"
-  R6502_OPCODE_CYCLES_BRANCH 3,0,r65c12$tag.zpgtail
-  ELSE
-  R6502_OPCODE_CYCLES_BRANCH 3,0,r6502$tag.zpgtail
-  ENDIF
-  ELIF "$mode"=="zpgx" || "$mode"=="zpgy"
-  [ "$mode"=="zpgx"
-  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
-  |
-  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
-  ]
-  ADD r2,r4,r2,LSL #24
-  ADD r6,r6,#2:SHL:16
-  ADD r4,r0,r2,LSR #24
-  IF "$tag"=="trb" || "$tag"=="tsb"
-  R6502_OPCODE_CYCLES_BRANCH 4,0,r65c12$tag.zpgtail
-  ELSE
-  R6502_OPCODE_CYCLES_BRANCH 4,0,r6502$tag.zpgtail
-  ENDIF
-  ELIF "$mode"=="preindexed"
-  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  R6502_MODIFY_PREINDEXED $type,$tag,$mode,$aname,$features
   ADD r2,r4,r2,LSL #24
   ADD r3,r2,#1:SHL:24
   LDRB r2,[r0,r2,LSR #24]
@@ -720,8 +736,11 @@ action SETS "r6502$tag.action"
   MOV r1,#ADDRESSING_BASECODE
   ORR r1,r1,r2,LSL #16
   ORR r1,r1,r3,LSL #24
-  R6502_LINEAR_MODIFY 4,$type,$tag,zpgind,$aname
-  ELIF "$mode"=="postindexed"
+  R6502_LINEAR_MODIFY 4,$type,$tag,zpgind,$aname,$features
+  MEND
+
+  MACRO
+  R6502_MODIFY_POSTINDEXED $type,$tag,$mode,$aname,$features
   MOV r2,r2,LSL #24
   ADD r3,r2,#1:SHL:24
   LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
@@ -732,31 +751,32 @@ action SETS "r6502$tag.action"
   ORR r1,r1,r2,LSR #8
   ORR r1,r1,r3,LSL #24
   BCS %F1
-  R6502_IN_PAGE_MODIFY 3,$type,$tag,zpgind,$aname
+  R6502_IN_PAGE_MODIFY 3,$type,$tag,zpgind,$aname,$features
 1
   [ "$type"=="r65c12"
   ADD r1,r1,#1:SHL:24
-  R6502_LINEAR_MODIFY 4,$type,$tag,zpgind,$aname
+  R6502_LINEAR_MODIFY 4,$type,$tag,zpgind,$aname,$features
   |
-  R6502_PAGE_INCREMENT_MODIFY 3,$type,$tag,zpgind,$aname
+  R6502_PAGE_INCREMENT_MODIFY 3,$type,$tag,zpgind,$aname,$features
   ]
-  ELIF "$mode"=="abs"
+  MEND
+
+  MACRO
+  R6502_MODIFY_ABS $type,$tag,$mode,$aname,$features
   SUB r3,r8,#2
   LDRB r3,[r9,r3]
   MOV r1,#ADDRESSING_BASECODE
   ORR r1,r1,r2,LSL #16
   ORR r1,r1,r3,LSL #24
   [ "$type"=="r65c12" && ("$tag"=="asl" || "$tag"=="lsr" || "$tag"=="rol" || "$tag"=="ror")
-  R6502_MODIFY 2,$type,$tag,abs,$aname
+  R6502_MODIFY 2,$type,$tag,abs,$aname,$features
   |
-  R6502_LINEAR_MODIFY 2,$type,$tag,abs,$aname
+  R6502_LINEAR_MODIFY 2,$type,$tag,abs,$aname,$features
   ]
-  ELIF "$mode"=="absx" || "$mode"=="absy"
-  [ "$mode"=="absx"
-  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
-  |
-  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
-  ]
+  MEND
+
+  MACRO
+  R6502_MODIFY_ABS_INDEXED $type,$tag,$mode,$aname,$features
   SUB r3,r8,#2
   ADDS r2,r1,r2,LSL #24
   LDRB r3,[r9,r3]
@@ -765,17 +785,71 @@ action SETS "r6502$tag.action"
   ORR r1,r1,r3,LSL #24
   BCS %F1
   [ "$type"=="r65c12" && ("$tag"=="asl" || "$tag"=="lsr" || "$tag"=="rol" || "$tag"=="ror")
-  R6502_MODIFY 2,$type,$tag,abs,$aname
+  R6502_MODIFY 2,$type,$tag,abs,$aname,$features
   |
-  R6502_IN_PAGE_MODIFY 2,$type,$tag,abs,$aname
+  R6502_IN_PAGE_MODIFY 2,$type,$tag,abs,$aname,$features
   ]
 1
   [ "$type"=="r65c12"
   ADD r1,r1,#1:SHL:24
-  R6502_LINEAR_MODIFY 3,$type,$tag,abs,$aname
+  R6502_LINEAR_MODIFY 3,$type,$tag,abs,$aname,$features
   |
-  R6502_PAGE_INCREMENT_MODIFY 2,$type,$tag,abs,$aname
+  R6502_PAGE_INCREMENT_MODIFY 2,$type,$tag,abs,$aname,$features
   ]
+  MEND
+
+  MACRO
+  R6502_MODIFY_OPCODE_BODY $type,$tag,$mode,$aname,$features
+  IF "$mode"=="zpg"
+  ADD r6,r6,#2:SHL:16
+  ADD r4,r0,r2
+  [ ($features&1)==0
+  IF "$tag"=="trb" || "$tag"=="tsb"
+  R6502_OPCODE_CYCLES_BRANCH 3,0,r65c12$tag.zpgtail
+  ELSE
+  R6502_OPCODE_CYCLES_BRANCH 3,0,r6502$tag.zpgtail
+  ENDIF
+  |
+  LDRB r2,[r4]
+  $aname._ACTION r2
+  STRB r2,[r4]
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 5,interrupt
+  ]
+  ELIF "$mode"=="zpgx" || "$mode"=="zpgy"
+  [ "$mode"=="zpgx"
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  |
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  ]
+  ADD r2,r4,r2,LSL #24
+  ADD r6,r6,#2:SHL:16
+  ADD r4,r0,r2,LSR #24
+  [ ($features&1)==0
+  IF "$tag"=="trb" || "$tag"=="tsb"
+  R6502_OPCODE_CYCLES_BRANCH 4,0,r65c12$tag.zpgtail
+  ELSE
+  R6502_OPCODE_CYCLES_BRANCH 4,0,r6502$tag.zpgtail
+  ENDIF
+  |
+  LDRB r2,[r4]
+  $aname._ACTION r2
+  STRB r2,[r4]
+  R6502_OPCODE_INFOLD_ADDRESSED_RETURN 6,interrupt
+  ]
+  ELIF "$mode"=="preindexed"
+  LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
+  R6502_MODIFY_PREINDEXED $type,$tag,$mode,$aname,$features
+  ELIF "$mode"=="postindexed"
+  R6502_MODIFY_POSTINDEXED $type,$tag,$mode,$aname,$features
+  ELIF "$mode"=="abs"
+  R6502_MODIFY_ABS $type,$tag,$mode,$aname,$features
+  ELIF "$mode"=="absx" || "$mode"=="absy"
+  [ "$mode"=="absx"
+  LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
+  |
+  LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
+  ]
+  R6502_MODIFY_ABS_INDEXED $type,$tag,$mode,$aname,$features
   ENDIF
   MEND
 
@@ -789,8 +863,10 @@ lengthdigit SETS "2"
   ]
   R6502_O_MODIFY_OPCODE $type,$tag,$mode
   R6502_MODIFY_OPCODE_SPLIT $type,$tag,$mode
-  R6502_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode
-  R6502_MODIFY_OPCODE_BODY $type,$tag,$mode,$aname
+  R6502_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode,1,0
+  R6502_MODIFY_OPCODE_BODY $type,$tag,$mode,$aname,0
+  R6502_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode,1,1
+  R6502_MODIFY_OPCODE_BODY $type,$tag,$mode,$aname,1
   MEND
 
 r6502linearmodifyzpgnofold

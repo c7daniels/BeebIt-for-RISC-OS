@@ -799,15 +799,7 @@ r6502topaction
   MEND
 
   MACRO
-  R6502_LOAD_ACTION $n,$ctype,$tag,$mode,$special,$aname
-  [ "$aname"!="TOP"
-  [ $special==0
-  LDRB r2,[r2]
-  |
-  LDRB r2,[r0,#:INDEX:R6502_M]
-  ]
-  ]
-  $aname._ACTION
+  R6502_LOAD_RETURN $n,$ctype,$tag,$mode,$aname
   [ "$ctype"=="NOFOLD"
   LCLA n1value
 n1value SETA $n+1
@@ -825,6 +817,19 @@ n1value SETA $n+1
   R6502_OPCODE_$ctype._ADDRESSED_RETURN $n+2,interrupt
   ]
   ]
+  MEND
+
+  MACRO
+  R6502_LOAD_ACTION $n,$ctype,$tag,$mode,$special,$aname
+  [ "$aname"!="TOP"
+  [ $special==0
+  LDRB r2,[r2]
+  |
+  LDRB r2,[r0,#:INDEX:R6502_M]
+  ]
+  ]
+  $aname._ACTION
+  R6502_LOAD_RETURN $n,$ctype,$tag,$mode,$aname
   MEND
 
   MACRO
@@ -952,7 +957,82 @@ action SETS "r6502$tag.action"
   MEND
 
   MACRO
-  R6502_LOAD_OPCODE_BODY $type,$tag,$mode,$aname
+  R6502_LOAD_PREINDEXED $type,$tag,$mode,$waittype,$aname
+  ADD r2,r4,r2,LSL #24
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_LOAD 4,$waittype,$tag,zpgind,$aname
+  MEND
+
+  MACRO
+  R6502_LOAD_NONINDEXED $type,$tag,$mode,$waittype,$aname
+  MOV r2,r2,LSL #24
+  ADD r3,r2,#1:SHL:24
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_LOAD 3,$waittype,$tag,zpgind,$aname
+  MEND
+
+  MACRO
+  R6502_LOAD_POSTINDEXED $type,$tag,$mode,$waittype,$aname
+  MOV r2,r2,LSL #24
+  ADD r3,r2,#1:SHL:24
+  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
+  LDRB r2,[r0,r2,LSR #24]
+  LDRB r3,[r0,r3,LSR #24]
+  ADDS r2,r4,r2,LSL #24
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_LOAD 3,$waittype,$tag,zpgind,$aname
+1
+  [ "$type"=="r65c12"
+  ADD r1,r1,#1:SHL:24
+  R6502_LOAD 4,$waittype,$tag,zpgind,$aname
+  |
+  R6502_PAGE_INCREMENT_LOAD 3,$waittype,$tag,zpgind,$aname
+  ]
+  MEND
+
+  MACRO
+  R6502_LOAD_ABS $type,$tag,$mode,$waittype,$aname
+  SUB r3,r8,#2
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSL #16
+  ORR r1,r1,r3,LSL #24
+  R6502_LOAD 2,$waittype,$tag,abs,$aname
+  MEND
+
+  MACRO
+  R6502_LOAD_ABS_INDEXED $type,$tag,$mode,$waittype,$aname
+  SUB r3,r8,#2
+  ADDS r2,r1,r2,LSL #24
+  LDRB r3,[r9,r3]
+  MOV r1,#ADDRESSING_BASECODE
+  ORR r1,r1,r2,LSR #8
+  ORR r1,r1,r3,LSL #24
+  BCS %F1
+  R6502_LOAD 2,$waittype,$tag,abs,$aname
+1
+  [ "$type"=="r65c12"
+  ADD r1,r1,#1:SHL:24
+  R6502_LOAD 3,$waittype,$tag,abs,$aname
+  |
+  R6502_PAGE_INCREMENT_LOAD 2,$waittype,$tag,abs,$aname
+  ]
+  MEND
+
+  MACRO
+  R6502_LOAD_OPCODE_BODY $type,$tag,$mode,$aname,$features
   LCLS resolvedaname
   LCLS waittype
   IF "$tag"=="adc" || "$tag"=="sbc"
@@ -1013,92 +1093,58 @@ waittype SETS "r6502"
   ]
   ELIF "$mode"=="preindexed"
   LDR r4,[r0,#:INDEX:R6502_X_SHIFT]
-  ADD r2,r4,r2,LSL #24
-  ADD r3,r2,#1:SHL:24
-  LDRB r2,[r0,r2,LSR #24]
-  LDRB r3,[r0,r3,LSR #24]
-  MOV r1,#ADDRESSING_BASECODE
-  ORR r1,r1,r2,LSL #16
-  ORR r1,r1,r3,LSL #24
-  R6502_LOAD 4,$waittype,$tag,zpgind,$resolvedaname
+  R6502_LOAD_PREINDEXED $type,$tag,$mode,$waittype,$resolvedaname
   ELIF "$mode"=="nonindexed"
-  MOV r2,r2,LSL #24
-  ADD r3,r2,#1:SHL:24
-  LDRB r2,[r0,r2,LSR #24]
-  LDRB r3,[r0,r3,LSR #24]
-  MOV r1,#ADDRESSING_BASECODE
-  ORR r1,r1,r2,LSL #16
-  ORR r1,r1,r3,LSL #24
-  R6502_LOAD 3,$waittype,$tag,zpgind,$resolvedaname
+  R6502_LOAD_NONINDEXED $type,$tag,$mode,$waittype,$resolvedaname
   ELIF "$mode"=="postindexed"
-  MOV r2,r2,LSL #24
-  ADD r3,r2,#1:SHL:24
-  LDR r4,[r0,#:INDEX:R6502_Y_SHIFT]
-  LDRB r2,[r0,r2,LSR #24]
-  LDRB r3,[r0,r3,LSR #24]
-  ADDS r2,r4,r2,LSL #24
-  MOV r1,#ADDRESSING_BASECODE
-  ORR r1,r1,r2,LSR #8
-  ORR r1,r1,r3,LSL #24
-  BCS %F1
-  R6502_LOAD 3,$waittype,$tag,zpgind,$resolvedaname
-1
-  [ "$type"=="r65c12"
-  ADD r1,r1,#1:SHL:24
-  R6502_LOAD 4,$waittype,$tag,zpgind,$resolvedaname
-  |
-  R6502_PAGE_INCREMENT_LOAD 3,$waittype,$tag,zpgind,$resolvedaname
-  ]
+  R6502_LOAD_POSTINDEXED $type,$tag,$mode,$waittype,$resolvedaname
   ELIF "$mode"=="abs"
-  SUB r3,r8,#2
-  LDRB r3,[r9,r3]
-  MOV r1,#ADDRESSING_BASECODE
-  ORR r1,r1,r2,LSL #16
-  ORR r1,r1,r3,LSL #24
-  R6502_LOAD 2,$waittype,$tag,abs,$resolvedaname
+  R6502_LOAD_ABS $type,$tag,$mode,$waittype,$resolvedaname
   ELIF "$mode"=="absx" || "$mode"=="absy"
   [ "$mode"=="absx"
   LDR r1,[r0,#:INDEX:R6502_X_SHIFT]
   |
   LDR r1,[r0,#:INDEX:R6502_Y_SHIFT]
   ]
-  SUB r3,r8,#2
-  ADDS r2,r1,r2,LSL #24
-  LDRB r3,[r9,r3]
-  MOV r1,#ADDRESSING_BASECODE
-  ORR r1,r1,r2,LSR #8
-  ORR r1,r1,r3,LSL #24
-  BCS %F1
-  R6502_LOAD 2,$waittype,$tag,abs,$resolvedaname
-1
-  [ "$type"=="r65c12"
-  ADD r1,r1,#1:SHL:24
-  R6502_LOAD 3,$waittype,$tag,abs,$resolvedaname
-  |
-  R6502_PAGE_INCREMENT_LOAD 2,$waittype,$tag,abs,$resolvedaname
-  ]
+  R6502_LOAD_ABS_INDEXED $type,$tag,$mode,$waittype,$resolvedaname
   ENDIF
   MEND
 
   MACRO
-  R6502_LOAD_OPCODE $type,$tag,$mode,$aname
+  R6502_DECIMAL_LOAD_OPCODE_VARIANTS $type,$tag,$mode,$aname
   LCLS lengthdigit
   [ "$mode"=="abs" || "$mode"=="absx" || "$mode"=="absy"
 lengthdigit SETS "3"
   |
 lengthdigit SETS "2"
   ]
+  R6502_DECIMAL_SET_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode,$type.decimal$tag.$mode,0,0
+  R6502_LOAD_OPCODE_BODY $type,decimal$tag,$mode,$aname,0
+  R6502_DECIMAL_CLEAR_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode,0,0
+  R6502_LOAD_OPCODE_BODY $type,$tag,$mode,$aname,0
+  MEND
+
+  MACRO
+  R6502_LOAD_OPCODE_VARIANTS $type,$tag,$mode,$aname
+  LCLS lengthdigit
+  [ "$mode"=="abs" || "$mode"=="absx" || "$mode"=="absy"
+lengthdigit SETS "3"
+  |
+lengthdigit SETS "2"
+  ]
+  R6502_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode,0,0
+  R6502_LOAD_OPCODE_BODY $type,$tag,$mode,$aname,0
+  MEND
+
+  MACRO
+  R6502_LOAD_OPCODE $type,$tag,$mode,$aname
   R6502_O_LOAD_OPCODE $type,$tag,$mode
   R6502_LOAD_OPCODE_SPLIT $type,$tag,$mode
   [ "$tag"=="adc" || "$tag"=="sbc"
   R6502_LOAD_OPCODE_SPLIT $type,decimal$tag,$mode
-  R6502_DECIMAL_SET_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode,$type.decimal$tag.$mode
-  R6502_LOAD_OPCODE_BODY $type,decimal$tag,$mode,$aname
-  R6502_DECIMAL_CLEAR_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode
-  R6502_LOAD_OPCODE_BODY $type,$tag,$mode,$aname
+  R6502_DECIMAL_LOAD_OPCODE_VARIANTS $type,$tag,$mode,$aname
   |
-  R6502_SCAN_OPCODE_ENTRY $lengthdigit,$type.$tag.$mode
-  R6502_LOAD_OPCODE_BODY $type,$tag,$mode,$aname
+  R6502_LOAD_OPCODE_VARIANTS $type,$tag,$mode,$aname
   ]
   MEND
 

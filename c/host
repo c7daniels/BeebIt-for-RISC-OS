@@ -85,8 +85,8 @@ extern R6502CPUMAP* host_r6502writemfred(R6502CPUMAP* ctop, uintptr_t address_co
 extern R6502CPUMAP* host_r6502writemjim(R6502CPUMAP* ctop, uintptr_t address_code, uint8_t value);
 
 #ifndef BEEBIT_NO_ASM
-extern void r6502assemblyroutinereset(R6502CPUMAP* ctop);
-extern void r65c12assemblyroutinereset(R6502CPUMAP* ctop);
+extern void r6502assemblyroutinereset(R6502CPUMAP* ctop, uint32_t features);
+extern void r65c12assemblyroutinereset(R6502CPUMAP* ctop, uint32_t features);
 #endif
 
 extern R6502CPUMAP* host_r6502cycle0s1(R6502CPUMAP* ctop);
@@ -927,7 +927,9 @@ void hostresetcpu(void)
     host_r6502_opcode07interfacesequence
   };
 #ifndef BEEBIT_NO_ASM
-  void (*assemblyroutinereset)(R6502CPUMAP* ctop);
+  void (*assemblyroutinereset)(R6502CPUMAP* ctop, uint32_t features);
+  const uint32_t feature_flat = 1;
+  uint32_t assemblyroutinefeatures = feature_flat;
 #endif
 
   switch (beebit_machinetype)
@@ -954,7 +956,7 @@ void hostresetcpu(void)
   ctop[-1].resetcontinuingaction = host_r6502onresetcontinue;
 
 #ifndef BEEBIT_NO_ASM
-  assemblyroutinereset(ctop);
+  assemblyroutinereset(ctop, assemblyroutinefeatures);
 #endif
 }
 
