@@ -2940,6 +2940,7 @@ void videoteletextdrawrow(void)
   int displaycursorx,displaycursorwidth;
   int borderlength,precedingrowlength;
   intptr_t nscaledscreen;
+  uint8_t *mem;
 
   if (videoteletextscale)
   {
@@ -3000,6 +3001,21 @@ void videoteletextdrawrow(void)
 
   /*teletextblankchar();*/
 
+  /*select memory source once per row instead of per character*/
+  switch (beebit_machinetype)
+  {
+    case MACHINE_MODELBPLUS:
+      mem = (htop[-1].acccon & 0x80) ? hostmap.upper.shadow : hostmap.upper.memory;
+      break;
+    case MACHINE_MASTER128:
+    case MACHINE_COMPACT:
+      mem = (htop[-1].acccon & 0x01) ? hostmap.upper.shadow : hostmap.upper.memory;
+      break;
+    default: /*MACHINE_MODELB*/
+      mem = hostmap.upper.memory;
+      break;
+  }
+
   nx = 0;
   nxoffscreen = teletext_leftoffscreen;
   nxend = nxoffscreen+teletext_screenwidth;
@@ -3013,26 +3029,7 @@ void videoteletextdrawrow(void)
     /*if (!teletext_holdgraphics)
       teletext_character = 0x20;*/
 
-    switch (beebit_machinetype)
-    {
-      case MACHINE_MODELB:
-        video_n = hostmap.upper.memory[video_address];
-        break;
-      case MACHINE_MODELBPLUS:
-        if (htop[-1].acccon & 0x80)
-          video_n = hostmap.upper.shadow[video_address];
-        else
-          video_n = hostmap.upper.memory[video_address];
-        break;
-      case MACHINE_MASTER128:
-      case MACHINE_COMPACT:
-        if (htop[-1].acccon & 0x01)
-          /*LYNNE (D)*/
-          video_n = hostmap.upper.shadow[video_address];
-        else
-          video_n = hostmap.upper.memory[video_address];
-        break;
-    }
+    video_n = mem[video_address];
 
     if (video_n >= 0xA0)
       video_n &= 0x7F;
