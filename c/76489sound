@@ -1,4 +1,4 @@
-/*sound.c
+/*76489sound.c
  *
  * Sound System
  *
@@ -6,16 +6,20 @@
  *
  * (C) Copyright Michael J Foot, 1998-1999
  *
- * Email: <mikef@voyager.co.nz>
+ * Email: <mjfoot.nz@gmail.com>
  */
 
 #include "beebit.h"
-#include "kernel.h"
 #include "riscos.h"
 #include "76489sound.h"
+#ifdef __RISCOS__
+#include "kernel.h"
 #include "swis.h"
+#endif
 
+#ifdef __RISCOS__
 extern _kernel_swi_regs regs;
+#endif
 
 /*76489 sound generator*/
 int a76489_timer; /*sound timer*/
@@ -328,6 +332,7 @@ void soundprocess(void)
 
 void soundplay(int nchannel)
 {
+#ifdef __RISCOS__
   #ifdef __DEBUG__
     fprintf(htrace,"CH:%i &%X\n",nchannel,a76489_frequency[nchannel]);
   #endif
@@ -386,4 +391,5 @@ void soundplay(int nchannel)
       _kernel_swi(Sound_Control,&regs,&regs);
     }
   }
+#endif
 }
