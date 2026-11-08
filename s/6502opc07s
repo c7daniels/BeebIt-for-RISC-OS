@@ -46,21 +46,7 @@
   R6502_CYCLE_UPDATE_PUSH
   TST r6,#&80000000
   BEQ %F1
-  [ !Optimise6502Links
-  STMFD sp!,{r0,lr}
-  |
-  STR r0,[sp, #-4]!
-  ]
-  MOV r1,r6
-  MOV lr,pc
-  LDR pc,[r0,#:INDEX:HOST_PAGING+:INDEX:HOSTPAGING_SCREENOPCODE07ROM]
-  TST r0,r0
-  [ !Optimise6502Links
-  LDMFD sp!,{r0,lr}
-  |
-  LDR r0, [sp], #4
-  ]
-  BNE host_r6502opcode07_interface
+  B host_r6502opcode07_interface
 1
   R6502_CYCLE_UPDATE_POP
   MEND
