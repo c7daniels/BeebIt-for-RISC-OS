@@ -44,6 +44,18 @@
   MACRO
   R6502_CONDITIONAL_JUMP_TO_OPCODE07_INTERFACE
   R6502_CYCLE_UPDATE_PUSH
+  ;
+  STR r0,[sp, #-4]!
+  SUB sp,sp,#16
+  SWI OS_WriteI+30
+  MOV r0,r6
+  MOV r1,sp
+  MOV r2,#16
+  SWI OS_ConvertHex8
+  SWI OS_Write0
+  ADD sp,sp,#16
+  LDR r0, [sp], #4
+  ;
   TST r6,#&80000000
   BEQ %F1
   B host_r6502opcode07_interface
